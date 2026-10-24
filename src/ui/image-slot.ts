@@ -1,7 +1,7 @@
 /* <image-slot> — framed image with a placeholder state and an attribution chip.
    Production counterpart of the design tool's image-slot starter (which was read-only
    outside the design runtime). Attributes: src, placeholder, shape (rect|circle),
-   credit, credit-href, initials (shown in the empty state instead of the icon). */
+   credit, credit-href, initials (shown in the empty state instead of the icon), focus (inline style framing the image). */
 const css = `
 :host{display:block;position:relative;width:100%;height:100%;color:inherit;font:13px/1.3 var(--mono,ui-monospace),monospace}
 .frame{position:absolute;inset:0;overflow:hidden;background:var(--paper2,#221d17)}
@@ -22,7 +22,7 @@ img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-pos
 const icon = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>';
 
 class ImageSlot extends HTMLElement {
-  static observedAttributes = ['src', 'placeholder', 'credit', 'credit-href', 'initials'];
+  static observedAttributes = ['src', 'placeholder', 'credit', 'credit-href', 'initials', 'focus'];
   private root: ShadowRoot;
   private img!: HTMLImageElement;
   private loaded = '';
@@ -50,6 +50,7 @@ class ImageSlot extends HTMLElement {
       this.removeAttribute('data-filled');
       if (src) this.img.src = src; else this.img.removeAttribute('src');
     }
+    this.img.style.cssText = this.getAttribute('focus') || '';
     const a = this.root.querySelector<HTMLAnchorElement>('.credit')!;
     a.textContent = this.getAttribute('credit') || '';
     const href = this.getAttribute('credit-href') || '';

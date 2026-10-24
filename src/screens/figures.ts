@@ -4,7 +4,7 @@ import { esc, layer, sheet, toast } from '../ui/dom';
 import { av, initials } from '../ui/bits';
 import { buzz } from '../audio';
 import { checkBadges } from '../badges';
-import { FIGIMG, loadFigImgs } from '../wiki';
+import { FIGIMG, figFocus, figImgPage } from '../wiki';
 
 export function openFig(id: string): void {
   const f = FIG[id];
@@ -17,7 +17,7 @@ export function openFig(id: string): void {
   }
   if (!S.figSeen.includes(id)) { S.figSeen.push(id); save(); }
   const chose = ERAS.flatMap(e => e.opts.filter(o => o.guide === id).map(o => [e, o] as const));
-  const img = FIGIMG[id] ? ` src="${esc(FIGIMG[id])}" credit="Wikimedia Commons"` : '';
+  const img = FIGIMG[id] ? ` src="${esc(FIGIMG[id])}" focus="${figFocus(id)}" credit="Wikimedia Commons" credit-href="${esc(figImgPage(id))}"` : '';
   sheet(`<div class="row" style="gap:16px;align-items:center"><div style="width:96px;height:96px;flex:none"><image-slot id="fg-${id}" shape="circle" placeholder="Chân dung" initials="${esc(initials(f[0]))}"${img}></image-slot></div>
   <div><div class="mono muted">${f[1]}</div><h2 style="margin-top:4px">${f[0]}</h2><div class="muted" style="font-style:italic">${f[2]}</div></div></div>
   <p style="margin-top:16px">${f[3]}</p>
@@ -39,5 +39,4 @@ export function paneFig(): void {
       return `<button class="fcard${open ? '' : ' off'}" data-a="fig" data-id="${id}"${open ? '' : ' aria-label="Nhân vật chưa mở"'}>${av(id, 0, !open)}<div class="nm" style="font:700 16.5px/1.15 var(--disp)">${f[0]}</div><div class="mono muted" style="margin-top:3px">${open ? f[1] : 'Chưa mở'}</div><div class="muted nm" style="font-size:13.5px;margin-top:4px;line-height:1.2">${f[2]}</div></button>`;
     }).join('')}</div>`;
   }).join('')}</div>`;
-  loadFigImgs();
 }

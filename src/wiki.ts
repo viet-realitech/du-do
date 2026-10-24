@@ -1,17 +1,26 @@
-import { FIG, WIKI, type HistEvent } from './data';
+import { WIKI, type HistEvent } from './data';
+import { PORTRAIT } from './data/portraits';
 
-/* ---------- figure portraits: vi.wikipedia → en.wikipedia → Commons search ---------- */
-export const FIGIMG: Record<string, string> = {};
-let figImgP: Promise<void> | null = null;
+/* ---------- figure portraits: curated Commons files (src/data/portraits.ts) ---------- */
+const COMMONS = 'https://upload.wikimedia.org/wikipedia/commons/';
+const portraitUrl = (p: string) => (p[0] === 'T' ? 'https://thumb.wikimedia.org/wikipedia/commons/thumb/' : COMMONS) + p.slice(1);
+
+export const FIGIMG: Record<string, string> = Object.fromEntries(Object.entries(PORTRAIT).map(([id, [p]]) => [id, portraitUrl(p)]));
+
+/** Commons description page for a figure's portrait, for the credit link. */
+export function figImgPage(id: string): string {
+  const p = PORTRAIT[id][0].split('/');
+  return 'https://commons.wikimedia.org/wiki/File:' + p[p.length - 1].replace(/^330px-/, '');
+}
+
+/** Inline style that frames the face: "object-position + scale" about the same point. */
+export function figFocus(id: string): string {
+  const f = PORTRAIT[id];
+  return f ? `object-position:${f[1]}% ${f[2]}%;transform:scale(${f[3]});transform-origin:${f[1]}% ${f[2]}%` : '';
+}
 
 /** fetch with a timeout so a stalled network falls back to placeholders instead of spinning forever. */
 const fetchT = (u: string, ms = 10_000) => fetch(u, { signal: AbortSignal.timeout(ms) });
-
-async function getJSON<T = any>(u: string): Promise<T> {
-  const res = await fetchT(u);
-  if (!res.ok || !/json/.test(res.headers.get('content-type') || '')) throw new Error('rate');
-  return res.json();
-}
 
 /** Preload an image; resolves false when it fails or is a broken/tiny placeholder. */
 export function probe(url: string, minW = 40): Promise<boolean> {
@@ -21,71 +30,6 @@ export function probe(url: string, minW = 40): Promise<boolean> {
     im.onerror = () => res(false);
     im.src = url;
   });
-}
-
-async function setFigImg(id: string, url: string): Promise<boolean> {
-  if (!(await probe(url))) return false;
-  FIGIMG[id] = url;
-  document.querySelectorAll(`.av[data-fig="${id}"]`).forEach(e => (e.innerHTML = `<img src="${url}" alt="">`));
-  const sl = document.getElementById('fg-' + id);
-  if (sl && !sl.getAttribute('src')) {
-    sl.setAttribute('src', url);
-    sl.setAttribute('credit', 'Wikimedia Commons');
-  }
-  return true;
-}
-
-const FIGFB: Record<string, string> = {
-  nvl: 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent('Tám Lê Thanh và Nguyễn Văn Linh (cropped) (2).jpg') + '?width=320',
-};
-
-async function wpThumbs(host: string, ids: string[]): Promise<Record<string, string>> {
-  const r = await getJSON(`https://${host}/w/api.php?format=json&origin=*&action=query&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=320&pilimit=50&titles=` +
-    encodeURIComponent(ids.map(k => FIG[k][0]).join('|')));
-  const back: Record<string, string> = {};
-  (r.query.normalized || []).forEach((n: any) => (back[n.to] = n.from));
-  (r.query.redirects || []).forEach((n: any) => (back[n.to] = back[n.from] || n.from));
-  const out: Record<string, string> = {};
-  Object.values<any>(r.query.pages || {}).forEach(p => {
-    const name = back[p.title] || p.title;
-    const id = ids.find(k => FIG[k][0] === name);
-    if (id && p.thumbnail) out[id] = p.thumbnail.source;
-  });
-  return out;
-}
-
-async function commonsThumb(name: string): Promise<string | null> {
-  const r = await getJSON('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=6&gsrsearch=' +
-    encodeURIComponent(name + ' filetype:bitmap') + '&prop=imageinfo&iiprop=url|mime&iiurlwidth=320');
-  const ps = Object.values<any>((r.query && r.query.pages) || {}).sort((a, b) => a.index - b.index);
-  const p = ps.find(p => p.imageinfo && /jpeg|png/.test(p.imageinfo[0].mime) && !/map|bản đồ|flag|signature|chữ ký/i.test(p.title));
-  return p ? p.imageinfo[0].thumburl : null;
-}
-
-export function loadFigImgs(): Promise<void> {
-  if (figImgP) return figImgP;
-  figImgP = (async () => {
-    let miss = Object.keys(FIG);
-    for (const host of ['vi.wikipedia.org', 'en.wikipedia.org']) {
-      try {
-        const t = await wpThumbs(host, miss);
-        const ok = await Promise.all(miss.map(id => (t[id] ? setFigImg(id, t[id]) : false)));
-        miss = miss.filter((_, i) => !ok[i]);
-      } catch { /* offline or rate-limited: keep initials */ }
-      if (!miss.length) return;
-    }
-    for (const id of miss) {
-      let ok = false;
-      if (FIGFB[id]) ok = await setFigImg(id, FIGFB[id]);
-      if (!ok) {
-        try {
-          const u = await commonsThumb(FIG[id][0]);
-          if (u) await setFigImg(id, u);
-        } catch { /* ignore */ }
-      }
-    }
-  })();
-  return figImgP;
 }
 
 /* ---------- event articles & media ---------- */

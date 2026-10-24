@@ -23,7 +23,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; margin: 0; padding: 0 }
-html, body { height: 100% }
+/* fixed root: iOS Safari otherwise scrolls the whole document when a sheet takes focus or the keyboard closes */
+html, body { height: 100%; position: fixed; inset: 0; width: 100% }
 body { background: var(--paper); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: manipulation; overscroll-behavior: none }
 a { color: var(--red) }
 a:hover { color: var(--ink) }
@@ -219,7 +220,7 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .bdg.off { opacity: .38 }
 .bdg.off .bi { background: var(--paper3); color: var(--ink3) }
 .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
-.fcard { border: 1px solid var(--rule); border-radius: 14px; padding: 12px; text-align: left; background: var(--paper2) }
+.fcard { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; border: 1px solid var(--rule); border-radius: 14px; padding: 12px; text-align: left; background: var(--paper2) }
 .fcard .av { width: 64px; height: 64px; font-size: 20px; margin-bottom: 10px }
 .fcard.off { opacity: .55 }
 .fcard.off .nm { filter: blur(3px) }
@@ -313,7 +314,9 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .mstrip, .chips { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0 }
   .mstrip button { width: 150px; height: 112px }
   .mgrid { grid-template-columns: repeat(3, 1fr) }
-  .fgrid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) }
+  .fgrid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px }
+  .fcard { padding: 16px }
+  .fcard .av { width: 88px; height: 88px; font-size: 26px; margin-bottom: 14px }
   .bgrid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) }
   .lbstage { left: 60px; right: 60px }
   .lbcap { left: 50%; right: auto; width: min(640px, 100% - 40px); transform: translateX(-50%); text-align: center }

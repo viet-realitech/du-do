@@ -1,5 +1,5 @@
 import { FIG, VAL, type Faction, type Option } from '../data';
-import { FIGIMG } from '../wiki';
+import { FIGIMG, figFocus } from '../wiki';
 
 /* Faction colours, after the historical flags. */
 export const PAL = { dainam: '#d3a338', phap: '#3f5b8c', bh1: '#8496b6', bh2: '#3f5b8c', red: '#a8322b', yel: '#ddb03a', blue: '#2f5fa0', jp: '#b3322a' };
@@ -44,7 +44,13 @@ export function initials(n: string): string {
 /** Round portrait (initials until the Wikipedia image arrives). */
 export function av(id: string, sz = 0, lock = false): string {
   const style = sz ? ` style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz * 0.36)}px"` : '';
-  return `<span class="av${lock ? ' lock' : ''}" data-fig="${id}"${style}>${FIGIMG[id] ? `<img src="${FIGIMG[id]}" alt="">` : initials(FIG[id][0])}</span>`;
+  return `<span class="av${lock ? ' lock' : ''}" data-fig="${id}"${style}>${FIGIMG[id] ? `<img src="${FIGIMG[id]}" alt="" style="${figFocus(id)}">` : initials(FIG[id][0])}</span>`;
 }
+
+// A portrait that fails to load (offline, blocked) falls back to the figure's initials.
+document.addEventListener('error', e => {
+  const im = e.target, box = im instanceof HTMLImageElement ? im.parentElement : null;
+  if (box && box.classList.contains('av') && box.dataset.fig && FIG[box.dataset.fig]) box.textContent = initials(FIG[box.dataset.fig][0]);
+}, true);
 
 export const TAG_LABEL: Record<string, string> = { vutrang: 'Đấu tranh', caicach: 'Cải cách', thuongthuyet: 'Hoà hoãn' };

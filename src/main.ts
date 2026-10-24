@@ -32,7 +32,6 @@ import { initTabs } from './tabs';
 import { initHistory } from './ui/history';
 import { isTouring, startTour, stopTour } from './tour';
 import { ac } from './audio';
-import { loadFigImgs } from './wiki';
 import { splash, intro } from './screens/onboarding';
 import './screens/event';
 import './screens/profile';
@@ -45,7 +44,9 @@ document.getElementById('play')!.addEventListener('click', () => { ac(); if (isT
 setFocus();
 renderMain();
 initMap().then(renderMain);
-loadFigImgs();
+
+// iOS leaves the page scrolled after the keyboard closes; the app never scrolls as a document.
+addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) scrollTo(0, 0); }, 60));
 
 if (S.step === 'splash') splash();
 else if (S.step === 'intro') intro();

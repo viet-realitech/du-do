@@ -45,7 +45,8 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 | `src/view.ts` | Main screen: header, value bars, legend, event card, timeline, filter |
 | `src/tour.ts` | Chapter zoom tour with narration |
 | `src/screens/` | Onboarding, turning points + quiz, event detail, lightbox, figures, sources, profile, ending/share card |
-| `src/wiki.ts` | Wikipedia / Commons lookups (event media, figure portraits, video derivatives) |
+| `src/wiki.ts` | Wikipedia / Commons lookups (event media, video derivatives) and portrait URLs |
+| `src/data/portraits.ts` | Hand-picked Commons portrait per figure (real photo or painting, never statues) with a face focus point |
 | `src/ui/` | DOM helpers, delegated `data-a` actions, Back/Escape handling, `<image-slot>` element, flags/avatars |
 | `e2e/` | Playwright tests |
 | `scripts/` | Geodata trimming and icon / share-image generation |
