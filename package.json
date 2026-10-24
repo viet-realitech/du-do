@@ -1,0 +1,41 @@
+{
+  "name": "du-do",
+  "private": true,
+  "version": "2.0.0",
+  "description": "D\u01b0 \u0110\u1ed3 \u2014 b\u1ea3n \u0111\u1ed3 Vi\u1ec7t Nam 1858 \u2013 nay, tr\u00f2 ch\u01a1i l\u1ecbch s\u1eed",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "test:e2e": "playwright test",
+    "geo": "node scripts/build-geo.mjs",
+    "icons": "node scripts/build-icons.mjs"
+  },
+  "dependencies": {
+    "@fontsource/big-shoulders-display": "^5.3.0",
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "d3": "^7.9.0",
+    "topojson-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^22.20.5",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-server": "^3.0.4",
+    "@types/topojson-simplify": "^3.0.3",
+    "@types/topojson-specification": "^1.0.5",
+    "topojson-server": "^3.0.1",
+    "topojson-simplify": "^3.0.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "world-atlas": "^2.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,3 +1,57 @@
+# Dư Đồ — bản đồ Việt Nam 1858 – nay
+
+Mobile-first web app (PWA) built from the Claude Design handoff in `project/` (`Du Do v2.html`, "Chiến lược" night theme).
+
+```sh
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # typecheck + production build to dist/ (static, deploy anywhere)
+npm run preview    # serve dist/ on http://localhost:4173
+npm run test:e2e   # Playwright end-to-end tests against the build (Wikipedia blocked → offline paths)
+npm run geo        # regenerate src/data/region-50m.json from world-atlas
+npm run icons      # regenerate PNG icons + og.png in public/ (needs Playwright Chromium)
+```
+
+### Deploying
+
+`dist/` is a static site with relative paths, so it works at a domain root or a sub-path. Build with the public URL so
+canonical / Open Graph tags are absolute (Facebook, Zalo and X need that to show the share image):
+
+```sh
+SITE_URL=https://your-domain.example/ npm run build
+```
+
+- Headers: `public/_headers` (Netlify / Cloudflare Pages) sets security and caching headers; hashed `assets/*` are immutable,
+  `index.html` / `sw.js` / `manifest.webmanifest` must stay `no-cache` so updates reach installed apps.
+- A Content-Security-Policy `<meta>` is injected at build time (`vite.config.ts`): own code only, plus Wikipedia/Wikimedia.
+  If you add analytics or another API, extend `CSP` there.
+- CI (`.github/workflows/ci.yml`) runs typecheck, build and the e2e tests on every push / PR.
+
+Before launch, have a historian review the event texts, quotes and casualty / population figures in `src/data/`
+(the design notes flag these as unreviewed), and confirm the attribution text in `src/screens/about.ts`.
+
+**Stack:** Vite + TypeScript, d3 + topojson for the map, self-hosted fonts (Fontsource), `vite-plugin-pwa` for install/offline.
+Geodata ships with the app: provinces from `project/vn-provinces.json`, countries from Natural Earth via `world-atlas`, trimmed to the region by `npm run geo` (`src/data/region-50m.json`, lazy-loaded).
+Wikipedia/Commons images, portraits and video are fetched at runtime and cached by the service worker; everything degrades to placeholders offline.
+
+| Path | What |
+|---|---|
+| `src/data/` | Content tables ported verbatim from `project/data.js` + `data2.js` (ES modules), typed in `index.ts` |
+| `src/state.ts` | Persisted game state (`localStorage` key `dudo-v2`) and derived helpers |
+| `src/map.ts` | Map rendering, zoom/pan, region popover, tour spotlight |
+| `src/view.ts` | Main screen: header, value bars, legend, event card, timeline, filter |
+| `src/tour.ts` | Chapter zoom tour with narration |
+| `src/screens/` | Onboarding, turning points + quiz, event detail, lightbox, figures, sources, profile, ending/share card |
+| `src/wiki.ts` | Wikipedia / Commons lookups (event media, figure portraits, video derivatives) |
+| `src/ui/` | DOM helpers, delegated `data-a` actions, Back/Escape handling, `<image-slot>` element, flags/avatars |
+| `e2e/` | Playwright tests |
+| `scripts/` | Geodata trimming and icon / share-image generation |
+
+Not carried over from the prototype: the phone-frame mock, the Tweaks panel and the Lưu trữ / Áp phích themes.
+The designer's drag-and-drop image replacement only worked inside the design tool, so `<image-slot>` is display-only here.
+
+---
+
 # CODING AGENTS: READ THIS FIRST
 
 This is a **handoff bundle** from Claude Design (claude.ai/design).

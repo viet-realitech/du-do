@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#16130f">
+<!--seo-->
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Dư Đồ — Bản đồ Việt Nam 1858 – nay</title>
+</head>
+<body>
+<noscript><p style="padding:24px;color:#efe0bf;font:18px Georgia,serif">Dư Đồ cần JavaScript để chạy. Hãy bật JavaScript trong trình duyệt.</p></noscript>
+<div id="app" class="grain">
+  <div id="main">
+    <div class="hd">
+      <div><div class="mono muted" id="eraNo">Chương 1/6</div><div class="yr" id="yr">1858</div></div>
+      <div class="era"><b id="eraT">—</b><button class="eraR" id="eraR"></button></div>
+    </div>
+    <div class="lbl" id="lbl"></div>
+    <div class="vals" id="vals"></div>
+    <div class="mapwrap" id="mapwrap">
+      <svg id="map" viewBox="0 0 390 400" preserveAspectRatio="xMidYMid slice"></svg>
+      <div class="mtag" id="popl"></div>
+      <div class="zoomc">
+        <button id="zin" aria-label="Phóng to">+</button>
+        <button id="zout" aria-label="Thu nhỏ">−</button>
+        <button id="zrs" aria-label="Về toàn cảnh" style="font-size:14px">⟲</button>
+        <button id="fbtn" aria-label="Lọc sự kiện" style="font-size:15px">≡</button>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="card" id="card"></div>
+    <div class="scrub" id="scrub">
+      <button class="pbtn" id="play" aria-label="Chạy chương này">▶</button>
+      <div class="tl" id="tl"><div class="trk" id="trk"></div></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab on" data-t="map"><i><span class="ic1"></span></i>Bản đồ</button>
+      <button class="tab" data-t="fig"><i><span class="ic4"></span></i>Nhân vật</button>
+      <button class="tab" data-t="src"><i><span class="ic2"></span></i>Sử liệu</button>
+      <button class="tab" data-t="me"><i><span class="ic3"></span></i>Hồ sơ</button>
+    </nav>
+  </div>
+  <div id="layer"></div>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
