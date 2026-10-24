@@ -16,8 +16,9 @@ else console.log(`${human.length} recorded, ${files.length - human.length} synth
 const trim = 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.15';
 for (const { dir, f, key } of files) {
   // Trim the start, reverse to trim the end, then loudness-match; keep 0.15 s of air at both ends.
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', join(dir, f), '-vn',
-    '-af', `${trim},areverse,${trim},areverse,loudnorm=I=-16:TP=-1.5:LRA=7,highpass=f=70`,
-    '-ac', '1', '-ar', '44100', '-c:a', 'aac', '-b:a', '64k', '-movflags', '+faststart', join(OUT, key + '.m4a')]);
+  // Resample inside the chain: loudnorm emits 192 kHz and `-ar` after it makes ffmpeg hang with lossy encoders.
+  execFileSync('ffmpeg', ['-nostdin', '-v', 'error', '-y', '-i', join(dir, f), '-vn',
+    '-af', `${trim},areverse,${trim},areverse,loudnorm=I=-16:TP=-3:LRA=7,highpass=f=70,aresample=44100`,
+    '-ac', '1', '-c:a', 'aac', '-b:a', '64k', '-movflags', '+faststart', join(OUT, key + '.m4a')]);
   console.log(dir === 'recordings' ? '✓' : '·', key);
 }
