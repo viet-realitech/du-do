@@ -49,7 +49,18 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 | `src/data/portraits.ts` | Hand-picked Commons portrait per figure (real photo or painting, never statues) with a face focus point |
 | `src/ui/` | DOM helpers, delegated `data-a` actions, Back/Escape handling, `<image-slot>` element, flags/avatars |
 | `e2e/` | Playwright tests |
-| `scripts/` | Geodata trimming and icon / share-image generation |
+| `scripts/` | Geodata trimming, icon / share-image generation, music and voice-over builds |
+| `src/music.ts`, `src/audio.ts`, `src/narration.ts` | Soundtrack moods, synthesised effects, narration (recordings or system voice) |
+
+### Sound
+
+- **Music**: six tracks by Kevin MacLeod (incompetech.com, CC BY 4.0, credited in the About sheet), one per mood
+  (`src/music.ts`). `npm run music` downloads and re-encodes them into `public/music/` (needs ffmpeg).
+- **Voice-over**: a narrator's recordings replace the system voice clip by clip. `npm run voice:script` writes the
+  script to `docs/voice/kich-ban.md` / `.csv` (file name, context, exact text). Put recordings named after their key
+  (e.g. `recordings/dn58.wav`) in `recordings/` and run `npm run voice` (trim, loudness, AAC into `src/voice/`).
+  Lines without a recording fall back to the device's Vietnamese voice.
+- **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects.
 
 Not carried over from the prototype: the phone-frame mock, the Tweaks panel and the Lưu trữ / Áp phích themes.
 The designer's drag-and-drop image replacement only worked inside the design tool, so `<image-slot>` is display-only here.

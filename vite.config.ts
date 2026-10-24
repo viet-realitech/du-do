@@ -98,7 +98,7 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Wikipedia / Commons media: keep what was seen for offline replays.
-            urlPattern: /^https:\/\/upload\.wikimedia\.org\//,
+            urlPattern: /^https:\/\/(upload|thumb)\.wikimedia\.org\//,
             handler: 'CacheFirst',
             options: { cacheName: 'wm-media', expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 30 }, cacheableResponse: { statuses: [0, 200] } },
           },

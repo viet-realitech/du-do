@@ -1,3 +1,5 @@
+import { gateKey, gateSpeech } from '../speech';
+import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
@@ -52,9 +54,10 @@ export function openChoice(e: Era): void {
   stopTour();
   let selOpt: string | null = null;
   clearLayer();
+  mood('gate');
   SND.gong();
   buzz([30, 60, 30]);
-  setTimeout(() => speak(`Điểm rẽ thứ ${e.n}, năm ${e.cy}. ${e.title}. ${e.q}`), 1200);
+  setTimeout(() => speak(gateSpeech(e), undefined, false, gateKey(e)), 1200);
   const prevE = ERAS[ERAS.indexOf(e) - 1], pp = prevE && S.picks[prevE.id], ctx = e.ctx && pp ? e.ctx[pp] : null;
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
   <h2 style="margin:8px 0 8px">${e.title}</h2>
@@ -85,6 +88,7 @@ export function openChoice(e: Era): void {
 
 function outcome(e: Era, o: Option): void {
   clearLayer();
+  mood('calm');
   renderMain();
   const fs = Object.keys(FIG).filter(id => FIGERA[id] === e.id);
   sheet(`<span class="stamp">Thế hệ ${e.n} · ${o.label}</span>

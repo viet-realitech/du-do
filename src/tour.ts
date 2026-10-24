@@ -1,8 +1,10 @@
+import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
 import { $ } from './ui/dom';
 import { SND } from './audio';
-import { hasTTS, hasVoice, hush, speak, evSpeech } from './narration';
+import { canSpeak, hush, speak } from './narration';
+import { evKey, evSpeech } from './speech';
 import { hidePop, zoomTo, zoomK } from './map';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -39,6 +41,7 @@ export function startTour(eIn?: Era): void {
   if (S.year >= Y1) return;
   const { L, end } = tourList(e);
   tour = { e, L, i: 0, end, t: undefined };
+  mood(eraMood(e.id));
   tourBar();
   tourStep();
 }
@@ -60,7 +63,7 @@ function tourStep(): void {
       if (!tour || tour.cur !== v.id) return;
       tour.t = window.setTimeout(() => { if (!tour) return; tour.i++; tourStep(); }, d);
     };
-    if (S.narr && hasTTS && hasVoice()) setTimeout(() => { if (tour && tour.cur === v.id) speak(evSpeech(v), () => next(900)); }, 700);
+    if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (tour && tour.cur === v.id) speak(evSpeech(v), () => next(900), false, evKey(v)); }, 700);
     else next(2900);
   });
 }
@@ -94,6 +97,7 @@ export function stopTour(): void {
     tour = null;
     renderMain(); // clears the spotlight
     hush();
+    mood('calm');
   }
   $('#tourb')?.remove();
   const p = $('#play');

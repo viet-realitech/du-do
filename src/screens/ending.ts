@@ -1,3 +1,4 @@
+import { mood } from '../music';
 import { ERAS, VAL } from '../data';
 import { S, save, optOf, archetype, matchStats, values, resetState, familyName } from '../state';
 import { on } from '../ui/actions';
@@ -18,6 +19,7 @@ export function goEnd(): void {
 export function openEnd(): void {
   stopTour();
   if (!S.ended) { S.ended = true; save(); }
+  mood('finale');
   const a = archetype(), ms = matchStats();
   const rows = ERAS.map(e => {
     const o = optOf(e), pv = e.opts.find(x => x.id === e.prev);

@@ -17,6 +17,7 @@ export interface State {
   badges: string[];
   filt: string;
   sound: boolean;
+  music: boolean;
   haptic: boolean;
   narr: boolean;
   rate: number;
@@ -28,7 +29,7 @@ export interface State {
 
 const def: State = {
   step: 'splash', name: '', year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
+  filt: 'Tất cả', sound: true, music: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
 };
 
 function load(): State {
@@ -47,7 +48,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], sound: S.sound, haptic: S.haptic, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], sound: S.sound, music: S.music, haptic: S.haptic, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   save();

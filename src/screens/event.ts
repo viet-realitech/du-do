@@ -1,9 +1,12 @@
+import { mood } from '../music';
+import { isTouring } from '../tour';
 import { EV, P, SRC } from '../data';
 import { S, save, rt, allEv, eraOf, curPick } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer } from '../ui/dom';
 import { checkBadges } from '../badges';
-import { hush, speak, evSpeech } from '../narration';
+import { hush, speak } from '../narration';
+import { evKey, evSpeechFull } from '../speech';
 import { stopTour } from '../tour';
 import { hidePop } from '../map';
 import { renderMain } from '../view';
@@ -158,7 +161,7 @@ function listen(id: string, b: HTMLElement): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
   if (b.textContent!.startsWith('■')) { hush(); return; }
-  const ok = speak(evSpeech(v) + (v.x ? ' ' + v.x : ''), () => { b.textContent = '▶ Nghe'; }, true);
+  const ok = speak(evSpeechFull(v), () => { b.textContent = '▶ Nghe'; }, true, evKey(v));
   if (ok) b.textContent = '■ Dừng';
 }
 
@@ -176,4 +179,4 @@ on('goev', el => {
   openEvent(v.id);
 });
 // Closing an overlay returns to the refreshed map.
-on('close', () => { clearLayer(); renderMain(); checkBadges(); });
+on('close', () => { clearLayer(); renderMain(); checkBadges(); if (!isTouring()) mood('calm'); });

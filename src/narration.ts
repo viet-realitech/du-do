@@ -1,7 +1,7 @@
 import { S } from './state';
 import { duck } from './audio';
+import { recording } from './voice';
 import { toast } from './ui/dom';
-import type { HistEvent } from './data';
 
 /* Documentary-style narration with the device's Vietnamese system voice. */
 export const hasTTS = 'speechSynthesis' in window;
@@ -21,11 +21,16 @@ if (hasTTS) {
 }
 
 export const hasVoice = () => !!VOICE;
+/** Narration is possible for `key`: a recorded clip, or a Vietnamese system voice. */
+export const canSpeak = (key?: string) => !!recording(key) || (hasTTS && !!VOICE);
+
+let clip: HTMLAudioElement | null = null;
 
 let run = 0; // bumps on every new speech / hush so stale queues stop
 
 export function hush(): void {
   run++;
+  if (clip) { clip.pause(); clip = null; }
   if (hasTTS) speechSynthesis.cancel();
   duck(false);
   document.querySelectorAll<HTMLElement>('.nbtn').forEach(b => (b.textContent = '▶ Nghe'));
@@ -44,11 +49,24 @@ export function phrases(text: string): [string, number][] {
   return out;
 }
 
-/** Speak `text`; `onend` always fires (also when narration is off or unavailable). Returns whether speech started. */
-export function speak(text: string, onend?: () => void, force = false): boolean {
+/** Speak `text` (or play the recording for `key` when there is one); `onend` always fires (also when narration
+    is off or unavailable). Returns whether speech started. */
+export function speak(text: string, onend?: () => void, force = false, key?: string): boolean {
   let cb = onend;
   const done = () => { duck(false); cb?.(); cb = undefined; };
-  if ((!S.narr && !force) || !hasTTS) { done(); return false; }
+  if (!S.narr && !force) { done(); return false; }
+  const rec = recording(key);
+  if (rec) {
+    hush();
+    const me = run, a = new Audio(rec);
+    clip = a;
+    const end = () => { if (me === run) { clip = null; done(); } };
+    a.onended = a.onerror = end;
+    duck(true);
+    a.play().catch(end);
+    return true;
+  }
+  if (!hasTTS) { done(); return false; }
   hush();
   if (!VOICE) {
     pickVoice();
@@ -83,5 +101,3 @@ export function speak(text: string, onend?: () => void, force = false): boolean 
   say(0);
   return true;
 }
-
-export const evSpeech = (v: HistEvent) => (v.diary ? `Nhật ký dòng họ, năm ${v.y}. ` : `Năm ${v.y}. `) + v.t + '. ' + v.s;

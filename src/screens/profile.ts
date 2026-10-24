@@ -1,3 +1,4 @@
+import { refreshMusic } from '../music';
 import { BADGES, ERAS, FIG, VAL } from '../data';
 import { S, save, optOf, archetype, quizCorrect, values, pct, familyName } from '../state';
 import { on } from '../ui/actions';
@@ -39,6 +40,7 @@ export function paneMe(): void {
   }).join('')}
   <h3 style="margin:22px 0 6px">Cài đặt</h3>
   ${sw('sound', 'Âm thanh', S.sound)}
+  ${sw('music', 'Nhạc nền', S.music)}
   ${sw('narr', `Giọng đọc${hasTTS && !hasVoice() ? ' <span class="muted" style="font-size:13px">· chưa có giọng tiếng Việt</span>' : ''}`, S.narr)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
   ${sw('haptic', 'Rung', S.haptic)}
@@ -50,11 +52,12 @@ export function paneMe(): void {
 }
 
 on('set', el => {
-  const k = el.dataset.k as 'sound' | 'narr' | 'haptic';
+  const k = el.dataset.k as 'sound' | 'music' | 'narr' | 'haptic';
   S[k] = !S[k];
   save();
   paneMe();
   if (k === 'sound' && S.sound) SND.chime();
+  if (k === 'sound' || k === 'music') refreshMusic();
   if (k === 'narr' && S.narr) speak('Giọng đọc đã bật.');
   if (k === 'haptic') buzz(20);
 });
