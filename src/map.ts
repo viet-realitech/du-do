@@ -15,6 +15,10 @@ import { openEvent } from './screens/event';
    is fixed so markers, labels and zoom targets share one coordinate system. */
 export const W = 390;
 export const H = 400;
+/* The SVG viewBox always contains the W × H core and grows to the container's aspect ratio
+   (phone, iPad portrait, landscape panel), so the whole country stays in view. Geometry is
+   drawn well beyond the core so the extra margin is never empty. */
+const PAD = 1000;
 
 type Prov = Feature<MultiPolygon> & { n: string; g: Region };
 type Sel<T extends d3.BaseType = SVGPathElement, D = unknown> = d3.Selection<T, D, d3.BaseType, unknown>;
@@ -22,6 +26,8 @@ type Pt = { p: [number, number] };
 
 const G = {} as {
   k: number;
+  /** Extra scale for labels/markers so a big map frame doesn't blow them up ×2 (1 on phones). */
+  f: number;
   svg: Sel<SVGSVGElement>;
   Z: Sel<SVGGElement>;
   defs: Sel<SVGDefsElement>;
@@ -36,6 +42,7 @@ const G = {} as {
   zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 };
 G.k = 1;
+G.f = 1;
 let proj: d3.GeoProjection;
 let path: d3.GeoPath;
 let ready = false;
@@ -65,7 +72,7 @@ export async function initMap(): Promise<void> {
   G.provs = provs; G.laF = la; G.khF = kh;
 
   proj = d3.geoMercator().fitExtent([[6, 4], [384, H - 4]], { type: 'MultiPoint', coordinates: [[101.2, 8.2], [115.2, 23.6]] });
-  proj.clipExtent([[-30, -30], [420, H + 30]]);
+  proj.clipExtent([[-PAD, -PAD], [W + PAD, H + PAD]]);
   path = d3.geoPath(proj);
   const y17 = proj([105, 17])![1];
 
@@ -81,7 +88,7 @@ export async function initMap(): Promise<void> {
   gm.append('feMergeNode').attr('in', 'SourceGraphic');
   buildPatterns();
 
-  svg.append('rect').attr('x', -10).attr('y', -10).attr('width', W + 20).attr('height', H + 20).attr('fill', SEA).on('click', hidePop);
+  svg.append('rect').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('fill', SEA).on('click', hidePop);
   const Z = svg.append('g');
   G.Z = Z;
   Z.append('path').attr('d', path(d3.geoGraticule().step([2, 2])())).attr('fill', 'none').style('stroke', 'var(--ink2)')
@@ -109,10 +116,10 @@ export async function initMap(): Promise<void> {
     .style('transition', 'opacity .3s').on('click', (ev, d) => showPop(ev, d));
   const qt = provs.find(p => p.g === 'QT')!;
   G.qtn = R0.append('path').attr('d', path(qt)).attr('clip-path', 'url(#n17)').style('pointer-events', 'none');
-  G.jpr = R0.append('rect').attr('clip-path', 'url(#vnclip)').attr('width', W).attr('height', H).attr('fill', 'url(#p-jp)').attr('opacity', 0).style('pointer-events', 'none');
+  G.jpr = R0.append('rect').attr('clip-path', 'url(#vnclip)').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('fill', 'url(#p-jp)').attr('opacity', 0).style('pointer-events', 'none');
   G.edge = R0.append('path').attr('d', path(vn)).attr('clip-path', 'url(#vnclip)').attr('fill', 'none').style('stroke', 'var(--ink)')
     .attr('stroke-opacity', 0.3).attr('stroke-width', 8).style('pointer-events', 'none');
-  G.l17 = R0.append('line').attr('clip-path', 'url(#vnclip)').attr('x1', 0).attr('x2', W).attr('y1', y17).attr('y2', y17).style('stroke', 'var(--ink)')
+  G.l17 = R0.append('line').attr('clip-path', 'url(#vnclip)').attr('x1', -PAD).attr('x2', W + PAD).attr('y1', y17).attr('y2', y17).style('stroke', 'var(--ink)')
     .attr('stroke-width', 2.2).attr('stroke-dasharray', '5 3').attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
   G.sel = R0.append('path').attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 2).attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
   G.indo = R0.append('path').attr('d', path({ type: 'FeatureCollection', features: [vn, la, kh] })).attr('fill', 'none').attr('stroke', '#3f5b8c')
@@ -155,7 +162,7 @@ export async function initMap(): Promise<void> {
   G.mk = Z.append('g');
   G.call = Z.append('g').style('pointer-events', 'none');
 
-  G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([1, 8]).translateExtent([[0, 0], [W, H]]).on('zoom', ev => {
+  G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([1, 8]).on('zoom', ev => {
     if (ev.sourceEvent && isTouring()) stopTour();
     G.k = ev.transform.k;
     Z.attr('transform', ev.transform);
@@ -166,6 +173,8 @@ export async function initMap(): Promise<void> {
   document.getElementById('zin')!.onclick = () => svg.transition().duration(300).call(G.zoom.scaleBy, 1.6);
   document.getElementById('zout')!.onclick = () => svg.transition().duration(300).call(G.zoom.scaleBy, 1 / 1.6);
   document.getElementById('zrs')!.onclick = () => { svg.transition().duration(400).call(G.zoom.transform, d3.zoomIdentity); hidePop(); };
+  fitViewBox();
+  new ResizeObserver(fitViewBox).observe(svg.node()!);
   ready = true;
   rescale();
 }
@@ -185,10 +194,24 @@ function buildPatterns(): void {
   pat('p-jp', 14, 14, 0, p => { p.append('circle').attr('cx', 7).attr('cy', 7).attr('r', 2).attr('fill', c.jp).attr('opacity', 0.8); });
 }
 
+/** Grow the viewBox around the W × H core to match the map frame's aspect ratio. */
+function fitViewBox(): void {
+  const r = G.svg.node()!.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const a = r.width / r.height;
+  const vw = Math.max(W, H * a), vh = Math.max(H, W / a);
+  const box: [[number, number], [number, number]] = [[(W - vw) / 2, (H - vh) / 2], [(W + vw) / 2, (H + vh) / 2]];
+  G.svg.attr('viewBox', `${box[0][0]} ${box[0][1]} ${vw} ${vh}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  G.zoom.extent(box).translateExtent(box);
+  const px = r.width / vw; // screen px per SVG unit
+  G.f = Math.min(1, 1.3 / px);
+  rescale();
+}
+
 /** Keep markers, labels and callouts at constant screen size while zoomed. */
 function rescale(): void {
   if (!ready) return;
-  const k = G.k || 1;
+  const k = (G.k || 1) / G.f;
   const keep = (d: Pt) => `translate(${d.p}) scale(${1 / k})`;
   G.spotC.attr('r', 75 / k);
   G.call.selectAll<SVGGElement, Pt>('g.co').attr('transform', keep);

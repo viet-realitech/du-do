@@ -86,3 +86,25 @@ test('reaching the present opens the last quiz, then the ending', async ({ page 
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test.describe('iPad layouts', () => {
+  for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
+    test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      const errors = await boot(page, midGame);
+      await expect(page.locator('#map g.m').first()).toBeAttached();
+      const app = (await page.locator('#app').boundingBox())!;
+      expect(app.width).toBe(w); // no phone-sized column
+      const map = (await page.locator('#mapwrap').boundingBox())!, card = (await page.locator('#card').boundingBox())!;
+      if (twoCol) expect(card.x).toBeGreaterThan(map.x + map.width - 1);
+      else expect(card.y).toBeGreaterThan(map.y + map.height - 1);
+      // the whole of Vietnam stays in the frame: Hà Nội and Sài Gòn markers visible
+      for (const c of ['Hà Nội', 'Sài Gòn']) {
+        const b = (await page.locator(`#map text[data-city="${c}"]`).boundingBox())!;
+        expect(b.y).toBeGreaterThan(map.y);
+        expect(b.y + b.height).toBeLessThan(map.y + map.height);
+      }
+      expect(errors).toEqual([]);
+    });
+  }
+});
