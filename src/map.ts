@@ -260,11 +260,25 @@ function showPop(ev: MouseEvent, d: Prov | 'la' | 'kh'): void {
 /* ---------- per-year paint ---------- */
 const regOf = (g: Region) => (g === 'QT' ? 'T2' : g);
 
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+const cyOf = new WeakMap<Prov, number>();
+let lastShift = 0;
+
 export function paintMap(): void {
   if (!ready) return;
   const y = S.year, R = regime2(y), pk = curPick(y);
   const dim = !!(pk && pk.fac && R.legend.includes(pk.fac));
-  G.pv.attr('fill', d => fill(R.reg[regOf(d.g)])).attr('opacity', d => (dim && R.reg[regOf(d.g)] !== pk!.fac ? 0.5 : 1));
+  const op = (d: Prov) => (dim && R.reg[regOf(d.g)] !== pk!.fac ? 0.5 : 1);
+  const before = new Map<SVGPathElement, string | null>();
+  G.pv.each(function () { before.set(this, this.getAttribute('fill')); });
+  G.pv.interrupt().attr('fill', d => fill(R.reg[regOf(d.g)])).attr('opacity', op);
+  // Provinces that changed hands sweep in north → south, with a low drum.
+  const moved = G.pv.filter(function () { const b = before.get(this); return b != null && b !== this.getAttribute('fill'); });
+  if (!moved.empty() && !calm.matches) {
+    const cy = (d: Prov) => { if (!cyOf.has(d)) cyOf.set(d, path.centroid(d)[1]); return cyOf.get(d)!; };
+    moved.attr('opacity', 0.1).transition().delay(d => Math.max(0, cy(d) / H) * 520).duration(650).ease(d3.easeCubicOut).attr('opacity', op);
+    if (Date.now() - lastShift > 700) { SND.shift(); lastShift = Date.now(); }
+  }
   G.qtn.attr('fill', fill(R.reg.T1)).attr('opacity', R.l17 ? (dim && R.reg.T1 !== pk!.fac ? 0.5 : 1) : 0);
   G.jpr.attr('opacity', R.jp ? 1 : 0);
   G.la.attr('fill', fill(R.laos));

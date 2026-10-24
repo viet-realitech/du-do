@@ -39,7 +39,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   const vs = [...v.v].sort((a, b) => Number(b[0] === mine) - Number(a[0] === mine));
   layer.innerHTML = `<div class="ov">
   <div class="row sb">${closeBtn}<span class="mono muted" style="flex:1;text-align:center">Chương ${e.n}</span><button class="chip nbtn" data-a="listen" data-id="${v.id}">▶ Nghe</button></div>
-  <div class="hero"><image-slot id="ev-${v.id}" shape="rect" placeholder="Đang tìm ảnh tư liệu trên Wikipedia…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">⤢</button></div>
+  <div class="hero"><image-slot id="ev-${v.id}" shape="rect" busy placeholder="Đang tìm ảnh tư liệu…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">⤢</button></div>
   <div style="margin-top:14px" class="mono"><span style="color:var(--red)">${KIND_ICON[v.k] || '●'} ${v.k}</span> · ${v.d}</div>
   <h1 style="margin:8px 0 6px;font-size:30px">${esc(v.t)}</h1>
   <div class="muted" style="font-style:italic;font-size:16px">${esc(v.p)}</div>
@@ -60,7 +60,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
       return vs.map(([pp, tx]) => `<div class="pv${pp === mine ? ' mine' : ''}"><div class="row sb"><span class="mono muted">${P[pp]}</span>${pp === mine ? '<span class="mono" style="color:var(--acc)">Gần lựa chọn của bạn</span>' : ''}</div><q>${esc(tx)}</q></div>`).join('') +
         `<p class="muted" style="font-size:14px;margin-top:14px">Các góc nhìn được tóm lược từ sử liệu công khai, xếp ngang hàng nhau. Ứng dụng không đứng về phía nào.</p>`;
     }
-    if (k === 'm') return '<p class="muted">Đang tải từ Wikipedia và Wikimedia Commons…</p>';
+    if (k === 'm') return `<div class="skel" style="height:120px;border-radius:14px"></div><div class="mgrid" style="margin-top:18px">${'<div class="skel" style="aspect-ratio:4/3;border-radius:10px"></div>'.repeat(6)}</div>`;
     return v.src.map(sid => {
       const s = SRC.find(x => x.id === sid)!;
       return `<button class="src" data-a="src" data-id="${sid}"><div class="tt"><h3>${esc(s.t)}</h3><span class="mono muted">${s.k}</span></div><div class="muted" style="font-size:15px;margin-top:3px">${esc(s.at)}</div></button>`;
@@ -94,6 +94,7 @@ async function loadHero(v: HistEvent): Promise<void> {
     break;
   }
   const sl = document.getElementById('ev-' + v.id);
+  sl?.removeAttribute('busy');
   if (sl && !sl.getAttribute('src')) sl.setAttribute('placeholder', 'Ảnh tư liệu chưa có');
   if (w && w.media.length) fillStrip(v, w);
 }
@@ -101,6 +102,8 @@ async function loadHero(v: HistEvent): Promise<void> {
 /** A failed thumbnail becomes a hatched "ẢNH TƯ LIỆU" tile and is dropped from the viewer. */
 function wireTiles(root: HTMLElement, v: HistEvent, w: WikiInfo): void {
   root.querySelectorAll<HTMLImageElement>('img[data-i]').forEach(img => {
+    if (img.complete && img.naturalWidth) img.classList.add('in');
+    else img.addEventListener('load', () => img.classList.add('in'), { once: true });
     img.addEventListener('error', () => {
       const b = img.parentElement;
       img.remove();

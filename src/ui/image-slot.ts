@@ -1,13 +1,19 @@
 /* <image-slot> — framed image with a placeholder state and an attribution chip.
    Production counterpart of the design tool's image-slot starter (which was read-only
    outside the design runtime). Attributes: src, placeholder, shape (rect|circle),
-   credit, credit-href, initials (shown in the empty state instead of the icon), focus (inline style framing the image). */
+   credit, credit-href, initials (shown in the empty state instead of the icon), focus (inline style framing the image),
+   busy (shimmer while the caller is still looking for an image). */
 const css = `
 :host{display:block;position:relative;width:100%;height:100%;color:inherit;font:13px/1.3 var(--mono,ui-monospace),monospace}
 .frame{position:absolute;inset:0;overflow:hidden;background:var(--paper2,#221d17)}
 :host([shape=circle]) .frame{border-radius:50%}
-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block;opacity:0;transition:opacity .35s}
-:host([data-filled]) img{opacity:1}
+img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block;opacity:0;filter:blur(14px) saturate(.6);scale:1.06;
+  transition:opacity .45s ease-out,filter .8s cubic-bezier(.2,.8,.2,1),scale 1.2s cubic-bezier(.2,.8,.2,1)}
+:host([data-filled]) img{opacity:1;filter:none;scale:1}
+.empty::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;background:linear-gradient(100deg,transparent 30%,rgba(239,224,191,.13) 50%,transparent 70%) 0 0/250% 100%;animation:sh 1.3s linear infinite}
+:host([busy]) .empty::after,:host([src]:not([src=""]):not([data-filled])) .empty::after{opacity:1}
+@keyframes sh{from{background-position:130% 0}to{background-position:-30% 0}}
+@media (prefers-reduced-motion:reduce){img{transition:opacity .2s;filter:none;scale:1}.empty::after{animation:none}}
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:12px;
   background:repeating-linear-gradient(45deg,var(--paper3,#3a3127) 0 6px,var(--paper2,#221d17) 6px 12px);color:var(--ink3,#8d7c5e);
   font-size:10px;letter-spacing:.08em;text-transform:uppercase}

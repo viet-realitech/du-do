@@ -12,9 +12,28 @@ import { openFig } from './screens/figures';
 import { goEnd } from './screens/ending';
 
 /* Main map screen: header, value bars, map, legend, event card, timeline. */
+/* The big year counter glides to its target instead of jumping (also while scrubbing). */
+let shownY = 0, goalY = 0, raf = 0;
+function showYear(y: number): void {
+  const el = $('#yr')!;
+  goalY = y;
+  if (!shownY || Math.abs(y - shownY) > 60 || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    shownY = y;
+    el.textContent = String(y);
+    return;
+  }
+  const step = () => {
+    shownY += (goalY - shownY) * 0.2;
+    if (Math.abs(goalY - shownY) < 0.5) shownY = goalY;
+    el.textContent = String(Math.round(shownY));
+    raf = shownY === goalY ? 0 : requestAnimationFrame(step);
+  };
+  if (!raf) raf = requestAnimationFrame(step);
+}
+
 export function renderMain(): void {
   const y = S.year, R = regime2(y), e = eraOf(y), pk = curPick(y);
-  $('#yr')!.textContent = String(y);
+  showYear(y);
   $('#eraNo')!.textContent = `Chương ${e.n}/6 · Thế hệ ${e.n}`;
   $('#eraT')!.textContent = e.title;
   const er = $('#eraR')!;

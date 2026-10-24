@@ -77,8 +77,8 @@ export function openChoice(e: Era): void {
     rt.gate = null;
     save();
     invalidateTrack();
-    SND.chime();
-    buzz(25);
+    SND.stamp();
+    buzz([10, 30, 40]);
     outcome(e, e.opts.find(o => o.id === selOpt)!);
   };
 }

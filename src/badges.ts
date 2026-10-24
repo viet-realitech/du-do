@@ -24,7 +24,7 @@ export function checkBadges(): void {
     save();
     setTimeout(() => {
       toast(`<span class="bi">${ic}</span><span><span class="mono" style="opacity:.7">Huy hiệu mới</span><br><b>${name}</b> · ${d}</span>`);
-      SND.chime();
+      SND.fanfare();
       buzz(20);
     }, 400 + n++ * 1400);
   });

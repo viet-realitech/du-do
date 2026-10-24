@@ -36,7 +36,7 @@ export function probe(url: string, minW = 40): Promise<boolean> {
 export interface Media { type: 'image' | 'video'; thumb: string; src: string; file: string; cap: string | null; bad?: boolean }
 export interface WikiInfo { title: string; url: string; ext: string | null; media: Media[]; en: string | null }
 
-const WAPI = 'https://vi.wikipedia.org/w/api.php?format=json&origin=*&action=query&redirects=1&prop=pageimages|extracts|langlinks|info&inprop=url&piprop=original|thumbnail|name&pithumbsize=900&exintro=1&explaintext=1&exsentences=3&lllang=en';
+const WAPI = 'https://vi.wikipedia.org/w/api.php?format=json&origin=*&action=query&redirects=1&prop=pageimages|extracts|langlinks|info&inprop=url&piprop=original|thumbnail|name&pithumbsize=960&exintro=1&explaintext=1&exsentences=3&lllang=en';
 const wcache: Partial<Record<string, Promise<WikiInfo | null>>> = {};
 
 async function wikiQuery(q: string): Promise<any> {
@@ -67,8 +67,9 @@ export function wikiFor(v: HistEvent): Promise<WikiInfo | null> {
           .slice(0, 10)
           .map((i: any) => ({ type: i.type, thumb: 'https:' + i.srcset[0].src, src: 'https:' + i.srcset[i.srcset.length - 1].src, file: i.title, cap: i.caption && i.caption.text }));
       } catch { /* article text without media is still useful */ }
+      // Lead image at the 960px standard thumbnail; originals can be many MB.
       if (pg.pageimage && pg.thumbnail && !media.some(m => fileKey(m.file) === fileKey(pg.pageimage)))
-        media.unshift({ type: 'image', thumb: pg.thumbnail.source, src: (pg.original && pg.original.source) || pg.thumbnail.source, file: 'File:' + pg.pageimage, cap: null });
+        media.unshift({ type: 'image', thumb: pg.thumbnail.source, src: pg.thumbnail.source, file: 'File:' + pg.pageimage, cap: null });
       const en = (pg.langlinks && pg.langlinks[0] && pg.langlinks[0]['*']) || null;
       return { title: pg.title, url: pg.fullurl, ext: pg.extract || null, media, en };
     } catch {

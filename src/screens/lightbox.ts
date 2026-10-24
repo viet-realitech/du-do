@@ -51,9 +51,20 @@ export async function openMedia(id: string, start: number): Promise<void> {
       T.querySelector('img')!.onerror = () => fail(m);
       q('.lbbig').onclick = e => { e.stopPropagation(); playVid(m); };
     } else {
-      T.innerHTML = `<img src="${esc(m.src)}" alt="${esc(mediaCaption(m))}" draggable="false">`;
-      img = T.querySelector('img');
-      img!.onerror = () => fail(m);
+      // Show the cached thumbnail at once (soft), swap in the full image when it arrives.
+      const lo = m.thumb && m.thumb !== m.src;
+      T.innerHTML = `<img src="${esc(lo ? m.thumb : m.src)}" alt="${esc(mediaCaption(m))}" draggable="false"${lo ? ' class="lo"' : ''}><span class="spin" aria-hidden="true"></span>`;
+      const el = img = T.querySelector('img')!;
+      const done = () => T.querySelector('.spin')?.remove();
+      if (lo) {
+        const hi = new Image();
+        hi.onload = () => { if (img === el) { el.src = m.src; el.classList.remove('lo'); } done(); };
+        hi.onerror = done;
+        hi.src = m.src;
+      } else {
+        el.onload = done;
+      }
+      el.onerror = () => fail(m);
     }
   }
 

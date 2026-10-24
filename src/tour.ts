@@ -54,7 +54,7 @@ function tourStep(): void {
     tour.cur = v.id;
     renderMain();
     zoomTo(v.l, zoomK(v));
-    SND.tick();
+    SND.fly();
     tourBar();
     const next = (d: number) => {
       if (!tour || tour.cur !== v.id) return;
