@@ -78,6 +78,28 @@ test('figures lock until their turning point; profile, about and share card', as
   expect(errors).toEqual([]);
 });
 
+test('appearance: theme picked at onboarding, changed in settings, kept after reload', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: 'Mở hồ sơ' }).click();
+  await page.getByRole('radio', { name: /Lưu trữ/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'archive');
+  await page.locator('#nm').fill('Họ Phan');
+  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
+  await page.locator('.opt').first().click();
+  await page.locator('#go').click();
+  await page.locator('[data-a=close]').first().click();
+  await page.locator('.tab[data-t=me]').click();
+  await page.getByRole('radio', { name: /Áp phích/ }).click();
+  await page.getByRole('button', { name: 'Mực nâu' }).click();
+  await page.getByRole('switch', { name: 'Đường biên hiện nay' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'poster');
+  await expect(page.getByRole('switch', { name: 'Đường biên hiện nay' })).toHaveAttribute('aria-checked', 'true');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'poster');
+  await expect(page.locator('#map rect[fill="url(#p-sea)"]')).toHaveCount(1); // poster's half-tone sea
+  expect(errors).toEqual([]);
+});
+
 test('reaching the present opens the last quiz, then the ending', async ({ page }) => {
   const done = { ...midGame, year: 2026, picks: { ...midGame.picks, e6: 'doimoi' }, quiz: { ...midGame.quiz, e5: [true, true] } };
   const errors = await boot(page, done);

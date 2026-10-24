@@ -1,7 +1,7 @@
-/* Dư Đồ — "Chiến lược" (night) theme, ported from project/Du Do v2.html.
-   Design tokens are the night values; the phone-frame mock, Tweaks panel and
-   the Lưu trữ / Áp phích themes are intentionally not carried over. */
-:root {
+/* Dư Đồ, ported from project/Du Do v2.html with its three looks, chosen by the player:
+   Chiến lược (night, default), Lưu trữ (archive paper) and Áp phích (poster). Tokens live on
+   [data-theme] so a preview card can show another theme inside the current one. */
+:root, [data-theme=night] {
   --paper: #16130f;
   --paper2: #221d17;
   --paper3: #3a3127;
@@ -14,13 +14,33 @@
   --rip: #d9a441;
   --ok: #8fbf74;
   --gold: #c99a2e;
+  --shine: rgba(239, 224, 191, .1);
+  --cardline: rgba(230, 167, 60, .3);
   --serif: 'EB Garamond', Georgia, serif;
   --disp: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+[data-theme=archive] {
+  --paper: #efe5cf; --paper2: #e5d6b6; --paper3: #d9c7a1;
+  --ink: #2e2216; --ink2: #5f4c36; --ink3: #8a7558; --rule: rgba(46, 34, 22, .16);
+  --red: #a8322b; --acc: #2e2216; --rip: #4e5f5a; --ok: #4f7a46; --gold: #c99a2e;
+  --shine: rgba(255, 255, 255, .45); --cardline: rgba(46, 34, 22, .16);
+  --serif: 'EB Garamond', Georgia, serif; --disp: 'Playfair Display', Georgia, serif;
+  color-scheme: light;
+}
+[data-theme=poster] {
+  --paper: #f2e7cd; --paper2: #e8d8b0; --paper3: #d6c08c;
+  --ink: #16130f; --ink2: #3e362b; --ink3: #6e6250; --rule: rgba(22, 19, 15, .28);
+  --red: #c81f2a; --acc: #c81f2a; --rip: #4e5f5a; --ok: #4f7a46; --gold: #c99a2e;
+  --shine: rgba(255, 255, 255, .45); --cardline: var(--ink);
+  --serif: 'Be Vietnam Pro', system-ui, sans-serif; --disp: 'Be Vietnam Pro', system-ui, sans-serif;
+  color-scheme: light;
+}
+:root {
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --tabh: calc(64px + var(--sab));
-  color-scheme: dark;
 }
 * { box-sizing: border-box; margin: 0; padding: 0 }
 /* fixed root: iOS Safari otherwise scrolls the whole document when a sheet takes focus or the keyboard closes */
@@ -87,7 +107,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .flag { display: inline-block; width: 20px; height: 13px; border: 1px solid rgba(46, 34, 22, .5); position: relative; flex: none; overflow: hidden }
 .flag b { position: absolute; inset: 0; display: grid; place-items: center; color: #f2c933; font-size: 9px; line-height: 1 }
 
-.card { margin: 10px 14px 0; background: var(--paper2); border: 1px solid rgba(230, 167, 60, .3); border-radius: 14px; padding: 0 12px 0 16px; display: flex; gap: 12px; align-items: center; height: 88px; flex: none }
+.card { margin: 10px 14px 0; background: var(--paper2); border: 1px solid var(--cardline); border-radius: 14px; padding: 0 12px 0 16px; display: flex; gap: 12px; align-items: center; height: 88px; flex: none }
 .card .c { flex: 1; min-width: 0; cursor: pointer; text-align: left }
 .card .c .t { font: 700 17px/1.2 var(--disp); margin: 4px 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .card .c .s { font-size: 13.5px; line-height: 1.3; color: var(--ink2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
@@ -278,9 +298,9 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .lbtrack img { transition: filter .4s }
 .spin { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2.5px solid rgba(230, 167, 60, .2); border-top-color: #e6a73c; animation: spin .8s linear infinite; pointer-events: none }
 @keyframes spin { to { transform: rotate(360deg) } }
-.skel { background: var(--paper3) linear-gradient(100deg, transparent 30%, rgba(239, 224, 191, .1) 50%, transparent 70%) 0 0/250% 100%; animation: sh 1.3s linear infinite }
+.skel { background: var(--paper3) linear-gradient(100deg, transparent 30%, var(--shine) 50%, transparent 70%) 0 0/250% 100%; animation: sh 1.3s linear infinite }
 @keyframes sh { from { background-position: 130% 0 } to { background-position: -30% 0 } }
-.mstrip button, .mgrid button { background: var(--paper3) linear-gradient(100deg, transparent 30%, rgba(239, 224, 191, .1) 50%, transparent 70%) 0 0/250% 100%; animation: sh 1.3s linear infinite }
+.mstrip button, .mgrid button { background: var(--paper3) linear-gradient(100deg, transparent 30%, var(--shine) 50%, transparent 70%) 0 0/250% 100%; animation: sh 1.3s linear infinite }
 .mstrip img, .mgrid img { opacity: 0; transform: scale(1.06); transition: opacity .45s ease-out, transform .8s cubic-bezier(.2, .8, .2, 1) }
 .mstrip img.in, .mgrid img.in { opacity: 1; transform: none }
 .lbvid { position: relative; max-width: 100%; max-height: 100% }
@@ -298,11 +318,50 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .lbdots i.on { background: #e6a73c; width: 14px; border-radius: 3px }
 .lbhint { position: absolute; left: 0; right: 0; bottom: calc(var(--sab) + 16px); text-align: center; font: 500 9px var(--mono); letter-spacing: .1em; color: #776a55; text-transform: uppercase }
 
+/* ---------- Lưu trữ & Áp phích (light themes) ---------- */
+[data-theme=archive] #app.grain::before, [data-theme=poster] #app.grain::before { opacity: .55; mix-blend-mode: multiply }
+[data-theme=archive] .yr { font: 800 66px/.86 var(--disp); letter-spacing: -.02em }
+[data-theme=archive] .thumb::after, [data-theme=poster] .thumb::after { box-shadow: 0 0 0 4px rgba(168, 50, 43, .18) }
+[data-theme=archive] .card.cta { background: var(--ink) }
+[data-theme=poster] .yr { font: 900 72px/.86 var(--disp); letter-spacing: -.04em }
+[data-theme=poster] h1, [data-theme=poster] h2 { font-weight: 900; letter-spacing: -.025em; text-transform: uppercase }
+[data-theme=poster] .hd .era b { font-style: normal; font-weight: 800; text-transform: uppercase; font-size: 16px }
+[data-theme=poster] p { font-size: 15.5px }
+[data-theme=poster] .mt { font-size: 10.5px; letter-spacing: -.01em }
+[data-theme=poster] .mt > span { gap: 4px }
+[data-theme=poster] .card, [data-theme=poster] .opt, [data-theme=poster] .pv, [data-theme=poster] .fcard, [data-theme=poster] .sheet { border: 2px solid var(--ink); border-radius: 4px; box-shadow: 4px 4px 0 var(--ink) }
+[data-theme=poster] .sheet { border-bottom: 0; box-shadow: 0 -4px 0 var(--ink) }
+[data-theme=poster] .btn, [data-theme=poster] .rb, [data-theme=poster] .back, [data-theme=poster] .chip, [data-theme=poster] .seg, [data-theme=poster] .seg button, [data-theme=poster] .pbtn, [data-theme=poster] .mapwrap { border-radius: 4px }
+[data-theme=poster] .card.cta { background: var(--red); color: #fff; border-color: var(--ink) }
+[data-theme=poster] .card.cta .s { color: rgba(255, 255, 255, .85) }
+[data-theme=poster] .tabs { border-top: 2px solid var(--ink) }
+[data-theme=poster] .stamp { border-width: 3px }
+
+/* theme previews (onboarding, settings) */
+.ov.intro > * { flex-shrink: 0 }
+.thg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
+.thc { display: flex; flex-direction: column; text-align: left; border: 1.5px solid var(--rule); border-radius: 14px; padding: 6px; background: none; color: var(--ink) }
+.thc.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) }
+.thc .pvw { display: block; position: relative; height: 92px; border-radius: 9px; overflow: hidden; background: var(--paper); color: var(--ink); padding: 8px 9px; border: 1px solid var(--rule) }
+.thc .pvw b { display: block; font: 800 30px/.9 var(--disp); color: var(--acc); letter-spacing: -.01em }
+[data-theme=night] .thc .pvw b, .thc .pvw[data-theme=night] b { font-weight: 900 }
+.thc .pvw i { position: absolute; right: 8px; bottom: 8px; width: 34px; height: 46px; border-radius: 40% 55% 45% 50%; background: var(--gold); opacity: .8 }
+.thc .pvw[data-theme=poster] { box-shadow: inset 0 0 0 2px var(--ink) }
+.thc .pvw[data-theme=poster] i { background: var(--red); border-radius: 2px }
+.thc .pvw u { position: absolute; left: 9px; bottom: 9px; width: 44%; height: 6px; border-radius: 3px; background: var(--ink); opacity: .7; text-decoration: none }
+.thc .nm { display: block; font: 700 15px/1.1 var(--disp); margin: 8px 3px 2px }
+.thc .ds { display: block; font-size: 12.5px; line-height: 1.2; color: var(--ink2); margin: 0 3px 3px }
+.swl { display: flex; gap: 3px; margin-left: 8px }
+.swl .flag { width: 14px; height: 10px }
+
 /* ---------- tablet (iPad portrait, small laptops) ---------- */
 @media (min-width: 700px) {
   :root { --gut: 32px; --read: 720px }
   .hd { padding: calc(var(--sat) + 26px) var(--gut) 0 }
   .yr { font-size: 112px }
+  [data-theme=archive] .yr { font-size: 88px }
+  [data-theme=poster] .yr { font-size: 96px }
+  [data-theme=poster] .mt { font-size: 12px }
   .hd .era { max-width: 320px; gap: 10px }
   .hd .era b { font-size: 26px }
   .eraR { font-size: 12px }
@@ -359,6 +418,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   }
   .hd { grid-area: hd; padding: calc(var(--sat) + 26px) var(--gut) 0 8px }
   .yr { font-size: 92px }
+  [data-theme=archive] .yr { font-size: 74px }
+  [data-theme=poster] .yr { font-size: 80px }
   .eraR { white-space: nowrap }
   .lbl { grid-area: lbl; padding: 12px var(--gut) 0 8px; white-space: normal; height: auto; min-height: 28px }
   .vals { grid-area: vals; padding: 20px var(--gut) 0 8px; gap: 20px }

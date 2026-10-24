@@ -17,6 +17,27 @@ import '@fontsource/big-shoulders-display/latin-800';
 import '@fontsource/big-shoulders-display/vietnamese-800';
 import '@fontsource/big-shoulders-display/latin-900';
 import '@fontsource/big-shoulders-display/vietnamese-900';
+// Lưu trữ / Áp phích theme faces: only downloaded when that theme is in use.
+import '@fontsource/playfair-display/latin-500';
+import '@fontsource/playfair-display/vietnamese-500';
+import '@fontsource/playfair-display/latin-700';
+import '@fontsource/playfair-display/vietnamese-700';
+import '@fontsource/playfair-display/latin-800';
+import '@fontsource/playfair-display/vietnamese-800';
+import '@fontsource/playfair-display/latin-500-italic';
+import '@fontsource/playfair-display/vietnamese-500-italic';
+import '@fontsource/be-vietnam-pro/latin-400';
+import '@fontsource/be-vietnam-pro/vietnamese-400';
+import '@fontsource/be-vietnam-pro/latin-500';
+import '@fontsource/be-vietnam-pro/vietnamese-500';
+import '@fontsource/be-vietnam-pro/latin-600';
+import '@fontsource/be-vietnam-pro/vietnamese-600';
+import '@fontsource/be-vietnam-pro/latin-700';
+import '@fontsource/be-vietnam-pro/vietnamese-700';
+import '@fontsource/be-vietnam-pro/latin-800';
+import '@fontsource/be-vietnam-pro/vietnamese-800';
+import '@fontsource/be-vietnam-pro/latin-900';
+import '@fontsource/be-vietnam-pro/vietnamese-900';
 import '@fontsource/ibm-plex-mono/latin-400';
 import '@fontsource/ibm-plex-mono/vietnamese-400';
 import '@fontsource/ibm-plex-mono/latin-500';
@@ -32,6 +53,7 @@ import { initTabs } from './tabs';
 import { initHistory } from './ui/history';
 import { isTouring, startTour, stopTour } from './tour';
 import { ac } from './audio';
+import { applyTheme } from './theme';
 import { initMusic, mood } from './music';
 import { splash, intro } from './screens/onboarding';
 import './screens/event';
@@ -45,7 +67,7 @@ initMusic();
 mood('calm');
 document.getElementById('play')!.addEventListener('click', () => { ac(); if (isTouring()) stopTour(); else startTour(); });
 setFocus();
-renderMain();
+applyTheme(); // also renders the main screen
 initMap().then(renderMain);
 
 // iOS leaves the page scrolled after the keyboard closes; the app never scrolls as a document.

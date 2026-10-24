@@ -92,10 +92,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['og.png'],
+        // Faces of the optional Lưu trữ / Áp phích themes are cached on first use instead.
+        globIgnores: ['og.png', '**/playfair-display-*', '**/be-vietnam-pro-*'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(playfair-display|be-vietnam-pro)-[^/]+\.woff2?$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'theme-fonts', expiration: { maxEntries: 40 } },
+          },
           {
             // Wikipedia / Commons media: keep what was seen for offline replays.
             urlPattern: /^https:\/\/(upload|thumb)\.wikimedia\.org\//,

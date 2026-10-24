@@ -17,9 +17,11 @@
     "voice:script": "tsx scripts/voice-script.ts"
   },
   "dependencies": {
+    "@fontsource/be-vietnam-pro": "^5.3.0",
     "@fontsource/big-shoulders-display": "^5.3.0",
     "@fontsource/eb-garamond": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/playfair-display": "^5.3.0",
     "d3": "^7.9.0",
     "topojson-client": "^3.1.0"
   },

@@ -5,7 +5,7 @@ import type { Feature, MultiPolygon, Geometry } from 'geojson';
 import { F, PROVINCES, provGroup, provName, regionName, regime2, type HistEvent, type Region } from './data';
 import { S, save, rt, curPick, visEv } from './state';
 import { esc } from './ui/dom';
-import { fill, flag, PAL, LAND, SEA } from './ui/bits';
+import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
 import { isTouring, stopTour } from './tour';
@@ -38,6 +38,8 @@ const G = {} as {
   la: Sel; kh: Sel; qtn: Sel; edge: Sel; sel: Sel; hl: Sel; indo: Sel;
   jpr: Sel<SVGRectElement>; spot: Sel<SVGRectElement>; spotC: Sel<SVGCircleElement>;
   l17: Sel<SVGLineElement>;
+  sea: Sel<SVGRectElement>; vig: Sel<SVGRectElement>; grat: Sel; rip: Sel<SVGGElement>; r0: Sel<SVGGElement>; modern: Sel;
+  others: d3.Selection<SVGPathElement | d3.BaseType, Feature<Geometry>, SVGGElement, unknown>;
   labels: Sel<SVGGElement>; cities: Sel<SVGGElement>; mk: Sel<SVGGElement>; call: Sel<SVGGElement>;
   zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 };
@@ -86,24 +88,31 @@ export async function initMap(): Promise<void> {
   const gm = gl.append('feMerge');
   gm.append('feMergeNode').attr('in', 'b');
   gm.append('feMergeNode').attr('in', 'SourceGraphic');
-  buildPatterns();
+  // Lưu trữ: paper vignette and a hand-engraved wobble on the land.
+  const vg = defs.append('radialGradient').attr('id', 'vig');
+  vg.append('stop').attr('offset', '55%').attr('stop-color', '#5f4c36').attr('stop-opacity', 0);
+  vg.append('stop').attr('offset', '100%').attr('stop-color', '#5f4c36').attr('stop-opacity', 0.28);
+  const rf = defs.append('filter').attr('id', 'rough').attr('x', '-5%').attr('y', '-5%').attr('width', '110%').attr('height', '110%');
+  rf.append('feTurbulence').attr('type', 'fractalNoise').attr('baseFrequency', 0.045).attr('numOctaves', 2).attr('seed', 7).attr('result', 't');
+  rf.append('feDisplacementMap').attr('in', 'SourceGraphic').attr('in2', 't').attr('scale', 3.5).attr('xChannelSelector', 'R').attr('yChannelSelector', 'G');
 
-  svg.append('rect').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('fill', SEA).on('click', hidePop);
+  G.sea = svg.append('rect').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).on('click', hidePop);
   const Z = svg.append('g');
   G.Z = Z;
-  Z.append('path').attr('d', path(d3.geoGraticule().step([2, 2])())).attr('fill', 'none').style('stroke', 'var(--ink2)')
+  G.vig = svg.append('rect').attr('fill', 'url(#vig)').style('pointer-events', 'none');
+  G.grat = Z.append('path').attr('d', path(d3.geoGraticule().step([2, 2])())).attr('fill', 'none').style('stroke', 'var(--ink2)')
     .attr('stroke-opacity', 0.35).attr('stroke-width', 0.6).attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
 
   // Radar-like ripples around the coastline.
   const land = topojson.merge(topo, topo.objects.countries.geometries.filter(g => g.type) as any);
-  const rip = Z.append('g').attr('fill', 'none').style('pointer-events', 'none');
+  const rip = G.rip = Z.append('g').attr('fill', 'none').style('pointer-events', 'none');
   [26, 20, 15, 10.5, 7, 4].forEach((w, i) => {
     rip.append('path').attr('d', path(land)).style('stroke', 'var(--rip)').attr('stroke-opacity', 0.14 + i * 0.06).attr('stroke-width', w);
-    rip.append('path').attr('d', path(land)).attr('stroke', SEA).attr('stroke-width', w - 1.3);
+    rip.append('path').attr('class', 'seaS').attr('d', path(land)).attr('stroke-width', w - 1.3);
   });
 
-  const R0 = Z.append('g');
-  R0.append('g').selectAll('path').data(others).join('path').attr('d', path).attr('fill', LAND).style('stroke', 'var(--ink3)')
+  const R0 = G.r0 = Z.append('g');
+  G.others = R0.append('g').selectAll('path').data(others).join('path').attr('d', path).style('stroke', 'var(--ink3)')
     .attr('stroke-width', 0.6).attr('vector-effect', 'non-scaling-stroke').on('click', hidePop);
   G.la = R0.append('path').attr('d', path(la)).style('stroke', 'var(--ink2)').attr('stroke-width', 0.7).attr('vector-effect', 'non-scaling-stroke')
     .style('cursor', 'pointer').on('click', ev => showPop(ev, 'la'));
@@ -122,6 +131,8 @@ export async function initMap(): Promise<void> {
   G.l17 = R0.append('line').attr('clip-path', 'url(#vnclip)').attr('x1', -PAD).attr('x2', W + PAD).attr('y1', y17).attr('y2', y17).style('stroke', 'var(--ink)')
     .attr('stroke-width', 2.2).attr('stroke-dasharray', '5 3').attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
   G.sel = R0.append('path').attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 2).attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
+  G.modern = R0.append('path').attr('d', path(vn)).attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 1.2).attr('stroke-dasharray', '2 2.5')
+    .attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none').attr('opacity', 0);
   G.indo = R0.append('path').attr('d', path({ type: 'FeatureCollection', features: [vn, la, kh] })).attr('fill', 'none').attr('stroke', '#3f5b8c')
     .attr('stroke-width', 2.4).attr('stroke-opacity', 0.5).attr('stroke-dasharray', '8 4').attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
 
@@ -176,11 +187,13 @@ export async function initMap(): Promise<void> {
   fitViewBox();
   new ResizeObserver(fitViewBox).observe(svg.node()!);
   ready = true;
+  themeMap();
   rescale();
 }
 
 function buildPatterns(): void {
-  const c = PAL;
+  const c = pal();
+  G.defs.selectAll('pattern').remove();
   const pat = (id: string, w: number, h: number, rot: number, draw: (p: Sel<SVGPatternElement>) => void) => {
     const p = G.defs.append('pattern').attr('id', id).attr('patternUnits', 'userSpaceOnUse').attr('width', w).attr('height', h);
     if (rot) p.attr('patternTransform', `rotate(${rot})`);
@@ -192,6 +205,24 @@ function buildPatterns(): void {
   pat('p-vnch', 20, 22, 0, p => { p.append('rect').attr('width', 20).attr('height', 22).attr('fill', c.yel); [8, 11, 14].forEach(y => p.append('rect').attr('y', y).attr('width', 20).attr('height', 1.6).attr('fill', c.red)); });
   pat('p-cmlt', 20, 24, 0, p => { p.append('rect').attr('width', 20).attr('height', 12).attr('fill', c.red); p.append('rect').attr('y', 12).attr('width', 20).attr('height', 12).attr('fill', c.blue); });
   pat('p-jp', 14, 14, 0, p => { p.append('circle').attr('cx', 7).attr('cy', 7).attr('r', 2).attr('fill', c.jp).attr('opacity', 0.8); });
+  pat('p-sea', 6, 6, 30, p => { p.append('rect').attr('width', 6).attr('height', 6).attr('fill', seaC()); p.append('circle').attr('cx', 3).attr('cy', 3).attr('r', 1.05).attr('fill', '#16130f').attr('opacity', 0.32); });
+}
+
+/** Apply the look (theme, palette, map style, overlays) without rebuilding the map. */
+export function themeMap(): void {
+  if (!G.defs) return;
+  buildPatterns();
+  const th = S.theme, co = th === 'archive' && S.mstyle !== 'flat';
+  G.sea.attr('fill', th === 'poster' ? 'url(#p-sea)' : seaC());
+  G.rip.selectAll('.seaS').attr('stroke', seaC());
+  G.rip.attr('opacity', co || th === 'night' ? 1 : 0).attr('filter', co ? 'url(#rough)' : null);
+  G.others.attr('fill', landC()).attr('stroke-width', th === 'poster' ? 1.2 : 0.6);
+  G.r0.attr('filter', co ? 'url(#rough)' : null);
+  G.vig.attr('opacity', co ? 1 : 0);
+  G.edge.attr('opacity', th === 'poster' ? 0 : 1);
+  G.grat.attr('stroke-opacity', th === 'night' ? 0.35 : 0.18).attr('opacity', S.grat ? 1 : 0);
+  G.modern.attr('opacity', S.modern ? 1 : 0);
+  paintMap(true);
 }
 
 /** Grow the viewBox around the W × H core to match the map frame's aspect ratio. */
@@ -202,6 +233,7 @@ function fitViewBox(): void {
   const vw = Math.max(W, H * a), vh = Math.max(H, W / a);
   const box: [[number, number], [number, number]] = [[(W - vw) / 2, (H - vh) / 2], [(W + vw) / 2, (H + vh) / 2]];
   G.svg.attr('viewBox', `${box[0][0]} ${box[0][1]} ${vw} ${vh}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  G.vig.attr('x', box[0][0]).attr('y', box[0][1]).attr('width', vw).attr('height', vh);
   G.zoom.extent(box).translateExtent(box);
   const px = r.width / vw; // screen px per SVG unit
   G.f = Math.min(1, 1.3 / px);
@@ -264,7 +296,8 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)');
 const cyOf = new WeakMap<Prov, number>();
 let lastShift = 0;
 
-export function paintMap(): void {
+/** Repaint for the current year; `quiet` skips the regime-change wave (used for look changes). */
+export function paintMap(quiet = false): void {
   if (!ready) return;
   const y = S.year, R = regime2(y), pk = curPick(y);
   const dim = !!(pk && pk.fac && R.legend.includes(pk.fac));
@@ -274,7 +307,7 @@ export function paintMap(): void {
   G.pv.interrupt().attr('fill', d => fill(R.reg[regOf(d.g)])).attr('opacity', op);
   // Provinces that changed hands sweep in north → south, with a low drum.
   const moved = G.pv.filter(function () { const b = before.get(this); return b != null && b !== this.getAttribute('fill'); });
-  if (!moved.empty() && !calm.matches) {
+  if (!moved.empty() && !calm.matches && !quiet) {
     const cy = (d: Prov) => { if (!cyOf.has(d)) cyOf.set(d, path.centroid(d)[1]); return cyOf.get(d)!; };
     moved.attr('opacity', 0.1).transition().delay(d => Math.max(0, cy(d) / H) * 520).duration(650).ease(d3.easeCubicOut).attr('opacity', op);
     if (Date.now() - lastShift > 700) { SND.shift(); lastShift = Date.now(); }
@@ -329,9 +362,9 @@ function highlight(): void {
   hlId = v.id;
   const p = proj(v.l)!;
   G.spotC.attr('cx', p[0]).attr('cy', p[1]);
-  G.spot.attr('opacity', 0.62);
+  G.spot.attr('opacity', S.theme === 'night' ? 0.62 : 0.55);
   const f = featOf(v);
-  G.hl.attr('d', f ? path(f) : null).attr('filter', 'url(#glow)');
+  G.hl.attr('d', f ? path(f) : null).attr('filter', S.theme === 'night' ? 'url(#glow)' : null);
   G.call.selectAll('*').remove();
   const g = G.call.append('g').attr('class', 'co').datum<Pt>({ p });
   const t = v.t.length > 34 ? v.t.slice(0, 33) + '…' : v.t;

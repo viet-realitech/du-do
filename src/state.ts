@@ -1,5 +1,7 @@
 import { ERAS, EV, FIG, FIGERA, type Era, type HistEvent, type Option, type ValueKey } from './data';
 
+export type Theme = 'archive' | 'night' | 'poster';
+
 export const Y0 = 1858;
 export const Y1 = 2026;
 const KEY = 'dudo-v2';
@@ -17,6 +19,12 @@ export interface State {
   badges: string[];
   filt: string;
   sound: boolean;
+  theme: Theme;
+  pal: 'flag' | 'sepia';
+  mstyle: 'co' | 'flat';
+  grain: boolean;
+  modern: boolean;
+  grat: boolean;
   music: boolean;
   haptic: boolean;
   narr: boolean;
@@ -29,7 +37,7 @@ export interface State {
 
 const def: State = {
   step: 'splash', name: '', year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, music: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
+  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
 };
 
 function load(): State {
@@ -48,7 +56,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], sound: S.sound, music: S.music, haptic: S.haptic, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   save();

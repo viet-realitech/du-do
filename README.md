@@ -62,7 +62,10 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
   Lines without a recording fall back to the device's Vietnamese voice.
 - **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects.
 
-Not carried over from the prototype: the phone-frame mock, the Tweaks panel and the Lưu trữ / Áp phích themes.
+The prototype's Tweaks became player settings: theme (Lưu trữ / Chiến lược / Áp phích, also offered during onboarding),
+faction palette (flags / sepia ink), map style for Lưu trữ (engraved / flat), paper grain, today's border and graticule
+(`src/theme.ts`, Hồ sơ → Giao diện). `public/boot.js` applies the saved theme before first paint.
+Not carried over from the prototype: the phone-frame mock and the designer's "jump to" buttons.
 The designer's drag-and-drop image replacement only worked inside the design tool, so `<image-slot>` is display-only here.
 
 ---

@@ -1,3 +1,4 @@
+import { themeCards } from '../theme';
 import { EV } from '../data';
 import { S, save } from '../state';
 import { on } from '../ui/actions';
@@ -34,6 +35,8 @@ export function intro(): void {
   <div class="mono muted">Cách chơi</div><h2 style="margin:8px 0 14px">Bạn là một dòng họ Việt đi qua sáu thế hệ.</h2>
   ${HOW.map(([i, t, d]) => `<div class="row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--rule)"><div style="width:30px;font:700 20px var(--disp);text-align:center;color:var(--acc)">${i}</div><div style="flex:1"><h3 style="font-size:17.5px">${t}</h3><p class="muted" style="font-size:15px;line-height:1.3;margin-top:2px">${d}</p></div></div>`).join('')}
   <div style="flex:1"></div>
+  <div class="mono muted" style="margin:16px 0 8px">Phong cách</div>
+  ${themeCards()}
   <label class="mono muted" for="nm" style="margin:14px 0 6px;display:block">Họ của dòng họ bạn</label>
   <input class="f" id="nm" placeholder="Ví dụ: Họ Lê" value="${esc(S.name)}" maxlength="24" autocomplete="off">
   <div style="height:12px"></div>

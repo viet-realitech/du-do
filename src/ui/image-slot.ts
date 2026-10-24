@@ -10,7 +10,7 @@ const css = `
 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block;opacity:0;filter:blur(14px) saturate(.6);scale:1.06;
   transition:opacity .45s ease-out,filter .8s cubic-bezier(.2,.8,.2,1),scale 1.2s cubic-bezier(.2,.8,.2,1)}
 :host([data-filled]) img{opacity:1;filter:none;scale:1}
-.empty::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;background:linear-gradient(100deg,transparent 30%,rgba(239,224,191,.13) 50%,transparent 70%) 0 0/250% 100%;animation:sh 1.3s linear infinite}
+.empty::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;background:linear-gradient(100deg,transparent 30%,var(--shine,rgba(239,224,191,.13)) 50%,transparent 70%) 0 0/250% 100%;animation:sh 1.3s linear infinite}
 :host([busy]) .empty::after,:host([src]:not([src=""]):not([data-filled])) .empty::after{opacity:1}
 @keyframes sh{from{background-position:130% 0}to{background-position:-30% 0}}
 @media (prefers-reduced-motion:reduce){img{transition:opacity .2s;filter:none;scale:1}.empty::after{animation:none}}
