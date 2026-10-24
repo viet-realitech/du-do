@@ -8,6 +8,7 @@ const CREDITS: [string, string, string][] = [
   ['Tóm tắt bài viết', 'Wikipedia tiếng Việt (CC BY-SA 4.0)', 'https://vi.wikipedia.org/'],
   ['Ảnh, phim, chân dung', 'Wikimedia Commons, giấy phép theo từng tệp (xem link "Nguồn" ở mỗi ảnh)', 'https://commons.wikimedia.org/'],
   ['Phông chữ', 'EB Garamond, Big Shoulders Display, Playfair Display, Be Vietnam Pro, IBM Plex Mono (SIL Open Font License)', 'https://fontsource.org/'],
+  ['Giọng đọc', 'VieNeu-TTS v3 (pnnbao-ump, mã nguồn mở Apache-2.0), giọng "Thanh Bình"; sinh sẵn lúc dựng ứng dụng', 'https://github.com/pnnbao97/VieNeu-TTS'],
   ['Nhạc nền', 'Kevin MacLeod (incompetech.com): Ascending the Vale, Interloper, Crossing the Chasm, Five Armies, Impact Prelude, Heroic Age. Giấy phép Creative Commons: By Attribution 4.0', 'https://creativecommons.org/licenses/by/4.0/'],
 ];
 

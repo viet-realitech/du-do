@@ -14,7 +14,8 @@
     "icons": "node scripts/build-icons.mjs",
     "music": "node scripts/build-music.mjs",
     "voice": "node scripts/build-voice.mjs && tsx scripts/voice-script.ts",
-    "voice:script": "tsx scripts/voice-script.ts"
+    "voice:script": "tsx scripts/voice-script.ts",
+    "voice:tts": "python3 scripts/tts/generate.py"
   },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "^5.3.0",

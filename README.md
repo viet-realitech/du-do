@@ -56,10 +56,16 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 
 - **Music**: six tracks by Kevin MacLeod (incompetech.com, CC BY 4.0, credited in the About sheet), one per mood
   (`src/music.ts`). `npm run music` downloads and re-encodes them into `public/music/` (needs ffmpeg).
-- **Voice-over**: a narrator's recordings replace the system voice clip by clip. `npm run voice:script` writes the
-  script to `docs/voice/kich-ban.md` / `.csv` (file name, context, exact text). Put recordings named after their key
-  (e.g. `recordings/dn58.wav`) in `recordings/` and run `npm run voice` (trim, loudness, AAC into `src/voice/`).
-  Lines without a recording fall back to the device's Vietnamese voice.
+- **Voice-over**: every narration line ships as a pre-rendered clip in `src/voice/` (played instead of the device's
+  speech synthesis; that remains the fallback for a missing clip). `npm run voice:script` writes the script to
+  `docs/voice/kich-ban.md` / `.csv` (file name, context, exact text). Two sources, merged by `npm run voice`
+  (trim, loudness, AAC):
+  - **VieNeu-TTS** (open source, Apache-2.0, CPU only, ~1× real time): `pip install -r scripts/tts/requirements.txt`
+    then `npm run voice:tts [-- --voice "Thanh Bình"]` renders `tts-out/` (models, ~630 MB, download once into
+    `scripts/tts/models/`). `scripts/tts/generate.py` expands abbreviations and day.month dates before synthesis;
+    clips are re-rendered only when their text or voice changed.
+  - **A narrator's recordings** named after their key (e.g. `recordings/dn58.wav`) always take precedence, so lines
+    can be re-recorded one by one.
 - **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects.
 
 The prototype's Tweaks became player settings: theme (Lưu trữ / Chiến lược / Áp phích, also offered during onboarding),

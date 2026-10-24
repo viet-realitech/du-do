@@ -60,6 +60,7 @@ export function speak(text: string, onend?: () => void, force = false, key?: str
     hush();
     const me = run, a = new Audio(rec);
     clip = a;
+    a.playbackRate = Math.round(((S.rate || 0.95) / 0.95) * 100) / 100; // "Tốc độ đọc": Vừa = natural pace; browsers keep the pitch
     const end = () => { if (me === run) { clip = null; done(); } };
     a.onended = a.onerror = end;
     duck(true);

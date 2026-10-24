@@ -98,6 +98,12 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // Narration clips and music, hashed or not: keep what was played for offline replays.
+            urlPattern: /\.m4a$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'voice-music', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
+          },
+          {
             urlPattern: /\/assets\/(playfair-display|be-vietnam-pro)-[^/]+\.woff2?$/,
             handler: 'CacheFirst',
             options: { cacheName: 'theme-fonts', expiration: { maxEntries: 40 } },

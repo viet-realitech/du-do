@@ -1,6 +1,7 @@
-node_modules
-dist
-dev-dist
 *.local
-test-results
+dev-dist
+dist
+node_modules
 playwright-report
+test-results
+tts-out/
