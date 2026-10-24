@@ -21,6 +21,9 @@ canonical / Open Graph tags are absolute (Facebook, Zalo and X need that to show
 SITE_URL=https://your-domain.example/ npm run build
 ```
 
+- **Vercel**: import the repo at vercel.com/new — `vercel.json` sets the build, output and headers. **Netlify**: "Add new site → Import
+  from Git" — `netlify.toml` + `public/_headers`. On both, production builds pick up the site URL automatically (no `SITE_URL` needed);
+  every push to `main` redeploys, pull requests get preview URLs.
 - Headers: `public/_headers` (Netlify / Cloudflare Pages) sets security and caching headers; hashed `assets/*` are immutable,
   `index.html` / `sw.js` / `manifest.webmanifest` must stay `no-cache` so updates reach installed apps.
 - A Content-Security-Policy `<meta>` is injected at build time (`vite.config.ts`): own code only, plus Wikipedia/Wikimedia.

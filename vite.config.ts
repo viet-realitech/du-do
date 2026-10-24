@@ -3,8 +3,16 @@ import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json' with { type: 'json' };
 
 /* Absolute public URL of the deployment (e.g. https://dudo.example.vn/). Used for canonical/Open Graph
-   tags, which crawlers require to be absolute. Set SITE_URL when building for production. */
-const SITE_URL = (process.env.SITE_URL || '').replace(/\/?$/, '/').replace(/^\/$/, '');
+   tags, which crawlers require to be absolute. Set SITE_URL when building for production.
+   On Vercel / Netlify production builds it is detected automatically. */
+function siteUrl(): string {
+  const e = process.env;
+  const raw = e.SITE_URL
+    || (e.VERCEL_ENV === 'production' && e.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + e.VERCEL_PROJECT_PRODUCTION_URL : '')
+    || (e.NETLIFY && e.CONTEXT === 'production' ? e.URL || '' : '');
+  return raw ? raw.replace(/\/?$/, '/') : '';
+}
+const SITE_URL = siteUrl();
 
 const TITLE = 'Dư Đồ — Bản đồ Việt Nam 1858 – nay';
 const DESC = 'Cảm hứng bản đồ Việt Nam, từ thời Pháp thuộc tới nay. Sáu thế hệ, sáu điểm rẽ: chọn con đường của dòng họ bạn và so với lịch sử. Một trò chơi lịch sử dựa trên sử liệu công khai.';
