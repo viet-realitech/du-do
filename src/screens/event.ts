@@ -8,7 +8,7 @@ import { $, esc, layer, clearLayer } from '../ui/dom';
 import { checkBadges } from '../badges';
 import { hush, speak } from '../narration';
 import { evKey, evSpeechFull } from '../speech';
-import { stopTour } from '../tour';
+import { stopTour, pauseTour, resumeTour } from '../tour';
 import { hidePop } from '../map';
 import { renderMain } from '../view';
 import { wikiFor, cachedWiki, probe, type WikiInfo } from '../wiki';
@@ -24,7 +24,7 @@ const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">‹</b
 export function openEvent(id: string, tab: Tab = 'x'): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
-  stopTour();
+  if (isPlay() && isTouring()) pauseTour('overlay'); else stopTour();
   hidePop();
   if (!S.seen.includes(id)) { S.seen.push(id); save(); }
   const e = eraOf(v.y), pk = curPick(v.y), mine = pk?.persp;
@@ -180,4 +180,4 @@ on('goev', el => {
   openEvent(v.id);
 });
 // Closing an overlay returns to the refreshed map.
-on('close', () => { clearLayer(); renderMain(); checkBadges(); if (!isTouring()) mood('calm'); });
+on('close', () => { clearLayer(); renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else resumeTour('overlay'); });

@@ -61,7 +61,9 @@ export function speak(text: string, onend?: () => void, force = false, key?: str
     const me = run, a = new Audio(rec);
     clip = a;
     a.playbackRate = Math.round(((S.rate || 0.95) / 0.95) * 100) / 100; // "Tốc độ đọc": Vừa = natural pace; browsers keep the pitch
-    const end = () => { if (me === run) { clip = null; done(); } };
+    // Bảo hiểm: iOS tạm dừng clip khi khoá máy / chuyển app và có thể không bao giờ báo "ended".
+    const guard = setTimeout(() => end(), Math.max(6000, text.length * 130));
+    const end = () => { clearTimeout(guard); if (me === run) { clip = null; done(); } };
     a.onended = a.onerror = end;
     duck(true);
     a.play().catch(end);
@@ -102,3 +104,8 @@ export function speak(text: string, onend?: () => void, force = false, key?: str
   say(0);
   return true;
 }
+
+// Quay lại app sau khi khoá máy: clip đang dở chạy tiếp (hoặc coi như xong nếu không phát lại được).
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && clip && clip.paused && !clip.ended) clip.play().catch(() => clip?.dispatchEvent(new Event('ended')));
+});

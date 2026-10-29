@@ -1,4 +1,4 @@
-import { EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
+import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
 import { CARD, type Fx } from './data/cards';
 import { S, save, type Res, type Rel } from './state';
 
@@ -137,3 +137,6 @@ export function rank(): [string, string] {
 }
 
 export const decidedCount = () => Object.keys(S.cards).length;
+export const allPicked = () => ERAS.every(e => !!S.picks[e.id]);
+/** Chi phí tài nguyên của một lựa chọn (chỉ phần âm), để tìm lựa chọn rẻ nhất khi không đủ cho mọi lựa chọn. */
+export const cost = (fx: Fx) => RES.reduce((n, [k]) => n + Math.max(0, -(fx[k] || 0)), 0);

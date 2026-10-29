@@ -4,10 +4,11 @@ import { on } from './ui/actions';
 import { $, esc } from './ui/dom';
 import { av, flag } from './ui/bits';
 import { paintMap, paintHome } from './map';
-import { isPlay, pendingCard, cardOf, decided, mustDecide, home, RES, powersAt } from './play';
+import { isPlay, pendingCard, cardOf, decided, mustDecide, home, RES, powersAt, allPicked } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
-import { stopTour, isTourPaused, resumeTour } from './tour';
+import { stopTour, isTourPaused, resumeTour, canResumeChapter } from './tour';
+import { endGame } from './screens/ending';
 import { openGate } from './screens/gate';
 import { openEvent } from './screens/event';
 import { openFig } from './screens/figures';
@@ -65,17 +66,21 @@ function renderVals(): void {
 /** Trò chơi: sau một thẻ / mùa màng, đi tiếp luồng đang chạy (tour tạm dừng, hoặc năm đích còn thẻ bắt buộc). */
 export function continueFlow(): void {
   if (isTourPaused()) { resumeTour(); return; }
-  if (rt.flowTo != null) { const t = rt.flowTo; rt.flowTo = null; setYear(t, true); return; }
+  // setYear mở thẻ bắt buộc kế tiếp hoặc điểm rẽ / kết cục; openGate và endGame xoá flowTo, hoặc setYear khi hết việc.
+  if (rt.flowTo != null) { setYear(rt.flowTo, true); return; }
   renderMain();
 }
 
-let shownRes: Record<string, number> | null = null;
+let shownRes: Record<string, number> | null = null, resKey = '';
 function renderRes(): void {
   const el = $('#res')!;
   el.hidden = !isPlay();
-  if (!isPlay()) { shownRes = null; return; }
-  // Số nổi lên khi gia sản đổi (so với lần cuối thấy rõ màn chính, tức không có bảng che).
-  const covered = !!document.querySelector('#layer .scrim, #layer .ov');
+  if (!isPlay()) { shownRes = null; resKey = ''; return; }
+  // Số nổi lên khi gia sản đổi so với lần cuối thấy rõ màn chính (không có bảng che, kể cả bảng đang đóng).
+  const covered = !!document.querySelector('#layer .scrim, #layer .ov, #app > .exiting');
+  const key = RES.map(([k]) => S.res[k]).join(',') + (covered ? 'c' : 'o');
+  if (key === resKey) return; // không dựng lại mỗi khung hình: giữ số nổi đang bay
+  resKey = key;
   el.innerHTML = RES.map(([k, n, ic]) => {
     const d = shownRes && !covered ? S.res[k] - shownRes[k] : 0;
     return `<div class="mt r${S.res[k] <= 10 ? ' low' : ''}"><span><span><i>${ic}</i> ${n}</span><b>${S.res[k]}</b>${d ? `<em class="delta ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '+' : ''}${d}</em>` : ''}</span><i><b style="width:${S.res[k]}%"></b></i></div>`;
@@ -153,6 +158,9 @@ export function setYear(yIn: number, open = false): void {
   }
   if (open && rt.card) openCard(rt.card);
   else if (open && rt.gate) openGate(rt.gate);
+  else if (open && isPlay() && y >= Y1 && allPicked() && rt.flowTo != null) { rt.flowTo = null; endGame(ERAS[ERAS.length - 1]); }
+  else if (open && rt.flowTo != null && y >= rt.flowTo) rt.flowTo = null; // tới đích mà không còn gì để mở
+  $('#play')!.classList.toggle('act', canResumeChapter());
 }
 
 export function stepEv(d: number): void {
@@ -170,9 +178,15 @@ export function initTimeline(): void {
   const sc = $('#tl')!, t = $('#trk')!;
   let drag = false;
   const at = (ev: PointerEvent) => { const r = t.getBoundingClientRect(); return Y0 + ((ev.clientX - r.left) / r.width) * (Y1 - Y0); };
-  sc.addEventListener('pointerdown', ev => { ac(); drag = true; stopTour(); sc.setPointerCapture(ev.pointerId); setYear(at(ev)); });
-  sc.addEventListener('pointermove', ev => { if (drag) setYear(at(ev)); });
-  const up = () => { if (!drag) return; drag = false; if (rt.card) openCard(rt.card); else if (rt.gate) openGate(rt.gate); };
+  let target = S.year;
+  sc.addEventListener('pointerdown', ev => { ac(); drag = true; stopTour(); sc.setPointerCapture(ev.pointerId); target = at(ev); setYear(target); });
+  sc.addEventListener('pointermove', ev => { if (drag) { target = at(ev); setYear(target); } });
+  const up = () => {
+    if (!drag) return;
+    drag = false;
+    if (rt.card) { if (isPlay()) rt.flowTo = Math.min(Y1, Math.round(target)); openCard(rt.card); }
+    else if (rt.gate) openGate(rt.gate);
+  };
   sc.addEventListener('pointerup', up);
   sc.addEventListener('pointercancel', up);
 }
@@ -204,6 +218,6 @@ export function initMainControls(): void {
   on('step', el => stepEv(+el.dataset.d!));
   on('ev', el => openEvent(el.dataset.id!));
   on('fig', el => openFig(el.dataset.id!));
-  on('end', () => goEnd());
+  on('end', () => (isPlay() ? endGame(ERAS[ERAS.length - 1]) : goEnd()));
   initTimeline();
 }

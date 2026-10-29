@@ -10,7 +10,11 @@ function topmost(): Top {
   const lb = app.querySelector<HTMLElement>('.lb');
   if (lb) return { close: () => lb.querySelector<HTMLElement>('.back')!.click() };
   const sc = [...layer.querySelectorAll<HTMLElement>('.scrim')].pop();
-  if (sc) return sc.dataset.lock ? { locked: true } : { close: () => ghost(sc) };
+  if (sc) {
+    if (sc.dataset.lock) return { locked: true };
+    const own = sc.querySelector<HTMLElement>('[data-a="close-card"]'); // thẻ sự kiện: đóng = đi tiếp luồng
+    return { close: () => (own ? own.click() : ghost(sc)) };
+  }
   const ov = layer.querySelector<HTMLElement>('.ov:not(.splash):not(.intro)');
   if (ov) {
     const c = ov.querySelector<HTMLElement>('[data-a="close"]');

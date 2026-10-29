@@ -8,7 +8,8 @@ import { esc } from './ui/dom';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
-import { isTouring, stopTour } from './tour';
+import { isTouring, stopTour, pauseTour } from './tour';
+import { isPlay } from './play';
 import { openEvent } from './screens/event';
 
 /* Map of Vietnam in 1858–2026 frames. SVG user space is 390 × H; the projection
@@ -175,7 +176,7 @@ export async function initMap(): Promise<void> {
   G.call = Z.append('g').style('pointer-events', 'none');
 
   G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([1, 8]).on('zoom', ev => {
-    if (ev.sourceEvent && isTouring()) stopTour();
+    if (ev.sourceEvent && isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); }
     G.k = ev.transform.k;
     Z.attr('transform', ev.transform);
     rescale();

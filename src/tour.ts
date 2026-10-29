@@ -1,6 +1,5 @@
-import { isPlay, mustDecide, decided, cardOf } from './play';
+import { isPlay, mustDecide, decided, cardOf, pendingCard } from './play';
 import { openCard } from './screens/card';
-import { endGame } from './screens/ending';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
@@ -12,10 +11,20 @@ import { hidePop, zoomTo, zoomK } from './map';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
 
-/* Chapter "zoom tour": fly through up to 8 key events of an era, narrating each,
-   then return to the overview and open the next turning point. */
-interface Tour { e: Era; L: HistEvent[]; i: number; end: number; t: number | undefined; cur?: string; paused?: boolean }
+/* Chapter "zoom tour": fly through key events of an era, narrating each, then return to the overview and
+   open the next turning point. In the game flow the tour pauses (never stops) for cards, overlays and map
+   gestures and resumes by itself where it can; "Dừng" and a timeline scrub are the player taking over. */
+interface Tour {
+  e: Era; L: HistEvent[]; i: number; end: number; t: number | undefined; cur?: string;
+  /** Lý do tạm dừng: thẻ sự kiện, màn chi tiết / nhân vật, hay cử chỉ bản đồ. */
+  paused?: 'card' | 'overlay' | 'map';
+  /** Bước hiện tại; mọi callback hẹn giờ so với nó để lời đọc / hẹn giờ cũ không tác động lên bước sau. */
+  step: number;
+  /** Đi tiếp bước hiện tại (dùng khi giọng đọc bị tắt giữa chừng). */
+  next?: (d: number) => void;
+}
 let tour: Tour | null = null;
+let mapIdle: number | undefined;
 
 export const isTouring = () => !!tour;
 export const isTourPaused = () => !!tour?.paused;
@@ -54,7 +63,7 @@ export function startTour(eIn?: Era): void {
   }
   if (S.year >= Y1) return;
   const { L, end } = tourList(e);
-  tour = { e, L, i: 0, end, t: undefined };
+  tour = { e, L, i: 0, end, t: undefined, step: 0 };
   mood(eraMood(e.id));
   tourBar();
   tourStep();
@@ -64,26 +73,30 @@ function tourStep(): void {
   if (!tour) return;
   const { L, i } = tour;
   if (i >= L.length) { finishTour(); return; }
-  const v = L[i];
+  const v = L[i], step = ++tour.step;
+  const live = () => !!tour && tour.step === step && !tour.paused;
   animYear(v.y, () => {
-    if (!tour) return;
+    if (!live()) return;
     rt.focusEv = v;
-    tour.cur = v.id;
+    tour!.cur = v.id;
     renderMain();
     zoomTo(v.l, zoomK(v));
     SND.fly();
     tourBar();
-    // Trò chơi: sự kiện có thẻ thì tạm dừng tour và mở thẻ, sớm nhất sau 4,5 s (giọng đọc vẫn tiếp tục
-    // trong lúc người chơi đọc thẻ); "Tiếp tục" trên thẻ gọi resumeTour().
-    const card = isPlay() && cardOf(v) && !decided(v.id);
-    const openIt = () => { if (!tour || tour.cur !== v.id || tour.paused) return; clearTimeout(tour.t); tour.paused = true; tourBar(); openCard(v, true); };
-    if (card) tour.t = window.setTimeout(openIt, 4500);
+    // Trò chơi: sự kiện có thẻ thì tạm dừng tour và mở thẻ sau 4,5 s (giọng đọc vẫn tiếp tục trong lúc người
+    // chơi đọc thẻ); "Tiếp tục" trên thẻ gọi resumeTour(). Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
+    const card = isPlay() && !!cardOf(v) && !decided(v.id);
+    const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
+    const openIt = () => { if (!live()) return; if (decided(v.id)) advance(); else pauseForCard(v); };
     const next = (d: number) => {
-      if (!tour || tour.cur !== v.id) return;
-      if (card) { clearTimeout(tour.t); tour.t = window.setTimeout(openIt, Math.min(d, 500)); return; }
-      tour.t = window.setTimeout(() => { if (!tour) return; tour.i++; tourStep(); }, d);
+      if (!live()) return;
+      if (card) return; // thẻ mở theo hẹn giờ 4,5 s; không cắt ngắn cảnh bay
+      clearTimeout(tour!.t);
+      tour!.t = window.setTimeout(advance, d);
     };
-    if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (tour && tour.cur === v.id) speak(evSpeech(v), () => next(900), false, evKey(v)); }, 700);
+    tour!.next = next;
+    if (card) tour!.t = window.setTimeout(openIt, 4500);
+    if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(900), false, evKey(v)); }, 700);
     else next(2900);
   });
 }
@@ -105,23 +118,52 @@ function animYear(to: number, cb: () => void): void {
 }
 
 function finishTour(): void {
-  const end = tour!.end, e = tour!.e;
+  const end = tour!.end;
   stopTour();
   zoomTo(null);
-  if (isPlay()) rt.flowTo = end; // thẻ bắt buộc còn sót (sau khi bỏ qua tour) được mở lần lượt rồi mới tới điểm rẽ
-  setTimeout(() => { if (isPlay() && end >= Y1) endGame(e); else setYear(end, true); }, 950);
+  // Trò chơi: thẻ bắt buộc còn sót (sau khi bỏ qua tour) mở lần lượt, rồi điểm rẽ kế hoặc kết cục (setYear).
+  if (isPlay()) rt.flowTo = end;
+  setTimeout(() => setYear(end, true), 950);
 }
 
-/** Tour đang tạm dừng ở một thẻ: đi tiếp sự kiện kế. */
-export function resumeTour(): void {
+/** Thẻ của sự kiện `v` đang là bước hiện tại: tạm dừng tour và mở thẻ (một lần, không mở chồng). */
+export function pauseForCard(v: HistEvent): boolean {
+  if (!tour || tour.cur !== v.id || tour.paused) return false;
+  clearTimeout(tour.t);
+  tour.paused = 'card';
+  tourBar();
+  openCard(v, true);
+  return true;
+}
+
+/** Tạm dừng vì người chơi mở màn chi tiết / nhân vật (tự chạy tiếp khi đóng) hay chạm bản đồ (tự chạy tiếp sau 5 s yên). */
+export function pauseTour(why: 'overlay' | 'map'): void {
+  if (!tour) return;
+  clearTimeout(mapIdle);
+  if (tour.paused) { if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000); return; }
+  clearTimeout(tour.t);
+  hush();
+  tour.paused = why;
+  tourBar();
+  if (why === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000);
+}
+
+/** Tour đang tạm dừng: đi tiếp. Sau một thẻ thì sang sự kiện kế; sau màn chi tiết / bản đồ thì chơi lại bước hiện tại. */
+export function resumeTour(why?: 'overlay'): void {
   if (!tour || !tour.paused) return;
-  tour.paused = false;
-  tour.i++;
+  if (why === 'overlay' && tour.paused !== 'overlay') return;
+  clearTimeout(mapIdle);
+  clearTimeout(tour.t);
+  hush();
+  const was = tour.paused;
+  tour.paused = undefined;
+  if (was === 'card') tour.i++;
   tourBar();
   tourStep();
 }
 
 export function stopTour(): void {
+  clearTimeout(mapIdle);
   if (tour) {
     clearTimeout(tour.t);
     tour = null;
@@ -141,6 +183,14 @@ function skipTour(): void {
   finishTour();
 }
 
+/** Nút ▶ ở dòng thời gian: chạy / tạm dừng / chạy tiếp chương. */
+export function togglePlay(): void {
+  if (!tour) { startTour(); return; }
+  if (tour.paused === 'card') return; // đang chờ quyết định trên thẻ
+  if (tour.paused) { resumeTour(); return; }
+  if (isPlay()) pauseTour('map'); else stopTour();
+}
+
 function tourBar(): void {
   if (!tour) return;
   let b = $('#tourb');
@@ -151,13 +201,22 @@ function tourBar(): void {
     $('#mapwrap')!.appendChild(b);
     b.addEventListener('click', ev => {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
-      if (a === 'narr') { S.narr = !S.narr; save(); if (!S.narr) hush(); tourBar(); }
+      if (a === 'narr') {
+        S.narr = !S.narr; save();
+        if (!S.narr) { hush(); if (tour && !tour.paused && tour.next) tour.next(600); } // không để bước hiện tại treo
+        tourBar();
+      }
       else if (a === 'skip') skipTour();
       else if (a === 'stop') stopTour();
+      else if (a === 'resume') resumeTour();
     });
   }
   const { e, L, i, paused } = tour, n = Math.max(1, L.length), at = Math.min(i + 1, n);
-  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">Chương ${e.n} · ${at}/${n}${paused ? ' · chờ quyết định' : ''}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
-    <button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button><button class="chip" data-t="skip">Điểm rẽ ›</button><button class="chip" data-t="stop">Dừng</button>`;
-  $('#play')!.textContent = '❚❚';
+  const state = paused === 'card' ? ' · chờ quyết định' : paused ? ' · tạm dừng' : '';
+  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">Chương ${e.n} · ${at}/${n}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
+    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}<button class="chip" data-t="skip">Điểm rẽ ›</button><button class="chip" data-t="stop">Dừng</button>`;
+  $('#play')!.textContent = paused && paused !== 'card' ? '▶' : '❚❚';
 }
+
+/** Trò chơi: còn gì để tự chạy tiếp từ năm hiện tại (nút ▶ nhấp nháy sau khi dừng / tải lại). */
+export const canResumeChapter = () => isPlay() && !tour && S.year < Y1 && !!S.picks[eraOf(S.year).id] && !pendingCard(S.year);

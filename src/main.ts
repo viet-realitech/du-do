@@ -46,12 +46,13 @@ import './styles.css';
 import './ui/image-slot';
 import { registerSW } from 'virtual:pwa-register';
 import { ERAS } from './data';
-import { S, setFocus } from './state';
+import { S, setFocus, rt, Y1 } from './state';
 import { initMap } from './map';
 import { initMainControls, renderMain, setYear } from './view';
 import { initTabs } from './tabs';
 import { initHistory } from './ui/history';
-import { isTouring, startTour, stopTour } from './tour';
+import { togglePlay } from './tour';
+import { pendingCard } from './play';
 import { ac } from './audio';
 import { applyTheme } from './theme';
 import { initMusic, mood } from './music';
@@ -66,7 +67,7 @@ initTabs();
 initHistory();
 initMusic();
 mood('calm');
-document.getElementById('play')!.addEventListener('click', () => { ac(); if (isTouring()) stopTour(); else startTour(); });
+document.getElementById('play')!.addEventListener('click', () => { ac(); togglePlay(); });
 setFocus();
 applyTheme(); // also renders the main screen
 initMap().then(renderMain);
@@ -77,5 +78,7 @@ addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) sc
 if (S.step === 'splash') splash();
 else if (S.step === 'intro') (S.mode === 'play' ? gameIntro : intro)();
 else if (ERAS.find(e => !S.picks[e.id] && e.cy <= S.year)) setYear(S.year, true);
+// Trò chơi: tải lại giữa chương với thẻ bắt buộc đang chờ → mở lại thẻ rồi đi tiếp tới điểm rẽ kế.
+else if (S.mode === 'play' && pendingCard(S.year)) { const nx = ERAS.find(e => !S.picks[e.id]); rt.flowTo = nx ? nx.cy : Y1; setYear(S.year, true); }
 
 registerSW({ immediate: true });

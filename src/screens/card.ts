@@ -5,7 +5,9 @@ import { on } from '../ui/actions';
 import { esc, sheet, toast, ghost } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { SND, buzz } from '../audio';
-import { cardOf, canAfford, decide, decided, mustDecide, home, RES, POWERS, relLabel } from '../play';
+import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel } from '../play';
+import { pauseForCard } from '../tour';
+import { layer } from '../ui/dom';
 import { renderMain, continueFlow } from '../view';
 import { checkBadges } from '../badges';
 
@@ -31,8 +33,11 @@ export function fxChipsPlay(fx: Fx, got?: Fx): string {
 /** `inTour`: thẻ mở giữa tour; "Tiếp tục" đi tiếp sự kiện kế, thẻ tuỳ chọn có thể bỏ qua. */
 export function openCard(v: HistEvent, inTour = false): void {
   const c = cardOf(v);
-  if (!c) return;
+  if (!c || layer.querySelector(`.scrim[data-card="${v.id}"]`)) return; // thẻ này đang mở: không mở chồng
   const done = decided(v.id), must = mustDecide(v), h = home();
+  // Không đủ cho lựa chọn nào thì lựa chọn rẻ nhất vẫn bấm được (tài nguyên dừng ở 0): thẻ bắt buộc không thành ngõ cụt.
+  const noList = done ? c[2].map(() => null) : c[2].map(ch => canAfford(ch[2]));
+  if (!done && noList.every(Boolean)) { const cheap = c[2].reduce((b, ch, i) => (cost(ch[2]) < cost(c[2][b][2]) ? i : b), 0); noList[cheap] = null; }
   if (inTour) { buzz(must ? [15, 30, 15] : 10); }
   const near = c[1] !== 'all' && must;
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ ${must ? 'Dòng họ phải quyết định' : 'Dòng họ có thể hành động'} · ${v.y}</span><span class="mono muted">${esc(familyName())} · ${esc(h[1])}</span></div>
@@ -41,7 +46,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   ${near ? `<div class="mono" style="color:var(--acc);margin-bottom:10px">⌂ Chạm tới quê nhà ${esc(h[1])}</div>` : '<div style="height:6px"></div>'}
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div role="radiogroup">${c[2].map((ch, i) => {
-    const no = done ? null : canAfford(ch[2]);
+    const no = noList[i];
     const picked = done && S.cards[v.id] === i;
     return `<button class="opt${picked ? ' sel' : ''}" data-i="${i}" role="radio" aria-checked="${picked}"${no || (done && !picked) ? ' disabled' : ''}>
       <div class="tt"><h3>${esc(ch[0])}</h3>${no ? `<span class="mono" style="color:var(--red)">${no}</span>` : ''}</div>
@@ -49,6 +54,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   }).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
   ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done);
+  d.dataset.card = v.id;
   if (done) return;
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
     if (decided(v.id)) return; // một thẻ chỉ quyết một lần: chạm lại không áp hiệu ứng thêm
@@ -71,7 +77,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   }));
 }
 
-on('card', el => { const v = allEv().find(x => x.id === el.dataset.id); if (v) openCard(v); });
+on('card', el => { const v = allEv().find(x => x.id === el.dataset.id); if (v && !pauseForCard(v)) openCard(v); });
 on('close-card', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); continueFlow(); });
 
 /** Chip quan hệ cho chú giải màn chính. */

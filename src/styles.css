@@ -346,6 +346,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .fxs .relc { font-size: 13px; padding: 3px 0 }
 .card.must { border-color: var(--red); box-shadow: 0 0 0 1px var(--red) inset }
 .rb.act { background: var(--red); color: #fff; border-color: var(--red); animation: blink 1.4s infinite }
+.pbtn.act { background: var(--acc); color: var(--paper); animation: blink 1.4s infinite }
 .fx.up { color: var(--ok); border: 1px solid currentColor; background: transparent }
 .fx.dn { color: var(--red); border: 1px solid currentColor; background: transparent }
 .fx.rel .flag { width: 14px; height: 10px; margin-right: 2px }
