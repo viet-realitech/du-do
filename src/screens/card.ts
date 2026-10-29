@@ -51,11 +51,13 @@ export function openCard(v: HistEvent, inTour = false): void {
   ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done);
   if (done) return;
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
+    if (decided(v.id)) return; // một thẻ chỉ quyết một lần: chạm lại không áp hiệu ứng thêm
     const i = +b.dataset.i!, ch = c[2][i];
     const got = decide(v, i);
     SND.stamp();
     buzz([10, 30, 40]);
-    d.querySelectorAll<HTMLButtonElement>('.opt').forEach(x => { x.disabled = x !== b; x.classList.toggle('sel', x === b); });
+    d.querySelectorAll<HTMLButtonElement>('.opt').forEach(x => { x.disabled = true; x.classList.toggle('sel', x === b); });
+    d.querySelector('.lnk[data-a="close-card"]')?.remove();
     b.insertAdjacentHTML('beforeend', `<p class="out">${esc(ch[3])}</p>`);
     d.querySelector('.resrow')!.innerHTML = RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('');
     const warn = RES.filter(([k]) => S.res[k] <= 10).map(([, n]) => n.toLowerCase());
