@@ -100,6 +100,35 @@ test('appearance: theme picked at onboarding, changed in settings, kept after re
   expect(errors).toEqual([]);
 });
 
+test('play mode: home town, harvest, mandatory event card stops the timeline, resources change', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: 'Mở hồ sơ' }).click();
+  await page.getByRole('radio', { name: /Chơi/ }).click();
+  await page.getByRole('button', { name: 'Huế' }).click();
+  await page.locator('#nm').fill('Họ Tôn Thất');
+  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
+  // harvest sheet for generation 1, then the turning point
+  await expect(page.getByText('Gia sản sau một đời người')).toBeVisible();
+  await page.getByRole('button', { name: /Bước vào điểm rẽ 1/ }).click();
+  await page.locator('.opt').first().click();
+  await page.locator('#go').click();
+  await page.getByRole('button', { name: 'Tự kéo dòng thời gian' }).click();
+  await expect(page.locator('#res')).toBeVisible();
+  await expect(page.locator('#map g.home g')).toHaveCount(1); // home marker
+  const before = await page.locator('#res .mt').first().locator('b').first().textContent();
+  // Đà Nẵng 1858 touches Huế's region: scrubbing past it stops there and opens the card
+  await page.locator('#card [data-a=card]').click();
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible();
+  await page.locator('.scrim .opt').first().click();
+  await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
+  await page.getByRole('button', { name: 'Tiếp tục' }).click();
+  const after = await page.locator('#res .mt').first().locator('b').first().textContent();
+  expect(after).not.toBe(before);
+  await page.locator('.tab[data-t=me]').click();
+  await expect(page.getByText('Gia sản dòng họ · Huế')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('reaching the present opens the last quiz, then the ending', async ({ page }) => {
   const done = { ...midGame, year: 2026, picks: { ...midGame.picks, e6: 'doimoi' }, quiz: { ...midGame.quiz, e5: [true, true] } };
   const errors = await boot(page, done);

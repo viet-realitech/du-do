@@ -40,7 +40,7 @@ const G = {} as {
   l17: Sel<SVGLineElement>;
   sea: Sel<SVGRectElement>; vig: Sel<SVGRectElement>; grat: Sel; rip: Sel<SVGGElement>; r0: Sel<SVGGElement>; modern: Sel;
   others: d3.Selection<SVGPathElement | d3.BaseType, Feature<Geometry>, SVGGElement, unknown>;
-  labels: Sel<SVGGElement>; cities: Sel<SVGGElement>; mk: Sel<SVGGElement>; call: Sel<SVGGElement>;
+  labels: Sel<SVGGElement>; cities: Sel<SVGGElement>; mk: Sel<SVGGElement>; call: Sel<SVGGElement>; homeG: Sel<SVGGElement>;
   zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 };
 G.k = 1;
@@ -170,6 +170,7 @@ export async function initMap(): Promise<void> {
       g.append('text').attr('x', side * 6).attr('y', 4).attr('text-anchor', side < 0 ? 'end' : 'start').attr('data-city', t)
         .style('stroke', 'var(--paper)').attr('stroke-width', 3).attr('paint-order', 'stroke').text(t);
     });
+  G.homeG = Z.append('g').attr('class', 'home').style('pointer-events', 'none');
   G.mk = Z.append('g');
   G.call = Z.append('g').style('pointer-events', 'none');
 
@@ -250,6 +251,7 @@ function rescale(): void {
   G.labels.selectAll<SVGTextElement, Pt>('text').attr('transform', keep);
   G.cities.selectAll<SVGGElement, Pt>('g').attr('transform', keep);
   G.mk.selectAll<SVGGElement, Pt>('g.m').attr('transform', keep);
+  G.homeG.selectAll<SVGGElement, Pt>('g').attr('transform', keep);
 }
 
 /* ---------- region popover ---------- */
@@ -287,6 +289,18 @@ function showPop(ev: MouseEvent, d: Prov | 'la' | 'kh'): void {
   if (!S.mapTapped) { S.mapTapped = true; save(); checkBadges(); }
   SND.tick();
   buzz(8);
+}
+
+/** Quê nhà của dòng họ (chế độ Chơi): nhà nhỏ có mái, luôn hiện trên bản đồ. */
+export function paintHome(l: [number, number] | null): void {
+  if (!ready) return;
+  G.homeG.selectAll('*').remove();
+  if (!l) return;
+  const g = G.homeG.append('g').datum<Pt>({ p: proj(l)! });
+  g.append('circle').attr('r', 9).style('fill', 'var(--acc)').attr('opacity', 0.18);
+  g.append('path').attr('d', 'M-5,1 L0,-5 L5,1 L5,6 L-5,6 Z').style('fill', 'var(--paper)').style('stroke', 'var(--acc)').attr('stroke-width', 1.6).attr('stroke-linejoin', 'round');
+  g.append('rect').attr('x', -1.5).attr('y', 2).attr('width', 3).attr('height', 4).style('fill', 'var(--acc)');
+  rescale();
 }
 
 /* ---------- per-year paint ---------- */

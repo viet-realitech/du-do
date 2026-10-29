@@ -3,7 +3,9 @@ import { S, save, rt, Y0, Y1, eraOf, curPick, values, allEv, visEv, setFocus, pc
 import { on } from './ui/actions';
 import { $, esc } from './ui/dom';
 import { av, flag } from './ui/bits';
-import { paintMap } from './map';
+import { paintMap, paintHome } from './map';
+import { isPlay, pendingCard, cardOf, decided, mustDecide, home, RES, powersAt } from './play';
+import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
 import { stopTour } from './tour';
 import { openGate } from './screens/gate';
@@ -44,9 +46,11 @@ export function renderMain(): void {
   $('#popl')!.textContent = pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu';
   $('#legend')!.innerHTML = R.legend
     .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
-    .join('');
+    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(relChip).join('') : '');
   paintMap();
+  paintHome(isPlay() ? home()[2] : null);
   renderVals();
+  renderRes();
   $('#fbtn')!.classList.toggle('act', S.filt !== 'Tất cả');
   renderCard();
   renderScrub();
@@ -56,6 +60,13 @@ function renderVals(): void {
   const v = values();
   $('#vals')!.innerHTML = VAL.map(([k, n]) =>
     `<div class="mt"><span>${n}<b>${v[k]}</b></span><i><b style="width:${Math.min(100, (v[k] / 18) * 100)}%"></b></i></div>`).join('');
+}
+
+function renderRes(): void {
+  const el = $('#res')!;
+  el.hidden = !isPlay();
+  if (!isPlay()) return;
+  el.innerHTML = RES.map(([k, n, ic]) => `<div class="mt r${S.res[k] <= 10 ? ' low' : ''}"><span><span><i>${ic}</i> ${n}</span><b>${S.res[k]}</b></span><i><b style="width:${S.res[k]}%"></b></i></div>`).join('');
 }
 
 function renderCard(): void {
@@ -72,8 +83,10 @@ function renderCard(): void {
     return;
   }
   const seen = S.seen.includes(v.id);
+  const card = isPlay() ? cardOf(v) : undefined, open = card && !decided(v.id), must = open && mustDecide(v);
+  if (must) c.className += ' must';
   c.innerHTML = `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div><div class="s">${esc(v.s)}</div></button>
-    <div class="nav"><button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button><button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`;
+    <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`;
 }
 
 /* ---------- timeline ---------- */
@@ -110,23 +123,29 @@ export function setYear(yIn: number, open = false): void {
   let y = Math.max(Y0, Math.min(Y1, Math.round(yIn)));
   const pend = pendingGate(y);
   rt.gate = null;
+  rt.card = null;
   if (pend) { y = pend.cy; rt.gate = pend; }
+  // Chế độ Chơi: dừng ở thẻ sự kiện bắt buộc chưa quyết định; điểm rẽ cùng năm đi trước.
+  const pc = pendingCard(y);
+  if (pc && (!pend || pc.y < pend.cy)) { y = pc.y; rt.card = pc; rt.gate = null; }
   if (y !== S.year || open) {
     const a = Math.min(S.year, y), b = Math.max(S.year, y);
     if (y !== S.year && visEv().some(v => v.y > a && v.y <= b) && Date.now() - lastTick > 70) { SND.tick(); lastTick = Date.now(); }
     S.year = y;
     setFocus();
+    if (rt.card) rt.focusEv = rt.card;
     save();
     renderMain();
   }
-  if (open && rt.gate) openGate(rt.gate);
+  if (open && rt.card) openCard(rt.card);
+  else if (open && rt.gate) openGate(rt.gate);
 }
 
 export function stepEv(d: number): void {
   const list = visEv(), i = rt.focusEv ? list.indexOf(rt.focusEv) : -1, j = i + d;
   if (j < 0 || j >= list.length) return;
   const v = list[j];
-  if (pendingGate(v.y)) { setYear(v.y, true); return; }
+  if (pendingGate(v.y) || pendingCard(v.y)) { setYear(v.y, true); return; }
   S.year = v.y;
   rt.focusEv = v;
   save();
@@ -139,7 +158,7 @@ export function initTimeline(): void {
   const at = (ev: PointerEvent) => { const r = t.getBoundingClientRect(); return Y0 + ((ev.clientX - r.left) / r.width) * (Y1 - Y0); };
   sc.addEventListener('pointerdown', ev => { ac(); drag = true; stopTour(); sc.setPointerCapture(ev.pointerId); setYear(at(ev)); });
   sc.addEventListener('pointermove', ev => { if (drag) setYear(at(ev)); });
-  const up = () => { if (!drag) return; drag = false; if (rt.gate) openGate(rt.gate); };
+  const up = () => { if (!drag) return; drag = false; if (rt.card) openCard(rt.card); else if (rt.gate) openGate(rt.gate); };
   sc.addEventListener('pointerup', up);
   sc.addEventListener('pointercancel', up);
 }

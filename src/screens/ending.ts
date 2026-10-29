@@ -1,3 +1,4 @@
+import { isPlay, home, rank, decidedCount, RES } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL } from '../data';
 import { S, save, optOf, archetype, matchStats, values, resetState, familyName } from '../state';
@@ -36,6 +37,9 @@ export function openEnd(): void {
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
    <div class="pv" style="text-align:center"><div class="mono muted">Trùng hướng chiếm ưu thế</div><div style="font:800 40px/1.1 var(--disp);color:var(--acc)">${ms.m}/${ms.t}</div></div>
    <div class="pv" style="text-align:center;margin-top:0"><div class="mono muted">Dòng họ bạn là</div><div style="font:700 21px/1.15 var(--disp);margin-top:6px">${a ? a[0] : '—'}</div></div></div>
+  ${isPlay() ? `<h3 style="margin:22px 0 10px">Gia sản dòng họ sau sáu thế hệ</h3>
+  <div class="pv mine" style="text-align:center"><div class="mono muted">${esc(home()[1])} · ${decidedCount()} quyết định</div><div style="font:800 30px/1.1 var(--disp);color:var(--acc);margin-top:6px">${rank()[0]}</div><p class="muted" style="margin-top:6px">${rank()[1]}</p></div>
+  <div class="gs" style="margin-top:10px">${RES.map(([k, n, ic]) => `<div class="pv"><div class="mono muted">${ic} ${n}</div><b>${S.res[k]}</b></div>`).join('')}</div>` : ''}
   <h3 style="margin:22px 0 6px">La bàn giá trị</h3>${compass()}
   <h3 style="margin:22px 0 4px">Con đường của bạn và lịch sử</h3>${rows}
   <div class="pv mine" style="margin-top:14px"><div class="mono muted">Điều đọng lại</div><p style="margin-top:6px">Ở mỗi điểm rẽ, người Việt ở mọi phía đều tin mình đang làm điều đúng cho đất nước. Lịch sử ghi lại bên chiếm ưu thế, còn sử liệu giữ lại tiếng nói của tất cả.</p></div>
@@ -80,7 +84,7 @@ async function makeCard(): Promise<string> {
   });
   const ms = matchStats();
   y += 40;
-  x.fillStyle = ink; x.font = `700 40px ${disp}`; x.fillText(`Trùng hướng chiếm ưu thế ${ms.m}/${ms.t}  ·  ${S.badges.length} huy hiệu`, 100, y);
+  x.fillStyle = ink; x.font = `700 40px ${disp}`; x.fillText(isPlay() ? `${rank()[0]}  ·  ${home()[1]}  ·  ${decidedCount()} quyết định` : `Trùng hướng chiếm ưu thế ${ms.m}/${ms.t}  ·  ${S.badges.length} huy hiệu`, 100, y);
   x.fillStyle = ink2; x.font = `italic 400 30px ${serif}`; x.fillText('Một trò chơi lịch sử. Không có câu trả lời đúng.', 100, HH - 110);
   return cv.toDataURL('image/png');
 }

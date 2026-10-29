@@ -1,3 +1,4 @@
+import { isPlay, mustDecide, decided } from './play';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
@@ -51,6 +52,7 @@ function tourStep(): void {
   const { L, i } = tour;
   if (i >= L.length) { finishTour(); return; }
   const v = L[i];
+  if (isPlay() && mustDecide(v) && !decided(v.id)) { stopTour(); setYear(v.y, true); return; }
   animYear(v.y, () => {
     if (!tour) return;
     rt.focusEv = v;

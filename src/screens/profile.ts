@@ -1,4 +1,7 @@
 import { refreshMusic } from '../music';
+import { isPlay, HOMES, RES, powersAt, rank, decidedCount, home } from '../play';
+import { relChip } from './card';
+import { resetPlay } from '../state';
 import { applyTheme, themeCards } from '../theme';
 import { flag } from '../ui/bits';
 import type { Faction } from '../data';
@@ -9,6 +12,7 @@ import { esc, layer } from '../ui/dom';
 import { SND, buzz } from '../audio';
 import { hasTTS, hasVoice, speak } from '../narration';
 import { openShare, resetAll } from './ending';
+import { renderMain } from '../view';
 import './about';
 
 /** Value compass: cumulative points per value (max ≈ 18). */
@@ -18,6 +22,11 @@ export function compass(): string {
 }
 
 const RATES: [number, string][] = [[0.8, 'Chậm'], [0.95, 'Vừa'], [1.15, 'Nhanh']];
+
+/** Đọc sử / Chơi: hai thẻ chọn cách chơi (màn mở đầu và Hồ sơ). */
+export const modeCards = () => `<div class="modeg" role="radiogroup" aria-label="Cách chơi">${([['read', '❧', 'Đọc sử', 'Kể chuyện qua sáu điểm rẽ, bản đồ, tư liệu. Không có tài nguyên.'], ['play', '◆', 'Chơi', 'Giữ gia sản dòng họ qua 168 năm: lúa gạo, người, bạc, uy tín và các mối quan hệ.']] as const).map(([id, ic, n, d]) =>
+  `<button class="thc${S.mode === id ? ' on' : ''}" data-a="mode" data-v="${id}" role="radio" aria-checked="${S.mode === id}"><span class="nm">${ic} ${n}</span><span class="ds">${d}</span></button>`).join('')}</div>`;
+export const homeChips = () => `<div class="homes">${HOMES.map(h => `<button class="chip${S.home === h[0] ? ' on' : ''}" data-a="home" data-v="${h[0]}" aria-pressed="${S.home === h[0]}">${h[1]}</button>`).join('')}</div>`;
 
 export function paneMe(): void {
   const done = ERAS.filter(e => S.picks[e.id]).length, a = archetype();
@@ -45,6 +54,13 @@ export function paneMe(): void {
     return `<div class="era-row"><div class="n">${e.n}</div><div><div class="row sb"><b style="font:700 17px var(--disp)">${e.title}</b><span class="mono muted">${e.cy}</span></div>
      <div style="font-size:16px;margin-top:2px;${o ? '' : 'color:var(--ink3)'}">${o ? 'Chọn <b>' + o.label + '</b> · đồng hành: <i>' + FIG[o.guide][0] + '</i>' : 'Chưa tới'}</div></div></div>`;
   }).join('')}
+  ${isPlay() ? `<h3 style="margin:22px 0 10px">Gia sản dòng họ · ${esc(home()[1])}</h3>
+  <div class="gs">${RES.map(([k, n, ic]) => `<div class="pv"><div class="mono muted">${ic} ${n}</div><b>${S.res[k]}</b></div>`).join('')}</div>
+  <div class="mono muted" style="margin:14px 0 6px">Quan hệ hiện nay</div><div class="fxs">${powersAt(S.year).map(relChip).join('')}</div>
+  <div class="mono muted" style="margin:14px 0 6px">Đã quyết định ${decidedCount()} thẻ sự kiện · hiện là <b style="color:var(--acc)">${rank()[0]}</b></div>` : ''}
+  <h3 style="margin:22px 0 10px">Cách chơi</h3>
+  ${modeCards()}
+  <div id="homepick"${isPlay() ? '' : ' hidden'}><div class="mono muted" style="margin:12px 0 8px">Quê quán</div>${homeChips()}</div>
   <h3 style="margin:22px 0 10px">Giao diện</h3>
   ${themeCards()}
   <div class="row sb" style="padding:12px 0 6px"><span class="row" style="white-space:nowrap"><span class="muted">Màu các phe</span><span class="swl" aria-hidden="true">${sample}</span></span>${seg('pal', S.pal, [['flag', 'Theo cờ'], ['sepia', 'Mực nâu']])}</div>
@@ -92,3 +108,24 @@ on('theme', el => {
 });
 on('pal', el => { S.pal = el.dataset.v as typeof S.pal; save(); applyTheme(); paneMe(); SND.tick(); });
 on('mstyle', el => { S.mstyle = el.dataset.v as typeof S.mstyle; save(); applyTheme(); paneMe(); SND.tick(); });
+
+/* Cách chơi và quê quán (màn mở đầu + Hồ sơ). Chuyển sang Chơi giữa chừng thì gia sản bắt đầu từ mức gốc. */
+on('mode', el => {
+  const m = el.dataset.v as 'read' | 'play';
+  if (m === S.mode) return;
+  S.mode = m;
+  if (m === 'play' && !Object.keys(S.cards).length) resetPlay();
+  save();
+  SND.page();
+  el.closest('.modeg')?.querySelectorAll<HTMLElement>('.thc').forEach(b => { const o = b === el; b.classList.toggle('on', o); b.setAttribute('aria-checked', String(o)); });
+  const hp = document.getElementById('homepick'); if (hp) hp.hidden = m !== 'play';
+  if (layer.querySelector('.pane')) paneMe();
+  renderMain();
+});
+on('home', el => {
+  S.home = el.dataset.v!;
+  save();
+  SND.tick();
+  el.closest('.homes')?.querySelectorAll<HTMLElement>('.chip').forEach(b => { const o = b === el; b.classList.toggle('on', o); b.setAttribute('aria-pressed', String(o)); });
+  renderMain();
+});

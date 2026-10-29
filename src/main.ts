@@ -57,6 +57,7 @@ import { applyTheme } from './theme';
 import { initMusic, mood } from './music';
 import { splash, intro } from './screens/onboarding';
 import './screens/event';
+import './screens/card';
 import './screens/profile';
 import './screens/ending';
 

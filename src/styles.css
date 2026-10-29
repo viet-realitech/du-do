@@ -318,6 +318,47 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .lbdots i.on { background: #e6a73c; width: 14px; border-radius: 3px }
 .lbhint { position: absolute; left: 0; right: 0; bottom: calc(var(--sab) + 16px); text-align: center; font: 500 9px var(--mono); letter-spacing: .1em; color: #776a55; text-transform: uppercase }
 
+/* ---------- chế độ Chơi: gia sản, quan hệ, thẻ sự kiện ---------- */
+.res { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 10px 20px 0; height: 24px; box-sizing: content-box }
+.res .mt > span { color: var(--ink2) }
+.res .mt > span i { font-style: normal }
+.ri { vertical-align: -2px; margin-right: 2px; flex: none }
+.resrow i, .fx i, .gs .mono i { font-style: normal }
+.res .mt > span b { color: var(--ink); font-weight: 600 }
+.res .mt.low > span b, .res .mt.low i b { color: var(--red); background: var(--red) }
+.res .mt i b { background: var(--ink2) }
+.legend .sep { width: 1px; height: 16px; background: var(--rule); flex: none; margin: 0 -4px }
+.relc { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink2); flex: none }
+.relc .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink3); display: inline-block }
+.relc b { font-weight: 600; color: var(--ink2) }
+.relc b.ok { color: var(--ok) }
+.relc b.bad { color: var(--red) }
+.fxs .relc { font-size: 13px; padding: 3px 0 }
+.card.must { border-color: var(--red); box-shadow: 0 0 0 1px var(--red) inset }
+.rb.act { background: var(--red); color: #fff; border-color: var(--red); animation: blink 1.4s infinite }
+.fx.up { color: var(--ok); border: 1px solid currentColor; background: transparent }
+.fx.dn { color: var(--red); border: 1px solid currentColor; background: transparent }
+.fx.rel .flag { width: 14px; height: 10px; margin-right: 2px }
+.opt .out { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule); font-style: italic; font-size: 15px }
+.opt.sel .out { border-color: var(--paper3); color: var(--paper) }
+.opt[disabled] { opacity: .45 }
+.opt.sel[disabled] { opacity: 1 }
+.opt .tt .mono { font-size: 10px }
+.resrow { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; color: var(--ink2); padding: 10px 0 12px }
+.resrow i { font-style: normal; margin-right: 3px }
+.resrow b { color: var(--ink); font-weight: 600 }
+.hl { padding: 8px 0; border-top: 1px solid var(--rule); font-size: 15px; gap: 10px }
+.hl .fxs { justify-content: flex-end; flex: none; max-width: 60% }
+.fxs { display: flex; flex-wrap: wrap; gap: 5px }
+.modeg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.modeg .thc .nm { font-size: 17px }
+.modeg .thc { padding: 12px }
+.homes { display: flex; flex-wrap: wrap; gap: 6px }
+.homes .chip.on { background: var(--acc); border-color: var(--acc); color: var(--paper) }
+.gs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.gs .pv { margin: 0 }
+.gs .pv b { font: 800 28px/1.1 var(--disp); color: var(--acc); display: block }
+
 /* ---------- Lưu trữ & Áp phích (light themes) ---------- */
 [data-theme=archive] #app.grain::before, [data-theme=poster] #app.grain::before { opacity: .55; mix-blend-mode: multiply }
 [data-theme=archive] .yr { font: 800 66px/.86 var(--disp); letter-spacing: -.02em }
@@ -368,6 +409,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .eraR .av { width: 26px; height: 26px; font-size: 10px }
   .lbl { font-size: 17px; line-height: 24px; padding: 10px var(--gut) 0 }
   .vals { gap: 28px; padding: 16px var(--gut) 0 }
+  .res { gap: 28px; padding: 12px var(--gut) 0 }
   .mt { font-size: 13.5px }
   .mapwrap { margin: 16px var(--gut) 0; border-radius: 20px }
   .mtag { font-size: 11px; left: 14px; top: 14px }
@@ -413,8 +455,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   #main {
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--side);
-    grid-template-rows: auto auto auto auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "map hd" "map lbl" "map vals" "map legend" "map card" "map ." "scrub scrub" "tabs tabs";
+    grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "map hd" "map lbl" "map vals" "map res" "map legend" "map card" "map ." "scrub scrub" "tabs tabs";
   }
   .hd { grid-area: hd; padding: calc(var(--sat) + 26px) var(--gut) 0 8px }
   .yr { font-size: 92px }
@@ -423,6 +465,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .eraR { white-space: nowrap }
   .lbl { grid-area: lbl; padding: 12px var(--gut) 0 8px; white-space: normal; height: auto; min-height: 28px }
   .vals { grid-area: vals; padding: 20px var(--gut) 0 8px; gap: 20px }
+  .res { grid-area: res; padding: 14px var(--gut) 0 8px; gap: 20px }
+  .res[hidden] { display: none }
   .legend { grid-area: legend; padding: 20px var(--gut) 0 8px; height: auto; flex-wrap: wrap; gap: 8px 16px; white-space: normal }
   .card { grid-area: card; margin: 20px var(--gut) 0 8px; height: auto; min-height: 150px; padding: 16px 14px 16px 20px; align-items: flex-start }
   .card .c .t { white-space: normal; font-size: 24px; line-height: 1.15; margin: 6px 0 6px }

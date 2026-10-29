@@ -3,7 +3,9 @@ import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
-import { $, esc, sheet, clearLayer } from '../ui/dom';
+import { $, esc, sheet, clearLayer, ghost } from '../ui/dom';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, type Harvest } from '../play';
+import { fxChipsPlay, relChip } from './card';
 import { av, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
 import { hush, speak } from '../narration';
@@ -14,8 +16,27 @@ import { renderMain, invalidateTrack } from '../view';
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
   const prev = ERAS[ERAS.indexOf(e) - 1];
-  if (prev && !S.quiz[prev.id]) openQuiz(prev.id, () => openChoice(e));
-  else openChoice(e);
+  const next = () => { if (prev && !S.quiz[prev.id]) openQuiz(prev.id, () => openChoice(e)); else openChoice(e); };
+  const h = harvest(e);
+  if (h) openHarvest(e, h, next); else next();
+}
+
+/** Chế độ Chơi: mùa màng của một thế hệ, trước khi bước vào điểm rẽ. */
+function openHarvest(e: Era, h: Harvest, next: () => void): void {
+  stopTour();
+  clearLayer();
+  SND.chime();
+  const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">◆ Mùa màng · Thế hệ ${e.n}</span><span class="mono muted">${esc(familyName())} · ${esc(home()[1])}</span></div>
+  <h2 style="margin:10px 0 6px">Gia sản sau một đời người</h2>
+  <p class="muted" style="margin-bottom:12px">Ruộng đất, người trong họ và những mối quan hệ quyết định mùa màng của thế hệ này.</p>
+  ${h.lines.map(([n, fx]) => `<div class="row sb hl"><span>${esc(n)}</span><span class="fxs">${fxChipsPlay(fx) || '<span class="muted">—</span>'}</span></div>`).join('')}
+  <div class="rule"></div>
+  <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
+  <div class="mono muted" style="margin-top:12px">Quan hệ</div>
+  <div class="fxs" style="margin-top:6px">${powersAt(e.cy).map(relChip).join('')}</div>
+  <div style="height:16px"></div><button class="btn" id="hv-go">Bước vào điểm rẽ ${e.n}</button>`);
+  renderMain();
+  d.querySelector<HTMLButtonElement>('#hv-go')!.onclick = () => { ghost(d); next(); };
 }
 
 export function openQuiz(eid: string, done?: () => void): void {
@@ -79,6 +100,7 @@ export function openChoice(e: Era): void {
     S.picks[e.id] = selOpt;
     rt.gate = null;
     save();
+    if (isPlay()) applyFx(eraFx(selOpt));
     invalidateTrack();
     SND.stamp();
     buzz([10, 30, 40]);

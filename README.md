@@ -44,13 +44,25 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 | `src/map.ts` | Map rendering, zoom/pan, region popover, tour spotlight |
 | `src/view.ts` | Main screen: header, value bars, legend, event card, timeline, filter |
 | `src/tour.ts` | Chapter zoom tour with narration |
-| `src/screens/` | Onboarding, turning points + quiz, event detail, lightbox, figures, sources, profile, ending/share card |
+| `src/screens/` | Onboarding, turning points + quiz, event detail, event cards (play mode), lightbox, figures, sources, profile, ending/share card |
+| `src/play.ts`, `src/data/cards.ts` | Play-mode rules (resources, relations, harvest, rank) and the event cards |
 | `src/wiki.ts` | Wikipedia / Commons lookups (event media, video derivatives) and portrait URLs |
 | `src/data/portraits.ts` | Hand-picked Commons portrait per figure (real photo or painting, never statues) with a face focus point |
 | `src/ui/` | DOM helpers, delegated `data-a` actions, Back/Escape handling, `<image-slot>` element, flags/avatars |
 | `e2e/` | Playwright tests |
 | `scripts/` | Geodata trimming, icon / share-image generation, music and voice-over builds |
 | `src/music.ts`, `src/audio.ts`, `src/narration.ts` | Soundtrack moods, synthesised effects, narration (recordings or system voice) |
+
+### Play mode (Chế độ Chơi)
+
+Chosen at onboarding (Đọc sử / Chơi) and switchable in Hồ sơ. History still unfolds as it did; the player keeps a
+family estate through it: four resources (lúa gạo, nhân đinh, bạc, uy tín), relations with the powers of each
+period (triều đình, Pháp, Nhật, Việt Minh/VNDCCH, Quốc gia/VNCH, Mỹ, Nhà nước, làng xóm) and a home town shown on
+the map. Each historical event has a card (`src/data/cards.ts`, 91 cards × 2–3 choices) with resource and relation
+effects; cards marked nationwide or touching the home region must be decided before the timeline moves on, the rest
+are optional. Every generation opens with a harvest that depends on the ruling power's and the village's attitude
+(`src/play.ts`); turning-point choices also shift relations. The ending ranks the family (Vọng tộc … Dòng họ ly tán).
+All numbers are game abstractions, not historical data.
 
 ### Sound
 
