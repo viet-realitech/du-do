@@ -1,16 +1,22 @@
-import { isPlay, home, rank, decidedCount, RES } from '../play';
+import { isPlay, home, rank, decidedCount, RES, harvest } from '../play';
 import { mood } from '../music';
-import { ERAS, VAL } from '../data';
-import { S, save, optOf, archetype, matchStats, values, resetState, familyName } from '../state';
+import { ERAS, VAL, type Era } from '../data';
+import { S, save, optOf, archetype, matchStats, values, resetState, familyName, Y1 } from '../state';
 import { on } from '../ui/actions';
 import { app, esc, layer, sheet, toast, clearLayer } from '../ui/dom';
 import { checkBadges } from '../badges';
 import { stopTour } from '../tour';
 import { renderMain, invalidateTrack } from '../view';
 import { compass } from './profile';
-import { openQuiz } from './gate';
+import { openQuiz, openHarvest } from './gate';
 import { splash } from './onboarding';
 import { setTab } from '../tabs';
+
+/** Trò chơi: tour chương 6 kết thúc → mùa màng cuối → đố → kết cục. */
+export function endGame(e: Era): void {
+  const h = harvest(e, Y1);
+  if (h) openHarvest(e, h, 'Xem kết cục dòng họ', goEnd); else goEnd();
+}
 
 export function goEnd(): void {
   if (!S.quiz.e6) openQuiz('e6', openEnd);

@@ -328,6 +328,15 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .res .mt > span b { color: var(--ink); font-weight: 600 }
 .res .mt.low > span b, .res .mt.low i b { color: var(--red); background: var(--red) }
 .res .mt i b { background: var(--ink2) }
+.res .mt > span { position: relative }
+.res .delta { position: absolute; right: 0; top: -2px; font: 700 12px var(--mono); animation: floatup 1.6s ease-out forwards; pointer-events: none }
+.res .delta.up { color: var(--ok) }
+.res .delta.dn { color: var(--red) }
+@keyframes floatup { 0% { opacity: 0; transform: translateY(4px) } 15% { opacity: 1 } 100% { opacity: 0; transform: translateY(-18px) } }
+.btn.go { position: relative; overflow: hidden }
+.btn.go .cd { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--acc); opacity: .35; animation: cd linear forwards }
+.btn.go span { position: relative }
+@keyframes cd { to { width: 100% } }
 .legend .sep { width: 1px; height: 16px; background: var(--rule); flex: none; margin: 0 -4px }
 .relc { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink2); flex: none }
 .relc .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink3); display: inline-block }

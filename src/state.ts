@@ -85,6 +85,8 @@ export const rt = {
   focusEv: null as HistEvent | null,
   gate: null as Era | null,
   card: null as HistEvent | null,
+  /** Chế độ Chơi: năm mà luồng đang tự chạy tới (qua các thẻ bắt buộc) trước khi mở điểm rẽ. */
+  flowTo: null as number | null,
 };
 
 /** Còn điểm rẽ chưa chọn tính đến năm hiện tại. */

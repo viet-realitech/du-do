@@ -7,7 +7,7 @@ import { paintMap, paintHome } from './map';
 import { isPlay, pendingCard, cardOf, decided, mustDecide, home, RES, powersAt } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
-import { stopTour } from './tour';
+import { stopTour, isTourPaused, resumeTour } from './tour';
 import { openGate } from './screens/gate';
 import { openEvent } from './screens/event';
 import { openFig } from './screens/figures';
@@ -62,11 +62,25 @@ function renderVals(): void {
     `<div class="mt"><span>${n}<b>${v[k]}</b></span><i><b style="width:${Math.min(100, (v[k] / 18) * 100)}%"></b></i></div>`).join('');
 }
 
+/** Trò chơi: sau một thẻ / mùa màng, đi tiếp luồng đang chạy (tour tạm dừng, hoặc năm đích còn thẻ bắt buộc). */
+export function continueFlow(): void {
+  if (isTourPaused()) { resumeTour(); return; }
+  if (rt.flowTo != null) { const t = rt.flowTo; rt.flowTo = null; setYear(t, true); return; }
+  renderMain();
+}
+
+let shownRes: Record<string, number> | null = null;
 function renderRes(): void {
   const el = $('#res')!;
   el.hidden = !isPlay();
-  if (!isPlay()) return;
-  el.innerHTML = RES.map(([k, n, ic]) => `<div class="mt r${S.res[k] <= 10 ? ' low' : ''}"><span><span><i>${ic}</i> ${n}</span><b>${S.res[k]}</b></span><i><b style="width:${S.res[k]}%"></b></i></div>`).join('');
+  if (!isPlay()) { shownRes = null; return; }
+  // Số nổi lên khi gia sản đổi (so với lần cuối thấy rõ màn chính, tức không có bảng che).
+  const covered = !!document.querySelector('#layer .scrim, #layer .ov');
+  el.innerHTML = RES.map(([k, n, ic]) => {
+    const d = shownRes && !covered ? S.res[k] - shownRes[k] : 0;
+    return `<div class="mt r${S.res[k] <= 10 ? ' low' : ''}"><span><span><i>${ic}</i> ${n}</span><b>${S.res[k]}</b>${d ? `<em class="delta ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '+' : ''}${d}</em>` : ''}</span><i><b style="width:${S.res[k]}%"></b></i></div>`;
+  }).join('');
+  if (!covered) shownRes = { ...S.res };
 }
 
 function renderCard(): void {

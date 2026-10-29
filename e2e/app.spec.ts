@@ -100,26 +100,35 @@ test('appearance: theme picked at onboarding, changed in settings, kept after re
   expect(errors).toEqual([]);
 });
 
-test('game flow: separate entrance and save, harvest, mandatory card, switch back to reading', async ({ page }) => {
+test('game flow: one continuous loop — choice → tour auto-starts → card pauses it → continue resumes', async ({ page }) => {
   const errors = await boot(page);
   await page.getByRole('button', { name: /Vào trò chơi/ }).click();
   await expect(page.getByText('Giữ gia sản một dòng họ qua 168 năm.')).toBeVisible();
   await page.getByRole('button', { name: 'Huế' }).click();
   await page.locator('#nm').fill('Họ Tôn Thất');
   await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
-  await expect(page.getByText('Gia sản sau một đời người')).toBeVisible(); // harvest, then the turning point
-  await page.getByRole('button', { name: /Bước vào điểm rẽ 1/ }).click();
+  // generation 1 has nothing to harvest yet: straight to the turning point
+  await expect(page.getByText('Tiếng súng Sơn Trà').first()).toBeVisible();
+  await expect(page.getByText('Gia sản sau một đời người')).toHaveCount(0);
   await page.locator('.opt').first().click();
   await page.locator('#go').click();
-  await page.getByRole('button', { name: 'Tự kéo dòng thời gian' }).click();
+  // outcome: a single "live through the generation" button with a countdown; the chapter starts by itself
+  await expect(page.locator('.btn.go .cd')).toBeAttached();
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('#res')).toBeVisible();
   await expect(page.locator('#map g.home g')).toHaveCount(1); // home marker
+  // the first tour stop (Đà Nẵng 1858) touches Huế's region: its card opens by itself and pauses the tour
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 }); // opens ~4.5 s into the stop, narration or not
+  await expect(page.locator('#tourb')).toContainText('chờ quyết định');
   const before = await page.locator('#res .mt').first().locator('b').first().textContent();
-  await page.locator('#card [data-a=card]').click(); // Đà Nẵng 1858 touches Huế's region
-  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible();
   await page.locator('.scrim .opt').first().click();
-  await page.getByRole('button', { name: 'Tiếp tục' }).click();
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  // the tour goes on by itself: progress advances past 1/n, no Play press needed
+  await expect(page.locator('#tourb')).toBeVisible();
+  await expect(page.locator('#tourb')).not.toContainText('chờ quyết định');
+  await expect(page.locator('#tourb')).not.toContainText('· 1/');
   expect(await page.locator('#res .mt').first().locator('b').first().textContent()).not.toBe(before);
+  await page.locator('#tourb [data-t=stop]').click();
   // the reading flow is a separate save: switching lands on its own intro, no resources
   await page.locator('.tab[data-t=me]').click();
   await expect(page.getByText('Gia sản dòng họ · Huế')).toBeVisible();

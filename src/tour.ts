@@ -1,4 +1,6 @@
-import { isPlay, mustDecide, decided } from './play';
+import { isPlay, mustDecide, decided, cardOf } from './play';
+import { openCard } from './screens/card';
+import { endGame } from './screens/ending';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
@@ -12,14 +14,25 @@ import { openGate } from './screens/gate';
 
 /* Chapter "zoom tour": fly through up to 8 key events of an era, narrating each,
    then return to the overview and open the next turning point. */
-interface Tour { e: Era; L: HistEvent[]; i: number; end: number; t: number | undefined; cur?: string }
+interface Tour { e: Era; L: HistEvent[]; i: number; end: number; t: number | undefined; cur?: string; paused?: boolean }
 let tour: Tour | null = null;
 
 export const isTouring = () => !!tour;
+export const isTourPaused = () => !!tour?.paused;
 
 function tourList(e: Era): { L: HistEvent[]; end: number } {
   const i = ERAS.indexOf(e), nx = ERAS[i + 1], end = nx ? nx.cy : Y1;
   let L = allEv().filter(v => v.y >= Math.max(e.cy, S.year) && v.y < (nx ? nx.cy : Y1 + 1));
+  if (isPlay()) {
+    // Trò chơi: mọi thẻ bắt buộc còn bỏ ngỏ và nhật ký luôn có mặt, phần còn lại lấy đều, ưu tiên sự kiện có thẻ.
+    const must = L.filter(v => !v.diary && mustDecide(v) && !decided(v.id)), d = L.filter(v => v.diary);
+    const rest = L.filter(v => !must.includes(v) && !v.diary);
+    const pool = rest.filter(v => cardOf(v) && !decided(v.id)).length >= 3 ? rest.filter(v => cardOf(v) && !decided(v.id)) : rest;
+    const need = Math.max(0, 10 - must.length - d.length), pick: HistEvent[] = [];
+    for (let j = 0; j < need && pool.length; j++) pick.push(pool[Math.floor((j * pool.length) / need)]);
+    L = [...new Set([...must, ...d, ...pick])].sort((a, b) => a.y - b.y || (a.diary ? 1 : 0) - (b.diary ? 1 : 0));
+    return { L, end };
+  }
   if (L.length > 8) {
     // Keep every family-diary page, then sample battles/treaties/quoted events evenly.
     const d = L.filter(v => v.diary), rest = L.filter(v => !v.diary);
@@ -52,7 +65,6 @@ function tourStep(): void {
   const { L, i } = tour;
   if (i >= L.length) { finishTour(); return; }
   const v = L[i];
-  if (isPlay() && mustDecide(v) && !decided(v.id)) { stopTour(); setYear(v.y, true); return; }
   animYear(v.y, () => {
     if (!tour) return;
     rt.focusEv = v;
@@ -61,8 +73,14 @@ function tourStep(): void {
     zoomTo(v.l, zoomK(v));
     SND.fly();
     tourBar();
+    // Trò chơi: sự kiện có thẻ thì tạm dừng tour và mở thẻ, sớm nhất sau 4,5 s (giọng đọc vẫn tiếp tục
+    // trong lúc người chơi đọc thẻ); "Tiếp tục" trên thẻ gọi resumeTour().
+    const card = isPlay() && cardOf(v) && !decided(v.id);
+    const openIt = () => { if (!tour || tour.cur !== v.id || tour.paused) return; clearTimeout(tour.t); tour.paused = true; tourBar(); openCard(v, true); };
+    if (card) tour.t = window.setTimeout(openIt, 4500);
     const next = (d: number) => {
       if (!tour || tour.cur !== v.id) return;
+      if (card) { clearTimeout(tour.t); tour.t = window.setTimeout(openIt, Math.min(d, 500)); return; }
       tour.t = window.setTimeout(() => { if (!tour) return; tour.i++; tourStep(); }, d);
     };
     if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (tour && tour.cur === v.id) speak(evSpeech(v), () => next(900), false, evKey(v)); }, 700);
@@ -87,10 +105,20 @@ function animYear(to: number, cb: () => void): void {
 }
 
 function finishTour(): void {
-  const end = tour!.end;
+  const end = tour!.end, e = tour!.e;
   stopTour();
   zoomTo(null);
-  setTimeout(() => setYear(end, true), 950);
+  if (isPlay()) rt.flowTo = end; // thẻ bắt buộc còn sót (sau khi bỏ qua tour) được mở lần lượt rồi mới tới điểm rẽ
+  setTimeout(() => { if (isPlay() && end >= Y1) endGame(e); else setYear(end, true); }, 950);
+}
+
+/** Tour đang tạm dừng ở một thẻ: đi tiếp sự kiện kế. */
+export function resumeTour(): void {
+  if (!tour || !tour.paused) return;
+  tour.paused = false;
+  tour.i++;
+  tourBar();
+  tourStep();
 }
 
 export function stopTour(): void {
@@ -128,8 +156,8 @@ function tourBar(): void {
       else if (a === 'stop') stopTour();
     });
   }
-  const { e, L, i } = tour, n = Math.max(1, L.length), at = Math.min(i + 1, n);
-  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">Chương ${e.n} · ${at}/${n}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
+  const { e, L, i, paused } = tour, n = Math.max(1, L.length), at = Math.min(i + 1, n);
+  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">Chương ${e.n} · ${at}/${n}${paused ? ' · chờ quyết định' : ''}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
     <button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button><button class="chip" data-t="skip">Điểm rẽ ›</button><button class="chip" data-t="stop">Dừng</button>`;
   $('#play')!.textContent = '❚❚';
 }

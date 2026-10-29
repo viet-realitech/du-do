@@ -11,30 +11,33 @@ import { SND, buzz } from '../audio';
 import { hush, speak } from '../narration';
 import { checkBadges } from '../badges';
 import { stopTour, startTour } from '../tour';
+import { layer } from '../ui/dom';
 import { renderMain, invalidateTrack } from '../view';
 
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
+  rt.flowTo = null;
   const prev = ERAS[ERAS.indexOf(e) - 1];
   const next = () => { if (prev && !S.quiz[prev.id]) openQuiz(prev.id, () => openChoice(e)); else openChoice(e); };
-  const h = harvest(e);
-  if (h) openHarvest(e, h, next); else next();
+  // Trò chơi: khép lại thế hệ vừa sống (mùa màng) trước khi đố và bước vào điểm rẽ mới.
+  const h = prev ? harvest(prev, e.cy) : null;
+  if (prev && h) openHarvest(prev, h, `Bước vào điểm rẽ ${e.n}`, next); else next();
 }
 
-/** Chế độ Chơi: mùa màng của một thế hệ, trước khi bước vào điểm rẽ. */
-function openHarvest(e: Era, h: Harvest, next: () => void): void {
+/** Chế độ Chơi: mùa màng khép lại thế hệ `e`, rồi `next` (điểm rẽ kế hoặc kết cục). */
+export function openHarvest(e: Era, h: Harvest, go: string, next: () => void): void {
   stopTour();
   clearLayer();
   SND.chime();
-  const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">◆ Mùa màng · Thế hệ ${e.n}</span><span class="mono muted">${esc(familyName())} · ${esc(home()[1])}</span></div>
+  const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">◆ Mùa màng · Thế hệ ${e.n} khép lại</span><span class="mono muted">${esc(familyName())} · ${esc(home()[1])}</span></div>
   <h2 style="margin:10px 0 6px">Gia sản sau một đời người</h2>
-  <p class="muted" style="margin-bottom:12px">Ruộng đất, người trong họ và những mối quan hệ quyết định mùa màng của thế hệ này.</p>
+  <p class="muted" style="margin-bottom:12px">${e.title}, ${e.cy}–${ERAS[e.n]?.cy ?? 2026}. Ruộng đất, người trong họ và các mối quan hệ quyết định mùa màng.</p>
   ${h.lines.map(([n, fx]) => `<div class="row sb hl"><span>${esc(n)}</span><span class="fxs">${fxChipsPlay(fx) || '<span class="muted">—</span>'}</span></div>`).join('')}
   <div class="rule"></div>
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div class="mono muted" style="margin-top:12px">Quan hệ</div>
   <div class="fxs" style="margin-top:6px">${powersAt(e.cy).map(relChip).join('')}</div>
-  <div style="height:16px"></div><button class="btn" id="hv-go">Bước vào điểm rẽ ${e.n}</button>`);
+  <div style="height:16px"></div><button class="btn" id="hv-go">${esc(go)} ›</button>`);
   renderMain();
   d.querySelector<HTMLButtonElement>('#hv-go')!.onclick = () => { ghost(d); next(); };
 }
@@ -121,7 +124,25 @@ function outcome(e: Era, o: Option): void {
   <div class="rule"></div><div class="mono" style="color:var(--acc)">Mở khoá ${fs.length} nhân vật</div>
   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${fs.map(id => `<button data-a="fig" data-id="${id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center">${av(id, 48)}<span>${FIG[id][0].split(' ').slice(-2).join(' ')}</span></button>`).join('')}</div>
   ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">✎ Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${d.y}</span> · ${esc(d.t)}</div>`).join('')}` : ''}
-  <div style="height:18px"></div><button class="btn" data-a="watch" data-e="${e.id}">▶ Xem chương ${e.n} diễn ra</button><button class="lnk" data-a="close">Tự kéo dòng thời gian</button>`);
+  <div style="height:18px"></div>${isPlay()
+    ? `<button class="btn go" data-a="watch" data-e="${e.id}"><i class="cd"></i><span>▶ Sống qua thế hệ ${e.n}</span></button><p class="muted" style="font-size:13px;text-align:center;margin-top:10px">Chương tự bắt đầu; chạm nhân vật để đọc thêm trước.</p>`
+    : `<button class="btn" data-a="watch" data-e="${e.id}">▶ Xem chương ${e.n} diễn ra</button><button class="lnk" data-a="close">Tự kéo dòng thời gian</button>`}`);
+  if (!isPlay()) return;
+  // Trò chơi: đọc kết cục rồi tự sang chương; chạm vào nhân vật / nhật ký thì dừng đếm, để người chơi tự bấm.
+  const d = layer.lastElementChild as HTMLElement, bar = d.querySelector<HTMLElement>('.cd')!;
+  let armed = true;
+  const go = () => { if (!armed || !d.isConnected) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
+  // speak() gọi callback ngay (đồng bộ) khi không có giọng: khi đó dùng bộ đếm thay vì kết thúc lời đọc.
+  let sync = true;
+  const spoke = speak(`Con đường của bạn. ${o.out}`, () => { if (!sync && armed) setTimeout(go, 700); });
+  sync = false;
+  const ms = spoke ? Math.max(6000, o.out.length * 95) : 7000;
+  bar.style.animationDuration = ms + 'ms';
+  if (!spoke) setTimeout(go, ms);
+  d.addEventListener('click', ev => {
+    const t = (ev.target as Element).closest<HTMLElement>('[data-a]');
+    if (t && t.dataset.a === 'fig' && armed) { armed = false; hush(); bar.remove(); }
+  }, true);
 }
 
 on('watch', el => { clearLayer(); renderMain(); checkBadges(); startTour(ERAS.find(x => x.id === el.dataset.e)); });

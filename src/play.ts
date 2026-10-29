@@ -107,10 +107,11 @@ export const eraFx = (optId: string): Fx => ERA_FX[optId] || {};
 
 /* ---------- mùa màng mỗi thế hệ ---------- */
 export interface Harvest { lines: [string, Fx][]; total: Fx }
-/** Thu hoạch khi bước vào thế hệ e (một lần). Phụ thuộc quan hệ với bên cai quản quê nhà. */
-export function harvest(e: Era): Harvest | null {
-  if (!isPlay() || S.harvests.includes(e.id)) return null;
-  const y = e.cy, r = ruler(y), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
+/** Mùa màng của thế hệ vừa sống qua (`lived`), tính vào năm `y` nó khép lại; một lần mỗi thế hệ.
+    Phụ thuộc bên cai quản quê nhà và làng xóm nghĩ gì về dòng họ. */
+export function harvest(lived: Era, y: number): Harvest | null {
+  if (!isPlay() || S.harvests.includes(lived.id)) return null;
+  const r = ruler(y), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
   const lines: [string, Fx][] = [['Ruộng đất của họ', { g: 12, d: 4, b: 6 }]];
   if (r) lines.push([`${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 6), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
   else lines.push(['Vùng tranh chấp', { g: -6, d: -2 }]);
@@ -120,7 +121,7 @@ export function harvest(e: Era): Harvest | null {
   const total: Fx = {};
   for (const [, fx] of lines) for (const [k, n] of Object.entries(fx) as [keyof Fx, number][]) total[k] = (total[k] || 0) + n;
   applyFx(total);
-  S.harvests.push(e.id);
+  S.harvests.push(lived.id);
   save();
   return { lines, total };
 }

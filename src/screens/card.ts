@@ -6,7 +6,7 @@ import { esc, sheet, toast, ghost } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { SND, buzz } from '../audio';
 import { cardOf, canAfford, decide, decided, mustDecide, home, RES, POWERS, relLabel } from '../play';
-import { renderMain } from '../view';
+import { renderMain, continueFlow } from '../view';
 import { checkBadges } from '../badges';
 
 /* Thẻ ứng xử của dòng họ ở một sự kiện (chế độ Chơi). */
@@ -28,10 +28,12 @@ export function fxChipsPlay(fx: Fx, got?: Fx): string {
   return out.join('');
 }
 
-export function openCard(v: HistEvent): void {
+/** `inTour`: thẻ mở giữa tour; "Tiếp tục" đi tiếp sự kiện kế, thẻ tuỳ chọn có thể bỏ qua. */
+export function openCard(v: HistEvent, inTour = false): void {
   const c = cardOf(v);
   if (!c) return;
   const done = decided(v.id), must = mustDecide(v), h = home();
+  if (inTour) { buzz(must ? [15, 30, 15] : 10); }
   const near = c[1] !== 'all' && must;
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ ${must ? 'Dòng họ phải quyết định' : 'Dòng họ có thể hành động'} · ${v.y}</span><span class="mono muted">${esc(familyName())} · ${esc(h[1])}</span></div>
   <h2 style="margin:8px 0 6px">${esc(v.t)}</h2>
@@ -46,7 +48,7 @@ export function openCard(v: HistEvent): void {
       <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
   }).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
-  ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : ''}`, done);
+  ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done);
   if (done) return;
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
     const i = +b.dataset.i!, ch = c[2][i];
@@ -59,7 +61,7 @@ export function openCard(v: HistEvent): void {
     const warn = RES.filter(([k]) => S.res[k] <= 10).map(([, n]) => n.toLowerCase());
     d.querySelector('.sheet')!.insertAdjacentHTML('beforeend', `<div class="rule"></div><div class="mono muted">Thay đổi</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(ch[2], got) || '<span class="muted">Không đổi</span>'}</div>
       ${warn.length ? `<p style="color:var(--red);margin-top:8px">Cạn ${warn.join(', ')}: mùa màng thế hệ tới sẽ khó khăn.</p>` : ''}
-      <div style="height:14px"></div><button class="btn" data-a="close-card">Tiếp tục</button>`);
+      <div style="height:14px"></div><button class="btn" data-a="close-card">${inTour || rt.flowTo ? 'Tiếp tục ▶' : 'Tiếp tục'}</button>`);
     delete d.dataset.lock;
     if (rt.card?.id === v.id) rt.card = null;
     renderMain();
@@ -68,7 +70,7 @@ export function openCard(v: HistEvent): void {
 }
 
 on('card', el => { const v = allEv().find(x => x.id === el.dataset.id); if (v) openCard(v); });
-on('close-card', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); renderMain(); });
+on('close-card', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); continueFlow(); });
 
 /** Chip quan hệ cho chú giải màn chính. */
 export const relChip = (k: keyof typeof POWERS) => {
