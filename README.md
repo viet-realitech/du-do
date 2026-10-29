@@ -55,7 +55,9 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 
 ### Play mode (Chế độ Chơi)
 
-Chosen at onboarding (Đọc sử / Chơi) and switchable in Hồ sơ. History still unfolds as it did; the player keeps a
+A separate flow with its own save slot (`dudo-v2-play`; the reading flow stays in `dudo-v2`, `dudo-mode` names the
+open one). The splash offers both entrances and Hồ sơ switches between them without losing either progress; device
+settings are shared. History still unfolds as it did; the player keeps a
 family estate through it: four resources (lúa gạo, nhân đinh, bạc, uy tín), relations with the powers of each
 period (triều đình, Pháp, Nhật, Việt Minh/VNDCCH, Quốc gia/VNCH, Mỹ, Nhà nước, làng xóm) and a home town shown on
 the map. Each historical event has a card (`src/data/cards.ts`, 91 cards × 2–3 choices) with resource and relation

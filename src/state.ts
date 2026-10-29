@@ -8,7 +8,13 @@ const REL0: Rel = { tr: 50, ph: 35, nh: 35, vm: 40, qg: 40, my: 35, nn: 45, lg: 
 
 export const Y0 = 1858;
 export const Y1 = 2026;
-const KEY = 'dudo-v2';
+/* Hai luồng tách riêng, mỗi luồng một bản lưu: Đọc sử ('dudo-v2') và Trò chơi ('dudo-v2-play').
+   'dudo-mode' ghi luồng đang mở; public/boot.js đọc cùng khoá để tô giao diện trước khi app chạy. */
+const MODE_KEY = 'dudo-mode';
+const slotKey = (m: 'read' | 'play') => (m === 'play' ? 'dudo-v2-play' : 'dudo-v2');
+const activeMode = (): 'read' | 'play' => { try { return localStorage.getItem(MODE_KEY) === 'play' ? 'play' : 'read'; } catch { return 'read'; } };
+/** Thiết lập thiết bị, dùng chung cho cả hai luồng. */
+const PREFS = ['sound', 'music', 'theme', 'pal', 'mstyle', 'grain', 'modern', 'grat', 'haptic', 'narr', 'rate'] as const;
 
 export interface State {
   step: 'splash' | 'intro' | 'play';
@@ -52,20 +58,18 @@ const def: State = {
   filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
 };
 
-function load(): State {
-  try {
-    const s = Object.assign({}, def, JSON.parse(localStorage.getItem(KEY) || '{}'));
-    s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
-    return s;
-  } catch {
-    return { ...def };
-  }
+function load(mode = activeMode()): State {
+  let s: State;
+  try { s = Object.assign({}, def, JSON.parse(localStorage.getItem(slotKey(mode)) || '{}')); } catch { s = { ...def }; }
+  s.mode = mode;
+  s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
+  return s;
 }
 
 export let S: State = load();
 
 export function save(): void {
-  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: progress lives for this session only */ }
+  try { localStorage.setItem(slotKey(S.mode), JSON.stringify(S)); localStorage.setItem(MODE_KEY, S.mode); } catch { /* private mode: progress lives for this session only */ }
 }
 
 /** Start over, keeping device preferences. */
@@ -83,6 +87,8 @@ export const rt = {
   card: null as HistEvent | null,
 };
 
+/** Còn điểm rẽ chưa chọn tính đến năm hiện tại. */
+export const ERAS_PENDING = () => ERAS.some(e => !S.picks[e.id] && e.cy <= S.year);
 export const eraOf = (y: number): Era => [...ERAS].reverse().find(e => y >= e.from) || ERAS[0];
 export const optOf = (e: Era): Option | undefined => e.opts.find(o => o.id === S.picks[e.id]);
 export const curPick = (y: number) => optOf(eraOf(y));
@@ -140,5 +146,16 @@ export const familyName = () => S.name || 'Họ Lê';
 /** Bắt đầu lại gia sản (khi đổi sang chế độ Chơi giữa chừng). */
 export function resetPlay(): void {
   S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = [];
+  save();
+}
+
+/** Chuyển luồng (Đọc sử ⇄ Trò chơi): lưu luồng hiện tại, mở bản lưu của luồng kia, giữ thiết lập thiết bị. */
+export function switchMode(m: 'read' | 'play'): void {
+  if (m === S.mode) return;
+  save();
+  const prev = S;
+  S = load(m);
+  for (const k of PREFS) (S as unknown as Record<string, unknown>)[k] = prev[k];
+  rt.focusEv = null; rt.gate = null; rt.card = null;
   save();
 }

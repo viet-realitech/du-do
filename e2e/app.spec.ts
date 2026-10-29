@@ -16,7 +16,7 @@ const midGame = { step: 'play', name: 'Họ Lê', year: 1954, picks: { e1: 'chie
 
 test('first run: onboarding → turning point → outcome → chapter tour', async ({ page }) => {
   const errors = await boot(page);
-  await page.getByRole('button', { name: 'Mở hồ sơ' }).click();
+  await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
   await page.locator('#nm').fill('Họ Trần');
   await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
   await expect(page.getByText('Tiếng súng Sơn Trà').first()).toBeVisible();
@@ -80,7 +80,7 @@ test('figures lock until their turning point; profile, about and share card', as
 
 test('appearance: theme picked at onboarding, changed in settings, kept after reload', async ({ page }) => {
   const errors = await boot(page);
-  await page.getByRole('button', { name: 'Mở hồ sơ' }).click();
+  await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
   await page.getByRole('radio', { name: /Lưu trữ/ }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'archive');
   await page.locator('#nm').fill('Họ Phan');
@@ -100,15 +100,14 @@ test('appearance: theme picked at onboarding, changed in settings, kept after re
   expect(errors).toEqual([]);
 });
 
-test('play mode: home town, harvest, mandatory event card stops the timeline, resources change', async ({ page }) => {
+test('game flow: separate entrance and save, harvest, mandatory card, switch back to reading', async ({ page }) => {
   const errors = await boot(page);
-  await page.getByRole('button', { name: 'Mở hồ sơ' }).click();
-  await page.getByRole('radio', { name: /Chơi/ }).click();
+  await page.getByRole('button', { name: /Vào trò chơi/ }).click();
+  await expect(page.getByText('Giữ gia sản một dòng họ qua 168 năm.')).toBeVisible();
   await page.getByRole('button', { name: 'Huế' }).click();
   await page.locator('#nm').fill('Họ Tôn Thất');
-  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
-  // harvest sheet for generation 1, then the turning point
-  await expect(page.getByText('Gia sản sau một đời người')).toBeVisible();
+  await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
+  await expect(page.getByText('Gia sản sau một đời người')).toBeVisible(); // harvest, then the turning point
   await page.getByRole('button', { name: /Bước vào điểm rẽ 1/ }).click();
   await page.locator('.opt').first().click();
   await page.locator('#go').click();
@@ -116,16 +115,19 @@ test('play mode: home town, harvest, mandatory event card stops the timeline, re
   await expect(page.locator('#res')).toBeVisible();
   await expect(page.locator('#map g.home g')).toHaveCount(1); // home marker
   const before = await page.locator('#res .mt').first().locator('b').first().textContent();
-  // Đà Nẵng 1858 touches Huế's region: scrubbing past it stops there and opens the card
-  await page.locator('#card [data-a=card]').click();
+  await page.locator('#card [data-a=card]').click(); // Đà Nẵng 1858 touches Huế's region
   await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible();
   await page.locator('.scrim .opt').first().click();
-  await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
   await page.getByRole('button', { name: 'Tiếp tục' }).click();
-  const after = await page.locator('#res .mt').first().locator('b').first().textContent();
-  expect(after).not.toBe(before);
+  expect(await page.locator('#res .mt').first().locator('b').first().textContent()).not.toBe(before);
+  // the reading flow is a separate save: switching lands on its own intro, no resources
   await page.locator('.tab[data-t=me]').click();
   await expect(page.getByText('Gia sản dòng họ · Huế')).toBeVisible();
+  await page.getByRole('button', { name: /Sang Đọc sử/ }).click();
+  await expect(page.getByText('Bạn là một dòng họ Việt đi qua sáu thế hệ.')).toBeVisible();
+  await expect(page.locator('#res')).toBeHidden();
+  await page.reload();
+  await expect(page.getByText('Bạn là một dòng họ Việt đi qua sáu thế hệ.')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

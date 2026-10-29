@@ -320,6 +320,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 
 /* ---------- chế độ Chơi: gia sản, quan hệ, thẻ sự kiện ---------- */
 .res { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 10px 20px 0; height: 24px; box-sizing: content-box }
+.res[hidden] { display: none }
 .res .mt > span { color: var(--ink2) }
 .res .mt > span i { font-style: normal }
 .ri { vertical-align: -2px; margin-right: 2px; flex: none }

@@ -55,7 +55,7 @@ import { isTouring, startTour, stopTour } from './tour';
 import { ac } from './audio';
 import { applyTheme } from './theme';
 import { initMusic, mood } from './music';
-import { splash, intro } from './screens/onboarding';
+import { splash, intro, gameIntro } from './screens/onboarding';
 import './screens/event';
 import './screens/card';
 import './screens/profile';
@@ -75,7 +75,7 @@ initMap().then(renderMain);
 addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) scrollTo(0, 0); }, 60));
 
 if (S.step === 'splash') splash();
-else if (S.step === 'intro') intro();
+else if (S.step === 'intro') (S.mode === 'play' ? gameIntro : intro)();
 else if (ERAS.find(e => !S.picks[e.id] && e.cy <= S.year)) setYear(S.year, true);
 
 registerSW({ immediate: true });

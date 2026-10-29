@@ -36,7 +36,7 @@ function showYear(y: number): void {
 export function renderMain(): void {
   const y = S.year, R = regime2(y), e = eraOf(y), pk = curPick(y);
   showYear(y);
-  $('#eraNo')!.textContent = `Chương ${e.n}/6 · Thế hệ ${e.n}`;
+  $('#eraNo')!.textContent = `Chương ${e.n}/6 · Thế hệ ${e.n}${isPlay() ? ' · Trò chơi' : ''}`;
   $('#eraT')!.textContent = e.title;
   const er = $('#eraR')!;
   er.innerHTML = pk ? `${av(pk.guide)}${esc(pk.label)}` : 'Chưa chọn';
