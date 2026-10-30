@@ -112,27 +112,37 @@ export interface Harvest { lines: [string, Fx][]; total: Fx }
 export function harvest(lived: Era, y: number): Harvest | null {
   if (!isPlay() || S.harvests.includes(lived.id)) return null;
   const r = ruler(y), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
-  const lines: [string, Fx][] = [['Ruộng đất của họ', { g: 12, d: 4, b: 6 }]];
+  // Thu nhập cố định; chi phí tăng theo quy mô (họ càng đông càng tốn gạo, càng giàu càng nặng thuế, danh tiếng phai dần):
+  // không chọn gì cũng không thể giàu mãi, và không có tài nguyên nào kẹt ở mức trần.
+  const { g, d, b, u } = S.res;
+  const lines: [string, Fx][] = [
+    ['Ruộng đất của họ', { g: 14, d: 7, b: 5 }],
+    ['Nuôi người trong họ', { g: -Math.round(d / 6 + (g * g) / 500) }],
+    ['Thuế và sưu dịch', { b: -Math.round((b * b) / 350) }],
+    ['Danh tiếng phai theo thời gian', { u: -Math.max(4, Math.round((u * u) / 700)) }],
+  ];
   if (r) lines.push([`${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 6), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
   else lines.push(['Vùng tranh chấp', { g: -6, d: -2 }]);
   lines.push([`Làng xóm · ${relLabel(lg).toLowerCase()}`, { g: Math.round((lg - 50) / 8), u: Math.round((lg - 50) / 10) }]);
-  if (S.res.d >= 60) lines.push(['Họ đông người', { g: 4, b: 3 }]);
-  if (S.res.d < 20) lines.push(['Thiếu người làm', { g: -6 }]);
+  if (d >= 60) lines.push(['Họ đông người', { g: 4, b: 4 }]);
+  if (d < 20) lines.push(['Thiếu người làm', { g: -6 }]);
+  if (g < 10) lines.push(['Đói kém', { d: -4, u: -3 }]);
   const total: Fx = {};
-  for (const [, fx] of lines) for (const [k, n] of Object.entries(fx) as [keyof Fx, number][]) total[k] = (total[k] || 0) + n;
+  const shown = lines.filter(([, fx]) => Object.values(fx).some(Boolean)); // bỏ dòng không đổi gì (vd. thuế khi không có bạc)
+  for (const [, fx] of shown) for (const [k, n] of Object.entries(fx) as [keyof Fx, number][]) total[k] = (total[k] || 0) + n;
   applyFx(total);
   S.harvests.push(lived.id);
   save();
-  return { lines, total };
+  return { lines: shown, total };
 }
 
 /* ---------- kết cục ---------- */
 export function rank(): [string, string] {
   const { g, d, b, u } = S.res, s = g + d + b + u;
   if (d < 15) return ['Dòng họ ly tán', 'Người còn lại quá ít; gia phả dừng ở thế hệ này.'];
-  if (s >= 260) return ['Vọng tộc', 'Giàu có, đông đúc và được kính trọng qua sáu thế hệ.'];
-  if (s >= 190) return ['Gia đình khá giả', 'Giữ được ruộng, giữ được người, có tiếng trong vùng.'];
-  if (s >= 120) return ['Thường dân', 'Qua được mọi cơn bão, không giàu, không mất gốc.'];
+  if (s >= 225) return ['Vọng tộc', 'Giàu có, đông đúc và được kính trọng qua sáu thế hệ.'];
+  if (s >= 185) return ['Gia đình khá giả', 'Giữ được ruộng, giữ được người, có tiếng trong vùng.'];
+  if (s >= 140) return ['Thường dân', 'Qua được mọi cơn bão, không giàu, không mất gốc.'];
   return ['Nhà sa sút', 'Chiến tranh và lựa chọn lấy đi gần hết, chỉ còn tên họ.'];
 }
 

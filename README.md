@@ -62,8 +62,9 @@ family estate through it: four resources (lúa gạo, nhân đinh, bạc, uy tí
 period (triều đình, Pháp, Nhật, Việt Minh/VNDCCH, Quốc gia/VNCH, Mỹ, Nhà nước, làng xóm) and a home town shown on
 the map. Each historical event has a card (`src/data/cards.ts`, 91 cards × 2–3 choices) with resource and relation
 effects; cards marked nationwide or touching the home region must be decided before the timeline moves on, the rest
-are optional. Every generation opens with a harvest that depends on the ruling power's and the village's attitude
-(`src/play.ts`); turning-point choices also shift relations. The ending ranks the family (Vọng tộc … Dòng họ ly tán).
+are optional. Every generation opens with a harvest (`src/play.ts`): fixed income from the family land, upkeep that
+grows with the family's size and wealth (food, tax, fading renown), and bonuses or penalties from the ruling power's
+and the village's attitude, so no resource can sit at its ceiling; turning-point choices also shift relations. The ending ranks the family (Vọng tộc … Dòng họ ly tán).
 All numbers are game abstractions, not historical data.
 
 ### Sound
