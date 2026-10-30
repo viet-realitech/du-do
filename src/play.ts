@@ -106,6 +106,7 @@ const ERA_FX: Record<string, Fx> = {
 export const eraFx = (optId: string): Fx => ERA_FX[optId] || {};
 
 /* ---------- mùa màng mỗi thế hệ ---------- */
+/** `lines`: các khoản danh nghĩa; `total`: phần đổi thực sau khi chặn ở 0 và 100. */
 export interface Harvest { lines: [string, Fx][]; total: Fx }
 /** Mùa màng của thế hệ vừa sống qua (`lived`), tính vào năm `y` nó khép lại; một lần mỗi thế hệ.
     Phụ thuộc bên cai quản quê nhà và làng xóm nghĩ gì về dòng họ. */
@@ -130,10 +131,10 @@ export function harvest(lived: Era, y: number): Harvest | null {
   const total: Fx = {};
   const shown = lines.filter(([, fx]) => Object.values(fx).some(Boolean)); // bỏ dòng không đổi gì (vd. thuế khi không có bạc)
   for (const [, fx] of shown) for (const [k, n] of Object.entries(fx) as [keyof Fx, number][]) total[k] = (total[k] || 0) + n;
-  applyFx(total);
+  const got = applyFx(total); // phần đổi thực (đã chặn ở 0 và 100)
   S.harvests.push(lived.id);
   save();
-  return { lines: shown, total };
+  return { lines: shown, total: got };
 }
 
 /* ---------- kết cục ---------- */

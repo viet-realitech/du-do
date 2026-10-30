@@ -51,7 +51,7 @@ export const fxChips = (fx: Option['fx']) =>
   Object.entries(fx || {}).map(([k, n]) => `<span class="fx">+${n} ${VAL.find(v => v[0] === k)![1]}</span>`).join('');
 
 export function initials(n: string): string {
-  const w = n.split(' ');
+  const w = n.replace(/\s*\(.*\)\s*$/, '').split(' '); // bỏ biệt danh trong ngoặc
   return (w.length > 1 ? w[w.length - 2][0] + w[w.length - 1][0] : w[0].slice(0, 2)).toUpperCase();
 }
 

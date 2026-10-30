@@ -34,6 +34,7 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
   <h2 style="margin:10px 0 6px">Gia sản sau một đời người</h2>
   <p class="muted" style="margin-bottom:12px">${e.title}, ${e.cy}–${ERAS[e.n]?.cy ?? 2026}. Ruộng đất, người trong họ và các mối quan hệ quyết định mùa màng.</p>
   ${h.lines.map(([n, fx]) => `<div class="row sb hl"><span>${esc(n)}</span><span class="fxs">${fxChipsPlay(fx) || '<span class="muted">—</span>'}</span></div>`).join('')}
+  <div class="row sb hl" style="margin-top:6px;font-weight:700"><span>Gia sản đổi thực</span><span class="fxs">${fxChipsPlay(h.total) || '<span class="muted">Không đổi</span>'}</span></div>
   <div class="rule"></div>
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div class="mono muted" style="margin-top:12px">Quan hệ</div>
@@ -125,7 +126,7 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   <div class="rule"></div>
   <button class="row" style="width:100%;text-align:left" data-a="fig" data-id="${o.guide}">${av(o.guide, 46)}<span style="flex:1"><span class="mono muted">Người đồng hành</span><br><b style="font:700 18px var(--disp)">${FIG[o.guide][0]}</b> <span class="muted" style="font-size:14px">· ${FIG[o.guide][2]}</span></span><span class="muted">›</span></button>
   <div class="rule"></div><div class="mono" style="color:var(--acc)">Mở khoá ${fs.length} nhân vật</div>
-  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center">${av(id, 48)}<span>${FIG[id][0].split(' ').slice(-2).join(' ')}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết ›</span></button>` : ''}</div>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center">${av(id, 48)}<span>${FIG[id][0].replace(/\s*\(.*\)\s*$/, '').split(' ').slice(-2).join(' ')}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết ›</span></button>` : ''}</div>
   ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">✎ Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${d.y}</span> · ${esc(d.t)}</div>`).join('')}` : ''}
   <div style="height:18px"></div>${isPlay()
     ? `<button class="btn go" data-a="watch" data-e="${e.id}"><i class="cd"></i><span>▶ Sống qua thế hệ ${e.n}</span></button><p class="muted" style="font-size:13px;text-align:center;margin-top:10px">Chương tự bắt đầu; chạm nhân vật để đọc thêm trước.</p>`
@@ -134,7 +135,7 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   // Trò chơi: đọc kết cục rồi tự sang chương; chạm vào nhân vật / nhật ký thì dừng đếm, để người chơi tự bấm.
   const d = layer.lastElementChild as HTMLElement, bar = d.querySelector<HTMLElement>('.cd')!;
   let armed = true;
-  const go = () => { if (!armed || !d.isConnected) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
+  const go = () => { if (!armed || !layer.contains(d)) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
   // speak() gọi callback ngay (đồng bộ) khi không có giọng: khi đó dùng bộ đếm thay vì kết thúc lời đọc.
   let sync = true;
   const spoke = speak(`Con đường của bạn. ${o.out}`, () => { if (!sync && armed) setTimeout(go, 700); });
@@ -147,7 +148,7 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   d.addEventListener('click', ev => {
     const t = (ev.target as Element).closest<HTMLElement>('[data-a]');
     if (t && t.dataset.a === 'watch') armed = false;
-    else if (t && t.dataset.a === 'fig') disarm();
+    else if (t) disarm(); // nhân vật, 'Xem hết' (kể cả kích hoạt bằng bàn phím: không có pointerdown)
   }, true);
   d.querySelector('.sheet')!.addEventListener('scroll', disarm, { passive: true });
   d.querySelector('.sheet')!.addEventListener('pointerdown', ev => { if (!(ev.target as Element).closest('.btn.go')) disarm(); }, true);

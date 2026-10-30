@@ -130,12 +130,12 @@ export const SIDES: [string, string][] = [
 ];
 export const FIGSIDE: Record<string, string> = {
   ntp: 'tr', td: 'tr', ntt: 'tr', ptg: 'tr', tduc: 'tr', ntr: 'tr', hd: 'tr', ndc: 'vh', tvk: 'vh', fg: 'ph', rdg: 'ph',
-  hn: 'tr', pdp: 'tr', hht: 'pt', pbc: 'pt', pct: 'pt', ttt: 'tr', dct: 'tr', ntht: 'tr', pdm: 'ph', cd: 'pt', lvc: 'vh', htk: 'vm', nvv: 'vh',
+  hn: 'tr', pdp: 'tr', hht: 'pt', pbc: 'pt', pct: 'pt', ttt: 'tr', dct: 'tr', ntht: 'tr', pdm: 'ph', cd: 'pt', lvc: 'vh', htk: 'pt', nvv: 'vh',
   hcm: 'vm', nth: 'pt', pq: 'vh', tp: 'vm', lhp: 'vm', ntmk: 'vm', pdc: 'pt', nan: 'pt', ttt2: 'pt', bqc: 'pt', nl: 'vh', hps: 'tg',
   vng: 'vm', bd: 'qg', ttk: 'pt', tc: 'vm', pvd: 'vm', nb: 'vm', tvg: 'vm', js: 'ph', lcl: 'ph', nvx: 'qg', bv: 'pt',
   ndd: 'qg', dvm: 'qg', nvt: 'qg', tqd: 'tg', ndn: 'qg', ndc2: 'qg', tlx: 'qg', nck: 'qg', nk: 'qg', tvh: 'qg', nht: 'gp', ntb: 'gp', ntd: 'gp',
   ldt: 'vm', nct: 'vm', vtd: 'vm', pxa: 'vm', ttq: 'tg', tcs: 'vh', lbj: 'my', rn: 'my', hk: 'my', ww: 'my',
-  ld: 'nn', nvl: 'nn', pd: 'vh', vvk: 'nn', dm: 'nn', ph: 'nn', nct2: 'nn', kn: 'vm', pvk: 'nn', vcc: 'nn', tvk2: 'vh',
+  ld: 'nn', nvl: 'nn', pd: 'vh', vvk: 'nn', dm: 'nn', ph: 'nn', nct2: 'nn', kn: 'nn', pvk: 'nn', vcc: 'nn', tvk2: 'vh',
 };
 export const sideName = (id: string) => SIDES.find(x => x[0] === FIGSIDE[id])?.[1] || '';
 
