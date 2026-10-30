@@ -97,6 +97,22 @@ This is a **handoff bundle** from Claude Design (claude.ai/design).
 
 A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
 
+### Portraits
+
+Figure portraits are hand-picked Commons files (`src/data/portraits.ts`: path, face focus x/y, zoom). To add or
+re-pick portraits, `scripts/portraits/` has a three-step toolchain (Python 3 + Pillow, no API key):
+
+```sh
+python3 -I scripts/portraits/fetch_thumbs.py scripts/portraits/new-figures.json out/thumbs   # 330px thumbs, honours Retry-After
+python3 -I scripts/portraits/contact_sheets.py out/thumbs out/sheet                          # sheets with a 10% grid to read focus points
+python3 -I scripts/portraits/portrait_lines.py out/thumbs/meta.json picks.json                # prints PORTRAIT lines; picks = {id: [x, y, zoom]}
+```
+
+`new-figures.json` maps the 59 figures added in October 2026 to their Commons lead image (from the vi/en
+Wikipedia infoboxes). Rule: a real photograph or painted portrait, cropped to the face; never a statue, a
+banknote or a place. Wikimedia rate-limits aggressively per IP (Retry-After up to 10 minutes); the fetcher waits
+as told and never routes through third-party image proxies.
+
 ## What you should do — IMPORTANT
 
 **Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
