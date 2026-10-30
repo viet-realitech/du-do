@@ -114,7 +114,30 @@ export const FIGERA: Record<string, string> = {
   vng: 'e4', bd: 'e4', ttk: 'e4',
   ndd: 'e5', dvm: 'e5', nvt: 'e5', tqd: 'e5',
   ld: 'e6', nvl: 'e6', pd: 'e6',
+  // Nhân vật bổ sung theo từng thời kỳ
+  tduc: 'e1', ntr: 'e1', hd: 'e1', ndc: 'e1', tvk: 'e1', fg: 'e1', rdg: 'e1',
+  ttt: 'e2', dct: 'e2', ntht: 'e2', pdm: 'e2', cd: 'e2', lvc: 'e2', htk: 'e2', nvv: 'e2',
+  tp: 'e3', lhp: 'e3', ntmk: 'e3', pdc: 'e3', nan: 'e3', ttt2: 'e3', bqc: 'e3', nl: 'e3', hps: 'e3',
+  tc: 'e4', pvd: 'e4', nb: 'e4', tvg: 'e4', js: 'e4', lcl: 'e4', nvx: 'e4', bv: 'e4',
+  ndn: 'e5', ndc2: 'e5', tlx: 'e5', nck: 'e5', nk: 'e5', tvh: 'e5', nht: 'e5', ntb: 'e5', ntd: 'e5', ldt: 'e5', nct: 'e5', vtd: 'e5', ttq: 'e5', tcs: 'e5', pxa: 'e5', lbj: 'e5', rn: 'e5', hk: 'e5', ww: 'e5',
+  vvk: 'e6', dm: 'e6', ph: 'e6', nct2: 'e6', kn: 'e6', pvk: 'e6', vcc: 'e6', tvk2: 'e6',
 };
+
+/** Phe / lĩnh vực của mỗi nhân vật, để nhóm trong màn Nhân vật (thứ tự hiển thị theo SIDES). */
+export const SIDES: [string, string][] = [
+  ['tr', 'Triều đình & nghĩa quân'], ['ph', 'Pháp'], ['pt', 'Phong trào & lực lượng khác'], ['vm', 'Việt Minh / VNDCCH'],
+  ['gp', 'Mặt trận Giải phóng'], ['qg', 'Quốc gia / VNCH'], ['my', 'Mỹ'], ['nn', 'Nhà nước sau 1976'], ['tg', 'Tôn giáo'], ['vh', 'Văn hoá'],
+];
+export const FIGSIDE: Record<string, string> = {
+  ntp: 'tr', td: 'tr', ntt: 'tr', ptg: 'tr', tduc: 'tr', ntr: 'tr', hd: 'tr', ndc: 'vh', tvk: 'vh', fg: 'ph', rdg: 'ph',
+  hn: 'tr', pdp: 'tr', hht: 'pt', pbc: 'pt', pct: 'pt', ttt: 'tr', dct: 'tr', ntht: 'tr', pdm: 'ph', cd: 'pt', lvc: 'vh', htk: 'vm', nvv: 'vh',
+  hcm: 'vm', nth: 'pt', pq: 'vh', tp: 'vm', lhp: 'vm', ntmk: 'vm', pdc: 'pt', nan: 'pt', ttt2: 'pt', bqc: 'pt', nl: 'vh', hps: 'tg',
+  vng: 'vm', bd: 'qg', ttk: 'pt', tc: 'vm', pvd: 'vm', nb: 'vm', tvg: 'vm', js: 'ph', lcl: 'ph', nvx: 'qg', bv: 'pt',
+  ndd: 'qg', dvm: 'qg', nvt: 'qg', tqd: 'tg', ndn: 'qg', ndc2: 'qg', tlx: 'qg', nck: 'qg', nk: 'qg', tvh: 'qg', nht: 'gp', ntb: 'gp', ntd: 'gp',
+  ldt: 'vm', nct: 'vm', vtd: 'vm', pxa: 'vm', ttq: 'tg', tcs: 'vh', lbj: 'my', rn: 'my', hk: 'my', ww: 'my',
+  ld: 'nn', nvl: 'nn', pd: 'vh', vvk: 'nn', dm: 'nn', ph: 'nn', nct2: 'nn', kn: 'vm', pvk: 'nn', vcc: 'nn', tvk2: 'vh',
+};
+export const sideName = (id: string) => SIDES.find(x => x[0] === FIGSIDE[id])?.[1] || '';
 
 /** Hand-matched Vietnamese Wikipedia article per event; others fall back to search. */
 export const WIKI: Record<string, string> = {

@@ -68,7 +68,7 @@ test('event detail tabs work offline and Back closes overlays without leaving th
 test('figures lock until their turning point; profile, about and share card', async ({ page }) => {
   const errors = await boot(page, midGame);
   await page.locator('.tab[data-t=fig]').click();
-  await expect(page.locator('.fcard.off')).toHaveCount(3); // chapter 6 figures still locked
+  await expect(page.locator('.fcard.off')).toHaveCount(11); // chapter 6 figures still locked
   await page.locator('.tab[data-t=me]').click();
   await page.getByRole('button', { name: 'Giới thiệu & nguồn dữ liệu' }).click();
   await expect(page.getByText('Quyền riêng tư')).toBeVisible();

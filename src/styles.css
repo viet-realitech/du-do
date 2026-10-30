@@ -257,6 +257,8 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .bdg.off { opacity: .38 }
 .bdg.off .bi { background: var(--paper3); color: var(--ink3) }
 .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.fside { margin: 12px 0 8px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase }
+.fside + .fgrid + .fside { margin-top: 16px }
 .fcard { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; border: 1px solid var(--rule); border-radius: 14px; padding: 12px; text-align: left; background: var(--paper2) }
 .fcard .av { width: 64px; height: 64px; font-size: 20px; margin-bottom: 10px }
 .fcard.off { opacity: .55 }
