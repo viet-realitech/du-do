@@ -292,7 +292,7 @@ Quy ước phe: triều đình · Pháp · phong trào & lực lượng khác ·
 ### Phạm Hùng (1912–1988) · Chủ tịch HĐBT
 - Phe: Nhà nước sau 1976 · id `ph` · Wikipedia: vi "Phạm Hùng", en "Phạm Hùng"
 - Tiểu sử: Bí thư Trung ương Cục miền Nam 1967–1975, Bộ trưởng Nội vụ 1980–1987. Chủ tịch Hội đồng Bộ trưởng từ tháng 6.1987, mất đột ngột khi đương chức tại TP.HCM ngày 10.3.1988.
-- Đối chiếu: vi: sinh 11.6.1912; Bí thư TƯ Cục 7.1967–30.4.1975; Bộ trưởng Nội vụ 7.2.1980–16.2.1987; CT HĐBT từ 17.6.1987; mất đột ngột 10.3.1988 trong chuyến công tác tại TP.HCM. Thêm nơi mất;
+- Đối chiếu: vi: sinh 11.6.1912; Bí thư TƯ Cục 7.1967–30.4.1975; Bộ trưởng Nội vụ 7.2.1980–16.2.1987; CT HĐBT từ 17.6.1987; mất đột ngột 10.3.1988 trong chuyến công tác tại TP.HCM. Thêm nơi mất.
 
 ### Nguyễn Cơ Thạch (1921–1998) · Bộ trưởng Ngoại giao
 - Phe: Nhà nước sau 1976 · id `nct2` · Wikipedia: vi "Nguyễn Cơ Thạch", en "Nguyễn Cơ Thạch"
