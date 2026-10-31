@@ -5,7 +5,7 @@ import { on } from '../ui/actions';
 import { esc, sheet, toast, ghost } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { SND, buzz } from '../audio';
-import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel } from '../play';
+import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment } from '../play';
 import { pauseForCard } from '../tour';
 import { layer } from '../ui/dom';
 import { renderMain, continueFlow } from '../view';
@@ -46,10 +46,10 @@ export function openCard(v: HistEvent, inTour = false): void {
   ${near ? `<div class="mono" style="color:var(--acc);margin-bottom:10px">⌂ Chạm tới quê nhà ${esc(h[1])}</div>` : '<div style="height:6px"></div>'}
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div role="radiogroup">${c[2].map((ch, i) => {
-    const no = noList[i];
+    const no = noList[i], al = alignment(ch[2], v.y);
     const picked = done && S.cards[v.id] === i;
     return `<button class="opt${picked ? ' sel' : ''}" data-i="${i}" role="radio" aria-checked="${picked}"${no || (done && !picked) ? ' disabled' : ''}>
-      <div class="tt"><h3>${esc(ch[0])}</h3>${no ? `<span class="mono" style="color:var(--red)">${no}</span>` : ''}</div>
+      <div class="tt"><h3>${esc(ch[0])}</h3>${no ? `<span class="mono" style="color:var(--red)">${no}</span>` : al ? `<span class="al mono ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : ''}</div>
       <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
   }).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>

@@ -83,21 +83,20 @@ function tourStep(): void {
     zoomTo(v.l, zoomK(v));
     SND.fly();
     tourBar();
-    // Trò chơi: sự kiện có thẻ thì tạm dừng tour và mở thẻ sau 4,5 s (giọng đọc vẫn tiếp tục trong lúc người
-    // chơi đọc thẻ); "Tiếp tục" trên thẻ gọi resumeTour(). Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
+    // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
+    // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
+    // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
     const card = isPlay() && !!cardOf(v) && !decided(v.id);
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (decided(v.id)) advance(); else pauseForCard(v); };
     const next = (d: number) => {
       if (!live()) return;
-      if (card) return; // thẻ mở theo hẹn giờ 4,5 s; không cắt ngắn cảnh bay
       clearTimeout(tour!.t);
-      tour!.t = window.setTimeout(advance, d);
+      tour!.t = window.setTimeout(card ? openIt : advance, d);
     };
     tour!.next = next;
-    if (card) tour!.t = window.setTimeout(openIt, 4500);
-    if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(900), false, evKey(v)); }, 700);
-    else next(2900);
+    if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
+    else next(card ? 4500 : 2900);
   });
 }
 

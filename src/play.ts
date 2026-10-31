@@ -1,6 +1,6 @@
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
 import { CARD, type Fx } from './data/cards';
-import { S, save, type Res, type Rel } from './state';
+import { S, save, curPick, type Res, type Rel } from './state';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
    và "mùa màng" ở mỗi thế hệ. Lịch sử vẫn diễn ra như đã diễn ra; chỉ vận mệnh dòng họ đổi. */
@@ -104,6 +104,30 @@ const ERA_FX: Record<string, Fx> = {
   baocap: { nn: 15 }, doimoi: { nn: 10, lg: 5 }, radi: { nn: -20, my: 10 },
 };
 export const eraFx = (optId: string): Fx => ERA_FX[optId] || {};
+
+/* ---------- đường đi của dòng họ qua các điểm rẽ ---------- */
+/** Phe / lực lượng mà mỗi hướng ở điểm rẽ gắn với: khoá quan hệ, hoặc 'pt' (phong trào, không phải thế lực cai quản). */
+export const CAMP: Record<string, keyof Rel | 'pt'> = {
+  chien: 'tr', canhtan: 'tr', hoa: 'tr', canvuong: 'tr', dongdu: 'pt', duytan: 'pt',
+  cs: 'vm', qdd: 'pt', laphien: 'ph', vm: 'vm', qg: 'qg', tl: 'lg', bac: 'vm', nam: 'qg', thuba: 'lg',
+  baocap: 'nn', doimoi: 'nn', radi: 'my',
+};
+/** Hướng ở điểm rẽ sau được xem là "tiếp nối" hướng trước (cùng phe hoặc kế thừa tinh thần). */
+export const NEXT: Record<string, string[]> = {
+  chien: ['canvuong'], canhtan: ['duytan', 'dongdu'], hoa: ['duytan'],
+  canvuong: ['dongdu'], dongdu: ['cs', 'qdd'], duytan: ['qdd', 'laphien'],
+  cs: ['vm'], qdd: ['qg'], laphien: ['qg', 'tl'],
+  vm: ['bac'], qg: ['nam'], tl: ['thuba'],
+  bac: ['baocap', 'doimoi'], nam: ['radi', 'doimoi'], thuba: ['doimoi'],
+};
+export const continues = (prev: string | undefined, next: string) => !!prev && (NEXT[prev] || []).includes(next);
+/** Lựa chọn trên thẻ hợp (1) hay trái (-1) với đường dòng họ đang theo, xét quan hệ với phe đó; 0 khi không liên quan. */
+export function alignment(fx: Fx, y: number): -1 | 0 | 1 {
+  const pk = curPick(y), c = pk && CAMP[pk.id];
+  if (!c || c === 'pt') return 0;
+  const n = fx[c] || 0;
+  return n > 0 ? 1 : n < 0 ? -1 : 0;
+}
 
 /* ---------- mùa màng mỗi thế hệ ---------- */
 /** `lines`: các khoản danh nghĩa; `total`: phần đổi thực sau khi chặn ở 0 và 100. */

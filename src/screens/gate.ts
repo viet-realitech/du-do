@@ -5,7 +5,7 @@ import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost } from '../ui/dom';
-import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, type Harvest } from '../play';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
@@ -83,15 +83,32 @@ export function openChoice(e: Era): void {
   mood('gate');
   SND.gong();
   buzz([30, 60, 30]);
-  const say = setTimeout(() => speak(gateSpeech(e), undefined, false, gateKey(e)), 1200);
+  // Nghe lời dẫn xong mới chọn: các hướng mờ và khoá cho tới khi giọng đọc kể hết (hoặc người chơi bỏ qua);
+  // không có giọng đọc thì mở sau một quãng đủ đọc câu hỏi.
+  let open = false, sync = true;
+  const release = () => {
+    if (open || !d.isConnected) return;
+    open = true;
+    d.querySelector('#lst')?.remove();
+    d.querySelectorAll<HTMLButtonElement>('.opt').forEach((b, i) => { b.disabled = false; b.style.animationDelay = `${i * 90}ms`; b.classList.add('in'); });
+    SND.tick();
+  };
+  const say = setTimeout(() => {
+    const spoke = speak(gateSpeech(e), () => { if (!sync) release(); }, false, gateKey(e));
+    sync = false;
+    if (!spoke) setTimeout(release, Math.min(6000, 1800 + e.q.length * 35));
+  }, 1200);
   const prevE = ERAS[ERAS.indexOf(e) - 1], pp = prevE && S.picks[prevE.id], ctx = e.ctx && pp ? e.ctx[pp] : null;
+  const tag = (id: string) => (pp ? (continues(pp, id) ? '<div class="alrow"><span class="al mono ok">Tiếp nối đường cũ</span></div>' : '<div class="alrow"><span class="al mono">Rẽ hướng</span></div>') : '');
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
   <h2 style="margin:8px 0 8px">${e.title}</h2>
   ${ctx ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div><p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p></div>` : ''}
   <p class="muted" style="margin-bottom:14px">${e.q}</p>
-  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}"><div class="tt"><h3>${o.label}</h3><span class="mono muted">${TAG_LABEL[o.tag]}</span></div><div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
+  <div class="listen" id="lst"><i class="pulse"></i><span>Đang kể lời dẫn…</span><button class="lnk" id="lskip">Chọn ngay ›</button></div>
+  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="mono muted">${TAG_LABEL[o.tag]}</span></div>${tag(o.id)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
   <div style="height:12px"></div><button class="btn" id="go" disabled>Đi theo hướng này</button>`);
+  d.querySelector<HTMLButtonElement>('#lskip')!.onclick = () => { clearTimeout(say); hush(); release(); };
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
     selOpt = b.dataset.o!;
     d.querySelectorAll('.opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
