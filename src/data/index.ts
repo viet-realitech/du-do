@@ -148,22 +148,30 @@ export const EVFIG: Record<string, string[]> = {
 /** Sự kiện liên quan tới một nhân vật (chiều ngược của EVFIG), theo thứ tự thời gian. */
 export const figEvents = (id: string): HistEvent[] => EV.filter(v => EVFIG[v.id]?.includes(id));
 
-/** Hand-matched Vietnamese Wikipedia article per event; others fall back to search. */
+/** Bài Wikipedia tiếng Việt về đúng sự kiện (đã kiểm chứng từng bài, tháng 10.2026): ảnh và phim tư liệu lấy từ bài này.
+    Ba sự kiện không có bài riêng dùng bài gần nhất (kh63 → Campuchia thuộc Pháp, td64 → Trương Định, hn88 → Hàm Nghi). */
 export const WIKI: Record<string, string> = {
-  dn58: 'Trận Đà Nẵng (1858–1860)', cd61: 'Trận Đại đồn Chí Hòa', nt62: 'Hòa ước Nhâm Tuất', pt84: 'Hòa ước Giáp Thân 1884',
-  cv85: 'Phong trào Cần Vương', ld87: 'Liên bang Đông Dương', hk96: 'Khởi nghĩa Hương Khê', dd05: 'Phong trào Đông Du',
-  dk07: 'Đông Kinh Nghĩa Thục', yt13: 'Khởi nghĩa Yên Thế', cs30: 'Đảng Cộng sản Việt Nam', yb30: 'Khởi nghĩa Yên Bái',
-  vm41: 'Việt Minh', ng45: 'Cách mạng Tháng Tám', tk46: 'Toàn quốc kháng chiến', el49: 'Hiệp ước Élysée',
-  bg50: 'Chiến dịch Biên giới', dbp: 'Chiến dịch Điện Biên Phủ', gnv: 'Hiệp định Genève 1954', vc55: 'Việt Nam Cộng hòa',
-  mt60: 'Mặt trận Dân tộc Giải phóng miền Nam Việt Nam', dc63: 'Đảo chính Việt Nam Cộng hòa 1963', mt68: 'Sự kiện Tết Mậu Thân',
-  pr73: 'Hiệp định Paris 1973', hs74: 'Hải chiến Hoàng Sa 1974', sg75: 'Sự kiện 30 tháng 4 năm 1975',
-  cp79: 'Chiến tranh biên giới Tây Nam', bb79: 'Chiến tranh biên giới Việt–Trung 1979', tn80: 'Thuyền nhân', dm86: 'Đổi mới',
-  gm88: 'Hải chiến Trường Sa 1988', nt61: 'Trận Nhật Tảo', td64: 'Trương Định', tt85: 'Chiến tranh Pháp–Thanh',
-  bd86: 'Khởi nghĩa Ba Đình', hn88: 'Hàm Nghi', la93: 'Chiến tranh Pháp–Xiêm', tn25: 'Hội Việt Nam Cách mạng Thanh niên',
-  xv30: 'Xô viết Nghệ Tĩnh', nk40: 'Khởi nghĩa Nam Kỳ', ft41: 'Chiến tranh Pháp–Thái Lan', vb44: 'Quân đội nhân dân Việt Nam',
-  vb47: 'Chiến dịch Việt Bắc', hb52: 'Chiến dịch Hòa Bình', cc53: 'Cải cách ruộng đất tại miền Bắc Việt Nam',
-  nv56: 'Nhân Văn – Giai Phẩm', ts59: 'Đường Trường Sơn', dk60: 'Phong trào Đồng khởi', ab63: 'Trận Ấp Bắc',
-  qd63: 'Thích Quảng Đức', vb64: 'Sự kiện Vịnh Bắc Bộ', id65: 'Trận Ia Đrăng', ks68: 'Trận Khe Sanh', ml68: 'Thảm sát Mỹ Lai',
-  lk71: 'Chiến dịch Lam Sơn 719', lb72: 'Chiến dịch Linebacker II', xl75: 'Trận Xuân Lộc',
-  hd14: 'Sự kiện giàn khoan Hải Dương 981', hcm69: 'Hồ Chí Minh', nq11: 'Hồ Chí Minh', wto07: 'Tổ chức Thương mại Thế giới',
+  dn58: 'Trận Đà Nẵng (1858–1859)', gd59: 'Trận thành Gia Định, 1859', cd61: 'Trận Đại đồn Chí Hòa', nt61: 'Trận Nhựt Tảo',
+  nt62: 'Hòa ước Nhâm Tuất (1862)', kh63: 'Campuchia thuộc Pháp', td64: 'Trương Định', vl67: 'Trận Vĩnh Long',
+  hn73: 'Trận thành Hà Nội (1873)', gt74: 'Hòa ước Giáp Tuất (1874)', hd82: 'Trận thành Hà Nội (1882)', ta83: 'Trận Cửa Thuận An',
+  pt84: 'Hòa ước Giáp Thân (1884)', cv85: 'Trận Kinh thành Huế 1885', tt85: 'Chiến tranh Pháp – Thanh', bd86: 'Khởi nghĩa Ba Đình',
+  ld87: 'Liên bang Đông Dương', hn88: 'Hàm Nghi', la93: 'Chiến tranh Xiêm – Pháp', hk96: 'Khởi nghĩa Hương Khê',
+  dm02: 'Toàn quyền Đông Dương', dd05: 'Phong trào Đông Du', dk07: 'Đông Kinh Nghĩa Thục', ct08: 'Phong trào chống sưu thuế Trung Kỳ 1908',
+  nq11: 'Ngày Bác Hồ ra đi tìm đường cứu nước', yt13: 'Khởi nghĩa Yên Thế', ww14: 'Việt Nam trong Chiến tranh thế giới thứ nhất', tn25: 'Việt Nam Thanh niên Cách mạng Đồng chí Hội',
+  cs30: 'Hội nghị thành lập Đảng Cộng sản Việt Nam', yb30: 'Khởi nghĩa Yên Bái', xv30: 'Xô Viết Nghệ Tĩnh', mt36: 'Phong trào Dân chủ Đông Dương (1936–1939)',
+  nh40: 'Chiến dịch Đông Dương (1940)', nk40: 'Nam Kỳ khởi nghĩa', vm41: 'Việt Minh', ft41: 'Chiến tranh Pháp – Thái',
+  vb44: 'Việt Nam Tuyên truyền Giải phóng quân', ng45: 'Cách mạng Tháng Tám', tq45: 'Hoa quân nhập Việt', tk46: 'Toàn quốc kháng chiến',
+  tu46: 'Tạm ước Việt – Pháp', vb47: 'Chiến dịch Việt Bắc', el49: 'Hiệp định Élysée (1949)', bg50: 'Chiến dịch Biên giới',
+  hb52: 'Chiến dịch Hòa Bình', dbp: 'Chiến dịch Điện Biên Phủ', gnv: 'Hiệp định Genève 1954', dc54: 'Cuộc di cư Việt Nam (1954)',
+  vc55: 'Trưng cầu dân ý Quốc gia Việt Nam 1955', cc53: 'Cải cách ruộng đất tại miền Bắc Việt Nam', bx55: 'Trận Sài Gòn (1955)', nv56: 'Phong trào Nhân Văn – Giai Phẩm',
+  ts59: 'Đường Trường Sơn', mt60: 'Mặt trận Dân tộc Giải phóng miền Nam Việt Nam', dk60: 'Phong trào Đồng khởi', dc63: 'Đảo chính Việt Nam Cộng hòa 1963',
+  ab63: 'Trận Ấp Bắc', qd63: 'Biến cố Phật giáo 1963', vb64: 'Sự kiện Vịnh Bắc Bộ', dn65: 'Can thiệp của Hoa Kỳ trong Chiến tranh Việt Nam',
+  id65: 'Trận Ia Đrăng', mt68: 'Sự kiện Tết Mậu Thân', ks68: 'Chiến dịch Đường 9 – Khe Sanh', ml68: 'Thảm sát Mỹ Lai',
+  hcm69: 'Hồ Chí Minh', lk71: 'Chiến dịch Lam Sơn 719', qt72: 'Trận Thành cổ Quảng Trị', lb72: 'Chiến dịch Linebacker II',
+  pr73: 'Hiệp định Paris 1973', hs74: 'Hải chiến Hoàng Sa 1974', sg75: 'Sự kiện 30 tháng 4 năm 1975', bmt75: 'Chiến dịch Tây Nguyên',
+  xl75: 'Trận Xuân Lộc', cm75: 'Phnôm Pênh sụp đổ', tn76: 'Quốc hội Việt Nam khóa VI', ct78: 'Cải tạo kinh tế tại Việt Nam',
+  cp79: 'Chiến tranh biên giới Việt Nam – Campuchia', bb79: 'Chiến tranh biên giới Việt – Trung 1979', tn80: 'Thuyền nhân Việt Nam', vx84: 'Mặt trận Vị Xuyên',
+  dm86: 'Đổi Mới', gm88: 'Xung đột giành quyền kiểm soát tại quần đảo Trường Sa 1988', kh89: 'Quân tình nguyện Việt Nam tại Campuchia', bt91: 'Quan hệ Trung Quốc – Việt Nam',
+  hn95: 'Bình thường hóa quan hệ ngoại giao Hoa Kỳ – Việt Nam', bg99: 'Vấn đề lãnh thổ biên giới Trung Quốc – Việt Nam', vbb00: 'Hiệp định Phân định Vịnh Bắc Bộ', wto07: 'Tổ chức Thương mại Thế giới',
+  hd14: 'Vụ hạ giàn khoan Hải Dương 981', pca16: 'Philippines kiện Trung Quốc về Tranh chấp chủ quyền Biển Đông', st25: 'Sáp nhập tỉnh, thành Việt Nam 2025',
 };
