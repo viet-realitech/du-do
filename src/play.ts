@@ -1,6 +1,8 @@
+import { surnameKey, asFamily, ARCHETYPES, type Archetype } from './data/surnames';
+import { SPECIAL, type SpecialCard } from './data/cards2';
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
 import { CARD, type Fx } from './data/cards';
-import { S, save, curPick, type Res, type Rel } from './state';
+import { S, save, curPick, type Res, type Rel, renameFamily, matchStats } from './state';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
    và "mùa màng" ở mỗi thế hệ. Lịch sử vẫn diễn ra như đã diễn ra; chỉ vận mệnh dòng họ đổi. */
@@ -73,9 +75,9 @@ export function mustDecide(v: HistEvent): boolean {
   return c[1].split(',').some(r => r === g || (g === 'QT' && (r === 'T1' || r === 'T2')));
 }
 export const decided = (id: string) => id in S.cards;
-/** Thẻ bắt buộc đầu tiên còn bỏ ngỏ tính đến năm y (dừng dòng thời gian ở đó). */
+/** Thẻ bắt buộc (hay biến cố riêng) đầu tiên còn bỏ ngỏ tính đến năm y (dừng dòng thời gian ở đó). */
 export const pendingCard = (y: number): HistEvent | undefined =>
-  isPlay() ? EV.find(v => v.y <= y && !decided(v.id) && mustDecide(v)) : undefined;
+  isPlay() ? EV.find(v => v.y <= y && needsDecision(v) && (mustDecide(v) || !!specialFor(v))) : undefined;
 
 /** Điều kiện có thể chọn: không để tài nguyên âm quá sức. */
 export function canAfford(fx: Fx): string | null {
@@ -92,6 +94,57 @@ export function decide(v: HistEvent, i: number): Fx {
   const got = applyFx(ch[2]);
   save();
   return got;
+}
+
+/* ---------- biến cố riêng của dòng họ (cards2.ts) ---------- */
+function matches(w: SpecialCard['when'], y: number): boolean {
+  if (w.surnames && !w.surnames.includes(S.surname || surnameKey(S.name))) return false;
+  if (w.homes && !w.homes.includes(S.home)) return false;
+  if (w.minB != null && S.res.b < w.minB) return false;
+  if (w.picks || w.camps) {
+    const pk = curPick(y);
+    if (!pk) return false;
+    if (w.picks && !w.picks.includes(pk.id)) return false;
+    if (w.camps && !w.camps.includes(CAMP[pk.id])) return false;
+  }
+  return true;
+}
+/** Biến cố riêng gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản). */
+export const specialFor = (v: HistEvent): SpecialCard | undefined =>
+  isPlay() && !v.diary ? SPECIAL.find(c => c.ev === v.id && matches(c.when, v.y)) : undefined;
+export const specialDecided = (c: SpecialCard) => 'x:' + c.id in S.cards;
+export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: string): Fx {
+  S.cards['x:' + c.id] = i;
+  const ch = c.choices[i], got = applyFx(ch[2]);
+  if (ch[4]) renameFamily(asFamily(newName || ch[4]), y, c.title);
+  save();
+  return got;
+}
+/** Sự kiện còn cần dòng họ quyết định: thẻ thường chưa quyết, hay biến cố riêng chưa quyết. */
+export function needsDecision(v: HistEvent): boolean {
+  if (cardOf(v) && !decided(v.id)) return true;
+  const sp = specialFor(v);
+  return !!sp && !specialDecided(sp);
+}
+
+/** Dấu ấn dòng họ ở kết cục, theo đường đã đi qua sáu điểm rẽ và việc đổi họ (nội dung: surnames.ts). */
+export function lineage(): Archetype | null {
+  if (!ARCHETYPES.length) return null;
+  const by = (id: string) => ARCHETYPES.find(a => a.id === id) || ARCHETYPES.find(a => a.id === 'default') || null;
+  const ps = ERAS.map(e => S.picks[e.id]).filter(Boolean) as string[];
+  if (ps.length < ERAS.length) return by('default');
+  const count: Record<string, number> = {};
+  for (const p of ps) count[CAMP[p]] = (count[CAMP[p]] || 0) + 1;
+  const top = Math.max(...Object.values(count));
+  let changes = 0;
+  for (let i = 1; i < ps.length; i++) if (!continues(ps[i - 1], ps[i])) changes++;
+  if (S.picks.e6 === 'radi') return by('lyhuong');
+  if (S.names.length) return by('doiho');
+  if (top >= 4) return by('trungkien');
+  if (matchStats().m >= 5) return by('thuandong');
+  if (changes >= 3) return by('xoaychieu');
+  if (ps.filter(p => ['hoa', 'duytan', 'laphien', 'tl', 'thuba', 'doimoi'].includes(p)).length >= 4) return by('onhoa');
+  return by('default');
 }
 
 /* ---------- lựa chọn điểm rẽ đổi quan hệ ---------- */

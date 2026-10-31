@@ -1,10 +1,12 @@
+import { av } from '../ui/bits';
+import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT } from '../data/surnames';
 import { themeCards, applyTheme } from '../theme';
 import { HOMES, home, RES } from '../play';
 import { switchMode } from '../state';
 import { setTab } from '../tabs';
 import { invalidateTrack, renderMain } from '../view';
 import { stopTour } from '../tour';
-import { EV } from '../data';
+import { EV, FIG } from '../data';
 import { S, save, ERAS_PENDING } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer } from '../ui/dom';
@@ -72,11 +74,34 @@ export function gameIntro(): void {
   ${homeChips()}
   <div class="mono muted" style="margin:16px 0 8px">Phong cách</div>
   ${themeCards()}
-  <label class="mono muted" for="nm" style="margin:14px 0 6px;display:block">Họ của dòng họ bạn</label>
-  <input class="f" id="nm" placeholder="Ví dụ: Họ Lê" value="${esc(S.name)}" maxlength="24" autocomplete="off">
+  <div class="mono muted" style="margin:16px 0 8px">Họ của dòng họ bạn</div>
+  ${surnamePicker()}
   <div style="height:12px"></div>
   <button class="btn" data-a="begin">Bắt đầu năm 1858 ở ${esc(home()[1])}</button></div>`;
 }
+
+/** Chọn họ từ danh sách (kèm gia phả mở đầu) hay gõ họ khác. */
+function surnamePicker(): string {
+  const k = S.surname;
+  return `<div class="homes" id="snm">${SURNAMES.map(s => `<button class="chip${k === s.key ? ' on' : ''}" data-a="surname" data-k="${s.key}" aria-pressed="${k === s.key}">${esc(s.names.join(' / '))}</button>`).join('')}<button class="chip${!k ? ' on' : ''}" data-a="surname" data-k="" aria-pressed="${!k}">Họ khác…</button></div>
+  <div id="slore">${loreBox(k)}</div>`;
+}
+function loreBox(k: string): string {
+  const l = loreOf(k);
+  if (!l) return `<input class="f" id="nm" placeholder="Gõ họ của bạn, ví dụ: Lê" value="${esc(S.name.replace(/^Họ /, ''))}" maxlength="24" autocomplete="off" style="margin-top:8px">`;
+  const kin = l.kin.filter(id => FIG[id]);
+  return `<div class="pv mine" style="margin-top:8px"><div class="mono muted">Gia phả mở đầu · Họ ${esc(l.names.join(' / '))}</div>
+  <p style="font-size:15.5px;margin-top:4px">${esc(l.lore)}${l.variant ? ' ' + esc(l.variant) : ''}</p>
+  ${kin.length ? `<div class="mono muted" style="margin-top:8px">Cùng họ trong hồ sơ</div><div class="kin">${kin.map(id => `<span>${av(id, 26)}${esc(FIG[id][0])}</span>`).join('')}</div>` : ''}
+  ${l.hooks.filter(h => HOOK_TEXT[h]).map(h => `<p class="muted" style="font-size:13.5px;margin-top:6px">◆ ${esc(HOOK_TEXT[h])}</p>`).join('')}</div>`;
+}
+on('surname', el => {
+  S.surname = el.dataset.k || '';
+  if (S.surname) S.name = 'Họ ' + loreOf(S.surname)!.names[0];
+  save();
+  el.closest('.homes')?.querySelectorAll<HTMLElement>('.chip').forEach(b => { const o = b === el; b.classList.toggle('on', o); b.setAttribute('aria-pressed', String(o)); });
+  const box = layer.querySelector('#slore'); if (box) box.innerHTML = loreBox(S.surname);
+});
 
 /** Mở luồng `m` (Đọc sử / Trò chơi) với bản lưu riêng của nó; dùng ở màn chào và Hồ sơ. */
 export function goMode(m: 'read' | 'play'): void {
@@ -92,7 +117,10 @@ export function goMode(m: 'read' | 'play'): void {
 }
 
 function begin(): void {
-  S.name = $<HTMLInputElement>('#nm')!.value.trim() || 'Họ Lê';
+  const typed = $<HTMLInputElement>('#nm')?.value.trim() || '';
+  if (!S.surname && typed) S.surname = surnameKey(typed);
+  const l = loreOf(S.surname);
+  S.name = l ? 'Họ ' + l.names[0] : asFamily(typed) || 'Họ Lê';
   S.step = 'play';
   save();
   clearLayer();

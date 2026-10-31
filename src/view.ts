@@ -4,7 +4,7 @@ import { on } from './ui/actions';
 import { $, esc } from './ui/dom';
 import { av, flag } from './ui/bits';
 import { paintMap, paintHome } from './map';
-import { isPlay, pendingCard, cardOf, decided, mustDecide, home, RES, powersAt, allPicked } from './play';
+import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
 import { stopTour, isTourPaused, resumeTour, canResumeChapter } from './tour';
@@ -102,7 +102,7 @@ function renderCard(): void {
     return;
   }
   const seen = S.seen.includes(v.id);
-  const card = isPlay() ? cardOf(v) : undefined, open = card && !decided(v.id), must = open && mustDecide(v);
+  const card = isPlay() ? cardOf(v) : undefined, open = card && needsDecision(v), must = open && (mustDecide(v) || !!specialFor(v));
   if (must) c.className += ' must';
   c.innerHTML = `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div><div class="s">${esc(v.s)}</div>${isPlay() && pk && v.v?.some(([p]) => p === pk.persp) ? `<div class="mine-pv"><span class="mono">Phe bạn theo nhìn nhận</span> ${esc(v.v.find(([p]) => p === pk.persp)![1])}</div>` : ''}</button>
     <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`;

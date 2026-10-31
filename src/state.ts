@@ -1,3 +1,4 @@
+import { surnameKey } from './data/surnames';
 import { ERAS, EV, FIG, FIGERA, type Era, type HistEvent, type Option, type ValueKey } from './data';
 
 export type Theme = 'archive' | 'night' | 'poster';
@@ -27,6 +28,10 @@ export interface State {
   /** Thẻ sự kiện đã quyết định: id sự kiện → chỉ số lựa chọn. */
   cards: Record<string, number>;
   harvests: string[];
+  /** Khoá họ (surnames.ts) khi chọn từ danh sách; '' khi gõ họ khác. */
+  surname: string;
+  /** Lịch sử đổi họ: năm, từ, sang, vì sao. */
+  names: { y: number; from: string; to: string; why: string }[];
   year: number;
   picks: Record<string, string>;
   seen: string[];
@@ -54,7 +59,7 @@ export interface State {
 }
 
 const def: State = {
-  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
+  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
   filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
 };
 
@@ -74,7 +79,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, harvests: [], res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, harvests: [], surname: '', names: [], res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;
@@ -146,10 +151,18 @@ export function matchStats() {
 
 export const quizCorrect = () => Object.values(S.quiz).flat().filter(Boolean).length;
 export const familyName = () => S.name || 'Họ Lê';
+/** Dòng họ đổi họ (biến cố riêng): ghi vào gia phả rồi đổi tên hiển thị. */
+export function renameFamily(to: string, y: number, why: string): void {
+  if (!to || to === S.name) return;
+  S.names.push({ y, from: familyName(), to, why });
+  S.name = to;
+  S.surname = surnameKey(to);
+  save();
+}
 
 /** Bắt đầu lại gia sản (khi đổi sang chế độ Chơi giữa chừng). */
 export function resetPlay(): void {
-  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = [];
+  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.names = [];
   save();
 }
 

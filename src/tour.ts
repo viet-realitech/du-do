@@ -1,4 +1,4 @@
-import { isPlay, mustDecide, decided, cardOf, pendingCard } from './play';
+import { isPlay, mustDecide, pendingCard, needsDecision, specialFor } from './play';
 import { openCard } from './screens/card';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
@@ -34,9 +34,9 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
   let L = allEv().filter(v => v.y >= Math.max(e.cy, S.year) && v.y < (nx ? nx.cy : Y1 + 1));
   if (isPlay()) {
     // Trò chơi: mọi thẻ bắt buộc còn bỏ ngỏ và nhật ký luôn có mặt, phần còn lại lấy đều, ưu tiên sự kiện có thẻ.
-    const must = L.filter(v => !v.diary && mustDecide(v) && !decided(v.id)), d = L.filter(v => v.diary);
+    const must = L.filter(v => !v.diary && (mustDecide(v) || !!specialFor(v)) && needsDecision(v)), d = L.filter(v => v.diary);
     const rest = L.filter(v => !must.includes(v) && !v.diary);
-    const pool = rest.filter(v => cardOf(v) && !decided(v.id)).length >= 3 ? rest.filter(v => cardOf(v) && !decided(v.id)) : rest;
+    const pool = rest.filter(needsDecision).length >= 3 ? rest.filter(needsDecision) : rest;
     const need = Math.max(0, 10 - must.length - d.length), pick: HistEvent[] = [];
     for (let j = 0; j < need && pool.length; j++) pick.push(pool[Math.floor((j * pool.length) / need)]);
     L = [...new Set([...must, ...d, ...pick])].sort((a, b) => a.y - b.y || (a.diary ? 1 : 0) - (b.diary ? 1 : 0));
@@ -86,9 +86,9 @@ function tourStep(): void {
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
     // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
-    const card = isPlay() && !!cardOf(v) && !decided(v.id);
+    const card = isPlay() && needsDecision(v);
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
-    const openIt = () => { if (!live()) return; if (decided(v.id)) advance(); else pauseForCard(v); };
+    const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
     const next = (d: number) => {
       if (!live()) return;
       clearTimeout(tour!.t);

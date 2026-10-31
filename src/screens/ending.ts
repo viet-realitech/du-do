@@ -1,4 +1,5 @@
-import { isPlay, home, rank, decidedCount, RES, harvest } from '../play';
+import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
+import { isPlay, home, rank, decidedCount, RES, harvest, lineage } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, Y1 } from '../state';
@@ -24,6 +25,17 @@ export function goEnd(): void {
   else openEnd();
 }
 
+/** Gia phả: biên niên theo hướng đã chọn, các lần đổi họ, dấu ấn dòng họ và lời khép theo họ. */
+function giaPha(): string {
+  const lin = lineage(), key = S.surname || surnameKey(S.name), epi = EPILOGUES[key];
+  const rows: [number, string][] = [];
+  for (const e of ERAS) { const o = optOf(e); if (o) rows.push([e.cy, `<div class="chron"><span class="mono muted">${e.cy}</span><span>${esc(CHRONICLE[o.id] || o.out)}</span></div>`]); }
+  for (const n of S.names) rows.push([n.y + 0.5, `<div class="chron"><span class="mono muted">${n.y}</span><span><b>${esc(n.from)}</b> đổi thành <b>${esc(n.to)}</b> · ${esc(n.why)}</span></div>`]);
+  rows.sort((a, b) => a[0] - b[0]);
+  return `<h3 style="margin:22px 0 10px">Gia phả ${esc(familyName())}</h3><div class="pv">${rows.map(r => r[1]).join('')}</div>
+  ${lin ? `<div class="pv mine" style="margin-top:10px"><div class="mono muted">Dấu ấn dòng họ</div><div style="font:700 21px/1.15 var(--disp);margin-top:4px">${esc(lin.title)}</div><p style="margin-top:6px">${esc(lin.text)}</p>${epi ? `<p class="muted" style="margin-top:8px;font-size:14.5px">${esc(epi)}</p>` : ''}</div>` : ''}`;
+}
+
 export function openEnd(): void {
   stopTour();
   if (!S.ended) { S.ended = true; save(); }
@@ -47,6 +59,7 @@ export function openEnd(): void {
   ${isPlay() ? `<h3 style="margin:22px 0 10px">Gia sản dòng họ sau sáu thế hệ</h3>
   <div class="pv mine" style="text-align:center"><div class="mono muted">${esc(home()[1])} · ${decidedCount()} quyết định</div><div style="font:800 30px/1.1 var(--disp);color:var(--acc);margin-top:6px">${rank()[0]}</div><p class="muted" style="margin-top:6px">${rank()[1]}</p></div>
   <div class="gs" style="margin-top:10px">${RES.map(([k, n, ic]) => `<div class="pv"><div class="mono muted">${ic} ${n}</div><b>${S.res[k]}</b></div>`).join('')}</div>` : ''}
+  ${isPlay() ? giaPha() : ''}
   <h3 style="margin:22px 0 6px">La bàn giá trị</h3>${compass()}
   <h3 style="margin:22px 0 4px">Con đường của bạn và lịch sử</h3>${rows}
   <div class="pv mine" style="margin-top:14px"><div class="mono muted">Điều đọng lại</div><p style="margin-top:6px">Ở mỗi điểm rẽ, người Việt ở mọi phía đều tin mình đang làm điều đúng cho đất nước. Lịch sử ghi lại bên chiếm ưu thế, còn sử liệu giữ lại tiếng nói của tất cả.</p></div>
