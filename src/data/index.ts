@@ -139,11 +139,22 @@ export const FIGSIDE: Record<string, string> = {
 };
 export const sideName = (id: string) => SIDES.find(x => x[0] === FIGSIDE[id])?.[1] || '';
 
-/** Nhân vật trực tiếp liên quan tới từng sự kiện (chỉ huy, người ký, người khởi xướng…); màn chi tiết sự kiện
-    và hồ sơ nhân vật nối qua lại bằng bảng này. */
+/** Nhân vật trực tiếp liên quan tới từng sự kiện (chỉ huy, người ký, người khởi xướng, người bị cuốn vào biến cố);
+    màn chi tiết sự kiện và hồ sơ nhân vật nối qua lại bằng bảng này. Mỗi liên kết đã qua hai lượt phản biện (10.2026). */
 export const EVFIG: Record<string, string[]> = {
-  nt61: ['ntr'], td64: ['td'], vl67: ['ptg'], hn73: ['ntp', 'fg'], hd82: ['hd'], ta83: ['tduc'], cv85: ['hn', 'ttt'], bd86: ['dct'],
-  hn88: ['hn'], hk96: ['pdp'], dm02: ['pdm'], dd05: ['pbc'],
+  dn58: ['rdg', 'ntp'], gd59: ['rdg'], cd61: ['ntp', 'td'], nt61: ['ntr'], nt62: ['ptg', 'tduc'], td64: ['td'], vl67: ['ptg'], hn73: ['fg', 'ntp'],
+  gt74: ['tduc'], hd82: ['hd'], ta83: ['ttt'], pt84: ['ttt'], cv85: ['ttt', 'hn'], bd86: ['dct'], hn88: ['hn'], hk96: ['pdp'], dm02: ['pdm'],
+  dd05: ['pbc', 'cd'], dk07: ['lvc', 'nvv', 'pct'], ct08: ['pct', 'htk'], nq11: ['hcm'], yt13: ['hht'], tn25: ['hcm', 'lhp'], cs30: ['hcm', 'tp'],
+  yb30: ['nth', 'pdc'], mt36: ['nan', 'ttt2', 'lhp', 'ntmk', 'tc', 'vng'], nk40: ['ntmk', 'tc', 'vvk'], vm41: ['hcm', 'tc'], vb44: ['vng', 'hcm'],
+  ng45: ['hcm', 'bd', 'ttk', 'tvg', 'tc', 'vng', 'pq', 'ttt2'], tq45: ['lcl', 'tvg', 'hcm'], tk46: ['hcm', 'vng', 'tc', 'js'], tu46: ['hcm', 'pvd'],
+  vb47: ['vng', 'hcm', 'tc'], el49: ['bd', 'nvx'], bg50: ['vng', 'hcm'], hb52: ['vng', 'nct'], dbp: ['vng', 'hcm'], gnv: ['pvd', 'hcm', 'ndd'],
+  dc54: ['ndd'], vc55: ['ndd', 'bd'], cc53: ['tc', 'hcm', 'vng'], bx55: ['ndd', 'bv', 'dvm', 'bd'], mt60: ['ld', 'nvl'], dk60: ['ntd'],
+  dc63: ['dvm', 'ndd', 'ndn', 'nvt', 'ndc2'], ab63: ['pxa'], qd63: ['tqd', 'ttq', 'ndd', 'tlx'], vb64: ['lbj'], dn65: ['lbj', 'ww'], id65: ['ww'],
+  mt68: ['ld', 'ph', 'ww', 'lbj', 'nvt'], ks68: ['ww', 'lbj'], hcm69: ['hcm', 'rn', 'ld', 'nvt'], lk71: ['nvt', 'rn'], qt72: ['nvt', 'ld', 'vtd'],
+  lb72: ['rn', 'hk', 'vng'], pr73: ['ldt', 'hk', 'ntb', 'rn', 'nvt'], hs74: ['nvt'], sg75: ['dvm', 'vtd', 'ph', 'ld', 'tcs', 'tvh', 'ldt'],
+  bmt75: ['vtd', 'nvt', 'ld'], xl75: ['nvt'], tn76: ['tc', 'ld', 'pvd', 'ph', 'nht'], ct78: ['dm', 'ld', 'vvk'], cp79: ['ld', 'ldt', 'vtd', 'pvd'],
+  bb79: ['ld', 'vtd', 'vng'], vx84: ['vtd'], dm86: ['tc', 'nvl', 'vvk', 'ldt'], gm88: ['nct2'], kh89: ['nvl', 'nct2', 'dm'],
+  bt91: ['dm', 'vvk', 'nvl', 'pvd'], hn95: ['vvk', 'dm'], bg99: ['pvk'], vbb00: ['pvk'], wto07: ['pvk'],
 };
 /** Sự kiện liên quan tới một nhân vật (chiều ngược của EVFIG), theo thứ tự thời gian. */
 export const figEvents = (id: string): HistEvent[] => EV.filter(v => EVFIG[v.id]?.includes(id));
