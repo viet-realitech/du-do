@@ -1,4 +1,4 @@
-import { ERAS, FIG, FIGERA, FIGSIDE, SIDES, sideName } from '../data';
+import { ERAS, FIG, FIGERA, FIGSIDE, SIDES, sideName, figEvents } from '../data';
 import { S, save, figOpen, figsMet } from '../state';
 import { esc, layer, sheet, toast } from '../ui/dom';
 import { av, initials } from '../ui/bits';
@@ -21,6 +21,7 @@ export function openFig(id: string): void {
   sheet(`<div class="row" style="gap:16px;align-items:center"><div style="width:96px;height:96px;flex:none"><image-slot id="fg-${id}" shape="circle" placeholder="Chân dung" initials="${esc(initials(f[0]))}"${img}></image-slot></div>
   <div><div class="mono muted">${f[1]}${sideName(id) ? ' · ' + sideName(id) : ''}</div><h2 style="margin-top:4px">${f[0]}</h2><div class="muted" style="font-style:italic">${f[2]}</div></div></div>
   <p style="margin-top:16px">${f[3]}</p>
+  ${figEvents(id).length ? `<div class="rule"></div><div class="mono muted">Sự kiện liên quan</div>${figEvents(id).map(v => `<button class="row evl" data-a="ev" data-id="${v.id}"><span class="mono muted">${v.y}</span><span style="flex:1">${esc(v.t)}</span><span class="muted">›</span></button>`).join('')}` : ''}
   ${chose.length ? `<div class="rule"></div><div class="mono muted">Đồng hành khi bạn chọn</div>${chose.map(([e, o]) => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${e.cy}</span> · ${o.label}${S.picks[e.id] === o.id ? ' <span class="mono" style="color:var(--acc)">· đã chọn</span>' : ''}</div>`).join('')}` : ''}
   <p class="muted" style="font-size:13px;margin-top:16px">Tiểu sử tóm lược từ sử liệu công khai.</p>`, true);
   checkBadges();

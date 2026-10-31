@@ -1,8 +1,9 @@
 import { isPlay, cardOf, decided } from '../play';
 import { mood } from '../music';
 import { isTouring } from '../tour';
-import { EV, P, SRC } from '../data';
-import { S, save, rt, allEv, eraOf, curPick } from '../state';
+import { EV, EVFIG, FIG, P, SRC } from '../data';
+import { S, save, rt, allEv, eraOf, curPick, figOpen } from '../state';
+import { av } from '../ui/bits';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer } from '../ui/dom';
 import { checkBadges } from '../badges';
@@ -57,6 +58,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
      ${v.qt ? `<button class="quote" data-a="src" data-id="${v.qt.src}"><blockquote>${esc(v.qt.t)}</blockquote><div class="mono muted" style="margin-top:8px">— ${esc(v.qt.by)}</div></button>` : ''}
      ${v.n ? `<div class="nums">${v.n.map(([a, b]) => `<div><span class="muted">${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><p class="muted" style="font-size:13px;margin-top:6px">Số liệu ước tính, khác nhau giữa các nguồn.</p>` : ''}
      <div id="mstrip"></div>
+     ${(EVFIG[v.id] || []).filter(id => FIG[id]).length ? `<div class="mono muted" style="margin-top:18px">Nhân vật</div><div class="figrow">${(EVFIG[v.id] || []).filter(id => FIG[id]).map(id => `<button data-a="fig" data-id="${id}"${figOpen(id) ? '' : ' aria-label="Nhân vật chưa mở"'}>${av(id, 44, !figOpen(id))}<span><b>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</b><br><span class="muted">${esc(FIG[id][2])}</span></span></button>`).join('')}</div>` : ''}
      ${pk ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Gia đình bạn đang theo · ${esc(pk.label)}</div><p style="font-size:16px;margin-top:4px">${esc(pk.out)}</p></div>` : ''}`;
     }
     if (k === 'v') {

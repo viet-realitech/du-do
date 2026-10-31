@@ -258,6 +258,11 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .bdg.off .bi { background: var(--paper3); color: var(--ink3) }
 .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 .fside { margin: 12px 0 8px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase }
+.figrow { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px }
+.figrow > button { display: flex; align-items: center; gap: 10px; text-align: left; font-size: 14px; line-height: 1.2; max-width: 100%; padding: 4px 8px 4px 4px; border-radius: 30px; background: var(--paper2); border: 1px solid var(--rule) }
+.figrow > button .av { flex: none }
+.evl { width: 100%; text-align: left; gap: 12px; padding: 8px 0; font-size: 16px; border-bottom: 1px solid var(--rule) }
+.evl:last-of-type { border-bottom: 0 }
 .fside + .fgrid + .fside { margin-top: 16px }
 .fcard { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; border: 1px solid var(--rule); border-radius: 14px; padding: 12px; text-align: left; background: var(--paper2) }
 .fcard .av { width: 64px; height: 64px; font-size: 20px; margin-bottom: 10px }

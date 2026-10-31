@@ -139,6 +139,15 @@ export const FIGSIDE: Record<string, string> = {
 };
 export const sideName = (id: string) => SIDES.find(x => x[0] === FIGSIDE[id])?.[1] || '';
 
+/** Nhân vật trực tiếp liên quan tới từng sự kiện (chỉ huy, người ký, người khởi xướng…); màn chi tiết sự kiện
+    và hồ sơ nhân vật nối qua lại bằng bảng này. */
+export const EVFIG: Record<string, string[]> = {
+  nt61: ['ntr'], td64: ['td'], vl67: ['ptg'], hn73: ['ntp', 'fg'], hd82: ['hd'], ta83: ['tduc'], cv85: ['hn', 'ttt'], bd86: ['dct'],
+  hn88: ['hn'], hk96: ['pdp'], dm02: ['pdm'], dd05: ['pbc'],
+};
+/** Sự kiện liên quan tới một nhân vật (chiều ngược của EVFIG), theo thứ tự thời gian. */
+export const figEvents = (id: string): HistEvent[] => EV.filter(v => EVFIG[v.id]?.includes(id));
+
 /** Hand-matched Vietnamese Wikipedia article per event; others fall back to search. */
 export const WIKI: Record<string, string> = {
   dn58: 'Trận Đà Nẵng (1858–1860)', cd61: 'Trận Đại đồn Chí Hòa', nt62: 'Hòa ước Nhâm Tuất', pt84: 'Hòa ước Giáp Thân 1884',
