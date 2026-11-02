@@ -101,12 +101,9 @@ function matches(w: SpecialCard['when'], y: number): boolean {
   if (w.surnames && !w.surnames.includes(S.surname || surnameKey(S.name))) return false;
   if (w.homes && !w.homes.includes(S.home)) return false;
   if (w.minB != null && S.res.b < w.minB) return false;
-  if (w.picks || w.camps) {
-    const pk = curPick(y);
-    if (!pk) return false;
-    if (w.picks && !w.picks.includes(pk.id)) return false;
-    if (w.camps && !w.camps.includes(CAMP[pk.id])) return false;
-  }
+  // picks: dòng họ đã chọn một trong các hướng này ở một điểm rẽ nào đó tính tới năm y; camps: phe đang theo vào năm y.
+  if (w.picks && !ERAS.some(e => e.cy <= y && w.picks!.includes(S.picks[e.id]))) return false;
+  if (w.camps) { const pk = curPick(y); if (!pk || !w.camps.includes(CAMP[pk.id])) return false; }
   return true;
 }
 /** Biến cố riêng gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản). */
@@ -127,24 +124,26 @@ export function needsDecision(v: HistEvent): boolean {
   return !!sp && !specialDecided(sp);
 }
 
-/** Dấu ấn dòng họ ở kết cục, theo đường đã đi qua sáu điểm rẽ và việc đổi họ (nội dung: surnames.ts). */
+/** Dấu ấn dòng họ ở kết cục, theo đường đã đi qua sáu điểm rẽ và việc đổi họ (nội dung: surnames.ts).
+    Thứ tự xét: đổi họ → thuận dòng → trung kiên → hai quê → đứng giữa → rẽ nhiều ngả → mặc định. */
 export function lineage(): Archetype | null {
   if (!ARCHETYPES.length) return null;
-  const by = (id: string) => ARCHETYPES.find(a => a.id === id) || ARCHETYPES.find(a => a.id === 'default') || null;
-  const ps = ERAS.map(e => S.picks[e.id]).filter(Boolean) as string[];
-  if (ps.length < ERAS.length) return by('default');
-  const count: Record<string, number> = {};
-  for (const p of ps) count[CAMP[p]] = (count[CAMP[p]] || 0) + 1;
-  const top = Math.max(...Object.values(count));
-  let changes = 0;
-  for (let i = 1; i < ps.length; i++) if (!continues(ps[i - 1], ps[i])) changes++;
-  if (S.picks.e6 === 'radi') return by('lyhuong');
+  const by = (id: string) => ARCHETYPES.find(a => a.id === id) || ARCHETYPES.find(a => a.id === 'thuong') || null;
+  const os = ERAS.map(e => e.opts.find(o => o.id === S.picks[e.id]));
+  if (os.some(o => !o)) return by('thuong');
+  // phía của mỗi thế hệ theo góc nhìn sử học của hướng đã chọn: vn, vnch, hay "giữa" (cải cách, thương thuyết, đứng ngoài)
+  const side = os.map(o => (o!.persp === 'vn' || o!.persp === 'vnch' ? o!.persp : 'giua'));
+  const n = (k: string) => side.filter(x => x === k).length;
+  let turns = 0;
+  for (let i = 1; i < side.length; i++) if (side[i] !== side[i - 1]) turns++;
+  const ms = matchStats();
   if (S.names.length) return by('doiho');
-  if (top >= 4) return by('trungkien');
-  if (matchStats().m >= 5) return by('thuandong');
-  if (changes >= 3) return by('xoaychieu');
-  if (ps.filter(p => ['hoa', 'duytan', 'laphien', 'tl', 'thuba', 'doimoi'].includes(p)).length >= 4) return by('onhoa');
-  return by('default');
+  if (ms.t && ms.m === ms.t) return by('thuandong');
+  if (n('vn') >= 4 || n('vnch') >= 4) return by('trungkien');
+  if (S.picks.e6 === 'radi') return by('haique');
+  if (n('giua') >= 4) return by('dunggiua');
+  if (turns >= 3) return by('nhieunga');
+  return by('thuong');
 }
 
 /* ---------- lựa chọn điểm rẽ đổi quan hệ ---------- */

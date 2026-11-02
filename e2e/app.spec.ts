@@ -105,12 +105,18 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await page.getByRole('button', { name: /Vào trò chơi/ }).click();
   await expect(page.getByText('Giữ gia sản một dòng họ qua 168 năm.')).toBeVisible();
   await page.getByRole('button', { name: 'Huế' }).click();
-  await page.locator('#nm').fill('Họ Tôn Thất');
+  // the family name is chosen from a list and opens its family record (lore, kin in the roster, special events)
+  await page.getByRole('button', { name: 'Tôn Thất / Nguyễn Phúc' }).click();
+  await expect(page.getByText('Gia phả mở đầu · Họ Tôn Thất / Nguyễn Phúc')).toBeVisible();
+  await expect(page.locator('#slore .kin .av')).not.toHaveCount(0);
   await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
   // generation 1 has nothing to harvest yet: straight to the turning point
   await expect(page.getByText('Tiếng súng Sơn Trà').first()).toBeVisible();
   await expect(page.getByText('Gia sản sau một đời người')).toHaveCount(0);
+  // options stay locked while the turning point is being told, then open by themselves
+  await expect(page.locator('.listen')).toBeVisible();
   await page.locator('.opt').first().click();
+  await expect(page.locator('.listen')).toHaveCount(0);
   await page.locator('#go').click();
   // outcome: a single "live through the generation" button with a countdown; the chapter starts by itself
   await expect(page.locator('.btn.go .cd')).toBeAttached();
