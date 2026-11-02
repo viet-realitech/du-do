@@ -90,6 +90,7 @@ export function canAfford(fx: Fx): string | null {
 
 export function decide(v: HistEvent, i: number): Fx {
   const c = cardOf(v)!, ch = c[2][i];
+  S.xs[v.id] = specialFor(v)?.id || ''; // chốt biến cố riêng theo hoàn cảnh lúc quyết định (trước khi trừ gia sản)
   S.cards[v.id] = i;
   const got = applyFx(ch[2]);
   save();
@@ -106,9 +107,15 @@ function matches(w: SpecialCard['when'], y: number): boolean {
   if (w.camps) { const pk = curPick(y); if (!pk || !w.camps.includes(CAMP[pk.id])) return false; }
   return true;
 }
-/** Biến cố riêng gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản). */
-export const specialFor = (v: HistEvent): SpecialCard | undefined =>
-  isPlay() && !v.diary ? SPECIAL.find(c => c.ev === v.id && matches(c.when, v.y)) : undefined;
+/** Biến cố riêng gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản). Điều kiện được xét
+    một lần, lúc dòng họ quyết định thẻ của sự kiện (S.xs); sau đó đổi họ hay đổi gia sản không làm sự kiện cũ
+    "mọc" thêm biến cố và kéo dòng thời gian lùi lại. */
+export function specialFor(v: HistEvent): SpecialCard | undefined {
+  if (!isPlay() || v.diary) return undefined;
+  if (v.id in S.xs) return SPECIAL.find(c => c.id === S.xs[v.id]);
+  if (decided(v.id) || v.y < S.xFrom) return undefined;
+  return SPECIAL.find(c => c.ev === v.id && matches(c.when, v.y));
+}
 export const specialDecided = (c: SpecialCard) => 'x:' + c.id in S.cards;
 export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: string): Fx {
   S.cards['x:' + c.id] = i;

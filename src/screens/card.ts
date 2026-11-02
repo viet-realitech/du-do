@@ -36,7 +36,8 @@ export function fxChipsPlay(fx: Fx, got?: Fx): string {
 export function openCard(v: HistEvent, inTour = false): void {
   const c = cardOf(v);
   if (!c || layer.querySelector(`.scrim[data-card="${v.id}"]`)) return; // thẻ này đang mở: không mở chồng
-  const done = decided(v.id), must = mustDecide(v), h = home();
+  const sp0 = specialFor(v), spPending = !!sp0 && !specialDecided(sp0);
+  const done = decided(v.id), must = mustDecide(v) || spPending, h = home();
   // Không đủ cho lựa chọn nào thì lựa chọn rẻ nhất vẫn bấm được (tài nguyên dừng ở 0): thẻ bắt buộc không thành ngõ cụt.
   const noList = done ? c[2].map(() => null) : c[2].map(ch => canAfford(ch[2]));
   if (!done && noList.every(Boolean)) { const cheap = c[2].reduce((b, ch, i) => (cost(ch[2]) < cost(c[2][b][2]) ? i : b), 0); noList[cheap] = null; }
@@ -55,10 +56,9 @@ export function openCard(v: HistEvent, inTour = false): void {
       <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
   }).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
-  ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done);
+  ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done && !spPending);
   d.dataset.card = v.id;
-  const sp0 = specialFor(v);
-  if (done) { if (sp0 && !specialDecided(sp0)) { d.querySelector('.btn.ghost[data-a="close-card"]')?.remove(); mountSpecial(d, v, sp0, inTour); } return; }
+  if (done) { if (sp0 && spPending) { d.querySelector('.btn.ghost[data-a="close-card"]')?.remove(); mountSpecial(d, v, sp0, inTour); } return; }
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
     if (decided(v.id)) return; // một thẻ chỉ quyết một lần: chạm lại không áp hiệu ứng thêm
     const i = +b.dataset.i!, ch = c[2][i];

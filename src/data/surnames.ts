@@ -72,7 +72,7 @@ export const SURNAMES: SurnameLore[] = [
     variant: "Ở Nam Bộ, Thái thường đọc và viết thành Thới (như trong các địa danh Thới Bình, Thới Lai); cách đọc này thường được giải thích là kiêng huý chúa Nguyễn Phúc Thái (1687–1691).", kin: [], hooks: [] },
 ];
 
-const norm = (s: string) => s.replace(/^họ\s+/i, '').trim().toLowerCase();
+const norm = (s: string) => s.normalize('NFC').replace(/^họ\s+/i, '').trim().toLowerCase();
 /** Khoá họ từ tên người chơi gõ ("Họ Huỳnh" → hoang); '' khi không nhận ra. */
 export const surnameKey = (name: string): string => {
   const n = norm(name);
@@ -80,7 +80,9 @@ export const surnameKey = (name: string): string => {
 };
 export const loreOf = (key: string): SurnameLore | undefined => SURNAMES.find(s => s.key === key);
 /** Tên hiển thị chuẩn: "Họ X". */
-export const asFamily = (name: string): string => { const n = name.replace(/^họ\s+/i, '').trim(); return n ? 'Họ ' + n[0].toUpperCase() + n.slice(1) : ''; };
+export const asFamily = (name: string): string => { const n = name.normalize('NFC').replace(/^họ\s+/i, '').trim(); return n ? 'Họ ' + n[0].toUpperCase() + n.slice(1) : ''; };
+/** Cách viết khớp với họ đã gõ (Huỳnh vẫn là Huỳnh dù chung khoá với Hoàng), hoặc cách viết đầu. */
+export const spellingOf = (key: string, typed: string): string => { const l = SURNAMES.find(s => s.key === key); if (!l) return ''; const t = norm(typed); return l.names.find(x => x.toLowerCase() === t) || l.names[0]; };
 
 /** Dòng biên niên (gia phả cuối trò chơi) cho mỗi hướng ở điểm rẽ: id hướng → câu quá khứ. */
 export const CHRONICLE: Record<string, string> = {

@@ -10,7 +10,7 @@ import { SND, ac } from './audio';
 import { stopTour, isTourPaused, resumeTour, canResumeChapter } from './tour';
 import { endGame } from './screens/ending';
 import { openGate } from './screens/gate';
-import { openEvent } from './screens/event';
+import { openEvent, SIDE_PV } from './screens/event';
 import { openFig } from './screens/figures';
 import { goEnd } from './screens/ending';
 
@@ -96,6 +96,8 @@ function renderCard(): void {
     return;
   }
   const v = rt.focusEv, pk = v ? curPick(v.y) : undefined;
+  // Trò chơi: thẻ trên bản đồ đọc sự kiện bằng giọng của phe dòng họ đang theo (tóm tắt vẫn có trong lời kể và màn chi tiết)
+  const minePv = isPlay() && pk && SIDE_PV.includes(pk.persp) ? v?.v?.find(([p]) => p === pk.persp)?.[1] : undefined;
   c.className = 'card' + (v && v.diary ? ' diary' : '');
   if (!v) {
     c.innerHTML = `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div>`;
@@ -104,7 +106,7 @@ function renderCard(): void {
   const seen = S.seen.includes(v.id);
   const card = isPlay() ? cardOf(v) : undefined, open = card && needsDecision(v), must = open && (mustDecide(v) || !!specialFor(v));
   if (must) c.className += ' must';
-  c.innerHTML = `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div><div class="s">${esc(v.s)}</div>${isPlay() && pk && v.v?.some(([p]) => p === pk.persp) ? `<div class="mine-pv"><span class="mono">Phe bạn theo nhìn nhận</span> ${esc(v.v.find(([p]) => p === pk.persp)![1])}</div>` : ''}</button>
+  c.innerHTML = `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
     <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`;
 }
 

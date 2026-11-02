@@ -1,5 +1,5 @@
 import { av } from '../ui/bits';
-import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT } from '../data/surnames';
+import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT, spellingOf } from '../data/surnames';
 import { themeCards, applyTheme } from '../theme';
 import { HOMES, home, RES } from '../play';
 import { switchMode } from '../state';
@@ -117,10 +117,9 @@ export function goMode(m: 'read' | 'play'): void {
 }
 
 function begin(): void {
-  const typed = $<HTMLInputElement>('#nm')?.value.trim() || '';
-  if (!S.surname && typed) S.surname = surnameKey(typed);
-  const l = loreOf(S.surname);
-  S.name = l ? 'Họ ' + l.names[0] : asFamily(typed) || 'Họ Lê';
+  const typed = ($<HTMLInputElement>('#nm')?.value || '').normalize('NFC').trim();
+  if (typed) S.surname = surnameKey(typed); // gõ họ: giữ đúng cách viết (Huỳnh, Võ, Thới…)
+  S.name = typed ? asFamily(typed) : S.surname ? 'Họ ' + spellingOf(S.surname, '') : S.name || 'Họ Lê';
   S.step = 'play';
   save();
   clearLayer();

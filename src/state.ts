@@ -32,6 +32,10 @@ export interface State {
   surname: string;
   /** Lịch sử đổi họ: năm, từ, sang, vì sao. */
   names: { y: number; from: string; to: string; why: string }[];
+  /** Biến cố riêng đã gắn với một sự kiện, chốt lúc dòng họ quyết định thẻ của sự kiện đó: id sự kiện → id biến cố ('' = không có). */
+  xs: Record<string, string>;
+  /** Biến cố riêng chỉ áp dụng cho sự kiện từ năm này (bản lưu có trước tính năng: năm đang ở lúc mở lại). */
+  xFrom: number;
   year: number;
   picks: Record<string, string>;
   seen: string[];
@@ -59,13 +63,18 @@ export interface State {
 }
 
 const def: State = {
-  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
+  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
   filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
 };
 
 function load(mode = activeMode()): State {
   let s: State;
-  try { s = Object.assign({}, def, JSON.parse(localStorage.getItem(slotKey(mode)) || '{}')); } catch { s = { ...def }; }
+  let raw: Record<string, unknown> = {};
+  try { raw = JSON.parse(localStorage.getItem(slotKey(mode)) || '{}'); } catch { /* hỏng: dùng mặc định */ }
+  s = Object.assign({}, def, raw);
+  // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
+  if (!('xFrom' in raw)) s.xFrom = typeof raw.year === 'number' ? raw.year : Y0;
+  s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])];
   s.mode = mode;
   s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
   return s;
@@ -79,7 +88,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, harvests: [], surname: '', names: [], res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;
@@ -162,7 +171,8 @@ export function renameFamily(to: string, y: number, why: string): void {
 
 /** Bắt đầu lại gia sản (khi đổi sang chế độ Chơi giữa chừng). */
 export function resetPlay(): void {
-  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.names = [];
+  if (S.names.length) { S.name = S.names[0].from; S.surname = surnameKey(S.name); } // chơi lại: họ ban đầu
+  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.names = []; S.xs = {}; S.xFrom = 0;
   save();
 }
 

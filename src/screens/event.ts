@@ -18,6 +18,8 @@ import { openSrc } from './sources';
 import type { HistEvent } from '../data';
 
 type Tab = 'x' | 'v' | 'm' | 's';
+/** Góc nhìn sử học nào là "của phe" dòng họ theo (sử liệu quốc tế, Pháp không phải tiếng nói của phe người chơi). */
+export const SIDE_PV = ['vn', 'vnch', 'nguyen'];
 const TABS: [Tab, string][] = [['x', 'Diễn biến'], ['v', 'Góc nhìn'], ['m', 'Ảnh, phim'], ['s', 'Nguồn']];
 const KIND_ICON: Record<string, string> = { 'Trận đánh': '◆', 'Hiệp ước': '■' };
 const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">‹</button>`;
@@ -55,7 +57,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   const body = (k: Tab): string => {
     if (k === 'x') {
       return `<p style="font-size:19px;line-height:1.38">${esc(v.s)}</p>${v.x ? `<p style="margin-top:12px" class="muted">${esc(v.x)}</p>` : ''}
-     ${isPlay() && mine && vs.some(([pp]) => pp === mine) ? `<div class="pv mine" style="margin-top:12px"><div class="mono muted">Phe bạn theo nhìn nhận · ${P[mine]}</div><q>${esc(vs.find(([pp]) => pp === mine)![1])}</q></div>` : ''}
+     ${isPlay() && mine && SIDE_PV.includes(mine) && vs.some(([pp]) => pp === mine) ? `<div class="pv mine" style="margin-top:12px"><div class="mono muted">Phe bạn theo nhìn nhận · ${P[mine]}</div><q>${esc(vs.find(([pp]) => pp === mine)![1])}</q></div>` : ''}
      ${v.qt ? `<button class="quote" data-a="src" data-id="${v.qt.src}"><blockquote>${esc(v.qt.t)}</blockquote><div class="mono muted" style="margin-top:8px">— ${esc(v.qt.by)}</div></button>` : ''}
      ${v.n ? `<div class="nums">${v.n.map(([a, b]) => `<div><span class="muted">${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><p class="muted" style="font-size:13px;margin-top:6px">Số liệu ước tính, khác nhau giữa các nguồn.</p>` : ''}
      <div id="mstrip"></div>

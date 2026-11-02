@@ -6,7 +6,7 @@ import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
 import { $ } from './ui/dom';
 import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
-import { evKey, evSpeech } from './speech';
+import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK } from './map';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -95,7 +95,11 @@ function tourStep(): void {
       tour!.t = window.setTimeout(card ? openIt : advance, d);
     };
     tour!.next = next;
-    if (S.narr && canSpeak(evKey(v))) setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
+    if (S.narr && canSpeak(evKey(v))) {
+      // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
+      next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)) + 2500));
+      setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
+    }
     else next(card ? 4500 : 2900);
   });
 }

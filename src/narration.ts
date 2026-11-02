@@ -62,8 +62,10 @@ export function speak(text: string, onend?: () => void, force = false, key?: str
     clip = a;
     a.playbackRate = Math.round(((S.rate || 0.95) / 0.95) * 100) / 100; // "Tốc độ đọc": Vừa = natural pace; browsers keep the pitch
     // Bảo hiểm: iOS tạm dừng clip khi khoá máy / chuyển app và có thể không bao giờ báo "ended".
-    const guard = setTimeout(() => end(), Math.max(6000, text.length * 130));
-    const end = () => { clearTimeout(guard); if (me === run) { clip = null; done(); } };
+    let guard = setTimeout(() => end(), Math.max(6000, text.length * 130));
+    // khi biết độ dài thật của bản thu, hẹn lại theo đó (bản thu có thể dài hơn câu được truyền vào, và chạy theo tốc độ đọc)
+    a.onloadedmetadata = () => { if (isFinite(a.duration) && a.duration > 0) { clearTimeout(guard); guard = setTimeout(() => end(), (a.duration * 1000) / (a.playbackRate || 1) + 2500); } };
+    const end = () => { clearTimeout(guard); if (me === run) { if (clip === a) { a.pause(); clip = null; } done(); } };
     a.onended = a.onerror = end;
     duck(true);
     a.play().catch(end);

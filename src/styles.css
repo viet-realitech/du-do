@@ -218,8 +218,7 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .kin { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: 14px }
 .kin > span { display: inline-flex; align-items: center; gap: 6px }
 .xopts .opt + .opt { margin-top: 10px }
-.mine-pv { margin-top: 8px; padding: 8px 10px; border-left: 2px solid var(--acc); font-size: 14.5px; line-height: 1.35; color: var(--ink2) }
-.mine-pv .mono { color: var(--acc); font-size: 11px; display: block; margin-bottom: 2px }
+.card .c .s .pvl { color: var(--acc); font-weight: 600 }
 .opt .tt { display: flex; justify-content: space-between; align-items: center; gap: 8px }
 .opt h3 { font-size: 21px }
 .opt .who { font-size: 14px; font-style: italic; color: var(--ink2); margin: 2px 0 6px }
