@@ -8,6 +8,6 @@ for k, v in meta.items():
     if 'kind' not in v or picks.get(k, 0) is None: continue
     x, y, z = picks.get(k, [50, 30, 1.4])
     q = urllib.parse.quote(v['name'])
-    path = f"{v['rel']}/330px-{q}" if v['kind'] == 'T' else v['rel']
+    path = f"{v['rel']}/{v.get('size', 330)}px-{q}" if v['kind'] == 'T' else v['rel']
     if v['kind'] == 'T' and v['name'].lower().endswith(('.svg', '.tif', '.tiff')): path += '.png'
     print(f"  {k}: ['{v['kind']}{path}', {x}, {y}, {z}],")
