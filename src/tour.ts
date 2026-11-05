@@ -8,6 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK } from './map';
+import { playScene, endScene, fxOn } from './scene';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
 
@@ -82,6 +83,7 @@ function tourStep(): void {
     renderMain();
     zoomTo(v.l, zoomK(v));
     SND.fly();
+    playScene(v); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
@@ -100,7 +102,7 @@ function tourStep(): void {
       next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)) + 2500));
       setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
     }
-    else next(card ? 4500 : 2900);
+    else next(card ? 4500 : v.k === 'Trận đánh' && fxOn() ? 6500 : 2900); // không giọng đọc: trận đánh giữ đủ lâu cho cảnh động
   });
 }
 
@@ -146,6 +148,7 @@ export function pauseTour(why: 'overlay' | 'map'): void {
   if (tour.paused) { if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000); return; }
   clearTimeout(tour.t);
   hush();
+  endScene();
   tour.paused = why;
   tourBar();
   if (why === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000);
@@ -167,6 +170,7 @@ export function resumeTour(why?: 'overlay'): void {
 
 export function stopTour(): void {
   clearTimeout(mapIdle);
+  endScene();
   if (tour) {
     clearTimeout(tour.t);
     tour = null;

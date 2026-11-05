@@ -134,6 +134,65 @@ export const SND = {
   shift() { drum(0, 0.32, 55); noise(0.7, 150, 600, 0.1, 0.5, 0, 0.05); },
 };
 
+/* ---------- âm thanh chiến trường (cảnh động, scene.ts) ---------- */
+/** Low-passed noise burst: the body of an explosion. */
+function thud(d: number, f: number, f2: number, v: number, delay = 0): void {
+  const a = live();
+  if (!a || !NOISE) return;
+  const t = a.currentTime + delay;
+  const s = a.createBufferSource();
+  s.buffer = NOISE;
+  s.playbackRate.value = 0.5 + Math.random() * 0.3;
+  const lp = a.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(f, t);
+  lp.frequency.exponentialRampToValueAtTime(f2, t + d);
+  s.connect(lp).connect(env(a, t, v, 0.004, d)).connect(FX!);
+  s.start(t, Math.random());
+  s.stop(t + d + 0.05);
+}
+
+export const WAR = {
+  /** Artillery / cannon: transient, body and sub drop; `far` (0–1) softens and darkens it. */
+  boom(delay = 0, far = 0) {
+    const v = 0.55 * (1 - far * 0.6);
+    thud(1.3 + far, 900 - far * 600, 60, v, delay);
+    tone(62 - far * 15, 1.1, 'sine', v * 0.7, delay, 28);
+    if (far < 0.5) noise(0.06, 3200, 1500, v * 0.4, 1, delay, 0.001);
+  },
+  /** Rifle / machine-gun fire: scattered short cracks over `d` seconds. */
+  crackle(d = 2.5, n = 18, delay = 0) {
+    for (let i = 0; i < n; i++) {
+      const at = delay + Math.random() * d, burst = Math.random() < 0.3 ? 3 : 1;
+      for (let j = 0; j < burst; j++) noise(0.05, 2600 + Math.random() * 1500, 900, 0.05 + Math.random() * 0.06, 1.4, at + j * 0.07, 0.001);
+    }
+  },
+  /** Distant rolling front: a low bed with a few far booms. */
+  rumble(d = 5, delay = 0) {
+    thud(d, 220, 90, 0.12, delay);
+    for (let i = 0; i < 4; i++) WAR.boom(delay + 0.4 + Math.random() * (d - 0.8), 0.8);
+  },
+  /** Aircraft passing overhead (pitch drops as it passes) and a bomb whistle into a blast. */
+  plane(delay = 0) {
+    const a = live();
+    if (!a) return;
+    const t = a.currentTime + delay, d = 3.2;
+    const o = a.createOscillator(), lp = a.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(118, t); o.frequency.exponentialRampToValueAtTime(82, t + d);
+    lp.type = 'lowpass'; lp.frequency.value = 520;
+    o.connect(lp).connect(env(a, t, 0.06, 1.2, d)).connect(FX!);
+    o.start(t); o.stop(t + d + 0.1);
+    noise(d, 300, 700, 0.07, 0.6, delay, 1.1);
+  },
+  bomb(delay = 0) { tone(1700, 0.9, 'sine', 0.05, delay, 420); WAR.boom(delay + 0.85, 0.1); },
+  /** Sea: slow swells of filtered noise; with the cannons, a naval scene. */
+  waves(d = 5, delay = 0) { for (let i = 0; i < 3; i++) noise(1.8, 300, 900, 0.08, 0.5, delay + i * 1.5, 0.7); void d; },
+  /** Crowd / uprising: murmur swell with drums. */
+  crowd(delay = 0) { noise(3.5, 400, 900, 0.09, 0.4, delay, 1.2); drum(delay + 0.3, 0.3, 80); drum(delay + 0.9, 0.3, 80); drum(delay + 1.5, 0.35, 76); },
+  /** Treaty: quill scratches, then the seal. */
+  quill(delay = 0) { for (let i = 0; i < 5; i++) noise(0.12 + Math.random() * 0.1, 3500, 5200, 0.04, 2, delay + i * 0.17, 0.01); },
+};
+
 export function buzz(p: number | number[]): void {
   if (S.haptic && navigator.vibrate) {
     try { navigator.vibrate(p); } catch { /* ignore */ }

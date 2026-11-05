@@ -67,6 +67,7 @@ export function paneMe(): void {
   ${sw('narr', `Giọng đọc${hasTTS && !hasVoice() ? ' <span class="muted" style="font-size:13px">· chưa có giọng tiếng Việt</span>' : ''}`, S.narr)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
   ${sw('haptic', 'Rung', S.haptic)}
+  ${sw('fx', 'Cảnh động <span class="muted" style="font-size:13px">· trận đánh 3D, phim tư liệu</span>', S.fx)}
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
   ${done === 6 ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
@@ -76,7 +77,7 @@ export function paneMe(): void {
 }
 
 on('set', el => {
-  const k = el.dataset.k as 'sound' | 'music' | 'narr' | 'haptic' | 'grain' | 'modern' | 'grat';
+  const k = el.dataset.k as 'sound' | 'music' | 'narr' | 'haptic' | 'fx' | 'grain' | 'modern' | 'grat';
   S[k] = !S[k];
   save();
   paneMe();

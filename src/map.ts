@@ -41,7 +41,7 @@ const G = {} as {
   l17: Sel<SVGLineElement>;
   sea: Sel<SVGRectElement>; vig: Sel<SVGRectElement>; grat: Sel; rip: Sel<SVGGElement>; r0: Sel<SVGGElement>; modern: Sel;
   others: d3.Selection<SVGPathElement | d3.BaseType, Feature<Geometry>, SVGGElement, unknown>;
-  labels: Sel<SVGGElement>; cities: Sel<SVGGElement>; mk: Sel<SVGGElement>; call: Sel<SVGGElement>; homeG: Sel<SVGGElement>;
+  labels: Sel<SVGGElement>; cities: Sel<SVGGElement>; mk: Sel<SVGGElement>; call: Sel<SVGGElement>; homeG: Sel<SVGGElement>; fx: Sel<SVGGElement>;
   zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 };
 G.k = 1;
@@ -173,6 +173,7 @@ export async function initMap(): Promise<void> {
     });
   G.homeG = Z.append('g').attr('class', 'home').style('pointer-events', 'none');
   G.mk = Z.append('g');
+  G.fx = Z.append('g').attr('class', 'fxl').style('pointer-events', 'none'); // cảnh động của sự kiện (scene.ts)
   G.call = Z.append('g').style('pointer-events', 'none');
 
   G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([1, 8]).on('zoom', ev => {
@@ -392,6 +393,12 @@ function highlight(): void {
   bx.attr('x', -w / 2).attr('y', -52).attr('width', w).attr('height', 36);
   g.append('path').attr('d', 'M-5,-16 L0,-10 L5,-16Z').style('fill', 'var(--acc)');
   g.style('opacity', 0).transition().delay(500).duration(400).style('opacity', 1);
+}
+
+/** Lớp hiệu ứng cho cảnh động (scene.ts): nhóm SVG trong lớp zoom, phép chiếu, hệ số zoom hiện tại, defs. */
+export function fxHost(): { g: SVGGElement; defs: SVGDefsElement; proj: (l: [number, number]) => [number, number]; k: () => number } | null {
+  if (!ready) return null;
+  return { g: G.fx.node()!, defs: G.defs.node()!, proj: l => proj(l) as [number, number], k: () => (G.k || 1) / G.f };
 }
 
 /** Zoom level that frames the province (or Laos/Cambodia) containing the event. */

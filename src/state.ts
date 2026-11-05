@@ -15,7 +15,7 @@ const MODE_KEY = 'dudo-mode';
 const slotKey = (m: 'read' | 'play') => (m === 'play' ? 'dudo-v2-play' : 'dudo-v2');
 const activeMode = (): 'read' | 'play' => { try { return localStorage.getItem(MODE_KEY) === 'play' ? 'play' : 'read'; } catch { return 'read'; } };
 /** Thiết lập thiết bị, dùng chung cho cả hai luồng. */
-const PREFS = ['sound', 'music', 'theme', 'pal', 'mstyle', 'grain', 'modern', 'grat', 'haptic', 'narr', 'rate'] as const;
+const PREFS = ['sound', 'music', 'theme', 'pal', 'mstyle', 'grain', 'modern', 'grat', 'haptic', 'fx', 'narr', 'rate'] as const;
 
 export interface State {
   step: 'splash' | 'intro' | 'play';
@@ -54,6 +54,8 @@ export interface State {
   grat: boolean;
   music: boolean;
   haptic: boolean;
+  /** Cảnh động: trận đánh 3D, ấn triện, phim tư liệu trong tour. */
+  fx: boolean;
   narr: boolean;
   rate: number;
   zoomed: boolean;
@@ -64,7 +66,7 @@ export interface State {
 
 const def: State = {
   step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
+  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
 };
 
 function load(mode = activeMode()): State {
