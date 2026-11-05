@@ -7,8 +7,8 @@ import { $ } from './ui/dom';
 import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
-import { hidePop, zoomTo, zoomK } from './map';
-import { playScene, endScene, fxOn } from './scene';
+import { hidePop, zoomTo, zoomK, zoomFit } from './map';
+import { playScene, endScene, fxOn, sceneFrame } from './scene';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
 
@@ -81,7 +81,8 @@ function tourStep(): void {
     rt.focusEv = v;
     tour!.cur = v.id;
     renderMain();
-    zoomTo(v.l, zoomK(v));
+    const fr = sceneFrame(v);
+    if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5)); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân
     SND.fly();
     playScene(v); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();

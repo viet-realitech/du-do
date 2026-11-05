@@ -410,6 +410,17 @@ export function zoomK(v: HistEvent): number {
   return Math.max(2.4, Math.min(5, 0.55 * Math.min(W / Math.max(w, 1), H / Math.max(hh, 1))));
 }
 
+/** Fly so every point (lon/lat) is in view, at most at scale kMax (cảnh động có mũi tiến quân trải rộng). */
+export function zoomFit(pts: [number, number][], kMax: number, ms?: number): void {
+  if (!ready || !pts.length) return;
+  const xy = pts.map(l => proj(l)!), xs = xy.map(p => p[0]), ys = xy.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const bw = Math.max(1, (x1 - x0) * 1.35), bh = Math.max(1, (y1 - y0) * 1.45);
+  const k = Math.max(1.2, Math.min(kMax, W / bw, H / bh));
+  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2 - (y1 - y0) * 0.06);
+  G.svg.transition().duration(ms || 1200).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
+}
+
 /** Fly to a lon/lat at scale k, or back to the overview when `l` is null. */
 export function zoomTo(l: [number, number] | null, k = 1, ms?: number): void {
   if (!ready) return;

@@ -101,11 +101,16 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (!h || !r.root) return;
   ensureDefs(h.defs);
   const k = h.k(), root = r.root, type = sc?.type || 'land';
+  // Trận gọn trong vài km: phóng sơ đồ quanh vị trí sự kiện cho tới khi chiếm gần nửa khung (minh hoạ, không phải tỉ lệ thật)
+  const c0 = h.proj(v.l), pts = (sc?.arrows || []).flatMap(a => [h.proj(a[0]), h.proj(a[1])]).concat((sc?.hold || []).map(x => h.proj([x[0], x[1]])));
+  const span = pts.length ? Math.max(...pts.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * k : 0;
+  const f = span > 0 ? Math.max(1, 150 / span) : 1;
+  const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
   const arrows = sc?.arrows.length ? sc.arrows : [];
   const T0 = 120; // gọi sau khi bản đồ đã bay tới (playScene hẹn 1,25 s), để hệ số zoom k đã đúng
   // vị trí được giữ: vòng sáng nhấp nháy
   for (const [lo, la, side] of sc?.hold || []) {
-    const p = h.proj([lo, la]), g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
+    const p = P([lo, la]), g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
     const ring = el('circle', { r: 9, fill: 'none', stroke: SIDE_COLOR[side] || '#fff', 'stroke-width': 2, opacity: 0 }, g);
     el('rect', { x: -4, y: -4, width: 8, height: 8, transform: 'rotate(45)', fill: SIDE_COLOR[side] || '#fff', stroke: '#111', 'stroke-width': 1.2 }, g);
     anim(r, 5200, q => { const w = (q * 4) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
@@ -115,13 +120,14 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let hits = 0;
   arrows.forEach(([from, to, side], i) => {
-    const a = h.proj(from), b = h.proj(to), c = curve(a, b, (i % 2 ? -1 : 1) * 0.16);
+    const a = P(from), b = P(to), c = curve(a, b, (i % 2 ? -1 : 1) * 0.16);
     const col = SIDE_COLOR[side] || '#ffd84a';
-    const under = el('path', { d: c.d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.55, 'stroke-width': 7, 'stroke-linecap': 'round', 'vector-effect': 'non-scaling-stroke' }, root);
-    const line = el('path', { d: c.d, fill: 'none', stroke: col, 'stroke-width': type === 'uprising' ? 2.4 : 3.4, 'stroke-linecap': 'round', 'vector-effect': 'non-scaling-stroke' }, root);
-    if (type === 'naval' || type === 'landing') line.setAttribute('stroke-dasharray', '7 5');
-    const len = 1000;
-    for (const p of [under, line]) { p.setAttribute('pathLength', String(len)); if (!(type === 'naval' || type === 'landing') || p === under) { p.setAttribute('stroke-dasharray', `${len} ${len}`); p.setAttribute('stroke-dashoffset', String(len)); } }
+    // nét tính theo đơn vị bản đồ chia cho zoom (không dùng non-scaling-stroke: nó làm pathLength / nét đứt sai trên Chrome)
+    const under = el('path', { d: c.d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.55, 'stroke-width': 7 / k, 'stroke-linecap': 'round' }, root);
+    const line = el('path', { d: c.d, fill: 'none', stroke: col, 'stroke-width': (type === 'uprising' ? 2.4 : 3.4) / k, 'stroke-linecap': 'round' }, root);
+    if (type === 'naval' || type === 'landing') line.setAttribute('stroke-dasharray', `${7 / k} ${5 / k}`);
+    const len = line.getTotalLength() || 1;
+    for (const p of [under, line]) if (!(type === 'naval' || type === 'landing') || p === under) { p.setAttribute('stroke-dasharray', `${len} ${len}`); p.setAttribute('stroke-dashoffset', String(len)); }
     const head = el('g', { transform: `translate(${b[0]},${b[1]}) rotate(${c.ang}) scale(${1 / k})`, opacity: 0 }, root);
     el('path', { d: 'M-2,-7 L9,0 L-2,7 L1,0Z', fill: col, stroke: '#111', 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, head);
     const start = T0 + i * (type === 'uprising' ? 260 : 520), dur = calm.matches ? 1 : type === 'air' ? 1500 : 1900;
@@ -132,7 +138,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
       const e = ease(q);
       under.setAttribute('stroke-dashoffset', String(len * (1 - e)));
       if (!(type === 'naval' || type === 'landing')) line.setAttribute('stroke-dashoffset', String(len * (1 - e)));
-      else line.setAttribute('stroke-dashoffset', String(-e * 60));
+      else line.setAttribute('stroke-dashoffset', String(-e * 60 / k));
       if (mover) { const p = c.at(e), p2 = c.at(Math.min(1, e + 0.02)); mover.setAttribute('opacity', q > 0.97 ? '0' : '1'); mover.setAttribute('transform', `translate(${p[0]},${p[1]}) rotate(${(Math.atan2(p2[1] - p[1], p2[0] - p[0]) * 180) / Math.PI}) scale(${1 / k})`); }
       if (type === 'air' && q > 0.55 && Math.floor(q * 10) !== Math.floor((q - 0.016) * 10) && hits < 14) { hits++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55); }
     }, start, () => {
@@ -176,7 +182,7 @@ function treaty(r: Run, v: HistEvent): void {
 function ripple(r: Run, p: [number, number], k: number, delay: number, color: string): void {
   if (!r.root) return;
   for (let i = 0; i < 3; i++) {
-    const c = el('circle', { cx: p[0], cy: p[1], r: 0, fill: 'none', stroke: color, 'stroke-width': 1.6, 'vector-effect': 'non-scaling-stroke', opacity: 0 }, r.root);
+    const c = el('circle', { cx: p[0], cy: p[1], r: 0, fill: 'none', stroke: color, 'stroke-width': 1.6 / k, opacity: 0 }, r.root);
     anim(r, 1700, q => { c.setAttribute('r', String((6 + 46 * ease(q)) / k)); c.setAttribute('opacity', String(0.75 * (1 - q))); }, delay + i * 380);
   }
 }
@@ -203,6 +209,13 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
 }
 
 /* ---------- vào / ra ---------- */
+/** Các điểm cần thấy trong khung khi phát cảnh của sự kiện v (mũi tiến quân, vị trí giữ, chính sự kiện); null nếu không có cảnh. */
+export function sceneFrame(v: HistEvent): [number, number][] | null {
+  const sc = fxOn() && v.k === 'Trận đánh' ? SCENES[v.id] : undefined;
+  if (!sc) return null;
+  return [v.l, ...sc.arrows.flatMap(a => [a[0], a[1]]), ...sc.hold.map(h => [h[0], h[1]] as [number, number])];
+}
+
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
 export function playScene(v: HistEvent): void {
   endScene();
