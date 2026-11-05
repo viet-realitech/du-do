@@ -7,6 +7,8 @@ let AC: AudioContext | null = null;
 let MASTER: GainNode | null = null;
 let FX: GainNode | null = null;
 let NOISE: AudioBuffer | null = null;
+/** Bus riêng của cảnh động đang chạy (WAR.open/close): cắt được ngay khi tour sang bước khác. */
+let SCN: GainNode | null = null;
 
 /** Lazily create / resume the audio context; call from a user gesture. */
 export function ac(): AudioContext | null {
@@ -52,7 +54,7 @@ function env(a: AudioContext, t: number, v: number, att: number, d: number): Gai
   return g;
 }
 
-function tone(f: number, d: number, type: OscillatorType = 'sine', v = 0.2, delay = 0, f2?: number): void {
+function tone(f: number, d: number, type: OscillatorType = 'sine', v = 0.2, delay = 0, f2?: number, dst?: AudioNode): void {
   const a = live();
   if (!a) return;
   const t = a.currentTime + delay;
@@ -60,34 +62,35 @@ function tone(f: number, d: number, type: OscillatorType = 'sine', v = 0.2, dela
   o.type = type;
   o.frequency.setValueAtTime(f, t);
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d * 0.6);
-  o.connect(env(a, t, v, 0.012, d)).connect(FX!);
+  o.connect(env(a, t, v, 0.012, d)).connect(dst || FX!);
   o.start(t);
   o.stop(t + d + 0.05);
 }
 
 /** Filtered noise burst; `f`→`f2` sweeps the band-pass (whooshes, skin hits, paper). */
-function noise(d: number, f: number, f2: number, v: number, q = 0.8, delay = 0, att = 0.01): void {
+function noise(d: number, f: number, f2: number, v: number, q = 0.8, delay = 0, att = 0.01, dst?: AudioNode): void {
   const a = live();
   if (!a || !NOISE) return;
   const t = a.currentTime + delay;
   const s = a.createBufferSource();
   s.buffer = NOISE;
+  s.loop = true; // tiếng dài hơn bộ đệm 2 s không bị cụt
   s.playbackRate.value = 0.7 + Math.random() * 0.6;
   const bp = a.createBiquadFilter();
   bp.type = 'bandpass';
   bp.Q.value = q;
   bp.frequency.setValueAtTime(f, t);
   bp.frequency.exponentialRampToValueAtTime(f2, t + d);
-  s.connect(bp).connect(env(a, t, v, att, d)).connect(FX!);
+  s.connect(bp).connect(env(a, t, v, att, d)).connect(dst || FX!);
   s.start(t, Math.random());
   s.stop(t + d + 0.05);
 }
 
 /** Low drum: pitched body dropping in frequency plus a skin transient. */
-function drum(delay = 0, v = 0.5, f = 110): void {
-  tone(f, 0.9, 'sine', v, delay, f * 0.45);
-  tone(f * 1.5, 0.25, 'triangle', v * 0.25, delay, f * 0.6);
-  noise(0.18, 900, 200, v * 0.35, 0.7, delay, 0.002);
+function drum(delay = 0, v = 0.5, f = 110, dst?: AudioNode): void {
+  tone(f, 0.9, 'sine', v, delay, f * 0.45, dst);
+  tone(f * 1.5, 0.25, 'triangle', v * 0.25, delay, f * 0.6, dst);
+  noise(0.18, 900, 200, v * 0.35, 0.7, delay, 0.002, dst);
 }
 
 /** Warm brass-like chord: detuned saws through a closing low-pass. */
@@ -142,29 +145,32 @@ function thud(d: number, f: number, f2: number, v: number, delay = 0): void {
   const t = a.currentTime + delay;
   const s = a.createBufferSource();
   s.buffer = NOISE;
+  s.loop = true;
   s.playbackRate.value = 0.5 + Math.random() * 0.3;
   const lp = a.createBiquadFilter();
   lp.type = 'lowpass';
   lp.frequency.setValueAtTime(f, t);
   lp.frequency.exponentialRampToValueAtTime(f2, t + d);
-  s.connect(lp).connect(env(a, t, v, 0.004, d)).connect(FX!);
+  s.connect(lp).connect(env(a, t, v, 0.004, d)).connect(SCN || FX!);
   s.start(t, Math.random());
   s.stop(t + d + 0.05);
 }
+
+const sc = (): AudioNode => SCN || FX!;
 
 export const WAR = {
   /** Artillery / cannon: transient, body and sub drop; `far` (0–1) softens and darkens it. */
   boom(delay = 0, far = 0) {
     const v = 0.55 * (1 - far * 0.6);
     thud(1.3 + far, 900 - far * 600, 60, v, delay);
-    tone(62 - far * 15, 1.1, 'sine', v * 0.7, delay, 28);
-    if (far < 0.5) noise(0.06, 3200, 1500, v * 0.4, 1, delay, 0.001);
+    tone(62 - far * 15, 1.1, 'sine', v * 0.7, delay, 28, sc());
+    if (far < 0.5) noise(0.06, 3200, 1500, v * 0.4, 1, delay, 0.001, sc());
   },
   /** Rifle / machine-gun fire: scattered short cracks over `d` seconds. */
   crackle(d = 2.5, n = 18, delay = 0) {
     for (let i = 0; i < n; i++) {
       const at = delay + Math.random() * d, burst = Math.random() < 0.3 ? 3 : 1;
-      for (let j = 0; j < burst; j++) noise(0.05, 2600 + Math.random() * 1500, 900, 0.05 + Math.random() * 0.06, 1.4, at + j * 0.07, 0.001);
+      for (let j = 0; j < burst; j++) noise(0.05, 2600 + Math.random() * 1500, 900, 0.05 + Math.random() * 0.06, 1.4, at + j * 0.07, 0.001, sc());
     }
   },
   /** Distant rolling front: a low bed with a few far booms. */
@@ -180,17 +186,26 @@ export const WAR = {
     const o = a.createOscillator(), lp = a.createBiquadFilter();
     o.type = 'sawtooth'; o.frequency.setValueAtTime(118, t); o.frequency.exponentialRampToValueAtTime(82, t + d);
     lp.type = 'lowpass'; lp.frequency.value = 520;
-    o.connect(lp).connect(env(a, t, 0.06, 1.2, d)).connect(FX!);
+    o.connect(lp).connect(env(a, t, 0.06, 1.2, d)).connect(sc());
     o.start(t); o.stop(t + d + 0.1);
-    noise(d, 300, 700, 0.07, 0.6, delay, 1.1);
+    noise(d, 300, 700, 0.07, 0.6, delay, 1.1, sc());
   },
-  bomb(delay = 0) { tone(1700, 0.9, 'sine', 0.05, delay, 420); WAR.boom(delay + 0.85, 0.1); },
+  bomb(delay = 0) { tone(1700, 0.9, 'sine', 0.05, delay, 420, sc()); WAR.boom(delay + 0.85, 0.1); },
   /** Sea: slow swells of filtered noise; with the cannons, a naval scene. */
-  waves(d = 5, delay = 0) { for (let i = 0; i < 3; i++) noise(1.8, 300, 900, 0.08, 0.5, delay + i * 1.5, 0.7); void d; },
+  waves(d = 5, delay = 0) { for (let i = 0; i < 3; i++) noise(1.8, 300, 900, 0.08, 0.5, delay + i * 1.5, 0.7, sc()); void d; },
   /** Crowd / uprising: murmur swell with drums. */
-  crowd(delay = 0) { noise(3.5, 400, 900, 0.09, 0.4, delay, 1.2); drum(delay + 0.3, 0.3, 80); drum(delay + 0.9, 0.3, 80); drum(delay + 1.5, 0.35, 76); },
+  crowd(delay = 0) { noise(3.5, 400, 900, 0.09, 0.4, delay, 1.2, sc()); drum(delay + 0.3, 0.3, 80, sc()); drum(delay + 0.9, 0.3, 80, sc()); drum(delay + 1.5, 0.35, 76, sc()); },
   /** Treaty: quill scratches, then the seal. */
-  quill(delay = 0) { for (let i = 0; i < 5; i++) noise(0.12 + Math.random() * 0.1, 3500, 5200, 0.04, 2, delay + i * 0.17, 0.01); },
+  quill(delay = 0) { for (let i = 0; i < 5; i++) noise(0.12 + Math.random() * 0.1, 3500, 5200, 0.04, 2, delay + i * 0.17, 0.01, sc()); },
+  /** Mở bus riêng cho một cảnh (gọi khi cảnh bắt đầu). */
+  open() { WAR.close(); const a = live(); if (!a) return; SCN = a.createGain(); SCN.connect(FX!); },
+  /** Cắt mọi tiếng của cảnh đang chạy (đã hẹn trước hay chưa): hạ nhanh rồi ngắt bus. */
+  close() {
+    const g = SCN; SCN = null;
+    if (!g || !AC) return;
+    g.gain.setTargetAtTime(0, AC.currentTime, 0.05);
+    setTimeout(() => { try { g.disconnect(); } catch { /* đã ngắt */ } }, 400);
+  },
 };
 
 export function buzz(p: number | number[]): void {

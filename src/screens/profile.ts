@@ -1,3 +1,4 @@
+import { endScene } from '../scene';
 import { refreshMusic } from '../music';
 import { isPlay, RES, powersAt, rank, decidedCount, home } from '../play';
 import { relChip } from './card';
@@ -85,6 +86,7 @@ on('set', el => {
   if (k === 'sound' || k === 'music') refreshMusic();
   if (k === 'narr' && S.narr) speak('Giọng đọc đã bật.');
   if (k === 'haptic') buzz(20);
+  if ((k === 'fx' || k === 'sound') && !S[k]) endScene();
   if (k === 'grain' || k === 'modern' || k === 'grat') { applyTheme(); SND.tick(); }
 });
 on('rate', el => { S.rate = +el.dataset.r!; save(); paneMe(); speak(`Tốc độ ${el.dataset.l!.toLowerCase()}.`); });

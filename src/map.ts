@@ -11,6 +11,7 @@ import { checkBadges } from './badges';
 import { isTouring, stopTour, pauseTour } from './tour';
 import { isPlay } from './play';
 import { openEvent } from './screens/event';
+import { endScene } from './scene';
 
 /* Map of Vietnam in 1858–2026 frames. SVG user space is 390 × H; the projection
    is fixed so markers, labels and zoom targets share one coordinate system. */
@@ -184,9 +185,14 @@ export async function initMap(): Promise<void> {
     if (G.k > 1.3 && !S.zoomed) { S.zoomed = true; save(); checkBadges(); }
   });
   svg.call(G.zoom).on('dblclick.zoom', null);
-  document.getElementById('zin')!.onclick = () => svg.transition().duration(300).call(G.zoom.scaleBy, 1.6);
-  document.getElementById('zout')!.onclick = () => svg.transition().duration(300).call(G.zoom.scaleBy, 1 / 1.6);
-  document.getElementById('zrs')!.onclick = () => { svg.transition().duration(400).call(G.zoom.transform, d3.zoomIdentity); hidePop(); };
+  // chạm / cuộn trên bản đồ đang nghiêng: làm phẳng ngay trước khi d3 tính điểm neo (tránh bản đồ trượt dưới ngón tay)
+  const flat = () => { if (document.getElementById('mapwrap')?.classList.contains('tilt')) endScene(true); };
+  for (const t of ['pointerdown', 'touchstart', 'wheel']) svg.node()!.addEventListener(t, flat, { capture: true, passive: true });
+  // nút zoom là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
+  const byUser = () => { if (isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); } };
+  document.getElementById('zin')!.onclick = () => { byUser(); svg.transition().duration(300).call(G.zoom.scaleBy, 1.6); };
+  document.getElementById('zout')!.onclick = () => { byUser(); svg.transition().duration(300).call(G.zoom.scaleBy, 1 / 1.6); };
+  document.getElementById('zrs')!.onclick = () => { byUser(); svg.transition().duration(400).call(G.zoom.transform, d3.zoomIdentity); hidePop(); };
   fitViewBox();
   new ResizeObserver(fitViewBox).observe(svg.node()!);
   ready = true;
@@ -230,8 +236,10 @@ export function themeMap(): void {
 
 /** Grow the viewBox around the W × H core to match the map frame's aspect ratio. */
 function fitViewBox(): void {
-  const r = G.svg.node()!.getBoundingClientRect();
+  // kích thước bố cục (bỏ qua transform: bản đồ có thể đang nghiêng khi vào trận)
+  const n = G.svg.node()!, r = { width: n.clientWidth, height: n.clientHeight };
   if (!r.width || !r.height) return;
+  n.parentElement?.style.setProperty('--persp', `${Math.round(Math.max(900, r.height * 2.75))}px`);
   const a = r.width / r.height;
   const vw = Math.max(W, H * a), vh = Math.max(H, W / a);
   const box: [[number, number], [number, number]] = [[(W - vw) / 2, (H - vh) / 2], [(W + vw) / 2, (H + vh) / 2]];

@@ -31,6 +31,7 @@ function later(r: Run, ms: number, f: () => void): void {
 }
 function anim(r: Run, dur: number, step: (p: number) => void, delay = 0, done?: () => void): void {
   later(r, delay, () => {
+    if (calm.matches) { step(1); done?.(); return; } // giảm chuyển động: vẽ thẳng trạng thái cuối
     r.parts.push({ t0: performance.now(), dur, step, done });
     if (!r.raf) r.raf = requestAnimationFrame(t => frame(r, t));
   });
@@ -41,7 +42,8 @@ function frame(r: Run, now: number): void {
   r.parts = r.parts.filter(p => {
     const k = Math.min(1, (now - p.t0) / p.dur);
     p.step(k);
-    if (k >= 1) { p.done?.(); return false; }
+    // quá hạn lâu (thẻ trình duyệt bị ẩn): kết thúc lặng lẽ, không dồn mọi tiếng nổ vào một khung hình
+    if (k >= 1) { if (now - p.t0 < p.dur + 500) p.done?.(); return false; }
     return true;
   });
   if (r.parts.length) r.raf = requestAnimationFrame(t => frame(r, t));
@@ -55,8 +57,12 @@ function ensureDefs(defs: SVGDefsElement): void {
   el('stop', { offset: '35%', 'stop-color': '#ffb43a' }, g);
   el('stop', { offset: '70%', 'stop-color': '#e2461f', 'stop-opacity': 0.7 }, g);
   el('stop', { offset: '100%', 'stop-color': '#7a1f0d', 'stop-opacity': 0 }, g);
-  const f = el('filter', { id: 'fx-smoke', x: '-80%', y: '-80%', width: '260%', height: '260%' }, defs);
-  el('feGaussianBlur', { stdDeviation: 2.6 }, f);
+  for (const [id, c] of [['fx-puff-n', '#a09a90'], ['fx-puff-d', '#5f5950']]) { // khói: chấm mờ bằng gradient, không dùng bộ lọc blur (nhẹ cho máy yếu)
+    const s = el('radialGradient', { id }, defs);
+    el('stop', { offset: '0%', 'stop-color': c, 'stop-opacity': 0.85 }, s);
+    el('stop', { offset: '60%', 'stop-color': c, 'stop-opacity': 0.35 }, s);
+    el('stop', { offset: '100%', 'stop-color': c, 'stop-opacity': 0 }, s);
+  }
 }
 
 /* ---------- trận đánh ---------- */
@@ -68,14 +74,16 @@ function curve(a: [number, number], b: [number, number], bend: number): { d: str
 }
 
 function explode(r: Run, root: SVGGElement, p: [number, number], k: number, delay: number, big = 1): void {
+  if (calm.matches) return; // giảm chuyển động: không chớp lửa, không khói
   const g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
+  later(r, delay + 3800, () => g.remove()); // dọn nút sau khi khói tan
   const ball = el('circle', { r: 0, fill: 'url(#fx-boom)', opacity: 0 }, g);
   const flash = el('circle', { r: 5 * big, fill: '#fffbe8', opacity: 0 }, g);
   anim(r, 160, q => flash.setAttribute('opacity', String(0.95 * (1 - q))), delay);
   anim(r, 760, q => { ball.setAttribute('r', String(4 + 15 * big * ease(q))); ball.setAttribute('opacity', String(q < 0.2 ? q * 5 : 1 - (q - 0.2) / 0.8)); }, delay);
   for (let i = 0; i < 3; i++) {
-    const dx = (Math.random() - 0.5) * 10, sm = el('circle', { cx: dx, cy: 0, r: 5, fill: S.theme === 'night' ? '#9a958c' : '#6b655c', opacity: 0, filter: 'url(#fx-smoke)' }, g);
-    anim(r, 2600 + i * 300, q => { sm.setAttribute('r', String(5 + 12 * big * q)); sm.setAttribute('cy', String(-22 * q - i * 3)); sm.setAttribute('cx', String(dx + 6 * q)); sm.setAttribute('opacity', String(0.5 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, delay + 120 + i * 140);
+    const dx = (Math.random() - 0.5) * 10, sm = el('circle', { cx: dx, cy: 0, r: 5, fill: S.theme === 'night' ? 'url(#fx-puff-n)' : 'url(#fx-puff-d)', opacity: 0 }, g);
+    anim(r, 2600 + i * 300, q => { sm.setAttribute('r', String(5 + 12 * big * q)); sm.setAttribute('cy', String(-22 * q - i * 3)); sm.setAttribute('cx', String(dx + 6 * q)); sm.setAttribute('opacity', String(0.75 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, delay + 120 + i * 140);
   }
 }
 
@@ -118,7 +126,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (type === 'land' || type === 'siege') WAR.rumble(5.5, T0 / 1000);
   if (type === 'naval' || type === 'landing') WAR.waves(5, T0 / 1000);
   if (type === 'uprising') WAR.crowd(T0 / 1000);
-  let hits = 0;
+  let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
   arrows.forEach(([from, to, side], i) => {
     const a = P(from), b = P(to), c = curve(a, b, (i % 2 ? -1 : 1) * 0.16);
     const col = SIDE_COLOR[side] || '#ffd84a';
@@ -134,19 +142,21 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     const mover = type === 'naval' || type === 'landing' || type === 'air' ? glyph(type, root, col) : null;
     if (mover) mover.setAttribute('opacity', '0');
     if (type === 'air') WAR.plane(start / 1000);
+    let lastB = -1;
     anim(r, dur, q => {
       const e = ease(q);
       under.setAttribute('stroke-dashoffset', String(len * (1 - e)));
       if (!(type === 'naval' || type === 'landing')) line.setAttribute('stroke-dashoffset', String(len * (1 - e)));
       else line.setAttribute('stroke-dashoffset', String(-e * 60 / k));
       if (mover) { const p = c.at(e), p2 = c.at(Math.min(1, e + 0.02)); mover.setAttribute('opacity', q > 0.97 ? '0' : '1'); mover.setAttribute('transform', `translate(${p[0]},${p[1]}) rotate(${(Math.atan2(p2[1] - p[1], p2[0] - p[0]) * 180) / Math.PI}) scale(${1 / k})`); }
-      if (type === 'air' && q > 0.55 && Math.floor(q * 10) !== Math.floor((q - 0.016) * 10) && hits < 14) { hits++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55); }
+      const bk = Math.floor(q * 10);
+      if (type === 'air' && q > 0.55 && bk !== lastB && bursts < 14) { lastB = bk; bursts++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55); }
     }, start, () => {
       head.setAttribute('opacity', '1');
       // tới mục tiêu: chớp lửa, khói, tiếng nổ
       const big = type === 'siege' ? 1.25 : type === 'uprising' ? 0.6 : 1;
       for (let j = 0; j < (type === 'uprising' ? 1 : 3); j++) explode(r, root, [b[0] + (Math.random() - 0.5) * 14 / k, b[1] + (Math.random() - 0.5) * 10 / k], k, j * 260, big * (1 - j * 0.2));
-      if (hits++ < 6) {
+      if (sounds++ < 6) {
         if (type === 'air') WAR.bomb(0); else WAR.boom(0, i ? 0.25 : 0);
         if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2);
         if (i === 0) { shake(r); buzz([25, 40, 60]); }
@@ -193,7 +203,8 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
   const w = await Promise.race([wikiFor(v), new Promise<null>(res => setTimeout(() => res(null), 4000))]);
   if (!r.alive || !w) return;
   const im = w.media.find(m => m.type === 'image' && !m.bad);
-  if (!im || !(await probe(im.src, 120)) || !r.alive) return;
+  const src = im ? im.thumb || im.src : ''; // ảnh nhỏ đủ cho khung ≤ 230 px
+  if (!im || !(await Promise.race([probe(src, 120), new Promise<boolean>(res => setTimeout(() => res(false), 5000))])) || !r.alive) return;
   const box = document.createElement('button');
   box.className = 'reel' + (v.y < 1976 ? ' old' : '');
   box.dataset.a = 'ev';
@@ -202,7 +213,7 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
   const dir = Math.random() < 0.5 ? -1 : 1;
   box.style.setProperty('--kx', `${dir * 6}%`);
   box.style.setProperty('--ky', `${(Math.random() - 0.5) * 6}%`);
-  box.innerHTML = `<img alt="" src="${im.src.replace(/"/g, '&quot;')}"><i class="flick"></i><span class="mono">Tư liệu · ${v.y}</span>`;
+  box.innerHTML = `<img alt="" src="${src.replace(/"/g, '&quot;')}"><i class="flick"></i><span class="mono">Tư liệu · ${v.y}</span>`;
   document.getElementById('mapwrap')?.appendChild(box);
   r.reel = box;
   requestAnimationFrame(() => box.classList.add('on'));
@@ -219,12 +230,15 @@ export function sceneFrame(v: HistEvent): [number, number][] | null {
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
 export function playScene(v: HistEvent): void {
   endScene();
-  if (!fxOn()) return;
+  if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
   const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, alive: true };
   cur = r;
+  WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
-  void reel(r, v);
+  // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng
+  const nA = v.k === 'Trận đánh' ? SCENES[v.id]?.arrows.length || 0 : 0;
+  if (nA) later(r, 1250 + 120 + nA * 520 + 2000, () => void reel(r, v)); else void reel(r, v);
   if (v.diary) return;
   if (v.k === 'Trận đánh' && !calm.matches) document.getElementById('mapwrap')?.classList.add('tilt');
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó
@@ -235,12 +249,16 @@ export function playScene(v: HistEvent): void {
   });
 }
 
-/** Dừng cảnh đang chạy: xoá hiệu ứng, trả bản đồ về phẳng, cất khung tư liệu. */
-export function endScene(): void {
+/** Dừng cảnh đang chạy: cắt âm thanh của cảnh, xoá hiệu ứng, trả bản đồ về phẳng, cất khung tư liệu.
+    `instant`: phẳng ngay không chuyển tiếp (khi người dùng vừa chạm / vuốt bản đồ). */
+export function endScene(instant = false): void {
   const r = cur;
   cur = null;
-  document.getElementById('mapwrap')?.classList.remove('tilt');
-  document.getElementById('map')?.classList.remove('shake');
+  WAR.close();
+  const m = document.getElementById('map'), wrap = document.getElementById('mapwrap');
+  if (instant && m && wrap?.classList.contains('tilt')) { m.style.transition = 'none'; wrap.classList.remove('tilt'); void m.getBoundingClientRect(); m.style.transition = ''; }
+  wrap?.classList.remove('tilt');
+  m?.classList.remove('shake');
   if (!r) return;
   r.alive = false;
   r.timers.forEach(clearTimeout);
@@ -253,3 +271,6 @@ export function endScene(): void {
   }
   if (r.reel) { const b = r.reel; b.classList.remove('on'); setTimeout(() => b.remove(), 520); }
 }
+
+// thẻ trình duyệt bị ẩn / khoá máy: dừng cảnh (rAF dừng nhưng hẹn giờ vẫn chạy, tránh dồn hiệu ứng khi quay lại)
+document.addEventListener('visibilitychange', () => { if (document.hidden) endScene(); });

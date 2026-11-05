@@ -23,6 +23,8 @@ interface Tour {
   step: number;
   /** Đi tiếp bước hiện tại (dùng khi giọng đọc bị tắt giữa chừng). */
   next?: (d: number) => void;
+  /** Lúc bước hiện tại bắt đầu (để giữ đủ thời lượng cảnh trận khi tắt giọng giữa chừng). */
+  t0?: number;
 }
 let tour: Tour | null = null;
 let mapIdle: number | undefined;
@@ -98,6 +100,7 @@ function tourStep(): void {
       tour!.t = window.setTimeout(card ? openIt : advance, d);
     };
     tour!.next = next;
+    tour!.t0 = performance.now();
     if (S.narr && canSpeak(evKey(v))) {
       // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
       next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)) + 2500));
@@ -136,6 +139,7 @@ function finishTour(): void {
 export function pauseForCard(v: HistEvent): boolean {
   if (!tour || tour.cur !== v.id || tour.paused) return false;
   clearTimeout(tour.t);
+  endScene(); // cảnh chạy lại khi tour đi tiếp; không nổ pháo dưới thẻ quyết định
   tour.paused = 'card';
   tourBar();
   openCard(v, true);
@@ -149,7 +153,7 @@ export function pauseTour(why: 'overlay' | 'map'): void {
   if (tour.paused) { if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000); return; }
   clearTimeout(tour.t);
   hush();
-  endScene();
+  endScene(why === 'map'); // cử chỉ bản đồ: làm phẳng ngay, không trượt dưới ngón tay
   tour.paused = why;
   tourBar();
   if (why === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000);
@@ -211,7 +215,13 @@ function tourBar(): void {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
       if (a === 'narr') {
         S.narr = !S.narr; save();
-        if (!S.narr) { hush(); if (tour && !tour.paused && tour.next) tour.next(600); } // không để bước hiện tại treo
+        if (!S.narr) { // không để bước hiện tại treo; trận đánh vẫn giữ đủ 6,5 s cho cảnh động
+          hush();
+          if (tour && !tour.paused && tour.next) {
+            const v = tour.L[tour.i], el = performance.now() - (tour.t0 || 0);
+            tour.next(v && v.k === 'Trận đánh' && fxOn() ? Math.max(600, 6500 - el) : 600);
+          }
+        }
         tourBar();
       }
       else if (a === 'skip') skipTour();

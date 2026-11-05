@@ -1,3 +1,4 @@
+import { endScene } from './scene';
 import { $, clearLayer, ghost, layer } from './ui/dom';
 import { ac, SND } from './audio';
 import { renderMain } from './view';
@@ -14,6 +15,7 @@ export function setTab(t: TabId): void {
     if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   ghost(...layer.children);
+  if (t !== 'map') endScene(); // bảng phủ kín bản đồ: không để pháo nổ / máy rung phía sau
   if (t === 'map') { clearLayer(); renderMain(); }
   else if (t === 'src') paneSrc();
   else if (t === 'fig') paneFig();
