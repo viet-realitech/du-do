@@ -1,7 +1,10 @@
 /* Hand-picked figure portraits on Wikimedia Commons: period photographs or painted portraits, never statues or places.
    [path, x%, y%, zoom]: path is under commons/thumb ('T', a 330px standard-size thumbnail) or the original ('U', files
    narrower than 330px); x/y/zoom frame the face inside a round avatar (object-position + scale about that point).
-   Nguyễn Trường Tộ has no freely licensed portrait (the vi.wikipedia one is fair-use only), so he keeps initials. */
+   Figures whose only portrait is a fair-use file on vi.wikipedia (not on Commons) keep their initials: Nguyễn Trường
+   Tộ, Cường Để, Nguyễn Văn Vĩnh, Trần Văn Giàu, Nguyễn Văn Xuân, Ngô Đình Nhu, Nguyễn Hữu Thọ, Nguyễn Thị Định,
+   Nguyễn Chí Thanh, Thích Trí Quang, Trịnh Công Sơn, Phạm Xuân Ẩn, Phạm Hùng, Kim Ngọc, Phan Văn Khải, Võ Chí Công;
+   Jean Sainteny too (the only Commons photo is a group shot). */
 export const PORTRAIT: Record<string, [string, number, number, number]> = {
   ntp: ['T0/0c/Portrait_of_Nguy%E1%BB%85n_Tri_Ph%C6%B0%C6%A1ng.webp/330px-Portrait_of_Nguy%E1%BB%85n_Tri_Ph%C6%B0%C6%A1ng.webp', 50, 10, 2.4],
   td: ['T1/19/Truong_Dinh.JPG/330px-Truong_Dinh.JPG', 50, 40, 1.2],
@@ -24,4 +27,48 @@ export const PORTRAIT: Record<string, [string, number, number, number]> = {
   pd: ['T0/0f/Musician_Ph%E1%BA%A1m_Duy_and_singer_Th%C3%A1i_H%E1%BA%B1ng%2C_1949.jpg/330px-Musician_Ph%E1%BA%A1m_Duy_and_singer_Th%C3%A1i_H%E1%BA%B1ng%2C_1949.jpg', 8, 35, 1.4],
   nvt: ['T6/68/Official_Portrait_of_Nguy%E1%BB%85n_V%C4%83n_Thi%E1%BB%87u%2C_President_of_the_Republic_of_Vietnam_%28cropped%29.jpg/330px-Official_Portrait_of_Nguy%E1%BB%85n_V%C4%83n_Thi%E1%BB%87u%2C_President_of_the_Republic_of_Vietnam_%28cropped%29.jpg', 52, 22, 1.8],
   tqd: ['T7/7e/B%E1%BB%93_t%C3%A1t_Th%C3%ADch_Qu%E1%BA%A3ng_%C4%90%E1%BB%A9c.jpg/330px-B%E1%BB%93_t%C3%A1t_Th%C3%ADch_Qu%E1%BA%A3ng_%C4%90%E1%BB%A9c.jpg', 50, 18, 2],
+  // Nhân vật bổ sung (11.2026): chân dung chụp hoặc vẽ trên Commons, căn theo khuôn mặt.
+  tduc: ['Tc/ca/Vua_Tu_Duc.jpg/330px-Vua_Tu_Duc.jpg', 35, 38, 1.3],
+  ntr: ['Ta/ac/Nguyen_Trung_Truc_portrait.jpg/330px-Nguyen_Trung_Truc_portrait.jpg', 50, 28, 2.8],
+  hd: ['T2/29/Ho%C3%A0ng_Di%E1%BB%87u.jpg/330px-Ho%C3%A0ng_Di%E1%BB%87u.jpg', 52, 42, 1.4],
+  ndc: ['Td/d7/Ch%C3%A2n_dung_Nguy%E1%BB%85n_%C4%90%C3%ACnh_Chi%E1%BB%83u.jpg/330px-Ch%C3%A2n_dung_Nguy%E1%BB%85n_%C4%90%C3%ACnh_Chi%E1%BB%83u.jpg', 50, 30, 1.3],
+  ttt: ['T9/99/Ph%E1%BB%A5_ch%C3%ADnh_%C4%91%E1%BA%A1i_th%E1%BA%A7n_T%C3%B4n_Th%E1%BA%A5t_Thuy%E1%BA%BFt.jpg/330px-Ph%E1%BB%A5_ch%C3%ADnh_%C4%91%E1%BA%A1i_th%E1%BA%A7n_T%C3%B4n_Th%E1%BA%A5t_Thuy%E1%BA%BFt.jpg', 50, 20, 1.8],
+  dct: ['T1/18/%C4%90inh_C%C3%B4ng_Tr%C3%A1ng.jpg/330px-%C4%90inh_C%C3%B4ng_Tr%C3%A1ng.jpg', 50, 50, 1.2],
+  ntht: ['Te/eb/NguyenThienThuat.jpg/330px-NguyenThienThuat.jpg', 50, 28, 1.4],
+  pdm: ['Tf/ff/Paul-Doumer.jpg/330px-Paul-Doumer.jpg', 47, 12, 2.6],
+  lvc: ['T3/33/%E1%BA%A2nh_L%C6%B0%C6%A1ng_V%C4%83n_Can.jpg/330px-%E1%BA%A2nh_L%C6%B0%C6%A1ng_V%C4%83n_Can.jpg', 50, 27, 1.4],
+  htk: ['Tb/b6/Portrait_of_Mr._Hu%E1%BB%B3nh_Th%C3%BAc_Kh%C3%A1ng.jpg/330px-Portrait_of_Mr._Hu%E1%BB%B3nh_Th%C3%BAc_Kh%C3%A1ng.jpg', 52, 28, 1.35],
+  tp: ['T1/13/Tr%E1%BA%A7n_Ph%C3%BA.jpg/330px-Tr%E1%BA%A7n_Ph%C3%BA.jpg', 50, 28, 1.3],
+  lhp: ['T1/16/Le_Hong_Phong.gif/330px-Le_Hong_Phong.gif', 50, 22, 1.3],
+  ntmk: ['T6/61/Nguyen_Thi_Minh_Khai.jpg/330px-Nguyen_Thi_Minh_Khai.jpg', 50, 30, 1.3],
+  pdc: ['T9/93/Ph%C3%B3_%C4%90%E1%BB%A9c_Ch%C3%ADnh.jpg/330px-Ph%C3%B3_%C4%90%E1%BB%A9c_Ch%C3%ADnh.jpg', 47, 25, 1.8],
+  nan: ['T2/21/Nguyen_An_Ninh.jpg/330px-Nguyen_An_Ninh.jpg', 60, 38, 1.35],
+  ttt2: ['T9/90/Ta-Thu-Thau_1906-1945.jpg/330px-Ta-Thu-Thau_1906-1945.jpg', 25, 35, 2.2],
+  bqc: ['Tb/b4/B%C3%B9i_Quang_Chi%C3%AAu.jpg/330px-B%C3%B9i_Quang_Chi%C3%AAu.jpg', 50, 28, 1.4],
+  nl: ['T4/4c/Portrait_of_Nh%E1%BA%A5t_Linh_Nguy%E1%BB%85n_T%C6%B0%E1%BB%9Dng_Tam_%28cropped%29.jpg/330px-Portrait_of_Nh%E1%BA%A5t_Linh_Nguy%E1%BB%85n_T%C6%B0%E1%BB%9Dng_Tam_%28cropped%29.jpg', 45, 20, 2.2],
+  hps: ['Te/ec/Duc_huynh_phu_so.jpg/330px-Duc_huynh_phu_so.jpg', 50, 22, 1.4],
+  tc: ['T2/27/Truong_Chinh_circa_1951_Edit_Crop_Provisional.jpg/330px-Truong_Chinh_circa_1951_Edit_Crop_Provisional.jpg', 50, 24, 1.25],
+  pvd: ['T8/85/Ph%E1%BA%A1m_V%C4%83n_%C4%90%E1%BB%93ng_1972.jpg/330px-Ph%E1%BA%A1m_V%C4%83n_%C4%90%E1%BB%93ng_1972.jpg', 47, 18, 1.2],
+  nb: ['T2/2e/Tuong_Nguyen_Binh.jpg/330px-Tuong_Nguyen_Binh.jpg', 65, 22, 1.3],
+  lcl: ['T9/9b/Leclerc-casque.jpg/330px-Leclerc-casque.jpg', 35, 18, 2.2],
+  bv: ['T7/7a/Lieutenant_colonel_L%C3%AA_V%C4%83n_Vi%E1%BB%85n%2C_during_his_cooperation_with_the_French.jpg/330px-Lieutenant_colonel_L%C3%AA_V%C4%83n_Vi%E1%BB%85n%2C_during_his_cooperation_with_the_French.jpg', 50, 22, 1.4],
+  ndc2: ['Tb/b7/Ch%C3%A2n_dung_Ng%C3%B4_%C4%90%C3%ACnh_C%E1%BA%A9n.jpg/330px-Ch%C3%A2n_dung_Ng%C3%B4_%C4%90%C3%ACnh_C%E1%BA%A9n.jpg', 50, 28, 1.35],
+  tlx: ['Tc/cb/Madame_Nhu_in_her_thirties_%281950s%29.jpg/330px-Madame_Nhu_in_her_thirties_%281950s%29.jpg', 50, 32, 1.4],
+  nck: ['T8/89/USIA_66-1476.jpg/330px-USIA_66-1476.jpg', 45, 20, 2.0],
+  nk: ['T0/05/Nguy%E1%BB%85n_Kh%C3%A1nh_1964.jpg/330px-Nguy%E1%BB%85n_Kh%C3%A1nh_1964.jpg', 42, 25, 1.5],
+  tvh: ['T6/66/The_vice_president_Tr%E1%BA%A7n_V%C4%83n_H%C6%B0%C6%A1ng_of_the_Republic_of_Viet_Nam.png/330px-The_vice_president_Tr%E1%BA%A7n_V%C4%83n_H%C6%B0%C6%A1ng_of_the_Republic_of_Viet_Nam.png', 52, 25, 1.3],
+  ntb: ['Tb/b2/Nguyen_Thi_Binh.jpg/330px-Nguyen_Thi_Binh.jpg', 37, 32, 2.2],
+  ldt: ['Tb/b7/Le_Duc_Tho_at_Orly_Field_1972_%28cropped%29.jpg/330px-Le_Duc_Tho_at_Orly_Field_1972_%28cropped%29.jpg', 42, 18, 2.0],
+  vtd: ['T3/37/Van_Tien_Dung_1954.jpg/330px-Van_Tien_Dung_1954.jpg', 47, 22, 1.9],
+  lbj: ['Tc/c4/Lyndon_B._Johnson%2C_photo_portrait%2C_color_%283x4_cropped%29.jpg/330px-Lyndon_B._Johnson%2C_photo_portrait%2C_color_%283x4_cropped%29.jpg', 47, 22, 1.7],
+  rn: ['Te/ec/Richard_Nixon_presidential_portrait.jpg/330px-Richard_Nixon_presidential_portrait.jpg', 47, 25, 1.7],
+  hk: ['T9/97/Henry_A._Kissinger%2C_U.S._Secretary_of_State%2C_1973-1977.jpg/330px-Henry_A._Kissinger%2C_U.S._Secretary_of_State%2C_1973-1977.jpg', 45, 20, 1.8],
+  ww: ['T9/94/Gen_William_C_Westmoreland.jpg/330px-Gen_William_C_Westmoreland.jpg', 45, 20, 1.8],
+  vvk: ['Ta/ae/Mr._Vo_Van_Kiet.jpg/330px-Mr._Vo_Van_Kiet.jpg', 52, 20, 1.8],
+  dm: ['Tf/fb/Do_Muoi_cropped.jpg/330px-Do_Muoi_cropped.jpg', 47, 25, 1.8],
+  nct2: ['Tc/c8/Nguy%E1%BB%85n_C%C6%A1_Th%E1%BA%A1ch_1976.jpg/330px-Nguy%E1%BB%85n_C%C6%A1_Th%E1%BA%A1ch_1976.jpg', 47, 15, 2.8],
+  tvk2: ['T3/38/Tr%E1%BA%A7n_V%C4%83n_Kh%C3%AA.jpg/330px-Tr%E1%BA%A7n_V%C4%83n_Kh%C3%AA.jpg', 37, 7, 3.5],
+  tvk: ['Tb/bd/Truong_Vinh_Ky_Vietnamese_linguist.jpg/330px-Truong_Vinh_Ky_Vietnamese_linguist.jpg', 43, 28, 1.9],
+  fg: ['T9/98/FrancisGarnierPhotograph.JPG/330px-FrancisGarnierPhotograph.JPG', 48, 9, 3.4],
+  rdg: ['T4/42/Amiral_Charles_Rigault_de_Genouilly.jpg/330px-Amiral_Charles_Rigault_de_Genouilly.jpg', 50, 13, 2.6],
 };
