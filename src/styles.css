@@ -574,3 +574,18 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
 @keyframes fadeout { from { opacity: 1 } to { opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .cine-img img, .cine-img.old::before { animation: none } .cine-t .mono, .cine-t h1, .cine-t h2, .cine-t p { animation-duration: .01s } }
+
+/* ngọn cờ của hướng vừa chọn (gate.ts outcome) */
+.unfurl { display: flex; align-items: center; gap: 12px; margin: 2px 0 12px; padding: 10px 12px; border-radius: 14px; background: linear-gradient(90deg, rgba(232, 196, 106, .14), transparent 70%); border: 1px solid var(--rule) }
+.unfurl .flag { width: 54px; height: 36px; border-radius: 3px; transform-origin: 0 50%; animation: unfurl 1.1s cubic-bezier(.2, .8, .2, 1) both, wave 3.2s 1.1s ease-in-out infinite; box-shadow: 0 3px 10px rgba(0, 0, 0, .3) }
+.unfurl .flag.nf { background: linear-gradient(135deg, var(--acc), var(--paper3)) }
+.unfurl .flag b { font-size: 18px }
+.unfurl .uf-t { flex: 1; min-width: 0; display: flex; flex-direction: column; opacity: 0; animation: rise .6s .5s forwards }
+.unfurl .uf-t b { font: 700 20px/1.15 var(--disp) }
+.unfurl .av { opacity: 0; animation: slidein .6s .8s cubic-bezier(.2, .8, .2, 1) forwards }
+@keyframes unfurl { 0% { transform: scaleX(0) skewY(8deg) } 60% { transform: scaleX(1.06) skewY(-3deg) } 100% { transform: scaleX(1) skewY(0) } }
+@keyframes wave { 0%, 100% { transform: skewY(0) } 50% { transform: skewY(-2.5deg) scaleY(.97) } }
+@keyframes slidein { from { opacity: 0; transform: translateX(16px) } to { opacity: 1; transform: none } }
+.reel.film video { width: 100%; height: 100%; object-fit: cover; display: block }
+.reel.film.old video { filter: sepia(.45) contrast(1.08) }
+@media (prefers-reduced-motion: reduce) { .unfurl .flag, .unfurl .uf-t, .unfurl .av { animation: none; opacity: 1 } }

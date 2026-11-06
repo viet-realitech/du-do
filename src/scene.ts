@@ -3,7 +3,7 @@ import { SCENES, MOVES, SIDE_COLOR, type Scene, type Move } from './data/scenes'
 import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
-import { wikiFor, probe } from './wiki';
+import { wikiFor, probe, videoUrl } from './wiki';
 
 /* Cảnh động trong tour chương: trận đánh có bản đồ nghiêng 3D, mũi tiến quân vẽ dần, chớp lửa, khói, rung khung và
    âm thanh chiến trường; hiệp ước có ấn triện đóng xuống; mọi sự kiện có khung "phim tư liệu" với ảnh của chính sự
@@ -263,6 +263,14 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
   if (v.diary) return;
   const w = await Promise.race([wikiFor(v), new Promise<null>(res => setTimeout(() => res(null), 4000))]);
   if (!r.alive || !w) return;
+  // có phim tư liệu (Commons) và mạng không tiết kiệm dữ liệu: chiếu phim câm, lặp; hỏng thì về ảnh
+  const vid = w.media.find(m => m.type === 'video' && !m.bad);
+  const net = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (vid && !calm.matches && !(net && (net.saveData || /2g/.test(net.effectiveType || '')))) {
+    const url = await Promise.race([videoUrl(vid, true).catch(() => ''), new Promise<string>(res => setTimeout(() => res(''), 4000))]);
+    if (!r.alive) return;
+    if (url && (await film(r, v, url, vid.thumb || vid.src))) return;
+  }
   const im = w.media.find(m => m.type === 'image' && !m.bad);
   const src = im ? im.thumb || im.src : ''; // ảnh nhỏ đủ cho khung ≤ 230 px
   if (!im || !(await Promise.race([probe(src, 120), new Promise<boolean>(res => setTimeout(() => res(false), 5000))])) || !r.alive) return;
@@ -278,6 +286,32 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
   document.getElementById('mapwrap')?.appendChild(box);
   r.reel = box;
   requestAnimationFrame(() => box.classList.add('on'));
+}
+
+/** Khung phim tư liệu: video câm, lặp, chạy chậm cùng hiệu ứng phim cũ; trả về false nếu không phát được trong 5 s. */
+function film(r: Run, v: HistEvent, url: string, poster: string): Promise<boolean> {
+  return new Promise(res => {
+    const box = document.createElement('button');
+    box.className = 'reel film' + (v.y < 1976 ? ' old' : '');
+    box.dataset.a = 'ev';
+    box.dataset.id = v.id;
+    box.setAttribute('aria-label', 'Phim tư liệu: ' + v.t);
+    const vd = document.createElement('video');
+    Object.assign(vd, { muted: true, loop: true, playsInline: true, autoplay: true, preload: 'auto' });
+    vd.setAttribute('muted', ''); vd.setAttribute('playsinline', '');
+    vd.poster = poster;
+    vd.src = url;
+    box.appendChild(vd);
+    box.insertAdjacentHTML('beforeend', `<i class="flick"></i><span class="mono">Phim tư liệu · ${v.y}</span>`);
+    let done = false;
+    const fail = () => { if (done) return; done = true; vd.removeAttribute('src'); vd.load(); box.remove(); res(false); };
+    const ok = () => { if (done) return; done = true; if (!r.alive) { box.remove(); res(true); return; } r.reel = box; requestAnimationFrame(() => box.classList.add('on')); res(true); };
+    vd.addEventListener('playing', ok, { once: true });
+    vd.addEventListener('error', fail, { once: true });
+    setTimeout(fail, 5000);
+    document.getElementById('mapwrap')?.appendChild(box);
+    vd.play().catch(fail);
+  });
 }
 
 /* ---------- vào / ra ---------- */
@@ -334,7 +368,7 @@ export function endScene(instant = false): void {
     g.style.opacity = '0';
     setTimeout(() => g.remove(), 520);
   }
-  if (r.reel) { const b = r.reel; b.classList.remove('on'); setTimeout(() => b.remove(), 520); }
+  if (r.reel) { const b = r.reel; b.classList.remove('on'); b.querySelector('video')?.pause(); setTimeout(() => { const vd = b.querySelector('video'); if (vd) { vd.removeAttribute('src'); vd.load(); } b.remove(); }, 520); }
 }
 
 // thẻ trình duyệt bị ẩn / khoá máy: dừng cảnh (rAF dừng nhưng hẹn giờ vẫn chạy, tránh dồn hiệu ứng khi quay lại)

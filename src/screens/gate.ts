@@ -7,7 +7,7 @@ import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost } from '../ui/dom';
 import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
-import { av, fxChips, TAG_LABEL } from '../ui/bits';
+import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
 import { hush, speak } from '../narration';
 import { checkBadges } from '../badges';
@@ -15,6 +15,7 @@ import { stopTour, startTour } from '../tour';
 import { layer } from '../ui/dom';
 import { renderMain, invalidateTrack } from '../view';
 import { opener } from './cinema';
+import { fxOn } from '../scene';
 
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
@@ -143,7 +144,9 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   mood('calm');
   renderMain();
   const fs = Object.keys(FIG).filter(id => FIGERA[id] === e.id);
-  sheet(`<span class="stamp">Thế hệ ${e.n} · ${o.label}</span>
+  if (fxOn()) SND.vow();
+  // ngọn cờ của hướng vừa chọn mở ra, người đồng hành bước vào: dòng họ đứng về một phía
+  sheet(`<div class="unfurl">${o.fac ? flag(o.fac) : `<i class="flag nf"></i>`}<div class="uf-t"><span class="mono">Thế hệ ${e.n} chọn · ${e.cy}</span><b>${o.label}</b></div>${av(o.guide, 52)}</div>
   <h2 style="margin:14px 0 8px">Con đường của bạn</h2><p>${o.out}</p>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${fxChips(o.fx)}</div>
   ${isPlay() && Object.keys(got).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(got)}</div>` : ''}

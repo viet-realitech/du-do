@@ -83,13 +83,16 @@ export const mediaCaption = (m: Media) =>
   m.cap || decodeURIComponent(m.file).replace(/_/g, ' ').replace(/^(File|Tập tin|Image|Hình):/i, '').replace(/\.[a-z0-9]+$/i, '');
 
 /** Resolve a playable derivative (webm/mp4, prefer 480p/360p) for a Commons video file. */
-export async function videoUrl(m: Media): Promise<string> {
+export async function videoUrl(m: Media, small = false): Promise<string> {
   const r = await (await fetchT('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=videoinfo&viprop=url|derivatives&titles=' + encodeURIComponent(m.file))).json();
   const pg = Object.values<any>(r.query.pages)[0];
   const vi = pg.videoinfo && pg.videoinfo[0];
   if (!vi) throw new Error('no video');
   const der = (vi.derivatives || [])
     .filter((x: any) => /webm|mp4/.test(x.type || ''))
-    .sort((a: any, b: any) => (/480|360/.test(b.transcodekey) ? 1 : 0) - (/480|360/.test(a.transcodekey) ? 1 : 0))[0];
+    .sort((a: any, b: any) => {
+      const pref = small ? /240|180|360/ : /480|360/; // khung phim tư liệu nhỏ: bản 240p–360p
+      return (pref.test(b.transcodekey) ? 1 : 0) - (pref.test(a.transcodekey) ? 1 : 0);
+    })[0];
   return (der && der.src) || vi.url;
 }

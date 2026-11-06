@@ -133,6 +133,8 @@ export const SND = {
   page() { noise(0.16, 1800, 4200, 0.08, 1.4, 0, 0.02); },
   /** Badge earned: short heroic fanfare. */
   fanfare() { brass([196, 294], 0.32, 0.07); brass([262, 392, 523], 1.2, 0.08, 0.2); tone(1046, 1, 'sine', 0.03, 0.25); },
+  /** Lời thề theo một hướng: hợp âm kèn đồng trên nhịp trống. */
+  vow() { drum(0, 0.4, 70); brass([147, 220, 294], 1.4, 0.06, 0.08); tone(587, 0.9, 'triangle', 0.03, 0.5); },
   /** Regime / borders change on the map. */
   shift() { drum(0, 0.32, 55); noise(0.7, 150, 600, 0.1, 0.5, 0, 0.05); },
 };
