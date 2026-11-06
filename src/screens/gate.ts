@@ -14,6 +14,7 @@ import { checkBadges } from '../badges';
 import { stopTour, startTour } from '../tour';
 import { layer } from '../ui/dom';
 import { renderMain, invalidateTrack } from '../view';
+import { opener } from './cinema';
 
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
@@ -76,13 +77,19 @@ export function openQuiz(eid: string, done?: () => void): void {
   show();
 }
 
+/** Điểm rẽ: màn mở chương điện ảnh (cinema.ts) rồi bảng chọn hướng. */
 export function openChoice(e: Era): void {
+  stopTour();
+  clearLayer();
+  opener(e, played => choice(e, played));
+}
+
+function choice(e: Era, quiet: boolean): void {
   stopTour();
   let selOpt: string | null = null;
   clearLayer();
   mood('gate');
-  SND.gong();
-  buzz([30, 60, 30]);
+  if (!quiet) { SND.gong(); buzz([30, 60, 30]); }
   // Nghe lời dẫn xong mới chọn: các hướng mờ và khoá cho tới khi giọng đọc kể hết (hoặc người chơi bỏ qua);
   // không có giọng đọc thì mở sau một quãng đủ đọc câu hỏi.
   let open = false, sync = true;

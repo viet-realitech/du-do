@@ -12,6 +12,7 @@ import { compass } from './profile';
 import { openQuiz, openHarvest } from './gate';
 import { splash } from './onboarding';
 import { setTab } from '../tabs';
+import { montage, preloadEra } from './cinema';
 
 /** Trò chơi: tour chương 6 kết thúc → mùa màng cuối → đố → kết cục. */
 export function endGame(e: Era): void {
@@ -40,6 +41,7 @@ export function openEnd(): void {
   stopTour();
   if (!S.ended) { S.ended = true; save(); }
   mood('finale');
+  ERAS.forEach(e => void preloadEra(e, true)); // ảnh cho phim hành trình
   const a = archetype(), ms = matchStats();
   const rows = ERAS.map(e => {
     const o = optOf(e), pv = e.opts.find(x => x.id === e.prev);
@@ -52,6 +54,7 @@ export function openEnd(): void {
   <div style="text-align:center;margin:24px 0 6px"><span class="stamp">Hồ sơ đã khép</span></div>
   <h1 style="text-align:center;font-size:38px;margin-top:14px">Mọi con đường đều dẫn về hôm nay</h1>
   <p class="muted" style="text-align:center;margin-top:10px">Dù dòng họ bạn chọn gì, bản đồ năm 2026 vẫn là một: một Việt Nam thống nhất từ Lũng Cú đến Cà Mau, cùng các quần đảo ngoài Biển Đông.</p>
+  <button class="btn" data-a="film" style="margin-top:18px">▶ Xem phim hành trình</button>
   <div class="dbl" style="margin-top:20px"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
    <div class="pv" style="text-align:center"><div class="mono muted">Trùng hướng chiếm ưu thế</div><div style="font:800 40px/1.1 var(--disp);color:var(--acc)">${ms.m}/${ms.t}</div></div>
@@ -139,3 +142,5 @@ export function resetAll(): void {
 }
 
 on('tab', el => setTab(el.dataset.t as 'map' | 'fig' | 'src' | 'me'));
+
+on('film', () => montage());

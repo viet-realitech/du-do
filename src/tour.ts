@@ -9,6 +9,7 @@ import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
 import { playScene, endScene, fxOn, sceneFrame } from './scene';
+import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
 
@@ -67,6 +68,7 @@ export function startTour(eIn?: Era): void {
   if (S.year >= Y1) return;
   const { L, end } = tourList(e);
   tour = { e, L, i: 0, end, t: undefined, step: 0 };
+  void preloadEra(ERAS[ERAS.indexOf(e) + 1]); // ảnh cho màn mở chương kế tiếp
   mood(eraMood(e.id));
   tourBar();
   tourStep();
