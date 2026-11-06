@@ -307,3 +307,105 @@ Mỗi trận đánh trong tour chương có một cảnh động trên bản đ�
 - vndcch: [114.1, 9.1] → [114.37, 9.78] · HQ-605 từ đá Đông qua Tốc Tan đến giữ Len Đao
 - Giữ: vndcch [114.28, 9.72]; vndcch [114.25, 9.77]; vndcch [114.37, 9.78]
 - Ghi chú: For operation CQ-88, transport HQ-604 sailed from Cam Ranh, delivering orders at Đá Lớn on the way, to Gạc Ma. Landing ship HQ-505 went from Đá Lớn to Cô Lin. HQ-605 left its post at Đá Đông, called at Tốc Tan on 13 March and went on north to Len Đao. Chinese frigates 502, 531 and 556 closed in from the Đá Tư Nghĩa (Hughes Reef) side on 14.3.1988 and sank HQ-604 at Gạc Ma, which China then occupied, while Vietnam kept Cô Lin and Len Đao. (Sửa khi kiểm: The HQ-605 arrow starts at [113.95,9.56], west-south-west of Len Đao, on the straight line from Đá Đông. But HQ-605 did not sail that line. Vietnamese Wikipedia (Hải chiến Trường Sa 1988) says it left its post at Đá Đông, reached Tốc Tan (Alison Reef, about [113.99,8.81]) on 13 March, and only then sailed to Len Đao, about 29 hours in all. So its last leg came from the south-south-west. The new start is [114.10,9.10], on the Tốc Tan to Len Đao line (81 km arrow). That line passes about 7 km east of Gạc Ma rather than through it. All other arrows check out: 502 came from Đá Tư Nghĩa (Hughes), HQ-604 from Cam Ranh via Đá Lớn, HQ-505 from Đá Lớn to Cô Lin. Holds match the reef positions (Collins [114.26,9.77], Lansdowne [114.37,9.78]).)
+
+# Cảnh di chuyển (sự kiện không phải trận đánh)
+
+## cv85 · journey
+- dainam: [107.58, 16.47] → [106.96, 16.77] qua [[107.19, 16.75]] · Tôn Thất Thuyết đưa vua Hàm Nghi rời Kinh thành (5.7.1885), qua thành Quảng Trị (6.7), lên căn cứ Tân Sở, nơi phát hịch Cần Vương (13.7)
+- Ghi chú: Ở trung tâm sự kiện là chuyến rời kinh thành: sau trận Kinh thành, triều đình kháng chiến đưa vua ra Tân Sở, nơi phát hịch Cần Vương.
+
+## hn88 · journey
+- phap: [105.95, 17.85] → [107.63, 16.56] qua [[106.42, 17.75], [106.6, 17.47], [107.19, 16.75]] · Bị bắt ở khe Tá Bào, vua bị giải về đồn Thuận Bài (14.11), qua Bố Trạch, Đồng Hới tới cửa Thuận An (22.11.1888)
+- phap: [107.63, 16.56] → [106.71, 10.77] qua [[109.6, 15.7], [109.55, 10.9], [106.98, 10.25]] · 25.11.1888: tàu Pháp đưa ông rời Thuận An, qua Lăng Cô vào Sài Gòn
+- phap: [106.71, 10.77] → [104.5, 6.5] qua [[106.86, 10.5], [106.98, 10.25], [106.3, 8.5]] · 13.12.1888: tàu Biên Hòa đưa ông đi đày ở Algérie, tới Alger ngày 13.1.1889
+- Ghi chú: Sau khi bị bắt, vua bị giải ra Thuận An, vào Sài Gòn rồi bị đưa đi đày ở Algérie. Theo vi.wikipedia: tới Thuận Bài 14.11, Thuận An 22.11, xuống tàu đi Lăng Cô 25.11, rời Sài Gòn trên tàu Biên Hòa 13.12.1888, tới Alger 13.1.1889. (Sửa khi kiểm: Phần toạ độ đúng: đường biển có via vòng ngoài khơi Sơn Trà, mũi Điện, Kê Gà và Vũng Tàu, không cắt đất liền; Ba Đồn/Thuận Bài và Đồng Hới đặt đúng chỗ. Chỉ phải sửa ghi chú. (1) Tên địa danh viết đúng là 'khe Tá Bào', không phải 'Tá Bảo'. (2) Theo vi.wikipedia, 4 giờ sáng 25.11.1888 vua bị đưa xuống tàu đi Lăng Cô rồi vào Sài Gòn. Ghi chú nên nói rõ mốc này thay cho 'cuối tháng 11' và thêm mốc tới Thuận Bài 14.11.)
+
+## dd05 · journey
+- dan: [105.68, 18.67] → [106.68, 20.86] qua [[105.6, 19], [105.78, 19.81], [106.17, 20.42]] · Đầu năm 1905, Phan Bội Châu cùng Đặng Tử Kính, Tăng Bạt Hổ bí mật ra Hải Phòng
+- dan: [106.68, 20.86] → [114.17, 22.28] qua [[106.95, 20.65], [110.15, 20.15], [111, 20.3]] · 23.2.1905: xuống tàu ở Hải Phòng, theo đường biển sang Quảng Đông, Hồng Kông
+- dan: [114.17, 22.28] → [116.4, 22.6] qua [[114.3, 22.28]] · Đi tiếp qua Thượng Hải tới Yokohama; từ 1906 khoảng 200 thanh niên theo sang học
+- Ghi chú: Phong trào mở đầu bằng chuyến xuất dương bí mật của Phan Bội Châu: ngày 23.2.1905 xuống tàu ở Hải Phòng, theo đường biển qua Quảng Đông, Hồng Kông, Thượng Hải tới Yokohama (vi.wikipedia: Phong trào Đông Du). (Sửa khi kiểm: Lộ trình và sử liệu khớp vi.wikipedia (Phong trào Đông Du): ngày 23.2.1905 xuống tàu thuỷ ở Hải Phòng, theo đường biển sang Quảng Đông, Hồng Kông, Thượng Hải rồi tới Yokohama. Lỗi duy nhất ở đường bộ Vinh → Thanh Hoá: đoạn thẳng [105.68,18.67]→[105.78,19.81] chạy ra biển ở vịnh Diễn Châu (khoảng vĩ độ 18.86–19.15). Đã thêm điểm via Diễn Châu [105.6,19.0] để đường đi nằm trên đất liền. Đoạn biển qua eo Quỳnh Châu tới Hồng Kông và ra mép bản đồ phía đông bắc không cắt đất liền. Ghi chú đoạn 2 thêm ngày 23.2.1905.)
+
+## nq11 · journey
+- dan: [106.71, 10.77] → [104.5, 6.5] qua [[106.86, 10.5], [106.98, 10.25], [106.3, 8.5]] · 5.6.1911: tàu Amiral Latouche-Tréville rời bến Nhà Rồng, qua Singapore, Colombo, Port Said, cập Marseille 6.7.1911
+- Ghi chú: Sự kiện chính là chuyến ra đi trên tàu Amiral Latouche-Tréville từ bến Nhà Rồng.
+
+## ww14 · exodus
+- dan: [106.68, 20.86] → [104.5, 6.5] qua [[106.95, 20.65], [110, 15], [109.6, 10.8]] · Lính thợ, lính chiến xuống tàu ở Hải Phòng, sang Marseille qua kênh Suez (1915–1918)
+- dan: [106.71, 10.77] → [104.5, 6.5] qua [[106.86, 10.5], [106.98, 10.25], [106.3, 8.5]] · Tàu từ Sài Gòn chở thêm lính thợ, lính chiến sang Pháp
+- Ghi chú: Từ 1915, nhiều đợt tàu chở lính thợ, lính chiến Đông Dương từ các cảng Hải Phòng, Sài Gòn sang Marseille.
+
+## xv30 · uprising
+- nghiaquan: [105.58, 18.6] → [105.68, 18.67] qua [[105.63, 18.65]] · 12.9.1930: nông dân Hưng Nguyên kéo về phủ lỵ rồi tiến về Vinh; máy bay Pháp ném bom đoàn biểu tình
+- nghiaquan: [105.44, 18.75] → [105.49, 18.7] · Nông dân Nam Đàn biểu tình kéo về huyện lỵ
+- nghiaquan: [105.25, 18.72] → [105.34, 18.78] · Nông dân Thanh Chương kéo về huyện lỵ, phá huyện đường
+- nghiaquan: [105.57, 19.02] → [105.6, 18.98] · Nông dân Diễn Châu nổi dậy, kéo về phủ lỵ (9.1930)
+- nghiaquan: [105.7, 18.38] → [105.77, 18.45] · Nông dân Can Lộc (Hà Tĩnh) kéo về huyện lỵ Nghèn
+- Ghi chú: Nông dân nhiều huyện Nghệ An, Hà Tĩnh biểu tình kéo về các huyện lỵ, phủ lỵ; đỉnh cao là cuộc biểu tình Hưng Nguyên ngày 12.9.1930 tiến về Vinh. (Sửa khi kiểm: (1) Đường Nam Đàn bắt đầu ở [105.42,18.64]. Theo Nominatim, điểm này thuộc Thanh Lâm (huyện Thanh Chương cũ), không thuộc Nam Đàn. Đã chuyển điểm đầu vào đất Nam Đàn [105.44,18.75] và điểm cuối về huyện lỵ Nam Đàn [105.49,18.7]. (2) Đường Diễn Châu bắt đầu ở [105.52,19.04], thuộc Đông Thành (huyện Yên Thành cũ). Đã chuyển sang [105.57,19.02] (Quảng Châu, thuộc Diễn Châu cũ). (3) Theo vi.wikipedia, ngày 12.9.1930 là nông dân Hưng Nguyên kéo về phủ lỵ rồi tiến về Vinh, sự kiện gắn với Thái Lão. Ghi chú gán cả Nam Đàn vào cuộc biểu tình này nên đã bỏ chữ 'Nam Đàn'; Nam Đàn đã có đường riêng. Các toạ độ Hưng Nguyên, Vinh, Thanh Chương và Can Lộc (Nghèn) đều đúng.)
+
+## ng45 · uprising
+- vndcch: [105.44, 21.78] → [105.84, 21.59] · 16.8: Giải phóng quân từ Tân Trào tiến về thị xã Thái Nguyên
+- vndcch: [105.74, 21.12] → [105.85, 21.02] · 19.8: nhân dân nội, ngoại thành mít tinh ở Nhà hát Lớn, chiếm Phủ Khâm sai
+- vndcch: [108.2, 15.78] → [108.33, 15.88] · 18.8: Quảng Nam cùng Bắc Giang, Hải Dương, Hà Tĩnh giành chính quyền sớm nhất
+- vndcch: [107.47, 16.56] → [107.58, 16.47] · 23.8: nhân dân Huế và các huyện lân cận giành chính quyền; 30.8 Bảo Đại thoái vị
+- vndcch: [106.55, 10.62] → [106.7, 10.78] · 25.8: quần chúng Sài Gòn – Chợ Lớn và các tỉnh lân cận giành chính quyền
+- Ghi chú: Cao điểm của năm 1945 là Tổng khởi nghĩa tháng Tám: Giải phóng quân rời Tân Trào, quần chúng giành chính quyền ở các tỉnh lỵ và Hà Nội, Huế, Sài Gòn.
+
+## tq45 · march
+- tq: [103.97, 22.49] → [105.85, 21.03] qua [[104.87, 21.72], [105.4, 21.3]] · Cánh quân Vân Nam qua Lào Cai, theo sông Hồng về Hà Nội (9.1945); Lư Hán tới Hà Nội giữa tháng 9
+- tq: [106.72, 22.02] → [106.68, 20.86] qua [[106.76, 21.85], [106.2, 21.27], [106.33, 20.94]] · Quân đoàn 62 (Quảng Tây) qua Lạng Sơn, tới Hải Phòng, Nam Định (26.9)
+- anh: [100.5, 13.75] → [106.66, 10.82] · Lữ đoàn Anh – Ấn bay từ Miến Điện qua Bangkok xuống Tân Sơn Nhất (11.9); tướng Gracey tới ngày 13.9
+- Ghi chú: Quân Trung Hoa Dân Quốc tiến vào từ Vân Nam và Quảng Tây; quân Anh – Ấn được không vận từ Miến Điện qua Bangkok vào Sài Gòn (en.wikipedia: Chinese occupation of northern Vietnam; War in Vietnam 1945–1946).
+
+## dc54 · exodus
+- dan: [106.08, 20.09] → [106.66, 20.84] qua [[106.27, 20.28]] · Giáo dân Phát Diệm, Bùi Chu đổ về Hải Phòng chờ tàu
+- dan: [106.68, 20.86] → [106.7, 10.78] qua [[109.5, 16], [109.85, 11.4], [107.15, 10.15]] · Tàu Pháp, Mỹ chở người di cư từ Hải Phòng vào Sài Gòn
+- dan: [105.85, 21.03] → [106.66, 10.82] · Cầu hàng không Hà Nội – Sài Gòn
+- vndcch: [109.22, 13.77] → [105.9, 19.75] qua [[109.32, 13.72], [109.45, 15.9], [107.6, 18.4]] · Tập kết ra Bắc: tàu Ba Lan, Liên Xô chở cán bộ, bộ đội từ Quy Nhơn ra Sầm Sơn
+- Ghi chú: Cuộc di cư Bắc – Nam (đường biển Hải Phòng → Sài Gòn, cầu hàng không Hà Nội → Sài Gòn) và tập kết ra Bắc là chính sự kiện. (Sửa khi kiểm: One small sea-route fix. Path 3 (regroupment ships from Quy Nhơn) goes straight north-east from the port and cuts across the Phương Mai peninsula (land at about 109.26,13.82). It needs a first via at the harbour mouth. To stay within the 3-via limit, the old [109.6,14.2] point is replaced. The re-checked route stays at sea all the way to Sầm Sơn. The other paths are correct: Phát Diệm and Bùi Chu to Hải Phòng by land; the Hải Phòng to Sài Gòn sea route is at sea except the final river approach through Cần Giờ; the Hà Nội to Tân Sơn Nhất airlift is straight; sides dan/vndcch and the history are right.)
+
+## ts59 · march
+- vndcch: [106.88, 17.02] → [107.85, 14.75] qua [[106.72, 16.68], [107.2, 16.22], [107.55, 15.55]] · Tuyến đầu (1959): từ Khe Hó (Vĩnh Linh) vượt Đường 9 vào tây Thừa Thiên, xuống Khu 5
+- vndcch: [105.95, 17.62] → [106.65, 11.75] qua [[106.22, 16.68], [106.83, 14.81], [107.15, 12.95]] · Từ thập niên 1960 tuyến chính sang tây Trường Sơn, qua Lào (Sê Pôn, Attapeu) và Campuchia vào Nam Bộ
+- Ghi chú: Đoàn 559 mở tuyến vận chuyển người, vũ khí từ Bắc vào Nam dọc Trường Sơn; sau chuyển sang Lào và Campuchia.
+
+## dc63 · march
+- vnch: [106.82, 10.95] → [106.7, 10.78] · Hai tiểu đoàn Sư đoàn 5 (Đại tá Nguyễn Văn Thiệu) từ Biên Hoà tiến về Dinh Gia Long
+- vnch: [107.08, 10.35] → [106.72, 10.79] qua [[107.17, 10.5], [106.95, 10.78]] · Tiểu đoàn 6 Nhảy dù từ Vũng Tàu cùng thiết giáp trường Long Hải kéo về Sài Gòn
+- vnch: [106.36, 10.36] → [106.6, 10.72] · Đơn vị Sư đoàn 7 từ Mỹ Tho lên chặn trục đường phía nam vào Sài Gòn
+- vnch: [106.7, 10.78] → [106.65, 10.75] · Đêm 1.11, Diệm và Nhu rời dinh lánh về Chợ Lớn; sáng 2.11 bị bắt ở nhà thờ Cha Tam
+- Ghi chú: Các đơn vị phe đảo chính kéo về Sài Gòn vây Dinh Gia Long; anh em Diệm – Nhu rời dinh lánh về Chợ Lớn.
+
+## cm75 · exodus
+- dan: [104.9, 11.6] → [104.67, 12.22] · Dân Phnom Penh bị buộc rời thành phố theo đường số 5 lên phía bắc (17.4)
+- dan: [104.95, 11.6] → [105.42, 12] qua [[104.99, 12]] · Theo đường số 6, 7 về phía Kampong Cham
+- dan: [104.95, 11.55] → [105.75, 11.1] qua [[105.28, 11.27]] · Theo đường số 1 về phía đông nam (Neak Loeung, Svay Rieng)
+- dan: [104.9, 11.52] → [104.8, 11] · Theo đường số 2, 3 về phía nam (Takeo)
+- dan: [104.88, 11.56] → [104.52, 11.45] · Theo đường số 4 về phía tây (Kampong Speu)
+- Ghi chú: Sau 17.4.1975 Khmer Đỏ buộc toàn bộ dân Phnom Penh rời thành phố về nông thôn theo các quốc lộ.
+
+## ct78 · exodus
+- dan: [106.68, 20.86] → [108.05, 21.68] qua [[107.08, 20.95], [107.4, 21.3], [107.96, 21.53]] · Người Hoa ở Hải Phòng, Quảng Ninh qua cửa khẩu Móng Cái sang Trung Quốc
+- dan: [105.85, 21.03] → [106.78, 22.1] qua [[106.2, 21.28], [106.76, 21.85]] · Người Hoa ở Hà Nội và các tỉnh phía Bắc qua cửa khẩu Hữu Nghị
+- dan: [106.65, 10.75] → [104.5, 6.5] qua [[107.15, 10.15]] · Người Hoa ở Chợ Lớn ra đi bằng thuyền (1978–79)
+- Ghi chú: Nạn kiều 1978: người Hoa rời miền Bắc qua biên giới sang Trung Quốc, người Hoa Chợ Lớn ra đi bằng thuyền.
+
+## tn80 · exodus
+- dan: [105.09, 10.01] → [101.5, 7.6] · Từ Rạch Giá, Cà Mau qua vịnh Thái Lan sang miền nam Thái Lan
+- dan: [105.78, 10.03] → [103.85, 6.55] qua [[106.3, 9.48]] · Từ đồng bằng sông Cửu Long ra cửa Hậu Giang, hướng Malaysia (đảo Bidong)
+- dan: [106.36, 10.36] → [106.5, 6.5] qua [[106.8, 10.15], [107.1, 9.3]] · Từ Mỹ Tho, Vũng Tàu xuôi nam tới Indonesia (Kuku, Galang)
+- dan: [108.22, 16.07] → [114.17, 22.3] qua [[111.5, 18]] · Từ Đà Nẵng và miền Trung vòng qua đông Hải Nam tới Hồng Kông
+- dan: [106.68, 20.86] → [114.17, 22.3] qua [[106.9, 20.7], [110.05, 20.13], [110.85, 20.3]] · Từ Hải Phòng, Quảng Ninh qua eo Quỳnh Châu, men bờ biển Trung Quốc tới Hồng Kông
+- Ghi chú: Thuyền nhân rời đồng bằng sông Cửu Long, miền Trung và miền Bắc tới Thái Lan, Malaysia, Indonesia, Hồng Kông. (Sửa khi kiểm: (1) Path 0: the via [104.85,9.45] is on land on the west coast of Cà Mau and adds nothing. The direct line from Rạch Giá to the Gulf of Thailand is at sea all the way, so the via is removed and the path starts on land at Rạch Giá [105.09,10.01]. (2) Path 1: the via [106.2,9.5] is on land. It is moved just off the Hậu Giang mouth to [106.3,9.48], which is at sea; the line from there still points straight at Bidong. (3) Path 4: the first leg from Hải Phòng runs due east and crosses Cát Hải and Cát Bà (land at about 106.80 and 106.95, lat 20.86). It now leaves through the harbour mouth at [106.9,20.7], and the Gulf of Tonkin point [108.5,20.85] is dropped (still at sea, then through the Qiongzhou Strait to Hồng Kông). (4) Path 2: the end point [107,6.5] points due south toward Natuna, not toward Anambas (Kuku) or Galang. It is moved to [106.5,6.5]. All re-checked legs stay at sea apart from the river exits.)
+
+## kh89 · withdrawal
+- vndcch: [103.2, 13.1] → [104.9, 11.6] qua [[103.92, 12.54], [104.67, 12.25]] · Các đơn vị ở Battambang rút theo đường số 5 về Phnom Penh
+- vndcch: [103.86, 13.36] → [104.93, 11.62] qua [[104.89, 12.71]] · Các đơn vị ở Siem Reap rút theo đường số 6 về Phnom Penh
+- vndcch: [104.93, 11.56] → [106.66, 10.8] qua [[105.28, 11.26], [106.15, 11.07]] · Đoàn xe cuối cùng theo đường số 1 qua cửa khẩu Mộc Bài về nước (26.9.1989)
+- Ghi chú: Các đơn vị quân tình nguyện cuối cùng rời Campuchia: tiễn tại Phnom Penh (25.9), qua Mộc Bài về nước (26.9).
+
+## hd14 · march
+- cn: [109.55, 18.05] → [111.2, 15.5] · Giàn khoan HD-981 cùng tàu hộ tống Trung Quốc tới hạ đặt (2.5.2014)
+- vndcch: [108.3, 16.1] → [110.95, 15.45] · Tàu Cảnh sát biển, Kiểm ngư Việt Nam từ Đà Nẵng ra yêu cầu rút giàn khoan
+- cn: [111.25, 15.55] → [110.1, 17.7] · 15–16.7, giàn khoan rút về phía Lăng Thuỷ (Hải Nam)
+- Ghi chú: Trung Quốc đưa giàn khoan HD-981 và tàu hộ tống vào vùng đặc quyền kinh tế Việt Nam tuyên bố; tàu Việt Nam ra đối đầu; giàn khoan rút giữa tháng 7.

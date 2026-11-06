@@ -197,6 +197,10 @@ export const WAR = {
   crowd(delay = 0) { noise(3.5, 400, 900, 0.09, 0.4, delay, 1.2, sc()); drum(delay + 0.3, 0.3, 80, sc()); drum(delay + 0.9, 0.3, 80, sc()); drum(delay + 1.5, 0.35, 76, sc()); },
   /** Treaty: quill scratches, then the seal. */
   quill(delay = 0) { for (let i = 0; i < 5; i++) noise(0.12 + Math.random() * 0.1, 3500, 5200, 0.04, 2, delay + i * 0.17, 0.01, sc()); },
+  /** Còi tàu rời bến: hai âm trầm. */
+  horn(delay = 0) { tone(110, 1.6, 'sawtooth', 0.05, delay, undefined, sc()); tone(165, 1.6, 'sawtooth', 0.035, delay, undefined, sc()); tone(110, 1.1, 'sawtooth', 0.04, delay + 1.9, undefined, sc()); },
+  /** Nhịp hành quân: trống đều. */
+  march(n = 8, delay = 0) { for (let i = 0; i < n; i++) drum(delay + i * 0.42, i % 2 ? 0.16 : 0.24, i % 2 ? 120 : 95, sc()); },
   /** Mở bus riêng cho một cảnh (gọi khi cảnh bắt đầu). */
   open() { WAR.close(); const a = live(); if (!a) return; SCN = a.createGain(); SCN.connect(FX!); },
   /** Cắt mọi tiếng của cảnh đang chạy (đã hẹn trước hay chưa): hạ nhanh rồi ngắt bus. */

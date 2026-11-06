@@ -1,5 +1,5 @@
 import type { HistEvent } from './data';
-import { SCENES, SIDE_COLOR, type Scene } from './data/scenes';
+import { SCENES, MOVES, SIDE_COLOR, type Scene, type Move } from './data/scenes';
 import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
@@ -171,6 +171,67 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   }
 }
 
+/* ---------- cảnh di chuyển (chuyến đi, di cư, hành quân, rút quân, khởi nghĩa) ---------- */
+/** Đường mượt qua các điểm (Catmull-Rom → Bézier bậc ba). */
+function smooth(pts: [number, number][]): string {
+  if (pts.length < 3) return `M${pts[0]} L${pts[pts.length - 1]}`;
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
+  }
+  return d;
+}
+
+function movement(r: Run, v: HistEvent, mv: Move): void {
+  const h = fxHost();
+  if (!h || !r.root) return;
+  ensureDefs(h.defs);
+  const k = h.k(), root = r.root, T0 = 120;
+  // mít tinh / khởi nghĩa gọn trong một vùng: phóng sơ đồ như với trận đánh
+  const c0 = h.proj(v.l), all = mv.paths.flatMap(p => [p[0], ...p[1], p[2]]).map(l => h.proj(l));
+  const span = Math.max(...all.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * k;
+  const f = span > 0 ? Math.max(1, 120 / span) : 1;
+  const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
+  const sea = mv.paths.some(p => p[1].length);
+  if (mv.type === 'uprising' || mv.type === 'crowd') WAR.crowd(T0 / 1000);
+  else if (mv.type === 'march') WAR.march(8, T0 / 1000);
+  else if (mv.type === 'withdrawal') WAR.rumble(4, T0 / 1000);
+  if ((mv.type === 'journey' || mv.type === 'exodus') && sea) { WAR.horn(T0 / 1000 + 0.2); WAR.waves(5, T0 / 1000 + 1); }
+  mv.paths.forEach(([from, via, to, side], i) => {
+    const pts = [P(from), ...via.map(P), P(to)], d = smooth(pts);
+    const col = SIDE_COLOR[side] || '#f1e6c8', thin = mv.type === 'exodus' || mv.type === 'uprising' || mv.type === 'crowd';
+    const under = el('path', { d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.5, 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, root);
+    const line = el('path', { d, fill: 'none', stroke: col, 'stroke-width': (thin ? 2.2 : 3) / k, 'stroke-linecap': 'round' }, root);
+    if (mv.type === 'withdrawal') line.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`);
+    const len = line.getTotalLength() || 1;
+    under.setAttribute('stroke-dasharray', `${len} ${len}`); under.setAttribute('stroke-dashoffset', String(len));
+    if (mv.type !== 'withdrawal') { line.setAttribute('stroke-dasharray', `${len} ${len}`); line.setAttribute('stroke-dashoffset', String(len)); }
+    // vật đi trên đường: tàu (đường biển), đoàn người / đoàn quân (đường bộ)
+    const g = el('g', { opacity: 0 }, root);
+    if (p1Sea(via)) el('path', { d: 'M-8,-2.5 L6,-2.5 L9,0 L6,2.5 L-8,2.5 L-6,0Z', fill: col, stroke: '#111', 'stroke-width': 0.8 }, g);
+    else if (mv.type === 'march' || mv.type === 'withdrawal') { for (let j = 0; j < 3; j++) el('rect', { x: -9 + j * 6, y: -2.5, width: 4.5, height: 5, rx: 1, fill: col, stroke: '#111', 'stroke-width': 0.7 }, g); }
+    else { el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
+    const lenPx = len * k, dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
+    const start = T0 + i * (thin ? 280 : 700);
+    anim(r, dur, q => {
+      const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+      under.setAttribute('stroke-dashoffset', String(len * (1 - e)));
+      if (mv.type !== 'withdrawal') line.setAttribute('stroke-dashoffset', String(len * (1 - e)));
+      else line.setAttribute('stroke-dashoffset', String((-e * 40) / k));
+      const a = line.getPointAtLength(len * e), b = line.getPointAtLength(Math.min(len, len * e + 1 / k));
+      g.setAttribute('opacity', q > 0.98 ? '0' : '1');
+      g.setAttribute('transform', `translate(${a.x},${a.y}) rotate(${(Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI}) scale(${1 / k})`);
+    }, start, () => {
+      const end = pts[pts.length - 1];
+      if (mv.type === 'uprising' || mv.type === 'crowd' || mv.type === 'march') ripple(r, end, k, 0, col);
+      else { const dot = el('circle', { cx: end[0], cy: end[1], r: 3.2 / k, fill: col, stroke: '#111', 'stroke-width': 1 / k }, root); void dot; }
+    });
+  });
+  void v;
+}
+const p1Sea = (via: [number, number][]) => via.length > 0;
+
 /* ---------- hiệp ước ---------- */
 function treaty(r: Run, v: HistEvent): void {
   const h = fxHost();
@@ -222,9 +283,12 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
 /* ---------- vào / ra ---------- */
 /** Các điểm cần thấy trong khung khi phát cảnh của sự kiện v (mũi tiến quân, vị trí giữ, chính sự kiện); null nếu không có cảnh. */
 export function sceneFrame(v: HistEvent): [number, number][] | null {
-  const sc = fxOn() && v.k === 'Trận đánh' ? SCENES[v.id] : undefined;
-  if (!sc) return null;
-  return [v.l, ...sc.arrows.flatMap(a => [a[0], a[1]]), ...sc.hold.map(h => [h[0], h[1]] as [number, number])];
+  if (!fxOn()) return null;
+  const sc = v.k === 'Trận đánh' ? SCENES[v.id] : undefined;
+  if (sc) return [v.l, ...sc.arrows.flatMap(a => [a[0], a[1]]), ...sc.hold.map(h => [h[0], h[1]] as [number, number])];
+  const mv = MOVES[v.id];
+  if (mv) return [v.l, ...mv.paths.flatMap(p => [p[0], ...p[1], p[2]])];
+  return null;
 }
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
@@ -237,13 +301,14 @@ export function playScene(v: HistEvent): void {
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
   // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng
-  const nA = v.k === 'Trận đánh' ? SCENES[v.id]?.arrows.length || 0 : 0;
+  const nA = v.k === 'Trận đánh' ? SCENES[v.id]?.arrows.length || 0 : MOVES[v.id] ? 4 : 0;
   if (nA) later(r, 1250 + 120 + nA * 520 + 2000, () => void reel(r, v)); else void reel(r, v);
   if (v.diary) return;
   if (v.k === 'Trận đánh' && !calm.matches) document.getElementById('mapwrap')?.classList.add('tilt');
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó
   later(r, 1250, () => {
     if (v.k === 'Trận đánh') battle(r, v, SCENES[v.id]);
+    else if (MOVES[v.id]) movement(r, v, MOVES[v.id]);
     else if (v.k === 'Hiệp ước') treaty(r, v);
     else if (h) ripple(r, h.proj(v.l), h.k(), 0, S.theme === 'night' ? '#e8c46a' : '#a8322b');
   });
