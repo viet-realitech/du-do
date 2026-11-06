@@ -285,9 +285,33 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
   box.style.setProperty('--kx', `${dir * 6}%`);
   box.style.setProperty('--ky', `${(Math.random() - 0.5) * 6}%`);
   box.innerHTML = `<img alt="" src="${src.replace(/"/g, '&quot;')}"><i class="flick"></i><span class="mono">Tư liệu · ${v.y}</span>`;
+  place(box, r);
   document.getElementById('mapwrap')?.appendChild(box);
   r.reel = box;
   requestAnimationFrame(() => box.classList.add('on'));
+}
+
+/** Đặt khung tư liệu vào góc ít che cảnh nhất (trên trái, dưới trái, dưới phải; góc trên phải có nút zoom, tiêu đề).
+    Trận đánh nghiêng 3D giữ góc trên trái (dải sương), vì toạ độ màn hình của bản đồ nghiêng không tính phẳng được. */
+function place(box: HTMLElement, r: Run): void {
+  const wrap = document.getElementById('mapwrap');
+  if (!wrap || !r.root || wrap.classList.contains('tilt')) return;
+  const R = wrap.getBoundingClientRect(), bar = document.getElementById('tourb')?.getBoundingClientRect();
+  const bw = Math.min(R.width * 0.4, 230), bh = Math.min(bw * 0.75, R.height * 0.32), low = (bar ? R.bottom - bar.top : 0) + 10;
+  const pts: [number, number][] = [];
+  const add = (m: DOMMatrix | null, x: number, y: number) => { if (m) pts.push([m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]); };
+  r.root.querySelectorAll<SVGPathElement>('path').forEach(p => {
+    const m = p.getScreenCTM(), L = p.getTotalLength();
+    for (let i = 0; i <= 16; i++) { const q = p.getPointAtLength((L * i) / 16); add(m, q.x, q.y); }
+  });
+  r.root.querySelectorAll<SVGCircleElement>('circle').forEach(c => add(c.getScreenCTM(), c.cx.baseVal.value, c.cy.baseVal.value));
+  const spots: { s: Partial<CSSStyleDeclaration>; x: number; y: number }[] = [
+    { s: {}, x: R.left + 10, y: R.top + 46 },
+    { s: { top: 'auto', bottom: `${low}px` }, x: R.left + 10, y: R.bottom - low - bh },
+    { s: { top: 'auto', bottom: `${low}px`, left: 'auto', right: '10px' }, x: R.right - 10 - bw, y: R.bottom - low - bh },
+  ];
+  const hits = spots.map(o => pts.filter(([x, y]) => x > o.x - 8 && x < o.x + bw + 8 && y > o.y - 8 && y < o.y + bh + 8).length);
+  Object.assign(box.style, spots[hits.indexOf(Math.min(...hits))].s);
 }
 
 /** Khung phim tư liệu: video câm, lặp, chạy chậm cùng hiệu ứng phim cũ; trả về false nếu không phát được trong 5 s. */
@@ -312,6 +336,7 @@ function film(r: Run, v: HistEvent, url: string, poster: string): Promise<boolea
     vd.addEventListener('playing', ok, { once: true });
     vd.addEventListener('error', fail, { once: true });
     const t = setTimeout(fail, 5000);
+    place(box, r);
     document.getElementById('mapwrap')?.appendChild(box);
     r.reel = box; // endScene dừng và gỡ phim cả khi nó còn đang tải
     vd.play().catch(fail);
@@ -328,6 +353,9 @@ export function sceneFrame(v: HistEvent): [number, number][] | null {
   if (mv) return [v.l, ...mv.paths.flatMap(p => [p[0], ...p[1], p[2]])];
   return null;
 }
+
+/** Sự kiện có cảnh động riêng (trận đánh có sơ đồ, hoặc cảnh di chuyển): tour ưu tiên đưa vào. */
+export const hasScene = (v: HistEvent): boolean => (v.k === 'Trận đánh' && !!SCENES[v.id]) || !!MOVES[v.id];
 
 /** Lúc (ms từ đầu cảnh) khung tư liệu bắt đầu tải: trận đánh / cảnh di chuyển chờ các mũi tên vẽ gần xong để không che chúng. */
 function reelAt(v: HistEvent): number {

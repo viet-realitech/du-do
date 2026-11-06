@@ -8,7 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, hasScene } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -49,7 +49,7 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
   if (L.length > 8) {
     // Keep every family-diary page, then sample battles/treaties/quoted events evenly.
     const d = L.filter(v => v.diary), rest = L.filter(v => !v.diary);
-    const key = rest.filter(v => v.k === 'Trận đánh' || v.k === 'Hiệp ước' || v.qt);
+    const key = rest.filter(v => v.k === 'Trận đánh' || v.k === 'Hiệp ước' || v.qt || hasScene(v)); // cả cảnh di chuyển (Nhà Rồng, di cư…)
     const pool = key.length >= 4 ? key : rest, need = Math.max(0, 8 - d.length), pick: HistEvent[] = [];
     for (let j = 0; j < need; j++) pick.push(pool[Math.floor((j * pool.length) / need)]);
     L = [...new Set([...d, ...pick])].sort((a, b) => a.y - b.y);

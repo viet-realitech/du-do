@@ -245,8 +245,9 @@ function fitViewBox(): void {
   const box: [[number, number], [number, number]] = [[(W - vw) / 2, (H - vh) / 2], [(W + vw) / 2, (H + vh) / 2]];
   G.svg.attr('viewBox', `${box[0][0]} ${box[0][1]} ${vw} ${vh}`).attr('preserveAspectRatio', 'xMidYMid meet');
   G.vig.attr('x', box[0][0]).attr('y', box[0][1]).attr('width', vw).attr('height', vh);
-  G.zoom.extent(box).translateExtent(box);
   const px = r.width / vw; // screen px per SVG unit
+  // cho kéo bản đồ lên khỏi thanh tour (~90 px dưới) và xuống khỏi nhãn trên cùng (~44 px): mũi Cà Mau không bị che
+  G.zoom.extent(box).translateExtent([[box[0][0], box[0][1] - 44 / px], [box[1][0], box[1][1] + 90 / px]]);
   G.f = Math.min(1, 1.3 / px);
   rescale();
 }
@@ -421,11 +422,18 @@ export function zoomK(v: HistEvent): number {
 /** Fly so every point (lon/lat) is in view, at most at scale kMax (cảnh động có mũi tiến quân trải rộng). */
 export function zoomFit(pts: [number, number][], kMax: number, ms?: number): void {
   if (!ready || !pts.length) return;
+  const n = G.svg.node()!, vb = n.viewBox.baseVal, vw = vb.width || W, px = n.clientWidth / vw || 1;
+  // phần bản đồ bị che (px màn hình): nhãn dân số / tiêu đề ở trên, thanh tour ở dưới; khung vừa dải còn lại
+  const wrap = (n.parentElement || n).getBoundingClientRect(), bar = document.getElementById('tourb')?.getBoundingClientRect();
+  const top = 44, bot = (bar ? Math.max(0, wrap.bottom - bar.top) : 0) + 8;
+  const vh = Math.max(60, (vb.height || H) - (top + bot) / px);
   const xy = pts.map(l => proj(l)!), xs = xy.map(p => p[0]), ys = xy.map(p => p[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const bw = Math.max(1, (x1 - x0) * 1.35), bh = Math.max(1, (y1 - y0) * 1.45);
-  const k = Math.max(1, Math.min(kMax, W / bw, H / bh)); // 1 = cả bản đồ: hải trình dài (đi Pháp, vượt biên) vẫn trọn khung
-  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2 - (y1 - y0) * 0.06);
+  const bw = Math.max(1, (x1 - x0) * 1.3), bh = Math.max(1, (y1 - y0) * 1.35);
+  // < 1 khi đường đi dài hơn khung (hải trình Bắc – Nam trên điện thoại): thu nhỏ cả bản đồ cho trọn đường
+  const k = Math.max(0.7, Math.min(kMax, vw / bw, vh / bh));
+  const cy = (y0 + y1) / 2 + (bot - top) / 2 / px / k;
+  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -cy);
   G.svg.transition().duration(ms || 1200).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }
 
