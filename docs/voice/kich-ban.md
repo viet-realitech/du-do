@@ -1,6 +1,6 @@
 # Dư Đồ · Kịch bản thu giọng thuyết minh
 
-133 đoạn, tổng khoảng 31 phút đọc. Người thật đã thu: 0/133; giọng máy VieNeu: 133.
+184 đoạn, tổng khoảng 39 phút đọc. Người thật đã thu: 0/184; giọng máy VieNeu: 184.
 
 ## Hướng dẫn thu
 
@@ -826,3 +826,312 @@
 *Nhật ký dòng họ, nếu chọn "Ra đi" · 1995 · ~9 giây*
 
 > Nhật ký dòng họ, năm 1995. Về Tân Sơn Nhất. Hai mươi năm sau, bạn quay lại với hộ chiếu nước khác, tóc đã điểm bạc.
+
+
+## Kết cục · Phim hành trình
+
+### `chr-chien` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "chien" · ~10 giây*
+
+Thế hệ 1 theo quân triều đình giữ đồn Liên Trì rồi Chí Hoà; khi triều đình đã ký hoà, vẫn ở lại Nam Kỳ đánh cùng nghĩa quân.
+
+### `chr-canhtan` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "canhtan" · ~9 giây*
+
+Thế hệ 1 theo đường canh tân, dâng điều trần xin mở trường, đóng tàu, gửi người đi học; triều đình phần lớn gác lại.
+
+### `chr-hoa` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "hoa" · ~8 giây*
+
+Thế hệ 1 theo đoàn sứ thần chủ hoà vào Sài Gòn rồi sang Paris xin chuộc ba tỉnh miền Đông; việc không thành.
+
+### `chr-canvuong` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "canvuong" · ~9 giây*
+
+Thế hệ 2 ứng nghĩa Cần Vương, lên núi Vụ Quang, Yên Thế; hơn mười năm du kích rồi các cuộc khởi nghĩa lần lượt tan rã.
+
+### `chr-dongdu` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "dongdu" · ~8 giây*
+
+Thế hệ 2 xuống tàu sang Yokohama theo phong trào Đông Du; năm 1909 bị Nhật trục xuất theo thoả thuận với Pháp.
+
+### `chr-duytan` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "duytan" · ~7 giây*
+
+Thế hệ 2 dạy ở Đông Kinh Nghĩa Thục, cắt tóc ngắn, mặc âu phục; trường bị đóng cửa sau vài tháng.
+
+### `chr-cs` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "cs" · ~9 giây*
+
+Thế hệ 3 theo Đảng Cộng sản, hoạt động bí mật qua Xô viết Nghệ Tĩnh và nhà tù Côn Đảo, rồi về Pác Bó dựng Việt Minh.
+
+### `chr-qdd` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "qdd" · ~9 giây*
+
+Thế hệ 3 theo Quốc dân đảng, sống sót sau Yên Bái rồi lưu vong sang Vân Nam; phong trào phân tán nơi đất khách.
+
+### `chr-laphien` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "laphien" · ~7 giây*
+
+Thế hệ 3 theo đường lập hiến, viết báo và vận động Hội đồng Quản hạt; Pháp nhượng bộ rất ít.
+
+### `chr-vm` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "vm" · ~8 giây*
+
+Thế hệ 4 theo Việt Minh lên chiến khu Việt Bắc; chín năm kháng chiến, từ du kích đến những chiến dịch lớn.
+
+### `chr-qg` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "qg" · ~8 giây*
+
+Thế hệ 4 làm việc cho Quốc gia Việt Nam từ năm 1949, giữa hai lằn đạn và một nền độc lập còn hạn chế.
+
+### `chr-tl` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "tl" · ~8 giây*
+
+Thế hệ 4 không theo phe nào, ở lại vùng xôi đậu: ban ngày một chính quyền, ban đêm một chính quyền khác.
+
+### `chr-bac` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "bac" · ~8 giây*
+
+Thế hệ 5 ở lại miền Bắc hoặc tập kết ra Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.
+
+### `chr-nam` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "nam" · ~8 giây*
+
+Thế hệ 5 vào Nam năm 1954 hoặc vốn là người Nam, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.
+
+### `chr-thuba` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "thuba" · ~7 giây*
+
+Thế hệ 5 xuống đường đòi hoà bình ở Sài Gòn cùng thành phần thứ ba; cả hai phía đều nghi ngờ.
+
+### `chr-baocap` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "baocap" · ~8 giây*
+
+Thế hệ 6 ở lại trong hợp tác xã và biên chế, xếp hàng mua gạo bằng tem phiếu qua những năm lạm phát ba con số.
+
+### `chr-doimoi` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "doimoi" · ~6 giây*
+
+Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, rồi ASEAN, rồi WTO.
+
+### `chr-radi` · giọng máy
+
+*Phim hành trình · dòng gia phả của hướng "radi" · ~8 giây*
+
+Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.
+
+### `lin-doiho` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Dòng họ đổi tên giữ gốc" · ~16 giây*
+
+Dòng họ đổi tên giữ gốc. Dòng họ bạn từng đổi tên để qua một cơn biến, rồi giữ cả tên cũ lẫn tên mới trong gia phả. Nhiều dòng họ Việt Nam cũng mang một cái tên khác với tên tổ tiên vì những lý do tương tự.
+
+### `lin-haique` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Dòng họ hai quê" · ~14 giây*
+
+Dòng họ hai quê. Một nhánh của dòng họ bạn rời đất nước sau 1975 và dựng lại đời sống ở nơi khác. Từ 1995 hai nhánh gặp lại nhau; mộ tổ ở quê và bàn thờ ở xứ người cùng ghi một tên họ.
+
+### `lin-thuandong` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Dòng họ thuận dòng" · ~15 giây*
+
+Dòng họ thuận dòng. Qua năm điểm rẽ, dòng họ bạn đều đứng về hướng sau này chiếm ưu thế. Gia phả vì thế đi cùng nhịp với sử chính thống, nhưng ít ghi lại những ngả đường mà nhiều người Việt khác đã đi.
+
+### `lin-trungkien` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Dòng họ trung kiên" · ~14 giây*
+
+Dòng họ trung kiên. Dòng họ bạn giữ một hướng đi qua ít nhất bốn thế hệ, dù hướng ấy có lúc thắng, có lúc thua. Cái giá và phần được của sự nhất quán đều hiện rõ trong gia sản để lại.
+
+### `lin-dunggiua` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Dòng họ đứng giữa" · ~14 giây*
+
+Dòng họ đứng giữa. Dòng họ bạn thường chọn thương thuyết, cải cách hay đứng ngoài hơn là cầm súng. Sử sách ít ghi tên những người như thế, dù họ chiếm phần đông trong mỗi làng.
+
+### `lin-nhieunga` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Dòng họ rẽ nhiều ngả" · ~18 giây*
+
+Dòng họ rẽ nhiều ngả. Nhiều thế hệ của dòng họ bạn chọn một ngả khác cha ông. Gia phả vì thế ghi những người đi những con đường rất khác nhau, có khi ở hai bên một chiến tuyến, điều không hiếm trong các gia đình Việt Nam thế kỷ XX.
+
+### `lin-thuong` · giọng máy
+
+*Phim hành trình · dấu ấn dòng họ "Một dòng họ Việt Nam" · ~15 giây*
+
+Một dòng họ Việt Nam. Dòng họ bạn đi qua sáu thế hệ không theo một khuôn nào rõ rệt, như phần lớn các gia đình Việt Nam. Gia phả ghi đủ người cầm súng, người đi học và người ở lại giữ ruộng.
+
+### `epi-nguyen` · giọng máy
+
+*Phim hành trình · lời khép, họ Nguyễn · ~8 giây*
+
+Nguyễn vẫn là họ đông nhất nước, ước khoảng 38% dân số: cứ ba người Việt thì có hơn một người mang họ này.
+
+### `epi-tran` · giọng máy
+
+*Phim hành trình · lời khép, họ Trần · ~9 giây*
+
+Trần là họ đông thứ hai (khoảng 11%); hai Chủ tịch nước sau Đổi Mới, Trần Đức Lương và Trần Đại Quang, cùng mang họ này.
+
+### `epi-le` · giọng máy
+
+*Phim hành trình · lời khép, họ Lê · ~8 giây*
+
+Lê là họ đông thứ ba (khoảng 9–10%); sau Đổi Mới có Chủ tịch nước Lê Đức Anh và Tổng Bí thư Lê Khả Phiêu.
+
+### `epi-pham` · giọng máy
+
+*Phim hành trình · lời khép, họ Phạm · ~9 giây*
+
+Phạm là họ đông thứ tư (khoảng 7%); ba người đứng đầu chính phủ mang họ này: Phạm Văn Đồng, Phạm Hùng và Phạm Minh Chính.
+
+### `epi-hoang` · giọng máy
+
+*Phim hành trình · lời khép, họ Hoàng / Huỳnh · ~9 giây*
+
+Hoàng và Huỳnh vốn một họ: Đàng Trong kiêng tên chúa Nguyễn Hoàng nên đọc thành Huỳnh; gộp lại chiếm khoảng 5% dân số.
+
+### `epi-phan` · giọng máy
+
+*Phim hành trình · lời khép, họ Phan · ~10 giây*
+
+Phan chiếm khoảng 4–5% dân số; Phan Văn Khải, Thủ tướng 1997–2006, là Thủ tướng Việt Nam đầu tiên thăm chính thức Mỹ (2005).
+
+### `epi-vu` · giọng máy
+
+*Phim hành trình · lời khép, họ Vũ / Võ · ~8 giây*
+
+Vũ ở miền Bắc và Võ ở miền Nam là cùng một họ, viết cùng chữ Hán 武; gộp lại chiếm khoảng 4% dân số.
+
+### `epi-dang` · giọng máy
+
+*Phim hành trình · lời khép, họ Đặng · ~11 giây*
+
+Đặng chiếm khoảng 2% dân số; Đặng Thái Sơn, người châu Á đầu tiên thắng cuộc thi Chopin (1980), vẫn biểu diễn và giảng dạy khắp thế giới.
+
+### `epi-bui` · giọng máy
+
+*Phim hành trình · lời khép, họ Bùi · ~11 giây*
+
+Bùi chiếm khoảng 2% dân số; tranh phố cổ Hà Nội của Bùi Xuân Phái (1920–1988) nay thuộc hàng được sưu tập nhiều nhất của hội hoạ Việt Nam.
+
+### `epi-do` · giọng máy
+
+*Phim hành trình · lời khép, họ Đỗ · ~10 giây*
+
+Đỗ chiếm khoảng 1–2% dân số; Đỗ Mười, Tổng Bí thư 1991–1997, cầm lái giai đoạn bình thường hoá với Trung Quốc (1991) và Mỹ (1995).
+
+### `epi-ho` · giọng máy
+
+*Phim hành trình · lời khép, họ Hồ · ~10 giây*
+
+Hồ chiếm khoảng 1% dân số. Người mang họ này nổi tiếng nhất, Hồ Chí Minh, sinh ra là Nguyễn Sinh Cung và đổi tên nhiều lần trong đời.
+
+### `epi-ngo` · giọng máy
+
+*Phim hành trình · lời khép, họ Ngô · ~9 giây*
+
+Ngô chiếm khoảng 1% dân số; Ngô Bảo Châu, Huy chương Fields 2010, là nhà toán học Việt Nam đầu tiên nhận giải này.
+
+### `epi-duong` · giọng máy
+
+*Phim hành trình · lời khép, họ Dương · ~11 giây*
+
+Dương chiếm khoảng 1% dân số; sử gia Dương Trung Quốc, Tổng Thư ký Hội Khoa học Lịch sử Việt Nam, là đại biểu Quốc hội bốn khoá (2002–2021).
+
+### `epi-ly` · giọng máy
+
+*Phim hành trình · lời khép, họ Lý · ~10 giây*
+
+Lý nay chỉ còn khoảng 0,5% dân số: năm 1232 nhà Trần bắt người họ Lý đổi sang họ Nguyễn, một lần đổi họ hàng loạt còn ghi trong sử.
+
+### `epi-dinh` · giọng máy
+
+*Phim hành trình · lời khép, họ Đinh · ~11 giây*
+
+Đinh là họ của vị vua đặt quốc hiệu Đại Cồ Việt; cố đô Hoa Lư của Đinh Tiên Hoàng nay nằm trong quần thể Tràng An, di sản thế giới từ 2014.
+
+### `epi-truong` · giọng máy
+
+*Phim hành trình · lời khép, họ Trương · ~8 giây*
+
+Trương có Trương Tấn Sang làm Chủ tịch nước 2011–2016 và Trương Mỹ Hoa làm Phó Chủ tịch nước 2002–2007.
+
+### `epi-mac` · giọng máy
+
+*Phim hành trình · lời khép, họ Mạc · ~10 giây*
+
+Sau khi nhà Mạc đổ, con cháu đổi sang hàng chục họ khác để tránh truy sát; ngày nay Hội đồng Mạc tộc Việt Nam quy tụ lại các nhánh ấy.
+
+### `epi-tonthat` · giọng máy
+
+*Phim hành trình · lời khép, họ Tôn Thất / Nguyễn Phúc · ~10 giây*
+
+Tôn Thất dành cho con cháu các chúa Nguyễn ngoài dòng vua, nữ là Tôn Nữ; nay vẫn nhiều người giữ, như nhà ngoại giao Tôn Nữ Thị Ninh.
+
+### `epi-lam` · giọng máy
+
+*Phim hành trình · lời khép, họ Lâm · ~10 giây*
+
+Lâm là họ của nhiều người gốc Hoa (chữ 林) và nhiều người Khmer Nam Bộ, cùng các họ Thạch, Sơn, Danh, Kim mà sử liệu chưa rõ gốc tích.
+
+### `epi-trinh` · giọng máy
+
+*Phim hành trình · lời khép, họ Trịnh · ~11 giây*
+
+Trịnh là họ của Trịnh Công Sơn (1939–2001); nhạc ông vẫn được hát khắp nước, tên ông được đặt cho đường phố ở Huế (2011) và Hà Nội (2015).
+
+### `epi-cao` · giọng máy
+
+*Phim hành trình · lời khép, họ Cao · ~11 giây*
+
+Cao là họ của nhà ngôn ngữ học Cao Xuân Hạo (1930–2007), người đặt nền cho ngữ pháp chức năng tiếng Việt; chữ Hán 高, cùng chữ với họ Gao.
+
+### `epi-doan` · giọng máy
+
+*Phim hành trình · lời khép, họ Đoàn · ~10 giây*
+
+Đoàn là họ của Đoàn Giỏi (1925–1989); 'Đất rừng phương Nam' của ông được dựng thành phim truyền hình năm 1997 và phim điện ảnh năm 2023.
+
+### `epi-luong` · giọng máy
+
+*Phim hành trình · lời khép, họ Lương · ~11 giây*
+
+Lương là họ của nhà nông học Lương Định Của (1920–1975); từ 2006, Trung ương Đoàn trao giải thưởng mang tên ông cho nông dân trẻ mỗi năm.
+
+### `epi-ha` · giọng máy
+
+*Phim hành trình · lời khép, họ Hà · ~9 giây*
+
+Hà viết chữ Hán 何, cùng chữ với họ He, một trong 20 họ đông nhất Trung Quốc; ở Việt Nam, Hà là một họ nhỏ, dưới 1% dân số.
+
+### `epi-ta` · giọng máy
+
+*Phim hành trình · lời khép, họ Tạ · ~10 giây*
+
+Tạ là họ của Tạ Quang Bửu (1910–1986); Giải thưởng Tạ Quang Bửu của Bộ Khoa học và Công nghệ trao cho nghiên cứu cơ bản từ năm 2014.
+
+### `epi-thai` · giọng máy
+
+*Phim hành trình · lời khép, họ Thái / Thới · ~10 giây*
+
+Thái là một họ nhỏ; nghệ sĩ dương cầm Thái Thị Liên (1918–2023), người đồng sáng lập Trường Âm nhạc Việt Nam, là mẹ của Đặng Thái Sơn.

@@ -1,6 +1,6 @@
 import { BADGES } from './data';
 import { S, save, picked, matchStats, quizCorrect } from './state';
-import { toast } from './ui/dom';
+import { toast, whenClear } from './ui/dom';
 import { SND, buzz } from './audio';
 
 function badgeState(): Record<string, boolean> {
@@ -22,10 +22,10 @@ export function checkBadges(): void {
     if (!st[id] || S.badges.includes(id)) return;
     S.badges.push(id);
     save();
-    setTimeout(() => {
+    setTimeout(() => whenClear(() => {
       toast(`<span class="bi">${ic}</span><span><span class="mono" style="opacity:.7">Huy hiệu mới</span><br><b>${name}</b> · ${d}</span>`);
       SND.fanfare();
       buzz(20);
-    }, 400 + n++ * 1400);
+    }), 400 + n++ * 1400);
   });
 }

@@ -8,7 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -108,7 +108,7 @@ function tourStep(): void {
       next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)) + 2500));
       setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
     }
-    else next(card ? 4500 : sceneFrame(v) ? 6500 : 2900); // không giọng đọc: trận đánh giữ đủ lâu cho cảnh động
+    else next(card ? 4500 : sceneFrame(v) ? sceneHold(v) : 2900); // không giọng đọc: cảnh động giữ đủ lâu để vẽ xong, hiện tư liệu
   });
 }
 
@@ -217,11 +217,11 @@ function tourBar(): void {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
       if (a === 'narr') {
         S.narr = !S.narr; save();
-        if (!S.narr) { // không để bước hiện tại treo; trận đánh vẫn giữ đủ 6,5 s cho cảnh động
+        if (!S.narr) { // không để bước hiện tại treo; cảnh động vẫn giữ đủ thời gian (sceneHold)
           hush();
           if (tour && !tour.paused && tour.next) {
             const v = tour.L[tour.i], el = performance.now() - (tour.t0 || 0);
-            tour.next(v && sceneFrame(v) ? Math.max(600, 6500 - el) : 600);
+            tour.next(v && sceneFrame(v) ? Math.max(600, sceneHold(v) - el) : 600);
           }
         }
         tourBar();

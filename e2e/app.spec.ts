@@ -112,6 +112,10 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
   // generation 1 has nothing to harvest yet: the chapter opener, then the turning point
   await expect(page.locator('.cine')).toBeVisible();
+  // Back skips the opener instead of leaving the app
+  await page.goBack();
+  await expect(page.locator('.cine')).toHaveCount(0);
+  expect(page.url()).toContain('localhost');
   await expect(page.getByText('Tiếng súng Sơn Trà').first()).toBeVisible();
   await expect(page.getByText('Gia sản sau một đời người')).toHaveCount(0);
   // options stay locked while the turning point is being told, then open by themselves
@@ -157,6 +161,11 @@ test('reaching the present opens the last quiz, then the ending', async ({ page 
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   await expect(page.locator('.cine.film')).toBeVisible();
   await expect(page.locator('.cine.film .prog i')).toHaveCount(7);
+  // Escape closes only the film; the ending stays underneath
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.cine.film')).toHaveCount(0);
+  await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
+  await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   await page.locator('.cine.film .x').click();
   await expect(page.locator('.cine.film')).toHaveCount(0);
   expect(errors).toEqual([]);

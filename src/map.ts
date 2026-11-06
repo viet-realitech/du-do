@@ -424,7 +424,7 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number): voi
   const xy = pts.map(l => proj(l)!), xs = xy.map(p => p[0]), ys = xy.map(p => p[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   const bw = Math.max(1, (x1 - x0) * 1.35), bh = Math.max(1, (y1 - y0) * 1.45);
-  const k = Math.max(1.2, Math.min(kMax, W / bw, H / bh));
+  const k = Math.max(1, Math.min(kMax, W / bw, H / bh)); // 1 = cả bản đồ: hải trình dài (đi Pháp, vượt biên) vẫn trọn khung
   const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2 - (y1 - y0) * 0.06);
   G.svg.transition().duration(ms || 1200).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }

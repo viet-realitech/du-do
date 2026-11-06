@@ -193,12 +193,14 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   const span = Math.max(...all.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * k;
   const f = span > 0 ? Math.max(1, 120 / span) : 1;
   const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
-  const sea = mv.paths.some(p => p[1].length);
+  // âm thanh theo lối đi: chỉ có tàu thì còi tàu, sóng; có đường bộ thì tiếng đoàn người / bước quân; có máy bay thì tiếng động cơ
+  const sea = mv.paths.some(p => p[5] === 'sea'), land = mv.paths.some(p => p[5] === 'land'), air = mv.paths.findIndex(p => p[5] === 'air');
   if (mv.type === 'uprising' || mv.type === 'crowd') WAR.crowd(T0 / 1000);
-  else if (mv.type === 'march') WAR.march(8, T0 / 1000);
-  else if (mv.type === 'withdrawal') WAR.rumble(4, T0 / 1000);
-  if ((mv.type === 'journey' || mv.type === 'exodus') && sea) { WAR.horn(T0 / 1000 + 0.2); WAR.waves(5, T0 / 1000 + 1); }
-  mv.paths.forEach(([from, via, to, side], i) => {
+  else if (land && mv.type === 'march') WAR.march(8, T0 / 1000);
+  else if (land && mv.type === 'withdrawal') WAR.rumble(4, T0 / 1000);
+  if (sea) { WAR.horn(T0 / 1000 + 0.2); WAR.waves(5, T0 / 1000 + 1); }
+  if (air >= 0) WAR.plane((T0 + air * 700) / 1000 + 0.3);
+  mv.paths.forEach(([from, via, to, side, , mode], i) => {
     const pts = [P(from), ...via.map(P), P(to)], d = smooth(pts);
     const col = SIDE_COLOR[side] || '#f1e6c8', thin = mv.type === 'exodus' || mv.type === 'uprising' || mv.type === 'crowd';
     const under = el('path', { d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.5, 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, root);
@@ -207,9 +209,10 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     const len = line.getTotalLength() || 1;
     under.setAttribute('stroke-dasharray', `${len} ${len}`); under.setAttribute('stroke-dashoffset', String(len));
     if (mv.type !== 'withdrawal') { line.setAttribute('stroke-dasharray', `${len} ${len}`); line.setAttribute('stroke-dashoffset', String(len)); }
-    // vật đi trên đường: tàu (đường biển), đoàn người / đoàn quân (đường bộ)
+    // vật đi trên đường: tàu (đường biển), máy bay, đoàn quân / đoàn người (đường bộ)
     const g = el('g', { opacity: 0 }, root);
-    if (p1Sea(via)) el('path', { d: 'M-8,-2.5 L6,-2.5 L9,0 L6,2.5 L-8,2.5 L-6,0Z', fill: col, stroke: '#111', 'stroke-width': 0.8 }, g);
+    if (mode === 'air') el('path', { d: 'M9,0 L4,-1.2 L-1,-8 L-3,-8 L-0.5,-1.4 L-6,-1.2 L-8,-4 L-9.5,-4 L-8.5,0 L-9.5,4 L-8,4 L-6,1.2 L-0.5,1.4 L-3,8 L-1,8 L4,1.2Z', fill: col, stroke: '#111', 'stroke-width': 0.8 }, g);
+    else if (mode === 'sea') el('path', { d: 'M-8,-2.5 L6,-2.5 L9,0 L6,2.5 L-8,2.5 L-6,0Z', fill: col, stroke: '#111', 'stroke-width': 0.8 }, g);
     else if (mv.type === 'march' || mv.type === 'withdrawal') { for (let j = 0; j < 3; j++) el('rect', { x: -9 + j * 6, y: -2.5, width: 4.5, height: 5, rx: 1, fill: col, stroke: '#111', 'stroke-width': 0.7 }, g); }
     else { el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
     const lenPx = len * k, dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
@@ -230,7 +233,6 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   });
   void v;
 }
-const p1Sea = (via: [number, number][]) => via.length > 0;
 
 /* ---------- hiệp ước ---------- */
 function treaty(r: Run, v: HistEvent): void {
@@ -304,12 +306,14 @@ function film(r: Run, v: HistEvent, url: string, poster: string): Promise<boolea
     box.appendChild(vd);
     box.insertAdjacentHTML('beforeend', `<i class="flick"></i><span class="mono">Phim tư liệu · ${v.y}</span>`);
     let done = false;
-    const fail = () => { if (done) return; done = true; vd.removeAttribute('src'); vd.load(); box.remove(); res(false); };
-    const ok = () => { if (done) return; done = true; if (!r.alive) { box.remove(); res(true); return; } r.reel = box; requestAnimationFrame(() => box.classList.add('on')); res(true); };
+    const unload = () => { vd.removeAttribute('src'); vd.load(); box.remove(); };
+    const fail = () => { if (done) return; done = true; clearTimeout(t); if (r.reel === box) r.reel = null; unload(); res(false); };
+    const ok = () => { if (done) return; done = true; clearTimeout(t); if (!r.alive) { unload(); res(true); return; } requestAnimationFrame(() => box.classList.add('on')); res(true); };
     vd.addEventListener('playing', ok, { once: true });
     vd.addEventListener('error', fail, { once: true });
-    setTimeout(fail, 5000);
+    const t = setTimeout(fail, 5000);
     document.getElementById('mapwrap')?.appendChild(box);
+    r.reel = box; // endScene dừng và gỡ phim cả khi nó còn đang tải
     vd.play().catch(fail);
   });
 }
@@ -325,6 +329,14 @@ export function sceneFrame(v: HistEvent): [number, number][] | null {
   return null;
 }
 
+/** Lúc (ms từ đầu cảnh) khung tư liệu bắt đầu tải: trận đánh / cảnh di chuyển chờ các mũi tên vẽ gần xong để không che chúng. */
+function reelAt(v: HistEvent): number {
+  const nA = v.k === 'Trận đánh' ? SCENES[v.id]?.arrows.length || 0 : MOVES[v.id] ? 2 : 0;
+  return nA ? 1250 + 120 + Math.min(nA, 6) * 520 + 1600 : 0;
+}
+/** Bước tour không có giọng đọc giữ cảnh bao lâu: đủ để cảnh vẽ xong và khung tư liệu kịp hiện vài giây. */
+export const sceneHold = (v: HistEvent): number => Math.min(11000, Math.max(6500, reelAt(v) + 4500));
+
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
 export function playScene(v: HistEvent): void {
   endScene();
@@ -335,8 +347,8 @@ export function playScene(v: HistEvent): void {
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
   // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng
-  const nA = v.k === 'Trận đánh' ? SCENES[v.id]?.arrows.length || 0 : MOVES[v.id] ? 4 : 0;
-  if (nA) later(r, 1250 + 120 + nA * 520 + 2000, () => void reel(r, v)); else void reel(r, v);
+  const at = reelAt(v);
+  if (at) later(r, at, () => void reel(r, v)); else void reel(r, v);
   if (v.diary) return;
   if (v.k === 'Trận đánh' && !calm.matches) document.getElementById('mapwrap')?.classList.add('tilt');
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó

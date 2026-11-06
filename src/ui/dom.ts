@@ -30,7 +30,15 @@ export function clearLayer(): void {
   if (!isTouring()) hush();
 }
 
+/** Màn mở chương hay phim hành trình đang chiếu (che cả toast). */
+export const cineOpen = () => !!document.querySelector('body > .cine:not(.out)');
+/** Chạy `fn` khi không còn màn điện ảnh nào che (ngay nếu không có). */
+export function whenClear(fn: () => void): void {
+  if (cineOpen()) setTimeout(() => whenClear(fn), 500); else fn();
+}
+
 export function toast(html: string): void {
+  if (cineOpen()) { whenClear(() => toast(html)); return; }
   const n = document.createElement('div');
   n.className = 'toast';
   n.setAttribute('role', 'status');

@@ -88,11 +88,13 @@ export async function videoUrl(m: Media, small = false): Promise<string> {
   const pg = Object.values<any>(r.query.pages)[0];
   const vi = pg.videoinfo && pg.videoinfo[0];
   if (!vi) throw new Error('no video');
-  const der = (vi.derivatives || [])
-    .filter((x: any) => /webm|mp4/.test(x.type || ''))
-    .sort((a: any, b: any) => {
-      const pref = small ? /240|180|360/ : /480|360/; // khung phim tư liệu nhỏ: bản 240p–360p
-      return (pref.test(b.transcodekey) ? 1 : 0) - (pref.test(a.transcodekey) ? 1 : 0);
-    })[0];
-  return (der && der.src) || vi.url;
+  // chỉ các bản chuyển mã trình duyệt này phát được; lấy bản có chiều cao gần nhất với khung (360p cho khung nhỏ)
+  const tv = document.createElement('video'), want = small ? 360 : 480;
+  const der = ((vi.derivatives || []) as any[])
+    .filter(x => /^video\/(webm|mp4)/.test(x.type || '') && tv.canPlayType(x.type) !== '')
+    .map(x => ({ x, h: +x.height || +(String(x.transcodekey || '').match(/(\d+)p/)?.[1] || 0) }))
+    .sort((a, b) => Math.abs(a.h - want) - Math.abs(b.h - want))[0]?.x;
+  if (der?.src) return der.src;
+  if (small) throw new Error('no playable small derivative'); // khung nhỏ: không tải bản gốc nặng
+  return vi.url;
 }

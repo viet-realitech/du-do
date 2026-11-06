@@ -7,6 +7,9 @@ import { setTab } from '../tabs';
 type Top = { close: () => void } | { locked: true } | null;
 
 function topmost(): Top {
+  // màn mở chương / phim hành trình (gắn vào body, trên mọi lớp): Back / Escape = bỏ qua / đóng
+  const cine = document.querySelector<HTMLElement>('body > .cine:not(.out)');
+  if (cine) return { close: () => cine.querySelector<HTMLElement>('.x, .skip')!.click() };
   const lb = app.querySelector<HTMLElement>('.lb');
   if (lb) return { close: () => lb.querySelector<HTMLElement>('.back')!.click() };
   const sc = [...layer.querySelectorAll<HTMLElement>('.scrim')].pop();
@@ -47,6 +50,8 @@ function closeTop(): void {
 export function initHistory(): void {
   new MutationObserver(sync).observe(layer, { childList: true, subtree: true });
   new MutationObserver(sync).observe(app, { childList: true });
+  new MutationObserver(sync).observe(document.body, { childList: true }); // .cine
+
   addEventListener('popstate', () => {
     if (skipPop) { skipPop = false; return; }
     pushed = false;
