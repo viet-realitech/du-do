@@ -194,12 +194,11 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   const f = span > 0 ? Math.max(1, 120 / span) : 1;
   const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
   // âm thanh theo lối đi: chỉ có tàu thì còi tàu, sóng; có đường bộ thì tiếng đoàn người / bước quân; có máy bay thì tiếng động cơ
-  const sea = mv.paths.some(p => p[5] === 'sea'), land = mv.paths.some(p => p[5] === 'land'), air = mv.paths.findIndex(p => p[5] === 'air');
+  const sea = mv.paths.some(p => p[5] === 'sea'), land = mv.paths.some(p => p[5] === 'land');
   if (mv.type === 'uprising' || mv.type === 'crowd') WAR.crowd(T0 / 1000);
   else if (land && mv.type === 'march') WAR.march(8, T0 / 1000);
   else if (land && mv.type === 'withdrawal') WAR.rumble(4, T0 / 1000);
   if (sea) { WAR.horn(T0 / 1000 + 0.2); WAR.waves(5, T0 / 1000 + 1); }
-  if (air >= 0) WAR.plane((T0 + air * 700) / 1000 + 0.3);
   mv.paths.forEach(([from, via, to, side, , mode], i) => {
     const pts = [P(from), ...via.map(P), P(to)], d = smooth(pts);
     const col = SIDE_COLOR[side] || '#f1e6c8', thin = mv.type === 'exodus' || mv.type === 'uprising' || mv.type === 'crowd';
@@ -217,6 +216,7 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     else { el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
     const lenPx = len * k, dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
     const start = T0 + i * (thin ? 280 : 700);
+    if (mode === 'air') WAR.plane(start / 1000); // tiếng máy bay cùng lúc máy bay cất cánh
     anim(r, dur, q => {
       const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
       under.setAttribute('stroke-dashoffset', String(len * (1 - e)));
@@ -310,7 +310,10 @@ function place(box: HTMLElement, r: Run): void {
     { s: { top: 'auto', bottom: `${low}px` }, x: R.left + 10, y: R.bottom - low - bh },
     { s: { top: 'auto', bottom: `${low}px`, left: 'auto', right: '10px' }, x: R.right - 10 - bw, y: R.bottom - low - bh },
   ];
-  const hits = spots.map(o => pts.filter(([x, y]) => x > o.x - 8 && x < o.x + bw + 8 && y > o.y - 8 && y < o.y + bh + 8).length);
+  // cột nút zoom (trên phải) là vật cản: góc nào chạm vào nó thì không dùng (khung tư liệu sẽ che, nhận nhầm cú chạm)
+  const zc = document.querySelector('.zoomc')?.getBoundingClientRect();
+  const blocked = (o: { x: number; y: number }) => !!zc && o.x < zc.right + 6 && o.x + bw > zc.left - 6 && o.y < zc.bottom + 6 && o.y + bh > zc.top - 6;
+  const hits = spots.map(o => (blocked(o) ? Infinity : pts.filter(([x, y]) => x > o.x - 8 && x < o.x + bw + 8 && y > o.y - 8 && y < o.y + bh + 8).length));
   Object.assign(box.style, spots[hits.indexOf(Math.min(...hits))].s);
 }
 
@@ -366,7 +369,7 @@ function reelAt(v: HistEvent): number {
 export const sceneHold = (v: HistEvent): number => Math.min(11000, Math.max(6500, reelAt(v) + 4500));
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
-export function playScene(v: HistEvent): void {
+export function playScene(v: HistEvent, hold = Infinity): void {
   endScene();
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
@@ -376,7 +379,8 @@ export function playScene(v: HistEvent): void {
   if (h) r.root = el('g', { class: 'scene' }, h.g);
   // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng
   const at = reelAt(v);
-  if (at) later(r, at, () => void reel(r, v)); else void reel(r, v);
+  // bước sẽ dừng (mở thẻ) trước khi khung tư liệu kịp hiện ~2 s: bỏ, khỏi tải phim / ảnh rồi gỡ ngay
+  if (at && hold - at < 2000) { /* không chiếu tư liệu */ } else if (at) later(r, at, () => void reel(r, v)); else void reel(r, v);
   if (v.diary) return;
   if (v.k === 'Trận đánh' && !calm.matches) document.getElementById('mapwrap')?.classList.add('tilt');
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó

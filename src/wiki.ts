@@ -91,7 +91,8 @@ export async function videoUrl(m: Media, small = false): Promise<string> {
   // chỉ các bản chuyển mã trình duyệt này phát được; lấy bản có chiều cao gần nhất với khung (360p cho khung nhỏ)
   const tv = document.createElement('video'), want = small ? 360 : 480;
   const der = ((vi.derivatives || []) as any[])
-    .filter(x => /^video\/(webm|mp4)/.test(x.type || '') && tv.canPlayType(x.type) !== '')
+    // .mov 360p (mp4v) là bản Commons dành cho iOS cũ; chuỗi codecs="mp4v" không chuẩn nên thử thêm kiểu gốc
+    .filter(x => /^video\/(webm|mp4|quicktime)/.test(x.type || '') && (tv.canPlayType(x.type) !== '' || (/^video\/quicktime/.test(x.type) && tv.canPlayType('video/quicktime') !== '')))
     .map(x => ({ x, h: +x.height || +(String(x.transcodekey || '').match(/(\d+)p/)?.[1] || 0) }))
     .sort((a, b) => Math.abs(a.h - want) - Math.abs(b.h - want))[0]?.x;
   if (der?.src) return der.src;

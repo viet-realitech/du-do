@@ -428,8 +428,9 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number): voi
   if (!ready || !pts.length) return;
   const n = G.svg.node()!, vb = n.viewBox.baseVal, vw = vb.width || W, px = n.clientWidth / vw || 1;
   // phần bản đồ bị che (px màn hình): nhãn dân số / tiêu đề ở trên, thanh tour ở dưới; khung vừa dải còn lại
-  const wrap = (n.parentElement || n).getBoundingClientRect(), bar = document.getElementById('tourb')?.getBoundingClientRect();
-  const top = 44, bot = (bar ? Math.max(0, wrap.bottom - bar.top) : 0) + 8;
+  // đo theo bố cục (offsetTop), không theo getBoundingClientRect: thanh tour vừa gắn còn đang trượt lên (translateY 40 px)
+  const wrap = document.getElementById('mapwrap'), bar = document.getElementById('tourb');
+  const top = 44, bot = (bar && wrap ? Math.max(0, wrap.clientHeight - bar.offsetTop) : 0) + 8;
   const vh = Math.max(60, (vb.height || H) - (top + bot) / px);
   const xy = pts.map(l => proj(l)!), xs = xy.map(p => p[0]), ys = xy.map(p => p[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);

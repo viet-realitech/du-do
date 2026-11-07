@@ -88,12 +88,12 @@ function tourStep(): void {
     const fr = sceneFrame(v);
     if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5)); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân
     SND.fly();
-    playScene(v); // cảnh động: trận đánh, ấn triện, phim tư liệu
-    tourBar();
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
     // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
-    const card = isPlay() && needsDecision(v);
+    const card = isPlay() && needsDecision(v), voiced = S.narr && canSpeak(evKey(v));
+    playScene(v, card && !voiced ? 4500 : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
+    tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
     const next = (d: number) => {
@@ -103,7 +103,7 @@ function tourStep(): void {
     };
     tour!.next = next;
     tour!.t0 = performance.now();
-    if (S.narr && canSpeak(evKey(v))) {
+    if (voiced) {
       // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
       next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)) + 2500));
       setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
