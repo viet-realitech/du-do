@@ -14,18 +14,30 @@ function badgeState(): Record<string, boolean> {
   };
 }
 
+/* Thông báo huy hiệu xếp hàng: mỗi cái cách nhau 1,4 s, và chờ màn điện ảnh (mở chương / phim) chiếu xong. */
+const queue: (() => void)[] = [];
+let draining = false;
+function drain(): void {
+  whenClear(() => {
+    const fn = queue.shift();
+    if (!fn) { draining = false; return; }
+    fn();
+    if (queue.length) setTimeout(drain, 1400); else draining = false;
+  });
+}
+
 /** Award newly earned badges, announcing each with a staggered toast + chime. */
 export function checkBadges(): void {
   const st = badgeState();
-  let n = 0;
   BADGES.forEach(([id, ic, name, d]) => {
     if (!st[id] || S.badges.includes(id)) return;
     S.badges.push(id);
     save();
-    setTimeout(() => whenClear(() => {
+    queue.push(() => {
       toast(`<span class="bi">${ic}</span><span><span class="mono" style="opacity:.7">Huy hiệu mới</span><br><b>${name}</b> · ${d}</span>`);
       SND.fanfare();
       buzz(20);
-    }), 400 + n++ * 1400);
+    });
   });
+  if (queue.length && !draining) { draining = true; setTimeout(drain, 400); }
 }

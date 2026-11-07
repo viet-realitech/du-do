@@ -149,17 +149,39 @@ export function montage(): void {
   app.inert = true;
   box.querySelector<HTMLElement>('.x')!.focus({ preventScroll: true });
   /** Thanh tiến độ của cảnh `j` chạy đầy trong `ms`. */
-  const fill = (j: number, ms: number) => { const b = bars[j]; b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth; b.style.transition = `width ${Math.round(ms)}ms linear`; b.style.width = '100%'; };
-  /** Thuyết minh bằng bản thu (giọng Thanh Bình) nếu có; xong thì sang cảnh. Không có bản thu: chỉ chữ, theo nhịp `wait`. */
+  /** Thanh tiến độ của cảnh `j` chạy từ chỗ đang đứng tới `to`% trong `ms` (gọi lại được để chỉnh theo bản thu). */
+  const fill = (j: number, ms: number, to = 100) => {
+    const b = bars[j], w = b.parentElement!.getBoundingClientRect().width || 1;
+    const now = Math.min(100, (b.getBoundingClientRect().width / w) * 100);
+    b.style.transition = 'none';
+    b.style.width = `${now}%`;
+    void b.offsetWidth;
+    b.style.transition = `width ${Math.max(0, Math.round(ms))}ms linear`;
+    b.style.width = `${to}%`;
+  };
+  /** Thuyết minh bằng bản thu (giọng Thanh Bình) nếu có; xong thì sang cảnh. Không có bản thu: chỉ chữ, theo nhịp `wait`.
+      Cảnh luôn đứng ít nhất `wait` (bản thu hỏng / mất mạng thì vẫn đủ thời gian đọc chữ). */
   const narrate = (j: number, parts: [string, string][], wait: number) => {
-    const me = seq, rec = S.narr ? parts.filter(([, k]) => recording(k)) : [];
-    if (!rec.length) { fill(j, wait); timer = window.setTimeout(() => void show(j + 1), wait); return; }
+    const me = seq, t0 = performance.now(), rec = S.narr ? parts.filter(([, k]) => recording(k)) : [];
+    fill(j, wait);
+    if (!rec.length) { timer = window.setTimeout(() => void show(j + 1), wait); return; }
     const live = () => !closed && me === seq;
-    // thanh tiến độ theo độ dài thật của bản thu (đọc metadata song song với 0,7 s chờ)
-    void Promise.all(rec.map(([, k]) => clipMs(recording(k)!))).then(ls => { if (live()) fill(j, ls.every(Boolean) ? 700 + ls.reduce((a, b) => a + b, 0) + 300 * (ls.length - 1) + 1200 : wait); });
+    // biết độ dài thật của bản thu thì chỉnh thanh cho khớp; không đọc được thì chạy chậm tới 90 %, chờ bản thu đọc xong
+    void Promise.all(rec.map(([, k]) => clipMs(recording(k)!))).then(ls => {
+      if (!live()) return;
+      const total = 700 + ls.reduce((a, b) => a + b, 0) + 300 * (ls.length - 1) + 1200;
+      if (ls.every(Boolean)) fill(j, Math.max(total, wait) - (performance.now() - t0));
+      else fill(j, wait * 3, 90);
+    });
     const next = (n: number) => {
       if (!live()) return;
-      if (n >= rec.length) { clearTimeout(timer); timer = window.setTimeout(() => void show(j + 1), 1200); return; }
+      if (n >= rec.length) {
+        const tail = Math.max(1200, wait - (performance.now() - t0));
+        clearTimeout(timer);
+        fill(j, tail);
+        timer = window.setTimeout(() => void show(j + 1), tail);
+        return;
+      }
       speak(rec[n][0], () => setTimeout(() => next(n + 1), n + 1 < rec.length ? 300 : 0), false, rec[n][1]);
     };
     timer = window.setTimeout(() => void show(j + 1), wait + 30000); // bảo hiểm nếu bản thu không báo xong

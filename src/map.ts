@@ -177,7 +177,8 @@ export async function initMap(): Promise<void> {
   G.fx = Z.append('g').attr('class', 'fxl').style('pointer-events', 'none'); // cảnh động của sự kiện (scene.ts)
   G.call = Z.append('g').style('pointer-events', 'none');
 
-  G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([1, 8]).on('zoom', ev => {
+  // K_MIN < 1: cảnh hải trình dài thu cả bản đồ nhỏ lại; người dùng chụm / cuộn cũng đi được tới đó (không nhảy về 1)
+  G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([K_MIN, 8]).on('zoom', ev => {
     if (ev.sourceEvent && isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); }
     G.k = ev.transform.k;
     Z.attr('transform', ev.transform);
@@ -420,6 +421,9 @@ export function zoomK(v: HistEvent): number {
 }
 
 /** Fly so every point (lon/lat) is in view, at most at scale kMax (cảnh động có mũi tiến quân trải rộng). */
+/** Mức thu nhỏ nhất (dưới 1 = nhỏ hơn khung, để trọn hải trình dài trên điện thoại). */
+const K_MIN = 0.7;
+
 export function zoomFit(pts: [number, number][], kMax: number, ms?: number): void {
   if (!ready || !pts.length) return;
   const n = G.svg.node()!, vb = n.viewBox.baseVal, vw = vb.width || W, px = n.clientWidth / vw || 1;
@@ -431,7 +435,7 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number): voi
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   const bw = Math.max(1, (x1 - x0) * 1.3), bh = Math.max(1, (y1 - y0) * 1.35);
   // < 1 khi đường đi dài hơn khung (hải trình Bắc – Nam trên điện thoại): thu nhỏ cả bản đồ cho trọn đường
-  const k = Math.max(0.7, Math.min(kMax, vw / bw, vh / bh));
+  const k = Math.max(K_MIN, Math.min(kMax, vw / bw, vh / bh));
   const cy = (y0 + y1) / 2 + (bot - top) / 2 / px / k;
   const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -cy);
   G.svg.transition().duration(ms || 1200).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
