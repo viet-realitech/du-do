@@ -19,7 +19,7 @@ import { openGate } from './screens/gate';
 interface Tour {
   e: Era; L: HistEvent[]; i: number; end: number; t: number | undefined; cur?: string;
   /** Lý do tạm dừng: thẻ sự kiện, màn chi tiết / nhân vật, hay cử chỉ bản đồ. */
-  paused?: 'card' | 'overlay' | 'map';
+  paused?: 'card' | 'overlay' | 'map' | 'user';
   /** Bước hiện tại; mọi callback hẹn giờ so với nó để lời đọc / hẹn giờ cũ không tác động lên bước sau. */
   step: number;
   /** Đi tiếp bước hiện tại (dùng khi giọng đọc bị tắt giữa chừng). */
@@ -33,6 +33,11 @@ let mapIdle: number | undefined;
 export const isTouring = () => !!tour;
 export const isTourPaused = () => !!tour?.paused;
 
+/** Đọc sử: mốc khép / mở các chương, luôn có trong tour của chương chứa nó. */
+const MUST = ['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86'];
+/** Chỉ số thứ j trong `need` mẫu rải đều trên `len` phần tử, gồm cả đầu và cuối (sự kiện khép chương: 30.4.1975, Patenôtre…). */
+const spread = (j: number, need: number, len: number) => (need <= 1 || len <= 1 ? 0 : Math.round((j * (len - 1)) / (need - 1)));
+
 function tourList(e: Era): { L: HistEvent[]; end: number } {
   const i = ERAS.indexOf(e), nx = ERAS[i + 1], end = nx ? nx.cy : Y1;
   let L = allEv().filter(v => v.y >= Math.max(e.cy, S.year) && v.y < (nx ? nx.cy : Y1 + 1));
@@ -42,17 +47,18 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
     const rest = L.filter(v => !must.includes(v) && !v.diary);
     const pool = rest.filter(needsDecision).length >= 3 ? rest.filter(needsDecision) : rest;
     const need = Math.max(0, 10 - must.length - d.length), pick: HistEvent[] = [];
-    for (let j = 0; j < need && pool.length; j++) pick.push(pool[Math.floor((j * pool.length) / need)]);
+    for (let j = 0; j < need && pool.length; j++) pick.push(pool[spread(j, need, pool.length)]);
     L = [...new Set([...must, ...d, ...pick])].sort((a, b) => a.y - b.y || (a.diary ? 1 : 0) - (b.diary ? 1 : 0));
     return { L, end };
   }
   if (L.length > 8) {
     // Keep every family-diary page, then sample battles/treaties/quoted events evenly.
-    const d = L.filter(v => v.diary), rest = L.filter(v => !v.diary);
+    // mốc then chốt của chương luôn có mặt (câu đố cuối chương cũng hỏi về chúng)
+    const d = L.filter(v => v.diary), must = L.filter(v => MUST.includes(v.id)), rest = L.filter(v => !v.diary && !must.includes(v));
     const key = rest.filter(v => v.k === 'Trận đánh' || v.k === 'Hiệp ước' || v.qt || hasScene(v)); // cả cảnh di chuyển (Nhà Rồng, di cư…)
-    const pool = key.length >= 4 ? key : rest, need = Math.max(0, 8 - d.length), pick: HistEvent[] = [];
-    for (let j = 0; j < need; j++) pick.push(pool[Math.floor((j * pool.length) / need)]);
-    L = [...new Set([...d, ...pick])].sort((a, b) => a.y - b.y);
+    const pool = key.length >= 4 ? key : rest, need = Math.max(0, 8 - d.length - must.length), pick: HistEvent[] = [];
+    for (let j = 0; j < need && pool.length; j++) pick.push(pool[spread(j, need, pool.length)]);
+    L = [...new Set([...d, ...must, ...pick])].sort((a, b) => a.y - b.y); // cùng năm: trang nhật ký trước (như trước đây)
   }
   return { L, end };
 }
@@ -153,7 +159,8 @@ export function pauseForCard(v: HistEvent): boolean {
 }
 
 /** Tạm dừng vì người chơi mở màn chi tiết / nhân vật (tự chạy tiếp khi đóng) hay chạm bản đồ (tự chạy tiếp sau 5 s yên). */
-export function pauseTour(why: 'overlay' | 'map'): void {
+/** `user`: nút ❚❚ (đứng yên tới khi bấm ▶); `map`: cử chỉ bản đồ (tự chạy tiếp sau 5 s yên); `overlay`: trang chi tiết (chạy tiếp khi đóng). */
+export function pauseTour(why: 'overlay' | 'map' | 'user'): void {
   if (!tour) return;
   clearTimeout(mapIdle);
   if (tour.paused) { if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000); return; }
@@ -208,7 +215,7 @@ export function togglePlay(): void {
   if (!tour) { startTour(); return; }
   if (tour.paused === 'card') return; // đang chờ quyết định trên thẻ
   if (tour.paused) { resumeTour(); return; }
-  if (isPlay()) pauseTour('map'); else stopTour();
+  pauseTour('user'); // cả Đọc sử lẫn Trò chơi: tạm dừng thật, giữ bước và cảnh; ▶ chạy tiếp
 }
 
 function tourBar(): void {

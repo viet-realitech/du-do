@@ -29,7 +29,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
   if (document.getElementById('replb')) closeReplay(false); // đang xem lại diễn biến: dừng hẳn trước khi mở trang
-  if (isPlay() && isTouring()) pauseTour('overlay'); else stopTour();
+  if (isTouring()) pauseTour('overlay'); else stopTour(); // đóng trang thì tour chạy tiếp từ đúng bước này (cả Đọc sử)
   hidePop();
   if (!S.seen.includes(id)) { S.seen.push(id); save(); }
   const e = eraOf(v.y), pk = curPick(v.y), mine = pk?.persp;

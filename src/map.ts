@@ -8,8 +8,7 @@ import { esc, lite } from './ui/dom';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
-import { isTouring, stopTour, pauseTour } from './tour';
-import { isPlay } from './play';
+import { isTouring, pauseTour } from './tour';
 import { openEvent } from './screens/event';
 import { endScene } from './scene';
 
@@ -182,7 +181,7 @@ export async function initMap(): Promise<void> {
 
   // K_MIN < 1: cảnh hải trình dài thu cả bản đồ nhỏ lại; người dùng chụm / cuộn cũng đi được tới đó (không nhảy về 1)
   G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([K_MIN, 8]).on('zoom', ev => {
-    if (ev.sourceEvent && isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); }
+    if (ev.sourceEvent && isTouring()) pauseTour('map'); // kéo / chụm: tạm dừng, yên 5 s thì chạy tiếp (cả Đọc sử)
     G.k = ev.transform.k;
     Z.attr('transform', ev.transform);
     rescale();
@@ -200,7 +199,7 @@ export async function initMap(): Promise<void> {
   }
   svg.call(G.zoom).on('dblclick.zoom', null);
   // nút zoom, chạm bản đồ nghiêng là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
-  const byUser = () => { if (isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); } };
+  const byUser = () => { if (isTouring()) pauseTour('map'); };
   // chạm / cuộn trên bản đồ đang nghiêng: làm phẳng ngay trước khi d3 tính điểm neo (tránh bản đồ trượt dưới ngón tay)
   const flat = () => { if (document.getElementById('mapwrap')?.classList.contains('tilt')) { endScene(true); byUser(); } }; // cảnh bị cắt: tour không đứng chờ trên bản đồ trống
   for (const t of ['pointerdown', 'touchstart', 'wheel']) svg.node()!.addEventListener(t, flat, { capture: true, passive: true });

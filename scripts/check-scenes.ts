@@ -2,7 +2,8 @@
    kiểm các cặp giáp chiến (`meet`) và vòng vây, thoát mã 1 nếu có lỗi. Chạy: npm run scenes */
 import { SCENES, actOf } from '../src/data/scenes';
 import { kindOf } from '../src/units';
-import { EV } from '../src/data';
+import { EV, ERAS } from '../src/data';
+import { NEXT } from '../src/play';
 
 let err = 0;
 const kinds: Record<string, number> = {}, acts: Record<string, number> = {};
@@ -41,6 +42,11 @@ for (const [id, sc] of Object.entries(SCENES)) {
   const line = e.line ? e.line.join(' ') : sent(v.x || v.s)[0];
   ends.push(`${id.padEnd(5)} | ${sc.hold.map(h => h[2]).join(',').padEnd(22)} | fell ${JSON.stringify(e.fell || [])} left ${JSON.stringify(e.left || [])} | ${line}`);
 }
+// bảng "tiếp nối" của trò chơi: mỗi hướng chỉ nối sang hướng của điểm rẽ kế tiếp
+ERAS.forEach((e, i) => {
+  const nx = ERAS[i + 1];
+  for (const o of e.opts) for (const t of NEXT[o.id] || []) if (!nx || !nx.opts.some(x => x.id === t)) { console.error(`LỖI NEXT.${o.id} → ${t}: không phải hướng của điểm rẽ ${nx ? nx.n : '(hết)'}`); err++; }
+});
 console.log('\n' + rows.join('\n'));
 console.log('\nKhép trận\n' + ends.join('\n'));
 console.log('\nquân cờ', JSON.stringify(kinds), '\nviệc', JSON.stringify(acts), `\n${contacts} cặp giáp chiến, ${rings} vòng vây`);

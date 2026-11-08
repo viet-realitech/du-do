@@ -42,6 +42,13 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   // "›" skips the rest of a long battle step
   await page.locator('#tourb [data-t=next]').click();
   await expect(page.locator('#tourb')).toContainText('2/', { timeout: 5000 });
+  // reading mode pauses instead of stopping: ❚❚ holds the step, ▶ goes on from it
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toContainText('tạm dừng');
+  await expect(page.locator('#tourb [data-t=resume]')).toBeVisible();
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).not.toContainText('tạm dừng');
+  await expect(page.locator('#tourb')).toContainText('2/');
   await page.locator('#tourb [data-t=stop]').click();
   await expect(page.locator('#tourb')).toHaveCount(0);
   await expect(lt).toHaveCount(0, { timeout: 1000 });
