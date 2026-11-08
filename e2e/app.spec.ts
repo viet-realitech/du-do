@@ -52,6 +52,14 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
 
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
+  // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)
+  const mk = await page.locator('#map g.m').first().elementHandle();
+  await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dbp'; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+  await page.locator('#goto').click();
+  await expect(page.locator('.ov')).toBeVisible();
+  await page.goBack();
+  await expect(page.locator('#layer .ov')).toHaveCount(0);
+  expect(await mk!.evaluate(e => e.isConnected)).toBe(true);
   await expect(page.locator('#yr')).toHaveText('1954');
   await expect(page.locator('#lbl')).toContainText('vĩ tuyến 17');
   await expect(page.locator('#map path[fill]').first()).toBeAttached();

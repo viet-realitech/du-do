@@ -360,22 +360,30 @@ export function paintMap(quiet = false, y = S.year): void {
   G.indo.attr('opacity', R.laos || R.camb ? 1 : 0);
   G.cities.selectAll<SVGTextElement, unknown>('text[data-city="Sài Gòn"]').text(y >= 1976 ? 'TP. HCM' : 'Sài Gòn');
 
-  // Event markers for the last three years.
-  const near = visEv().filter(v => v.y <= y && v.y >= y - 3);
-  G.mk.selectAll('*').remove();
-  near.forEach(v => {
-    const on = rt.focusEv?.id === v.id;
-    const g = G.mk.append('g').attr('class', 'm').datum<Pt>({ p: proj(v.l)! }).style('cursor', 'pointer')
-      .on('click', ev => { ev.stopPropagation(); openEvent(v.id); });
-    if (on) g.append('circle').attr('r', 8).attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 2).attr('class', 'pulse');
-    const col = on ? 'var(--red)' : 'var(--ink)';
-    let m;
-    if (v.diary) m = g.append('path').attr('d', 'M0,-7 L6,0 L0,7 L-6,0Z').style('fill', on ? 'var(--red)' : 'var(--acc)');
-    else if (v.k === 'Trận đánh') m = g.append('rect').attr('x', -5).attr('y', -5).attr('width', 10).attr('height', 10).attr('transform', 'rotate(45)');
-    else if (v.k === 'Hiệp ước') m = g.append('rect').attr('x', -5).attr('y', -4).attr('width', 10).attr('height', 8);
-    else m = g.append('circle').attr('r', 5.5);
-    m.style('stroke', 'var(--paper)').attr('stroke-width', 1.5);
-    if (!v.diary) m.style('fill', col).attr('opacity', on ? 1 : 0.65);
+  // Event markers for the last three years. Keyed join: markers that stay in the window keep their element, so a
+  // finger resting on one is not detached mid-gesture (that left d3's touch gesture stuck and the map frozen).
+  type Mk = Pt & { v: HistEvent };
+  const near = visEv().filter(v => v.y <= y && v.y >= y - 3).map(v => ({ v, p: proj(v.l)! }) as Mk);
+  const sel = G.mk.selectAll<SVGGElement, Mk>('g.m').data(near, d => d.v.id);
+  sel.exit().remove();
+  const ent = sel.enter().append('g').attr('class', 'm').style('cursor', 'pointer')
+    .on('click', (ev: MouseEvent, d: Mk) => { ev.stopPropagation(); openEvent(d.v.id); });
+  ent.each(function (d) {
+    const g = d3.select(this), v = d.v;
+    if (v.diary) g.append('path').attr('class', 'mk').attr('d', 'M0,-7 L6,0 L0,7 L-6,0Z');
+    else if (v.k === 'Trận đánh') g.append('rect').attr('class', 'mk').attr('x', -5).attr('y', -5).attr('width', 10).attr('height', 10).attr('transform', 'rotate(45)');
+    else if (v.k === 'Hiệp ước') g.append('rect').attr('class', 'mk').attr('x', -5).attr('y', -4).attr('width', 10).attr('height', 8);
+    else g.append('circle').attr('class', 'mk').attr('r', 5.5);
+    g.select('.mk').style('stroke', 'var(--paper)').attr('stroke-width', 1.5);
+  });
+  ent.merge(sel).each(function (d) {
+    const g = d3.select(this), v = d.v, on = rt.focusEv?.id === v.id;
+    const pulse = g.select('circle.pulse');
+    if (on && pulse.empty()) g.insert('circle', ':first-child').attr('r', 8).attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 2).attr('class', 'pulse');
+    else if (!on && !pulse.empty()) pulse.remove();
+    const m = g.select('.mk');
+    if (v.diary) m.style('fill', on ? 'var(--red)' : 'var(--acc)');
+    else m.style('fill', on ? 'var(--red)' : 'var(--ink)').attr('opacity', on ? 1 : 0.65);
   });
   highlight();
   rescale();
