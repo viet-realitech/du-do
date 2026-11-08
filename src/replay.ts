@@ -10,6 +10,7 @@ import { zoomFit, zoomK, paintMap } from './map';
 import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene } from './scene';
 import { renderMain } from './view';
 import { resumeTour } from './tour';
+import { openEvent } from './screens/event';
 
 /* "Xem diễn biến": phát lại cảnh động của một sự kiện từ trang chi tiết (trận đánh, cảnh di chuyển), có lời kể,
    với thanh nhỏ dưới bản đồ (Xem lại · Đóng). Trò chơi: chỉ sự kiện dòng họ đã đi qua, và không đổi năm đang chơi. */
@@ -19,11 +20,16 @@ export const canReplay = (v: HistEvent): boolean => hasScene(v) && fxOn() && (!i
 
 let tok = 0; // mỗi lần phát / đóng tăng: lời gọi cũ (onEnd, lời kể hẹn giờ) tự bỏ
 let prevFocus: HistEvent | null = null; // trò chơi: sự kiện tour đang đứng (vùng sáng), trả lại khi đóng
+let back: { id: string; tab: 'x' | 'v' | 'm' | 's' } | null = null; // mở từ trang sự kiện: Đóng / Back trở lại đúng trang, đúng thẻ
 
 export function replayEvent(id: string): void {
   const v = allEv().find(x => x.id === id), fr = v && sceneFrame(v);
   if (!v || !fr || !canReplay(v)) return;
   const t = ++tok, wrap = document.getElementById('mapwrap')!, again = !!document.getElementById('replb');
+  if (!again) {
+    const sel = document.querySelector<HTMLElement>('#layer .ov #et [aria-selected="true"]');
+    back = sel ? { id, tab: (sel.dataset.k as 'x' | 'v' | 'm' | 's') || 'x' } : null;
+  }
   hush();
   clearLayer();
   if (!isPlay()) { S.year = v.y; rt.focusEv = v; save(); renderMain(); } // như "Đến sự kiện" của trang nguồn
@@ -70,7 +76,12 @@ export function closeReplay(resume = true): void {
   endScene();
   if (isPlay()) { if (prevFocus) rt.focusEv = prevFocus; prevFocus = null; paintMap(true); } // biên giới, vùng sáng của năm đang chơi
   else renderMain();
-  if (resume) resumeTour('overlay'); // tour trò chơi tạm dừng khi mở trang sự kiện thì đi tiếp
+  const b = back;
+  back = null;
+  // người dùng đóng (Đóng / Back): về lại trang sự kiện đã mở phần xem lại, đúng thẻ đang xem; tour (nếu có) vẫn chờ
+  // trang đó đóng mới đi tiếp. Không mở từ trang sự kiện: tour trò chơi tạm dừng thì đi tiếp.
+  if (resume && b) openEvent(b.id, b.tab);
+  else if (resume) resumeTour('overlay');
 }
 
 on('replay', el => replayEvent(el.dataset.id!));

@@ -105,7 +105,10 @@ const resRow = () => RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[
 
 /** Mọi quyết định trên thẻ đã xong: nút tiếp tục, mở khoá đóng thẻ, vẽ lại màn chính. */
 function finish(d: HTMLElement, v: HistEvent, inTour: boolean): void {
-  d.querySelector('.sheet')!.insertAdjacentHTML('beforeend', `<div style="height:14px"></div><button class="btn" data-a="close-card">${inTour || rt.flowTo ? 'Tiếp tục ▶' : 'Tiếp tục'}</button>`);
+  // kết cục vừa chọn làm mô tả cho nút tiếp tục, và tiêu điểm chuyển tới nút đó (không rơi về <body> khi lựa chọn bị khoá)
+  const outs = [...d.querySelectorAll<HTMLElement>('.opt.sel .out')].map((p, i) => { p.id ||= `cout-${v.id}-${i}`; return p.id; });
+  d.querySelector('.sheet')!.insertAdjacentHTML('beforeend', `<div style="height:14px"></div><button class="btn" data-a="close-card"${outs.length ? ` aria-describedby="${outs.join(' ')}"` : ''}>${inTour || rt.flowTo ? 'Tiếp tục ▶' : 'Tiếp tục'}</button>`);
+  d.querySelector<HTMLElement>('.btn[data-a="close-card"]')?.focus({ preventScroll: true });
   delete d.dataset.lock;
   if (rt.card?.id === v.id) rt.card = null;
   renderMain();

@@ -204,6 +204,7 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await page.locator('#cgo').click();
   await expect(page.locator('.scrim .opt').first()).toBeDisabled();
   await expect(page.locator('.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('button', { name: 'Tiếp tục ▶' })).toBeFocused(); // focus moves on, not to <body>
   await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
   // the tour goes on by itself: progress advances past 1/n, no Play press needed
   await expect(page.locator('#tourb')).toBeVisible();
@@ -282,6 +283,9 @@ test('an event page replays its battle scene; Back closes the replay without lea
   await expect(page.locator('#replb')).toHaveCount(0);
   expect(page.url()).toContain('localhost');
   await expect(page.locator('#mapwrap.tilt')).toHaveCount(0);
+  await expect(page.locator('.ov .hero .hplay')).toBeVisible(); // back on the event page the replay came from
+  await page.goBack();
+  await expect(page.locator('.ov')).toHaveCount(0);
   // again: the replay restarts from the first beat, and Đóng closes it
   await page.locator('#goto-dbp').click();
   await page.locator('.ov .hero .hplay').click();

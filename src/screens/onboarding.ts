@@ -84,7 +84,7 @@ export function gameIntro(): void {
 function surnamePicker(): string {
   const k = S.surname;
   return `<div class="homes" id="snm">${SURNAMES.map(s => `<button class="chip${k === s.key ? ' on' : ''}" data-a="surname" data-k="${s.key}" aria-pressed="${k === s.key}">${esc(s.names.join(' / '))}</button>`).join('')}<button class="chip${!k ? ' on' : ''}" data-a="surname" data-k="" aria-pressed="${!k}">Họ khác…</button></div>
-  <div id="slore">${loreBox(k)}</div>`;
+  <div id="slore" aria-live="polite">${loreBox(k)}</div>`;
 }
 function loreBox(k: string): string {
   const l = loreOf(k);

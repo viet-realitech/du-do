@@ -54,7 +54,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   <h1 style="margin:8px 0 6px;font-size:30px">${esc(v.t)}</h1>
   <div class="muted" style="font-style:italic;font-size:16px">${esc(v.p)}</div>
   <div class="dbl"></div>
-  <div class="seg" id="et" role="tablist">${TABS.map(([k, l]) => `<button role="tab" data-k="${k}" aria-selected="${k === tab}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>
+  <div class="seg" id="et" role="tablist">${TABS.map(([k, l]) => `<button role="tab" id="et-${k}" data-k="${k}" aria-controls="eb" aria-selected="${k === tab}" tabindex="${k === tab ? 0 : -1}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>
   <div id="eb" style="margin-top:16px" role="tabpanel"></div></div>`;
 
   const body = (k: Tab): string => {
@@ -80,11 +80,22 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   };
   const show = (k: Tab) => {
     $('#eb')!.innerHTML = body(k);
-    layer.querySelectorAll<HTMLElement>('#et button').forEach(b => { const o = b.dataset.k === k; b.classList.toggle('on', o); b.setAttribute('aria-selected', String(o)); });
+    layer.querySelectorAll<HTMLElement>('#et button').forEach(b => { const o = b.dataset.k === k; b.classList.toggle('on', o); b.setAttribute('aria-selected', String(o)); b.tabIndex = o ? 0 : -1; });
+    $('#eb')!.setAttribute('aria-labelledby', 'et-' + k);
     if (k === 'x') cachedWiki(v.id)?.then(w => { if (w && w.media.length) fillStrip(v, w); });
     if (k === 'm') mediaTab(v);
   };
   layer.querySelectorAll<HTMLElement>('#et button').forEach(b => (b.onclick = () => show(b.dataset.k as Tab)));
+  // bàn phím: một điểm dừng Tab cho cả dải thẻ, ←/→ (Home/End) chuyển thẻ và mở luôn
+  layer.querySelector<HTMLElement>('#et')!.addEventListener('keydown', ev => {
+    const bs = [...layer.querySelectorAll<HTMLElement>('#et button')], i = bs.indexOf(ev.target as HTMLElement);
+    if (i < 0) return;
+    const j = ev.key === 'ArrowRight' ? (i + 1) % bs.length : ev.key === 'ArrowLeft' ? (i - 1 + bs.length) % bs.length : ev.key === 'Home' ? 0 : ev.key === 'End' ? bs.length - 1 : -1;
+    if (j < 0) return;
+    ev.preventDefault();
+    bs[j].focus();
+    show(bs[j].dataset.k as Tab);
+  });
   show(tab);
   loadHero(v);
 }
