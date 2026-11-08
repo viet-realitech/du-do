@@ -4,7 +4,7 @@ import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
-import { $, esc, sheet, clearLayer, ghost, calm } from '../ui/dom';
+import { $, esc, sheet, clearLayer, ghost, calm, announce } from '../ui/dom';
 import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
@@ -119,6 +119,7 @@ function choice(e: Era, quiet: boolean): void {
     d.querySelector('#lst')?.remove();
     d.querySelectorAll<HTMLButtonElement>('.opt').forEach((b, i) => { b.disabled = false; b.style.animationDelay = `${i * 90}ms`; b.classList.add('in'); });
     if (had) d.querySelector<HTMLElement>('.opt')?.focus({ preventScroll: true });
+    else announce('Lời dẫn đã xong, có thể chọn hướng.'); // trình đọc màn hình: các lựa chọn vừa mở khoá
     SND.tick();
   };
   const say = setTimeout(() => {

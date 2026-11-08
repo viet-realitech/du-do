@@ -5,7 +5,7 @@ import { EV, EVFIG, FIG, P, SRC } from '../data';
 import { S, save, rt, allEv, evEra, chYear, curPick, figOpen } from '../state';
 import { av } from '../ui/bits';
 import { on } from '../ui/actions';
-import { $, esc, layer, clearLayer } from '../ui/dom';
+import { $, esc, layer, clearLayer, remember } from '../ui/dom';
 import { checkBadges } from '../badges';
 import { hush, speak } from '../narration';
 import { evKey, evSpeechFull } from '../speech';
@@ -37,6 +37,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
     const fig = [...layer.querySelectorAll<HTMLElement>(':scope > .scrim[data-fig]')].pop()?.dataset.fig;
     ret = t !== 'map' || fig ? { tab: t, fig } : null;
   }
+  const who = document.activeElement; // đóng trang thì tiêu điểm về nút đã mở nó
   if (document.getElementById('replb')) closeReplay(false); // đang xem lại diễn biến: dừng hẳn trước khi mở trang
   if (isTouring()) pauseTour('overlay'); else stopTour(); // đóng trang thì tour chạy tiếp từ đúng bước này (cả Đọc sử)
   hidePop();
@@ -52,6 +53,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
      ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:16px;margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
      <p class="muted" style="font-size:14px;margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
      ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}</div>`;
+    pageFocus(who);
     return;
   }
 
@@ -107,6 +109,14 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   });
   show(tab);
   loadHero(v);
+  pageFocus(who);
+}
+/** Trang sự kiện vừa mở: tiêu điểm lên tiêu đề (trình đọc đọc tên sự kiện), nhớ nút đã mở để đóng thì trả về. */
+function pageFocus(who: Element | null): void {
+  const ov = layer.querySelector<HTMLElement>(':scope > .ov'), h1 = ov?.querySelector<HTMLElement>('h1');
+  if (!ov) return;
+  remember(ov, who);
+  if (h1) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
 }
 
 /** Header image: first media item that actually loads; otherwise keep the placeholder. */

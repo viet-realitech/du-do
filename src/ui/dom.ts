@@ -11,7 +11,13 @@ export const layer = document.getElementById('layer')!;
    màn hình không đọc lẫn (trước đây Tab đi vào bản đồ, các nút ẩn sau bảng). Bảng Nhân vật / Sử liệu / Hồ sơ
    (.pane) không phủ thanh thẻ nên không tính. */
 const mainEl = document.getElementById('main');
-if (mainEl) new MutationObserver(() => {
+/** Nút đã mở một bảng / trang (để đóng xong trả tiêu điểm về đó). */
+const invoker = new WeakMap<Element, HTMLElement>();
+export function remember(el: Element, who: Element | null = document.activeElement): void {
+  if (who instanceof HTMLElement && who !== document.body && !el.contains(who)) invoker.set(el, who);
+}
+if (mainEl) new MutationObserver(recs => {
+  const back = recs.flatMap(r => [...r.removedNodes]).map(n => invoker.get(n as Element)).filter((x): x is HTMLElement => !!x).pop();
   mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov');
   // bảng Nhân vật / Sử liệu / Hồ sơ phủ bản đồ: chỉ thanh tab còn dùng được, phần dưới bảng (dòng thời gian, nút zoom…) không nhận tiêu điểm
   const pane = !!layer.querySelector(':scope > .pane');
@@ -20,8 +26,10 @@ if (mainEl) new MutationObserver(() => {
   requestAnimationFrame(() => {
     const a = document.activeElement;
     if (a && a !== document.body && a.isConnected) return;
+    // nút đã mở bảng vừa đóng (vd. thẻ dưới bản đồ, nhân vật trong danh sách), nếu còn và không bị che
+    if (back && back.isConnected && !back.closest('[inert]')) { back.focus({ preventScroll: true }); return; }
     if (layer.querySelector(':scope > .scrim, :scope > .ov, :scope > .pane')) return;
-    document.querySelector<HTMLElement>('#tourb [data-t=next], #tourb [data-t=resume], #replb [data-t=again], #play')?.focus({ preventScroll: true });
+    document.querySelector<HTMLElement>('#tourb [data-t=next], #tourb [data-t=resume], #replb [data-t=again], #card .c, #play')?.focus({ preventScroll: true });
   });
 }).observe(layer, { childList: true });
 
@@ -76,6 +84,7 @@ export function sheet(html: string, dismiss = false): HTMLElement {
   // Sheet replacing a sheet: the old one just dissolves and the backdrop stays put.
   const swap = [...app.querySelectorAll('.exiting')].filter(g => g.querySelector(':scope > .scrim'));
   if (swap.length) { swap.forEach(g => g.classList.add('swap')); d.classList.add('cont'); }
+  remember(d);
   layer.appendChild(d);
   const sh = d.querySelector<HTMLElement>('.sheet')!, h = sh.querySelector('h2');
   if (h) { h.id ||= 'sh-' + Math.random().toString(36).slice(2, 8); sh.setAttribute('aria-labelledby', h.id); }
@@ -86,4 +95,13 @@ export function sheet(html: string, dismiss = false): HTMLElement {
   s.tabIndex = -1;
   s.focus({ preventScroll: true });
   return d;
+}
+
+/** Thông báo lịch sự cho trình đọc màn hình (vùng ẩn có sẵn trước khi điền, để được đọc). */
+export function announce(t: string): void {
+  let n = document.getElementById('tourlive');
+  if (!n) { n = document.createElement('div'); n.id = 'tourlive'; n.className = 'sr'; n.setAttribute('aria-live', 'polite'); app.appendChild(n); }
+  const box = n;
+  box.textContent = '';
+  setTimeout(() => { box.textContent = t; }, 120);
 }

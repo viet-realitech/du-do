@@ -141,6 +141,26 @@ test('reading mode never forces a side: the turning point can wait, tours run wi
   expect(errors).toEqual([]);
 });
 
+test('keyboard: the side card keeps focus across ‹ ›, an event page focuses its title and Escape returns to the card', async ({ page }) => {
+  const errors = await boot(page, midGame);
+  const next = page.locator('#card [data-a=step][data-d="1"]');
+  await next.focus();
+  const t0 = await page.locator('#card .t').textContent();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#card .t')).not.toHaveText(t0!);
+  await expect(page.locator('#card [data-a=step][data-d="1"]')).toBeFocused();
+  const t1 = await page.locator('#card .t').textContent();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#card .t')).not.toHaveText(t1!);
+  await page.locator('#card .c').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.ov h1')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.ov')).toHaveCount(0);
+  await expect(page.locator('#card .c')).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)

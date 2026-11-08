@@ -3,7 +3,7 @@ import { openCard } from './screens/card';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, evEra, allEv, setFocus } from './state';
-import { $ } from './ui/dom';
+import { $, announce } from './ui/dom';
 import { SND } from './audio';
 import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
@@ -230,16 +230,8 @@ export function stopTour(): void {
 }
 
 /** Trình đọc màn hình: báo bước tour mới (vùng ẩn, lịch sự, không chen lời đọc). */
-const live0 = (): HTMLElement => {
-  let n = document.getElementById('tourlive');
-  if (!n) { n = document.createElement('div'); n.id = 'tourlive'; n.className = 'sr'; n.setAttribute('aria-live', 'polite'); document.getElementById('app')!.appendChild(n); }
-  return n;
-};
-function announce(t: string): void {
-  const n = live0();
-  n.textContent = '';
-  setTimeout(() => { n.textContent = t; }, 120); // vùng thông báo phải có sẵn (rỗng) trước khi điền thì trình đọc mới đọc
-}
+/** Tạo sẵn vùng thông báo (rỗng) trước bước đầu tiên, để thông báo đầu không bị trình đọc bỏ qua. */
+const live0 = (): void => { if (!document.getElementById('tourlive')) announce(''); };
 
 /** "Điểm rẽ ›": Đọc sử thì tới điểm rẽ ngay. Trò chơi còn sự kiện dòng họ phải quyết định thì không bật thẻ liền
     nhau: tour chỉ giữ các bước đó, mỗi bước vẫn bay tới nơi xảy ra rồi mở thẻ (thanh tour báo còn mấy quyết định). */
