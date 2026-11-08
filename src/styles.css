@@ -61,6 +61,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 
 .mono { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase }
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0 }
 .muted { color: var(--ink2) }
 
 /* main map screen */
@@ -618,10 +619,11 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .cine.film .stage, .cine.film .scene-s { position: absolute; inset: 0; display: grid; place-items: center }
 .cine.film .scene-s { animation: fadein .7s both }
 .cine.film .scene-s.gone { animation: fadeout .7s both }
-.cine.film .prog { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 12px; right: 56px; z-index: 5; display: flex; gap: 4px }
+.cine.film .prog { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 12px; right: 100px; z-index: 5; display: flex; gap: 4px }
 .cine.film .prog i { flex: 1; height: 3px; background: rgba(255, 255, 255, .25); border-radius: 2px; overflow: hidden }
 .cine.film .prog b { display: block; height: 100%; width: 0; background: #e8c46a }
 .cine.film .x { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 2px); right: 10px; z-index: 6; width: 40px; height: 40px; color: #f3ecdc; font-size: 20px }
+.cine.film .pz { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 2px); right: 52px; z-index: 6; width: 40px; height: 40px; color: #f3ecdc; font-size: 14px; letter-spacing: -.1em }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
 @keyframes fadeout { from { opacity: 1 } to { opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .cine-img img, .cine-img.old::before { animation: none } .cine-t .mono, .cine-t h1, .cine-t h2, .cine-t p { animation-duration: .01s } }

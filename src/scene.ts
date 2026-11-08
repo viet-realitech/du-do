@@ -52,6 +52,7 @@ const PIECE = 1.35;
 const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 40, 30, 90], naval: [25, 70, 25], landing: [30, 50, 60], uprising: [10, 110, 10, 110, 10], air: [18] };
 
 /** Tít mở trận: tên trận, thời gian, nơi, các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
+const TTL_AT = 550;
 function titleCard(r: Run, v: HistEvent, sc: Scene): void {
   const wrap = document.getElementById('mapwrap');
   if (!wrap) return;
@@ -60,12 +61,11 @@ function titleCard(r: Run, v: HistEvent, sc: Scene): void {
   card.className = 'ttl';
   card.setAttribute('aria-hidden', 'true'); // thẻ dưới bản đồ đã có tên trận cho trình đọc màn hình
   card.innerHTML = `<div class="mono">Trận đánh · ${esc(v.d)}</div><h2>${esc(v.t)}</h2>${v.p ? `<p>${esc(v.p)}</p>` : ''}<div class="sides">${sides.map(sd => `<span><i style="--c:${SIDE_COLOR[sd] || '#f1e6c8'}"></i>${esc(sideName(sd, v.y))}</span>`).join('')}</div>`;
-  wrap.appendChild(card);
   wrap.classList.add('scn');
-  r.ttl = card;
-  requestAnimationFrame(() => card.classList.add('on'));
-  later(r, 2200, () => card.classList.add('out'));
-  later(r, 2700, () => {
+  // thẻ tên trận hiện khi bản đồ đã bay gần tới nơi (không đè lên nơi cũ), tắt trước mũi tên đầu tiên
+  later(r, TTL_AT, () => { wrap.appendChild(card); r.ttl = card; requestAnimationFrame(() => card.classList.add('on')); });
+  later(r, TTL_AT + 1750, () => card.classList.add('out'));
+  later(r, TTL_AT + 2250, () => {
     card.remove();
     r.ttl = null;
     const sl = document.createElement('div');
@@ -699,6 +699,7 @@ export const sceneHold = (v: HistEvent): number => Math.min(24000, Math.max(6500
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
 export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void): void {
   endScene();
+  document.querySelectorAll('#mapwrap .lt.out').forEach(n => n.remove()); // phụ đề cảnh trước: gỡ ngay, không mờ dần dưới cảnh mới
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
   const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd };

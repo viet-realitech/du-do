@@ -136,6 +136,9 @@ function renderScrub(): void {
   t.querySelectorAll<HTMLElement>('.sg').forEach(n => { const id = n.dataset.e!; n.className = 'sg' + (id === ce ? ' cur' : S.picks[id] ? ' done' : ''); });
   t.querySelectorAll<HTMLElement>('.cp').forEach(n => { const id = n.dataset.e!; n.className = 'cp' + (S.picks[id] ? ' done' : rt.gate?.id === id ? ' pend' : ''); });
   $('#thumb')!.style.left = pct(S.year) + '%';
+  const tl = $('#tl')!;
+  tl.setAttribute('aria-valuenow', String(S.year));
+  tl.setAttribute('aria-valuetext', `Năm ${S.year}, chương ${eraOf(S.year).n}`);
 }
 
 const pendingGate = (y: number): Era | undefined => ERAS.find(e => !S.picks[e.id] && e.cy <= y);
@@ -195,6 +198,24 @@ export function initTimeline(): void {
   };
   sc.addEventListener('pointerup', up);
   sc.addEventListener('pointercancel', up);
+  // bàn phím: thanh trượt năm (←/→ một năm, PageUp/PageDown mười năm, Home/End hai đầu); dừng ở điểm rẽ / thẻ như khi kéo
+  sc.tabIndex = 0;
+  sc.setAttribute('role', 'slider');
+  sc.setAttribute('aria-label', 'Dòng thời gian');
+  sc.setAttribute('aria-valuemin', String(Y0));
+  sc.setAttribute('aria-valuemax', String(Y1));
+  sc.addEventListener('keydown', ev => {
+    const d: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 };
+    let y: number | null = null;
+    if (ev.key in d) y = S.year + d[ev.key]; else if (ev.key === 'Home') y = Y0; else if (ev.key === 'End') y = Y1;
+    if (y === null) return;
+    ev.preventDefault();
+    stopTour();
+    target = Math.max(Y0, Math.min(Y1, y));
+    drag = true;
+    setYear(target);
+    up();
+  });
 }
 
 /* ---------- event-type filter ---------- */

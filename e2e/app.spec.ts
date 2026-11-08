@@ -66,6 +66,17 @@ test('reading mode: the timeline moves freely past unchosen turning points; the 
   await page.mouse.click(trk.x + ((1960 - 1858) / (2026 - 1858)) * trk.width, trk.y + trk.height / 2);
   await expect(page.locator('#yr')).toHaveText(/196[01]/);
   await expect(page.locator('#layer .scrim')).toHaveCount(0); // no quiz, no forced turning point
+  // the timeline is a keyboard slider too: ←/→ one year, PageUp ten
+  const tl = page.locator('#tl');
+  await tl.focus();
+  const y0 = Number(await tl.getAttribute('aria-valuenow'));
+  await page.keyboard.press('ArrowRight');
+  await expect(tl).toHaveAttribute('aria-valuenow', String(y0 + 1));
+  await page.keyboard.press('PageUp');
+  await expect(page.locator('#yr')).toHaveText(String(y0 + 11));
+  await page.keyboard.press('PageDown');
+  await page.keyboard.press('ArrowLeft');
+  await expect(tl).toHaveAttribute('aria-valuenow', String(y0));
   await expect(page.locator('#eraR')).toHaveText('◆ Chọn hướng');
   await page.locator('#eraR').click();
   await expect(page.locator('#layer .scrim .opt').first()).toBeVisible({ timeout: 8000 }); // the chapter's own choice, no quiz first
@@ -222,6 +233,15 @@ test('reaching the present opens the last quiz, then the ending', async ({ page 
   await expect(page.locator('.cine.film')).toHaveCount(0);
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
+  // the film can be held on a slide (Space or ❚❚) and resumed
+  const pz = page.locator('.cine.film .pz');
+  await pz.click();
+  await expect(pz).toHaveAttribute('aria-pressed', 'true');
+  const w = await page.locator('.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width);
+  await page.waitForTimeout(600);
+  expect(await page.locator('.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width)).toBeCloseTo(w, 0);
+  await pz.click();
+  await expect(pz).toHaveAttribute('aria-label', 'Tạm dừng');
   await page.locator('.cine.film .x').click();
   await expect(page.locator('.cine.film')).toHaveCount(0);
   // starting over asks first; Huỷ keeps the ending

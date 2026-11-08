@@ -192,8 +192,8 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   let sync = true;
   const spoke = speak(outSpeech(o.out), () => { if (!sync && armed) setTimeout(go, 700); }, false, outKey(o.id)); // giọng thu sẵn (như lời dẫn điểm rẽ)
   sync = false;
-  const ms = spoke ? Math.max(6000, o.out.length * 95) : Math.max(5000, 3000 + o.out.length * 60);
-  bar.style.animationDuration = ms + 'ms';
+  const ms = spoke ? Math.max(6000, o.out.length * 95) : Math.max(7000, 4500 + o.out.length * 80); // tự đọc: đủ chậm
+  bar.style.setProperty('animation-duration', ms + 'ms', 'important'); // giảm chuyển động vẫn thấy thanh đếm (không phải hiệu ứng bay)
   setTimeout(go, ms + (spoke ? 4000 : 0)); // bảo hiểm khi lời đọc bị cắt giữa chừng
   // Người chơi đang đọc hay chạm vào bảng (nhân vật, cuộn): dừng đếm, để họ tự bấm. Chạm nút ▶ thì đếm cũng vô hiệu.
   const disarm = () => { if (!armed) return; armed = false; hush(); bar.remove(); };
@@ -206,6 +206,7 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   d.querySelector('.sheet')!.addEventListener('pointerdown', ev => { if (!(ev.target as Element).closest('.btn.go')) disarm(); }, true);
   // bàn phím / trình đọc màn hình: di chuyển trong bảng (Tab, mũi tên) cũng là đang đọc → không tự chuyển
   d.addEventListener('keydown', ev => { if (ev.key !== 'Enter' && ev.key !== ' ') disarm(); });
+  d.addEventListener('focusin', ev => { const t = ev.target as Element; if (t.matches('.scrim, .sheet') || t.closest('.btn.go')) return; disarm(); }); // Tab tới nhân vật, nhật ký (bảng tự nhận tiêu điểm lúc mở thì không tính)
 }
 
 on('watch', el => { clearLayer(); renderMain(); checkBadges(); startTour(ERAS.find(x => x.id === el.dataset.e)); });

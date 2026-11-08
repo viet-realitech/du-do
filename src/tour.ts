@@ -94,6 +94,7 @@ function tourStep(): void {
     rt.focusEv = v;
     tour!.cur = v.id;
     renderMain();
+    announce(`Chương ${tour!.e.n}, ${tour!.i + 1} trên ${tour!.L.length}: ${v.t}, ${v.y}`);
     const fr = sceneFrame(v);
     if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH()); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân, chừa phụ đề
     SND.fly();
@@ -204,7 +205,14 @@ export function stopTour(): void {
   }
   $('#tourb')?.remove();
   const p = $('#play');
-  if (p) p.textContent = '▶';
+  if (p) { p.textContent = '▶'; p.setAttribute('aria-label', 'Chạy chương này'); }
+}
+
+/** Trình đọc màn hình: báo bước tour mới (vùng ẩn, lịch sự, không chen lời đọc). */
+function announce(t: string): void {
+  let n = document.getElementById('tourlive');
+  if (!n) { n = document.createElement('div'); n.id = 'tourlive'; n.className = 'sr'; n.setAttribute('aria-live', 'polite'); document.getElementById('app')!.appendChild(n); }
+  n.textContent = t;
 }
 
 /** "Điểm rẽ ›": Đọc sử thì tới điểm rẽ ngay. Trò chơi còn sự kiện dòng họ phải quyết định thì không bật thẻ liền
@@ -273,7 +281,9 @@ function tourBar(): void {
   b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định · Chương ${e.n}` : `${at}/${n} · Chương ${e.n}`}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
     ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Sự kiện kế tiếp" title="Sự kiện kế tiếp">›</button>'}${tour.rush ? '' : '<button class="chip" data-t="skip">Điểm rẽ ›</button>'}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
   if (fk) (b.querySelector<HTMLElement>(`[data-t="${fk}"]`) || b.querySelector<HTMLElement>(fk === 'next' ? '[data-t=resume]' : '[data-t=stop]'))?.focus({ preventScroll: true });
-  $('#play')!.textContent = paused && paused !== 'card' ? '▶' : '❚❚';
+  const pb = $('#play')!;
+  pb.textContent = paused && paused !== 'card' ? '▶' : '❚❚';
+  pb.setAttribute('aria-label', paused === 'card' ? 'Đang chờ quyết định' : paused ? 'Chạy tiếp chương' : 'Tạm dừng chương');
 }
 
 /** Trò chơi: còn gì để tự chạy tiếp từ năm hiện tại (nút ▶ nhấp nháy sau khi dừng / tải lại). */

@@ -122,14 +122,27 @@ export function montage(): void {
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-modal', 'true');
   box.setAttribute('aria-label', 'Phim hành trình');
-  box.innerHTML = `<div class="prog">${list.map(() => '<i><b></b></i>').join('')}<i><b></b></i></div><div class="stage"></div>
-  <button class="x" aria-label="Đóng">✕</button>`;
+  box.innerHTML = `<div class="prog">${list.map(() => '<i><b></b></i>').join('')}<i><b></b></i></div><div class="stage" aria-live="polite"></div>
+  <button class="x" aria-label="Đóng">✕</button><button class="pz" aria-label="Tạm dừng" aria-pressed="false">❚❚</button>`;
   document.body.appendChild(box);
   mood('finale');
   requestAnimationFrame(() => box.classList.add('on'));
   const stage = box.querySelector<HTMLElement>('.stage')!, bars = [...box.querySelectorAll<HTMLElement>('.prog b')];
   const per = calm.matches ? 7000 : 5200;
-  let i = -1, seq = 0, timer = 0, closed = false;
+  let i = -1, seq = 0, timer = 0, closed = false, paused = false;
+  const pz = box.querySelector<HTMLButtonElement>('.pz')!;
+  /** Tạm dừng: đứng ở cảnh này (thanh tiến độ, lời thuyết minh dừng); chạy tiếp: kể lại cảnh này từ đầu. */
+  const toggle = () => {
+    paused = !paused;
+    pz.textContent = paused ? '▶' : '❚❚';
+    pz.setAttribute('aria-label', paused ? 'Chạy tiếp' : 'Tạm dừng');
+    pz.setAttribute('aria-pressed', String(paused));
+    if (paused) {
+      seq++; clearTimeout(timer); hush();
+      const b = bars[i];
+      if (b) { const w = b.parentElement!.getBoundingClientRect().width || 1; b.style.setProperty('transition', 'none', 'important'); b.style.width = `${(b.getBoundingClientRect().width / w) * 100}%`; }
+    } else void show(i);
+  };
   const back = document.activeElement as HTMLElement | null;
   const close = () => {
     if (closed) return;
@@ -144,7 +157,10 @@ export function montage(): void {
     mood(document.querySelector('#layer .ov') ? 'finale' : 'calm'); // phim mở từ màn kết: trả lại nhạc của màn kết
   };
   // Escape / Back do history.ts xử lý (bấm ✕); ở đây chỉ còn phím mũi tên
-  const key = (ev: KeyboardEvent) => { if (ev.key === 'ArrowRight') void show(i + 1); else if (ev.key === 'ArrowLeft') void show(i - 1); };
+  const key = (ev: KeyboardEvent) => {
+    if (ev.key === 'ArrowRight') void show(i + 1); else if (ev.key === 'ArrowLeft') void show(i - 1);
+    else if (ev.key === ' ' && !(ev.target as Element).closest?.('button')) { ev.preventDefault(); toggle(); }
+  };
   addEventListener('keydown', key);
   app.inert = true;
   box.querySelector<HTMLElement>('.x')!.focus({ preventScroll: true });
@@ -153,10 +169,11 @@ export function montage(): void {
   const fill = (j: number, ms: number, to = 100) => {
     const b = bars[j], w = b.parentElement!.getBoundingClientRect().width || 1;
     const now = Math.min(100, (b.getBoundingClientRect().width / w) * 100);
-    b.style.transition = 'none';
+    b.style.setProperty('transition', 'none', 'important');
     b.style.width = `${now}%`;
     void b.offsetWidth;
-    b.style.transition = `width ${Math.max(0, Math.round(ms))}ms linear`;
+    // !important: giảm chuyển động vẫn thấy thanh tiến độ chạy (thước đo thời gian, không phải hiệu ứng)
+    b.style.setProperty('transition', `width ${Math.max(0, Math.round(ms))}ms linear`, 'important');
     b.style.width = `${to}%`;
   };
   /** Thuyết minh bằng bản thu (giọng Thanh Bình) nếu có; xong thì sang cảnh. Không có bản thu: chỉ chữ, theo nhịp `wait`.
@@ -192,10 +209,11 @@ export function montage(): void {
     if (j < 0) j = 0;
     if (j > list.length) { close(); return; }
     i = j;
+    if (paused) { paused = false; pz.textContent = '❚❚'; pz.setAttribute('aria-label', 'Tạm dừng'); pz.setAttribute('aria-pressed', 'false'); }
     const me = ++seq;
     clearTimeout(timer);
     hush();
-    bars.forEach((b, k) => { b.style.transition = 'none'; b.style.width = k < j ? '100%' : '0%'; });
+    bars.forEach((b, k) => { b.style.setProperty('transition', 'none', 'important'); b.style.width = k < j ? '100%' : '0%'; });
     SND.page();
     let html: string;
     if (j < list.length) {
@@ -224,8 +242,10 @@ export function montage(): void {
   };
   box.onclick = ev => {
     const t = ev.target as HTMLElement;
+    if (t.closest('.pz')) { toggle(); return; }
     if (t.closest('.x')) { close(); return; }
-    void show(ev.clientX < innerWidth / 3 ? i - 1 : i + 1);
+    // chạm trái: lùi; chạm phải: sang; chạm giữa: tạm dừng / chạy tiếp
+    if (ev.clientX < innerWidth / 3) void show(i - 1); else if (ev.clientX > (innerWidth * 2) / 3) void show(i + 1); else toggle();
   };
   void show(0);
 }
