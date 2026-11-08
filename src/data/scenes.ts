@@ -50,7 +50,7 @@ export function sideName(side: string, y: number): string {
 }
 
 export const SCENES: Record<string, Scene> = {
-  dn58: { type: "landing", arrows: [[[108.33, 16.28], [108.27, 16.14], "phap", "Ba chiến hạm nã pháo các đồn trên bán đảo Sơn Trà"], [[108.22, 16.29], [108.22, 16.1], "phap", "Cánh thứ hai áp sát cửa sông Hàn, bắn đồn Đông, đồn Tây", { at: 'cửa sông Hàn' }], [[108.17, 16.18], [108.24, 16.09], "es", "Quân Tây Ban Nha – Philippines cùng đổ bộ Sơn Trà (2.9)"]],
+  dn58: { type: "landing", arrows: [[[108.33, 16.28], [108.27, 16.14], "phap", "Chiến hạm Pháp mở màn, nã pháo các đồn trên bán đảo Sơn Trà", { at: "Sơn Trà" }], [[108.22, 16.29], [108.22, 16.1], "phap", "Cánh thứ hai áp sát cửa sông Hàn, bắn đồn Đông, đồn Tây", { at: 'cửa sông Hàn' }], [[108.17, 16.18], [108.24, 16.09], "es", "Quân Tây Ban Nha – Philippines cùng đổ bộ Sơn Trà (2.9)"]],
     hold: [[108.22, 16.07, "dainam"], [108.24, 16.08, "dainam"], [108.2, 16.04, "dainam"]], end: { date: '' } /* liên quân bị cầm chân tới 1860: không đóng dấu ngày */ },
   gd59: { type: "siege", arrows: [[[106.99, 10.44], [106.75, 10.69], "phap", "Hạm đội ngược sông Lòng Tàu, phá sáu đồn ven sông"], [[106.78, 10.7], [106.71, 10.76], "es", "Quân Tây Ban Nha chiếm hai đồn phía nam (16.2)"], [[106.75, 10.72], [106.7, 10.78], "phap", "Thủy quân lục chiến đổ bộ, đánh thành (17.2)"]],
     hold: [[106.7, 10.78, "dainam"]], end: { fell: [0] } /* 'phá thành Gia Định' */ },
