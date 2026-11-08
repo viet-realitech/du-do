@@ -218,7 +218,7 @@ export function initMainControls(): void {
   });
   on('filt', (el, ev) => { ev.stopPropagation(); S.filt = el.dataset.k!; save(); setFocus(); $('#fmenu')?.remove(); renderMain(); });
   on('step', el => stepEv(+el.dataset.d!));
-  on('ev', el => openEvent(el.dataset.id!));
+  on('ev', el => openEvent(el.dataset.id!, (el.dataset.tab as 'x' | 'v' | 'm' | 's') || 'x')); // data-tab: mở thẳng một thẻ (Góc nhìn từ khép trận)
   on('fig', el => openFig(el.dataset.id!));
   on('end', () => (isPlay() ? endGame(ERAS[ERAS.length - 1]) : goEnd()));
   initTimeline();

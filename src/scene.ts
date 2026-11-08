@@ -15,7 +15,7 @@ import { speaking } from './narration';
 const NS = 'http://www.w3.org/2000/svg';
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 type Part = { t0: number; dur: number; step: (p: number) => void; done?: () => void };
-interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; len: number; t0: number; alive: boolean; onEnd?: () => void }
+interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; stamp?: HTMLElement | null; len: number; t0: number; alive: boolean; onEnd?: () => void }
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -76,10 +76,13 @@ function titleCard(r: Run, v: HistEvent, sc: Scene): void {
     r.slug = sl;
   });
 }
-/** Độ dài cảnh (ms từ lúc playScene) tới khi nhịp cuối đọc xong; 0 nếu không có nhịp. */
+/** Khép trận sau nhịp cuối: 0,6 s nghỉ rồi ~3 s cho dấu ngày và câu kết (chỉ trận đánh có sơ đồ). */
+const OUTRO_AT = 600, OUTRO = OUTRO_AT + 3000;
+const outro = (v: HistEvent) => (lead(v) ? OUTRO : 0);
+/** Độ dài cảnh (ms từ lúc playScene) tới khi nhịp cuối (và phần khép trận) xong; 0 nếu không có nhịp. */
 export function sceneLen(v: HistEvent): number {
   const b = beats(v);
-  return b.length ? 1250 + 120 + lead(v) + b.reduce((a, x) => a + x, 0) : 0;
+  return b.length ? 1250 + 120 + lead(v) + b.reduce((a, x) => a + x, 0) + outro(v) : 0;
 }
 /** Cảnh đang chạy còn bao lâu nữa mới đọc xong nhịp cuối (0 nếu không có cảnh). */
 export const sceneLeft = (): number => (cur && cur.alive ? Math.max(0, cur.len - (performance.now() - cur.t0)) : 0);
@@ -236,6 +239,47 @@ function contact(r: Run, root: SVGGElement, pA: [number, number], pB: [number, n
   }
 }
 
+interface HoldEl { g: SVGGElement; ring: SVGCircleElement; rect: SVGRectElement; side: string; p: [number, number]; stop: boolean }
+const sentences = (t: string) => (t.match(/.+?(?:[.!?…](?=\s|$)|$)/g) || []).map(x => x.trim()).filter(Boolean);
+/** Ngày kết thúc của khoảng thời gian ("13.3 – 7.5.1954" → "7.5.1954"). */
+const endOf = (d: string) => (/[–-]/.test(d) ? d.split(/\s*[–-]\s*/).pop()!.trim() : d);
+
+/** Khép trận: máy quay nâng lên, vị trí thất thủ xám lại (bị bỏ: mờ đi, viền chấm), dấu ngày kết thúc, câu kết
+    trích nguyên văn của sự kiện và lối vào "Góc nhìn". Không số thương vong, không tô màu bên thắng. */
+function outcome(r: Run, v: HistEvent, sc: Scene, hs: HoldEl[], parts: Element[][], k: number): void {
+  parts.forEach(ps => ps.forEach(e => { if (e.getAttribute('opacity') !== '0') e.setAttribute('opacity', '1'); }));
+  const wrap = document.getElementById('mapwrap'), m = document.getElementById('map'), end = sc.end || {};
+  if (!calm.matches && wrap?.classList.contains('tilt') && m) { m.style.transitionDuration = '2.4s'; wrap.style.setProperty('--rx', '31deg'); wrap.style.setProperty('--cs', '1.15'); } // máy quay nâng nhẹ
+  hs.forEach((hd, j) => {
+    hd.stop = true;
+    hd.ring.setAttribute('opacity', '0');
+    if (end.fell?.includes(j)) {
+      hd.rect.setAttribute('stroke', '#8f887c');
+      hd.rect.setAttribute('stroke-width', '1.6');
+      anim(r, 600, q => hd.rect.setAttribute('fill-opacity', String(1 - q)));
+      if (!calm.matches && r.root) for (let i = 0; i < 3; i++) {
+        const sm = el('circle', { cx: hd.p[0], cy: hd.p[1], r: 3 / k, fill: S.theme === 'night' ? 'url(#fx-puff-n)' : 'url(#fx-puff-d)', opacity: 0 }, r.root);
+        anim(r, 2600, q => { sm.setAttribute('r', String((3 + 7 * q) / k)); sm.setAttribute('cy', String(hd.p[1] - (14 * q) / k)); sm.setAttribute('opacity', String(0.6 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, i * 400, () => sm.remove());
+      }
+    } else if (end.left?.includes(j)) {
+      el('circle', { class: 'fx-left', r: 11, fill: 'none', stroke: SIDE_COLOR[hd.side] || '#fff', 'stroke-width': 1.2, 'stroke-dasharray': '2 2' }, hd.g);
+      anim(r, 600, q => hd.g.setAttribute('opacity', String(1 - 0.55 * q)));
+    }
+  });
+  if (wrap) {
+    const st = document.createElement('div');
+    st.className = 'endw';
+    st.setAttribute('aria-hidden', 'true');
+    st.innerHTML = `<span class="stamp">${esc(endOf(v.d))}</span>`;
+    wrap.appendChild(st);
+    r.stamp = st;
+  }
+  if (!speaking()) SND.stamp();
+  buzz([10, 30, 40]);
+  const lines = end.line || sentences(v.x || v.s).slice(0, 1);
+  caption(r, `<div class="lt-h mono"><b>Khép trận</b><button class="chip" data-a="ev" data-id="${v.id}" data-tab="v">Góc nhìn · ${v.v.length}</button></div><p>${esc(lines.join(' '))}</p>`, 'var(--ink3)', ' end');
+}
+
 function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const h = fxHost();
   if (!h || !r.root) return;
@@ -251,13 +295,15 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   // nhịp kể: mũi tên thứ i vẽ khi nhịp i bắt đầu, phụ đề đọc ghi chú của nó
   const bt = beats(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0), L0 = T0 + lead(v);
   const parts: Element[][] = [];
-  // vị trí được giữ: vòng sáng nhấp nháy suốt các nhịp
-  const ringDur = Math.max(5200, total + 1500);
+  // vị trí được giữ: vòng sáng nhấp nháy suốt các nhịp (tắt khi khép trận)
+  const ringDur = Math.max(2600, total + OUTRO_AT + 300), hs: HoldEl[] = [];
   for (const [lo, la, side] of sc?.hold || []) {
     const p = P([lo, la]), g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
     const ring = el('circle', { r: 9, fill: 'none', stroke: SIDE_COLOR[side] || '#fff', 'stroke-width': 2, opacity: 0 }, g);
-    el('rect', { x: -4, y: -4, width: 8, height: 8, transform: 'rotate(45)', fill: SIDE_COLOR[side] || '#fff', stroke: '#111', 'stroke-width': 1.2 }, g);
-    anim(r, ringDur, q => { const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
+    const rect = el('rect', { x: -4, y: -4, width: 8, height: 8, transform: 'rotate(45)', fill: SIDE_COLOR[side] || '#fff', stroke: '#111', 'stroke-width': 1.2 }, g);
+    const hd: HoldEl = { g, ring, rect, side, p, stop: false };
+    hs.push(hd);
+    anim(r, ringDur, q => { if (hd.stop) { ring.setAttribute('opacity', '0'); return; } const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
   }
   const bed = Math.max(5, Math.min(14, (L0 + total) / 1000)); // tiếng nền kéo suốt các nhịp
   if (type === 'land' || type === 'siege') WAR.rumble(bed, T0 / 1000);
@@ -368,9 +414,9 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
       for (const [x, y] of meets) if ((x === i || y === i) && arrived.has(x) && arrived.has(y)) contact(r, root, P(arrows[x][1]), P(arrows[y][1]), k, SIDE_COLOR[arrows[x][2]] || '#fff', SIDE_COLOR[arrows[y][2]] || '#fff', old);
     });
   });
-  if (arrows.length) {
-    later(r, L0 + total, () => closing(r, parts, [...arrows.map(x => x[2]), ...(sc?.hold || []).map(x => x[2])]));
-    r.len = 1250 + L0 + total;
+  if (arrows.length && sc) {
+    later(r, L0 + total + OUTRO_AT, () => outcome(r, v, sc, hs, parts, k));
+    r.len = 1250 + L0 + total + OUTRO;
   }
   if (!arrows.length) { // chưa có dữ liệu mũi tên: vài chớp lửa tại chỗ
     const p = h.proj(v.l);
@@ -635,7 +681,11 @@ export function endScene(instant = false): void {
   if (r.lt) { const b = r.lt; b.classList.add('out'); setTimeout(() => b.remove(), 320); }
   r.ttl?.remove();
   r.slug?.remove();
+  r.stamp?.remove();
   wrap?.classList.remove('scn');
+  wrap?.style.removeProperty('--rx');
+  wrap?.style.removeProperty('--cs');
+  if (m) m.style.transitionDuration = '';
   if (r.reel) { const b = r.reel; b.classList.remove('on'); b.querySelector('video')?.pause(); setTimeout(() => { const vd = b.querySelector('video'); if (vd) { vd.removeAttribute('src'); vd.load(); } b.remove(); }, 520); }
   const f = r.onEnd;
   r.onEnd = undefined;

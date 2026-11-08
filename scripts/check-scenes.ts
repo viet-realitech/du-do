@@ -2,6 +2,7 @@
    kiểm các cặp giáp chiến (`meet`) và vòng vây, thoát mã 1 nếu có lỗi. Chạy: npm run scenes */
 import { SCENES, actOf } from '../src/data/scenes';
 import { kindOf } from '../src/units';
+import { EV } from '../src/data';
 
 let err = 0;
 const kinds: Record<string, number> = {}, acts: Record<string, number> = {};
@@ -28,6 +29,19 @@ for (const [id, sc] of Object.entries(SCENES)) {
     if (t) { ringed.add(t.j); rings++; console.log(`vòng vây    ${id}: ${a[3]}`); }
   }
 }
+// khép trận: chỉ số trong hold, không vừa thất thủ vừa bị bỏ; câu kết phải trích nguyên văn s / x của sự kiện
+const sent = (t: string) => (t.match(/.+?(?:[.!?…](?=\s|$)|$)/g) || []).map(x => x.trim()).filter(Boolean);
+const ends: string[] = [];
+for (const [id, sc] of Object.entries(SCENES)) {
+  const v = EV.find(x => x.id === id), e = sc.end || {};
+  if (!v) { console.error(`LỖI ${id}: không có sự kiện`); err++; continue; }
+  for (const j of [...(e.fell || []), ...(e.left || [])]) if (!sc.hold[j]) { console.error(`LỖI ${id}: end chỉ số ${j} ngoài hold`); err++; }
+  for (const j of e.fell || []) if (e.left?.includes(j)) { console.error(`LỖI ${id}: vị trí ${j} vừa fell vừa left`); err++; }
+  for (const l of e.line || []) if (!v.s.includes(l) && !(v.x || '').includes(l)) { console.error(`LỖI ${id}: câu kết không có nguyên văn trong s / x: ${l}`); err++; }
+  const line = e.line ? e.line.join(' ') : sent(v.x || v.s)[0];
+  ends.push(`${id.padEnd(5)} | ${sc.hold.map(h => h[2]).join(',').padEnd(22)} | fell ${JSON.stringify(e.fell || [])} left ${JSON.stringify(e.left || [])} | ${line}`);
+}
 console.log('\n' + rows.join('\n'));
+console.log('\nKhép trận\n' + ends.join('\n'));
 console.log('\nquân cờ', JSON.stringify(kinds), '\nviệc', JSON.stringify(acts), `\n${contacts} cặp giáp chiến, ${rings} vòng vây`);
 if (err) { console.error(`${err} lỗi`); process.exit(1); }

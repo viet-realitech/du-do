@@ -215,8 +215,8 @@ test('an event page replays its battle scene; Back closes the replay without lea
   expect(errors).toEqual([]);
 });
 
-test('battle pieces follow the sources: a doubted attack, an engagement, an unopposed advance, a siege ring', async ({ page }) => {
-  test.setTimeout(90000);
+test('battle pieces follow the sources: a doubted attack, an engagement, an unopposed advance, a siege ring, the close', async ({ page }) => {
+  test.setTimeout(120000);
   const errors = await boot(page, midGame);
   const replay = async (id: string) => {
     await page.evaluate(id => { document.getElementById('goto')?.remove(); const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = id; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); }, id);
@@ -233,10 +233,17 @@ test('battle pieces follow the sources: a doubted attack, an engagement, an unop
   await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('3/3', { timeout: 15000 });
   await page.waitForTimeout(2500);
   await expect(page.locator('#map g.scene circle[fill="url(#fx-boom)"]')).toHaveCount(0);
-  // Điện Biên Phủ: the siege of Hồng Cúm draws a ring
+  // Điện Biên Phủ: the siege of Hồng Cúm draws a ring; the battle closes on its end date, the event's own words,
+  // the three fallen French positions greyed out, and a way into the perspectives
   await replay('dbp');
   await expect(page.locator('#map g.scene circle.fx-ring')).toHaveCount(1, { timeout: 16000 });
-  await page.locator('#replb [data-t=rclose]').click();
+  await expect(page.locator('#mapwrap .endw .stamp')).toHaveText('7.5.1954', { timeout: 12000 });
+  await expect(page.locator('#mapwrap .lt.end p')).toContainText('thất thủ');
+  await expect(page.locator('#map g.scene rect[fill-opacity="0"]')).toHaveCount(3, { timeout: 2000 });
+  await page.locator('#mapwrap .lt.end [data-tab=v]').click();
+  await expect(page.locator('.ov #et button[data-k="v"]')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#replb')).toHaveCount(0);
+  await expect(page.locator('#mapwrap .endw')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

@@ -86,14 +86,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .mapwrap { position: relative; flex: 1; min-height: 0; margin: 12px 14px 0; border: 1px solid var(--ink3); border-radius: 16px; overflow: hidden }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; overflow: hidden; cursor: grab; transition: transform 1.1s cubic-bezier(.2, .8, .2, 1); transform-origin: 50% 64% }
 /* Cảnh động (scene.ts): bản đồ nghiêng như sa bàn khi vào trận, rung khung khi pháo nổ, khung phim tư liệu */
-.mapwrap.tilt #map { transform: perspective(var(--persp, 1100px)) rotateX(36deg) scale(1.2) }
+.mapwrap.tilt #map { transform: perspective(var(--persp, 1100px)) rotateX(var(--rx, 36deg)) scale(var(--cs, 1.2)) }
 .mapwrap::after { content: ''; position: absolute; inset: 0 0 auto; height: 34%; background: linear-gradient(var(--paper), transparent); opacity: 0; transition: opacity 1.1s; pointer-events: none; z-index: 1 }
 .mapwrap.tilt::after { opacity: .92 }
 .mapwrap.tilt #map g.co { transition: opacity .6s 1.8s; opacity: 0 !important } /* tên trận đã có ở thẻ dưới bản đồ: nhường chỗ cho mũi tiến quân */
 #map.shake { animation: shake .42s cubic-bezier(.36, .07, .19, .97) }
 .mapwrap.tilt #map.shake { animation-name: shake3d }
 @keyframes shake { 10%, 90% { transform: translate(-1px, 1px) } 25%, 75% { transform: translate(3px, -2px) } 50% { transform: translate(-3px, 2px) } }
-@keyframes shake3d { 0%, 100% { transform: perspective(var(--persp, 1100px)) rotateX(36deg) scale(1.2) } 25% { transform: perspective(var(--persp, 1100px)) rotateX(36deg) scale(1.2) translate(3px, -2px) } 50% { transform: perspective(var(--persp, 1100px)) rotateX(36.6deg) scale(1.2) translate(-3px, 2px) } 75% { transform: perspective(var(--persp, 1100px)) rotateX(36deg) scale(1.2) translate(2px, 1px) } }
+@keyframes shake3d { 0%, 100% { transform: perspective(var(--persp, 1100px)) rotateX(var(--rx, 36deg)) scale(var(--cs, 1.2)) } 25% { transform: perspective(var(--persp, 1100px)) rotateX(var(--rx, 36deg)) scale(var(--cs, 1.2)) translate(3px, -2px) } 50% { transform: perspective(var(--persp, 1100px)) rotateX(calc(var(--rx, 36deg) + .6deg)) scale(var(--cs, 1.2)) translate(-3px, 2px) } 75% { transform: perspective(var(--persp, 1100px)) rotateX(var(--rx, 36deg)) scale(var(--cs, 1.2)) translate(2px, 1px) } }
 .reel { position: absolute; top: 46px; left: 10px; z-index: 2; width: min(40%, 230px); max-height: 32%; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; border: 2px solid var(--paper); box-shadow: 0 8px 24px rgba(0, 0, 0, .45); opacity: 0; transform: translateY(-8px) scale(.96); transition: opacity .5s, transform .5s cubic-bezier(.2, .8, .2, 1); padding: 0; background: #111 }
 .reel.on { opacity: 1; transform: none }
 .reel:not(.on) { pointer-events: none } /* phim còn đang tải: chưa hiện thì không chặn chạm */
@@ -130,6 +130,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .ttl .sides i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); border: 1px solid #111; margin-right: 5px; vertical-align: -1px }
 .slug { position: absolute; left: 10px; top: 10px; z-index: 2; max-width: calc(100% - 70px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--paper); padding: 5px 8px; border-radius: 6px; font-size: 9.5px; letter-spacing: .06em; color: var(--ink2); pointer-events: none }
 .mapwrap.scn #popl { visibility: hidden }
+.endw { position: absolute; top: 46px; left: 0; right: 0; text-align: center; z-index: 2; pointer-events: none }
+.endw .stamp { background: var(--paper); animation: stampin .55s cubic-bezier(.2, 1.3, .4, 1) backwards }
+.lt.end p { font-style: italic }
+.lt.end .chip { pointer-events: auto; margin-left: auto; height: 26px; padding: 0 10px; font-size: 12px; letter-spacing: 0; text-transform: none }
+.lt.end p { -webkit-line-clamp: 2 }
 
 .mtag { position: absolute; left: 10px; top: 10px; font: 500 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); background: var(--paper); opacity: .92; padding: 5px 8px; border-radius: 6px; pointer-events: none; z-index: 2 }
 .zoomc { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 2 }
