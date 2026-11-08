@@ -3,12 +3,12 @@ import * as topojson from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 import type { Feature, MultiPolygon, Geometry } from 'geojson';
 import { F, PROVINCES, provGroup, provName, regionName, regime2, type HistEvent, type Region } from './data';
-import { S, save, rt, curPick, visEv } from './state';
+import { S, save, rt, curPick, optOf, visEv } from './state';
 import { esc, lite } from './ui/dom';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
-import { isTouring, pauseTour } from './tour';
+import { isTouring, pauseTour, tourEra } from './tour';
 import { openEvent } from './screens/event';
 import { endScene } from './scene';
 
@@ -344,7 +344,7 @@ let lastShift = 0;
 /** Repaint for the current year; `quiet` skips the regime-change wave (used for look changes). */
 export function paintMap(quiet = false, y = S.year): void {
   if (!ready) return;
-  const R = regime2(y), pk = curPick(y);
+  const R = regime2(y), te = tourEra(), pk = te && y === S.year ? optOf(te) : curPick(y); // tour qua mốc khép chương (ĐBP 1954): hướng của chương ấy
   const dim = !!(pk && pk.fac && R.legend.includes(pk.fac));
   const op = (d: Prov) => (dim && R.reg[regOf(d.g)] !== pk!.fac ? 0.5 : 1);
   const before = new Map<SVGPathElement, string | null>();

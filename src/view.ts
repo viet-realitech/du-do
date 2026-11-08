@@ -1,5 +1,5 @@
 import { ERAS, F, VAL, pop, regime2, type Era } from './data';
-import { S, save, rt, Y0, Y1, eraOf, curPick, optOf, chYear, values, allEv, visEv, setFocus, pct } from './state';
+import { S, save, rt, Y0, Y1, eraOf, evEra, curPick, optOf, chYear, values, allEv, visEv, setFocus, pct } from './state';
 import { on } from './ui/actions';
 import { $, esc } from './ui/dom';
 import { av, flag } from './ui/bits';
@@ -144,13 +144,13 @@ function renderScrub(): void {
         .map(([y, c]) => `<span class="dec ${c}" style="left:${pct(y)}%">${y === 2026 ? 'NAY' : y}</span>`).join('') +
       '<i class="thumb" id="thumb"></i>';
   }
-  const ce = eraOf(S.year).id;
+  const ce = (tourEra() || eraOf(S.year)).id;
   t.querySelectorAll<HTMLElement>('.sg').forEach(n => { const id = n.dataset.e!; n.className = 'sg' + (id === ce ? ' cur' : S.picks[id] ? ' done' : ''); });
   t.querySelectorAll<HTMLElement>('.cp').forEach(n => { const id = n.dataset.e!; n.className = 'cp' + (S.picks[id] ? ' done' : rt.gate?.id === id ? ' pend' : ''); });
   $('#thumb')!.style.left = pct(S.year) + '%';
   const tl = $('#tl')!;
   tl.setAttribute('aria-valuenow', String(S.year));
-  tl.setAttribute('aria-valuetext', `Năm ${S.year}, chương ${eraOf(S.year).n}`);
+  tl.setAttribute('aria-valuetext', `Năm ${S.year}, chương ${(tourEra() || eraOf(S.year)).n}`);
 }
 
 const pendingGate = (y: number): Era | undefined => ERAS.find(e => !S.picks[e.id] && e.cy <= y);
@@ -167,7 +167,8 @@ export function setYear(yIn: number, open = false): void {
   if (pend) { y = pend.cy; rt.gate = pend; }
   // Chế độ Chơi: dừng ở thẻ sự kiện bắt buộc chưa quyết định; điểm rẽ cùng năm đi trước.
   const pc = pendingCard(y);
-  if (pc && (!pend || pc.y < pend.cy)) { y = pc.y; rt.card = pc; rt.gate = null; }
+  // thẻ còn nợ của một chương trước (kể cả Điện Biên Phủ, Genève: cùng năm 1954 nhưng thuộc chương 4) đi trước điểm rẽ
+  if (pc && (!pend || pc.y < pend.cy || ERAS.indexOf(evEra(pc)) < ERAS.indexOf(pend))) { y = pc.y; rt.card = pc; rt.gate = null; }
   if (y !== S.year || open) {
     const a = Math.min(S.year, y), b = Math.max(S.year, y);
     if (y !== S.year && visEv().some(v => v.y > a && v.y <= b) && Date.now() - lastTick > 70) { SND.tick(); lastTick = Date.now(); }

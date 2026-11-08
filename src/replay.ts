@@ -55,7 +55,6 @@ export function replayEvent(id: string): void {
     });
   }
   bar.dataset.id = id;
-  pzState(bar);
   bar.querySelector('.mono')!.textContent = `Xem lại · ${v.y}`;
   bar.querySelector('.rt')!.innerHTML = esc(v.t);
   wrap.classList.add('replaying');
@@ -69,6 +68,7 @@ export function replayEvent(id: string): void {
   let said = false;
   const say = () => { if (said || t !== tok || scenePaused() || !document.getElementById('replb')) return; said = true; speak(evSpeech(v), undefined, false, evKey(v)); };
   playScene(v, Infinity, () => { if (t === tok) closeReplay(false); }, undefined, undefined, say);
+  pzState(bar); // sau khi cảnh mới chạy (cảnh cũ đang giữ thì nút không còn ở ▶)
   setTimeout(say, closeAt(v) ? voiceAt(v) + 4000 : voiceAt(v)); // trận có sơ đồ: cảnh tự gọi say khi khép; đây là bảo hiểm
 }
 

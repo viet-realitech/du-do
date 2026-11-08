@@ -8,7 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -30,6 +30,10 @@ interface Tour {
   rush?: boolean;
   /** Đọc sử: lúc chạm "Điểm rẽ ›" lần đầu (đang chờ chạm lần hai để xác nhận bỏ qua chương). */
   arm?: number;
+  /** Bước mà `next` thuộc về (next của bước cũ không hẹn được gì: live() sai). */
+  nextStep?: number;
+  /** Bước hiện tại còn nợ lời kể (có giọng, chưa đọc): đừng rút ngắn bước trước khi kể. */
+  owed?: () => boolean;
 }
 let tour: Tour | null = null;
 let mapIdle: number | undefined;
@@ -76,7 +80,8 @@ export function startTour(eIn?: Era): void {
   stopTour();
   live0();
   hidePop();
-  const e = eIn || eraOf(S.year);
+  const pc0 = !eIn && isPlay() ? pendingCard(S.year) : undefined;
+  const e = eIn || (pc0 ? evEra(pc0) : eraOf(S.year)); // thẻ còn nợ của chương trước (ĐBP 1954): kể tiếp chương ấy
   if (!S.picks[e.id] && isPlay()) {
     // Trò chơi: điểm rẽ chưa chọn sớm nhất phải chọn trước. Đọc sử: xem chương không cần chọn (chip "◆ Chọn hướng" mời chọn)
     const g = ERAS.find(x => !S.picks[x.id] && x.cy <= S.year);
@@ -117,8 +122,16 @@ function tourStep(): void {
     // bước nhịp (›, chạm phụ đề): cảnh ngắn lại thì hẹn lại bước tour; đang có lời kể thì để lời kể xong tự đi tiếp
     // lời kể (một lần): trận đánh có sơ đồ đọc khi trận khép, kể cả khi người xem bước nhịp tới đó sớm
     let said = false;
-    const say = () => { if (said || !voiced || !live() || scenePaused() || tour!.cur !== v.id || !S.narr) return; said = true; speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(9000, sceneLeft() + (sceneLeft() ? 600 : 0)))), false, evKey(v)); };
-    const stepped = () => { if (live() && !speaking()) next(Math.max(900, sceneLeft() + (card ? 600 : 1200))); };
+    const speechMs = () => Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)));
+    const say = () => {
+      if (said || !voiced || !live() || scenePaused() || tour!.cur !== v.id || !S.narr) return;
+      said = true;
+      next(speechMs() + 2500); // bảo hiểm tính từ lúc bắt đầu kể (bước nhịp / giữ cảnh trước đó đã hẹn ngắn hơn)
+      speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(9000, sceneLeft() + (sceneLeft() ? 600 : 0)))), false, evKey(v));
+    };
+    const owed = () => voiced && !said && S.narr;
+    // bước nhịp: cảnh ngắn lại thì hẹn lại bước, trừ khi lời kể còn nợ (say() sẽ hẹn khi bắt đầu kể) hay đang kể
+    const stepped = () => { if (live() && !owed() && !speaking()) next(Math.max(900, sceneLeft() + (card ? 600 : 1200))); };
     const onward = () => { if (live()) { hush(); next(0); } }; // chạm phụ đề khi đã hết nhịp: như "›"
     if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped, onward, say); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
@@ -130,6 +143,8 @@ function tourStep(): void {
       tour!.t = window.setTimeout(card ? openIt : advance, d);
     };
     tour!.next = next;
+    tour!.nextStep = step;
+    tour!.owed = owed;
     tour!.t0 = performance.now();
     if (voiced) {
       // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
@@ -191,7 +206,9 @@ export function pauseTour(why: 'overlay' | 'map' | 'user'): void {
   clearTimeout(tour.t);
   hush();
   // ❚❚: giữ nguyên trận đang kể (chỉ vào mũi tên được); cử chỉ bản đồ: làm phẳng ngay, không trượt dưới ngón tay
-  if (!(why === 'user' && pauseScene())) endScene(why === 'map');
+  // chỉ giữ cảnh của chính bước đang đứng và có nhịp (không giữ cảnh bước trước khi bản đồ còn đang bay sang bước sau)
+  const held = why === 'user' && tour.cur === tour.L[tour.i]?.id && holdable(tour.cur) && pauseScene();
+  if (!held) endScene(why === 'map');
   tour.paused = why;
   tourBar();
   if (why === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000);
@@ -209,7 +226,13 @@ export function resumeTour(why?: 'overlay'): void {
   if (was === 'card') tour.i++;
   tourBar();
   // ▶ sau ❚❚: cảnh đã giữ chạy tiếp từ chỗ dừng (lời kể đã cắt thì không đọc lại); bước hẹn lại theo đồng hồ của cảnh
-  if (was === 'user' && resumeScene() && tour.next) { const v = tour.L[tour.i]; tour.next(Math.max(900, sceneLeft() + (v && isPlay() && needsDecision(v) ? 600 : 1500))); return; }
+  if (was === 'user' && scenePaused() && tour.next && tour.nextStep === tour.step) {
+    resumeScene();
+    const v = tour.L[tour.i];
+    // lời kể còn nợ (trận chưa khép): say() sẽ hẹn bước khi bắt đầu kể; giờ chỉ hẹn bảo hiểm dài
+    tour.next(tour.owed?.() ? sceneLeft() + 30000 : Math.max(900, sceneLeft() + (v && isPlay() && needsDecision(v) ? 600 : 1500)));
+    return;
+  }
   tourStep();
 }
 
@@ -283,7 +306,7 @@ function tourBar(): void {
         S.narr = !S.narr; save();
         if (!S.narr) { // không để bước hiện tại treo; cảnh động vẫn giữ đủ thời gian (sceneHold)
           hush();
-          if (tour && !tour.paused && tour.next && !tour.rush) { // "Điểm rẽ ›": bước đã hẹn mở thẻ, không hẹn lại
+          if (tour && !tour.paused && tour.next && !tour.rush && tour.nextStep === tour.step) { // "Điểm rẽ ›": bước đã hẹn mở thẻ, không hẹn lại
             const v = tour.L[tour.i], el = performance.now() - (tour.t0 || 0), left = sceneLeft();
             // đang có cảnh: theo đồng hồ của cảnh (đã tính các lần bước nhịp); chưa / không có cảnh: theo thời gian đã qua
             tour.next(v && sceneFrame(v) ? Math.max(600, left ? left + (needsDecision(v) && isPlay() ? 600 : 1200) : sceneHold(v) - el) : 600);

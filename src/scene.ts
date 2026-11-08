@@ -195,7 +195,7 @@ function beatList(r: Run, v: HistEvent): HTMLElement | null {
   }).join('')}</ol>`;
   box.hidden = false;
   box.querySelectorAll<HTMLButtonElement>('li button').forEach((b, i) => (b.onclick = () => {
-    if (cur !== r || !r.alive) return;
+    if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: ▶ trước
     const t = r.marks[i], now = vnow(r);
     if (t > now + 250) { jump(r, t - now); r.onStep?.(); }
   }));
@@ -306,6 +306,9 @@ export function resumeScene(): boolean {
   return true;
 }
 export const scenePaused = (): boolean => !!cur?.alive && !!cur.paused;
+/** Cảnh của sự kiện `id` đang chạy và có nhịp (sơ đồ trận / đường đi): ❚❚ giữ được nó. Cảnh khác (nhật ký, hiệp ước,
+    sự kiện thường) thì ❚❚ dừng hẳn, ▶ kể lại bước đó. */
+export const holdable = (id: string | undefined): boolean => !!cur && cur.alive && cur.id === id && cur.marks.length > 0;
 /** Chạm phụ đề: sang nhịp kế; hết nhịp thì để người mở cảnh quyết (tour đi tiếp, xem lại đứng yên). */
 function tapCaption(r: Run): void {
   if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: chạm phụ đề không làm gì (▶ để chạy tiếp)

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 /* Wikipedia/Commons are blocked so runs are deterministic and the offline fallbacks get exercised. */
 async function boot(page: Page, state?: object) {
@@ -172,6 +173,37 @@ test('play mode: another region\'s optional card is not offered (Hà Nội 1882 
   await page.locator('#goto').click();
   await expect(page.locator('.ov h1')).toBeVisible();
   await expect(page.locator('.ov [data-a=card]')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('play mode: Điện Biên Phủ and Genève, still owed at 1954, are played before turning point 5 (after a reload too)', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  // every card decided except the two 1954 events that close chapter 4
+  const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]).filter(id => id !== 'dbp' && id !== 'gnv');
+  const cards = Object.fromEntries(ids.map(id => [id, 0]));
+  const st = { step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year: 1954, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm' }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, cards, cardv: {}, xFrom: 2026, harvests: ['e1', 'e2', 'e3'] };
+  await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
+  await page.goto('/');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 }); // chapter 4 resumes at Điện Biên Phủ
+  await expect(page.locator('#eraNo')).toContainText('Chương 4');
+  await expect(page.getByText('Mùa màng')).toHaveCount(0); // not the generation-4 harvest / turning point 5 first
+  expect(errors).toEqual([]);
+});
+
+test('reading mode: ❚❚ pressed while the map flies to the next stop, then ▶, keeps the tour going', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1858, picks: { e1: 'chien' }, quiz: {}, narr: false });
+  await page.locator('#play').click();
+  await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('1/3', { timeout: 9000 });
+  for (let i = 0; i < 3; i++) await page.locator('#tourb [data-t=next]').click();
+  await expect(page.locator('#mapwrap .lt.end')).toBeVisible({ timeout: 3000 });
+  await page.locator('#tourb [data-t=next]').click(); // leave the battle: the year starts moving to the next stop
+  await page.locator('#play').click(); // ❚❚ during the flight
+  await expect(page.locator('#tourb')).toContainText('tạm dừng');
+  await page.locator('#play').click(); // ▶
+  await expect(page.locator('#tourb')).not.toContainText('tạm dừng');
+  await expect(page.locator('#tourb .mono').first()).toHaveText(/^3\//, { timeout: 20000 }); // went on past stop 2
   expect(errors).toEqual([]);
 });
 

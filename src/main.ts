@@ -46,7 +46,7 @@ import './styles.css';
 import './ui/image-slot';
 import { registerSW } from 'virtual:pwa-register';
 import { ERAS } from './data';
-import { S, setFocus, save, eraOf } from './state';
+import { S, setFocus, save, evEra } from './state';
 import { initMap } from './map';
 import { initMainControls, renderMain, setYear } from './view';
 import { initTabs } from './tabs';
@@ -77,14 +77,16 @@ addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) sc
 
 if (S.step === 'splash') splash();
 else if (S.step === 'intro') (S.mode === 'play' ? gameIntro : intro)();
-else if (ERAS.find(e => !S.picks[e.id] && e.cy <= S.year)) setYear(S.year, true);
-// Trò chơi: tải lại giữa chương với thẻ bắt buộc đang chờ → dựng lại tour chương từ sự kiện đó (bay tới, cảnh, lời kể,
-// rồi mới mở thẻ), không bật liền các thẻ còn lại trên bản đồ đứng yên.
-else if (S.mode === 'play' && pendingCard(S.year)) {
-  const pc = pendingCard(S.year)!;
-  S.year = pc.y;
-  save();
-  void mapReady.then(() => { if (!document.querySelector('#layer > *')) startTour(eraOf(pc.y)); });
+else {
+  // Trò chơi: tải lại giữa chương với thẻ bắt buộc đang chờ (của một chương trước điểm rẽ còn bỏ ngỏ, kể cả Điện Biên Phủ
+  // cùng năm 1954 với điểm rẽ 5) → dựng lại tour chương từ sự kiện đó (bay tới, cảnh, lời kể, rồi mới mở thẻ), không bật
+  // liền các thẻ còn lại trên bản đồ đứng yên. Không thì điểm rẽ chưa chọn.
+  const pc = S.mode === 'play' ? pendingCard(S.year) : undefined, pend = ERAS.find(e => !S.picks[e.id] && e.cy <= S.year);
+  if (pc && (!pend || ERAS.indexOf(evEra(pc)) < ERAS.indexOf(pend))) {
+    S.year = pc.y;
+    save();
+    void mapReady.then(() => { if (!document.querySelector('#layer > *')) startTour(evEra(pc)); });
+  } else if (pend) setYear(S.year, true);
 }
 
 registerSW({ immediate: true });
