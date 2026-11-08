@@ -226,8 +226,8 @@ on('goev', el => {
 // Chỉ nút đóng của chính trang sự kiện mới dùng đích quay về của nó (nút "close" khác: về bản đồ như cũ).
 on('close', el => {
   const raw = el.closest<HTMLElement>('.ov')?.dataset.ret, r: Ret | null = raw ? JSON.parse(raw) : null;
+  hush(); // "▶ Nghe" của trang vừa đóng thì dừng (cả khi tour đang giữ bằng ❚❚); tour chạy tiếp thì tự kể lại
   if (r && r.tab !== 'map') {
-    hush(); // "▶ Nghe" của trang vừa đóng thì dừng (cả khi tour đang giữ bằng ❚❚)
     setTab(r.tab);
     // bàn phím / trình đọc màn hình: tiêu điểm về đúng dòng đã mở trang (bảng vừa dựng lại, nút cũ không còn); mở lại
     // bảng nhân vật thì tiêu điểm đặt trước lên thẻ nhân vật trong bảng, để đóng bảng nhân vật xong quay về đó

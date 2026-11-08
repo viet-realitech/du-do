@@ -162,6 +162,19 @@ test('reading mode: ▶ late in a chapter tours what is left of it; 2026 offers 
   expect(errors).toEqual([]);
 });
 
+test('reading mode: a tour stopped at Genève resumes chapter 4 after a reload, even with a filter, then quizzes it and moves on', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1954, filt: 'Trận đánh', tourAt: { e: 'e4', id: 'gnv' }, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'tl' }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true] } });
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb .mono').first()).toContainText('Chương 4', { timeout: 5000 }); // not chapter 5 at 1955
+  await expect(page.locator('#card')).toContainText('Genève', { timeout: 5000 });
+  const next = page.locator('#tourb [data-t=next]');
+  for (let k = 0; k < 12 && await page.locator('#tourb').count(); k++) { if (await next.count()) await next.click().catch(() => {}); await page.waitForTimeout(400); }
+  if (await page.locator('.cine').count()) await page.goBack(); // chapter 5 opener
+  await expect(page.getByText(/Đố nhanh · Chương 4/i)).toBeVisible({ timeout: 8000 }); // the chapter was watched: quiz, then turning point 5
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2') || '{}').tourAt)).toBeNull(); // ▶ at 1954 now starts chapter 5
+  expect(errors).toEqual([]);
+});
+
 test('keyboard: the side card keeps focus across ‹ ›, an event page focuses its title and Escape returns to the card', async ({ page }) => {
   const errors = await boot(page, midGame);
   const next = page.locator('#card [data-a=step][data-d="1"]');

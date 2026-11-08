@@ -20,6 +20,7 @@ export const canReplay = (v: HistEvent): boolean => hasScene(v) && fxOn() && (!i
 
 let tok = 0; // mỗi lần phát / đóng tăng: lời gọi cũ (onEnd, lời kể hẹn giờ) tự bỏ
 let prevFocus: HistEvent | null = null; // trò chơi: sự kiện tour đang đứng (vùng sáng), trả lại khi đóng
+let sayNow: (() => void) | null = null; // lời kể của phần xem lại đang chạy (▶ sau ❚❚ gọi lại nếu chưa kể)
 let back: { id: string; tab: 'x' | 'v' | 'm' | 's'; ret: string } | null = null; // mở từ trang sự kiện: Đóng / Back trở lại đúng trang, đúng thẻ
 
 export function replayEvent(id: string): void {
@@ -48,7 +49,7 @@ export function replayEvent(id: string): void {
     wrap.appendChild(bar);
     bar.addEventListener('click', ev => {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
-      if (a === 'rpause') { if (scenePaused()) resumeScene(); else { pauseScene(); hush(); } pzState(bar!); }
+      if (a === 'rpause') { if (scenePaused()) { resumeScene(); sayNow?.(); } else { pauseScene(); hush(); } pzState(bar!); }
       else if (a === 'rnext') { stepScene(); pzState(bar!); }
       else if (a === 'again') replayEvent(bar!.dataset.id!);
       else if (a === 'rclose') closeReplay();
@@ -67,6 +68,7 @@ export function replayEvent(id: string): void {
   // lời kể một lần: trận đánh có sơ đồ đọc khi trận khép (bước nhịp tới đó thì đọc ngay)
   let said = false;
   const say = () => { if (said || t !== tok || scenePaused() || beforeClose(v.id) || !document.getElementById('replb')) return; said = true; speak(evSpeech(v), undefined, false, evKey(v)); };
+  sayNow = say;
   playScene(v, Infinity, () => { if (t === tok) closeReplay(false); }, undefined, undefined, say);
   pzState(bar); // sau khi cảnh mới chạy (cảnh cũ đang giữ thì nút không còn ở ▶)
   setTimeout(say, closeAt(v) ? voiceAt(v) + 4000 : voiceAt(v)); // trận có sơ đồ: cảnh tự gọi say khi khép; đây là bảo hiểm

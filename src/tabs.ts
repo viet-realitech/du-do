@@ -9,9 +9,9 @@ import { paneMe } from './screens/profile';
 export type TabId = 'map' | 'fig' | 'src' | 'me';
 
 export function setTab(t: TabId): void {
+  if (t !== 'map') endScene(); // bảng phủ kín bản đồ: không để pháo nổ / máy rung phía sau (trước markTab: xem lại bị cắt tự đưa thanh tab về Bản đồ)
   markTab(t);
   ghost(...layer.children);
-  if (t !== 'map') endScene(); // bảng phủ kín bản đồ: không để pháo nổ / máy rung phía sau
   if (t === 'map') { clearLayer(); renderMain(); }
   else if (t === 'src') paneSrc();
   else if (t === 'fig') paneFig();

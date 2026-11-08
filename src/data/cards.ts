@@ -426,7 +426,7 @@ export const VARIANT: Record<string, { regions?: string[]; notPicks?: string[]; 
   // tháng 5.1979). Cùng thứ tự với thẻ gốc: đi cả nhà / ở lại / một đường hẹp hơn.
   tn80: [
     { after: ['x:x-lylich78=2', 'x:x-ly79=1'], choices: [
-      ['Cả nhà theo đường người đi trước', 'Người đi trước gửi về tên chủ ghe, nơi đón; bán nhà mua chỗ.', { b: -10, g: -8, d: -3, u: -3, nn: -20, my: 15 }, 'Lần này cả nhà đi. Ghe tới Pulau Bidong sau sáu ngày; người trong họ đi trước đứng chờ ở trại.'],
+      ['Cả nhà theo đường người đi trước', 'Người đi trước gửi về tên chủ ghe, nơi đón; bán nhà mua chỗ.', { b: -10, g: -8, d: -3, u: -3, nn: -20, my: 15 }, 'Lần này cả nhà đi, theo đường dây người đi trước đã dò. Ghe tới Pulau Bidong sau sáu ngày; ở trại đã có thư của người đi trước, ghi sẵn địa chỉ bảo lãnh.'],
       ['Ở lại, chờ thư', 'Sống bằng sổ gạo và những lá thư từ trại tị nạn.', { g: -6, nn: 5 }, 'Thư về đều đặn. Ở nhà vẫn xếp hàng mua gạo, nhưng biết người đi đã tới nơi.'],
       ['Làm đơn xin đi diện đoàn tụ', 'Người đã tới nơi bảo lãnh; nộp đơn theo Chương trình Ra đi có trật tự (ODP).', { d: -1, u: -2, nn: -5, my: 8 }, 'Hồ sơ đi qua nhiều văn phòng và nhiều năm chờ; rồi một chuyến bay rời Tân Sơn Nhất, không phải một chiếc ghe.'],
     ] },

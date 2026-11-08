@@ -67,11 +67,13 @@ export interface State {
   cardv: Record<string, 'base'>;
   /** Các thẻ có bộ lựa chọn thay thế (VARIANT) mà bản lưu này đã biết: thẻ có bộ mới thêm sau, đã quyết, giữ bộ gốc. */
   cvk: string[];
+  /** Đọc sử: bước tour đang / vừa kể (chương, sự kiện); xoá khi xem xong hay bỏ qua chương. */
+  tourAt: { e: string; id: string } | null;
 }
 
 const def: State = {
   step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT),
+  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
 function load(mode = activeMode()): State {
@@ -100,7 +102,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), harvests: [], surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;
