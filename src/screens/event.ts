@@ -27,15 +27,18 @@ const TABS: [Tab, string][] = [['x', 'Diễn biến'], ['v', 'Góc nhìn'], ['m'
 const KIND_ICON: Record<string, string> = { 'Trận đánh': '◆', 'Hiệp ước': '■' };
 const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">‹</button>`;
 
-/** Trang sự kiện mở từ bảng Nhân vật / Sử liệu / Hồ sơ (và thẻ nhân vật đang mở): đóng thì về lại đó, không về bản đồ trống. */
-let ret: { tab: TabId; fig?: string } | null = null;
-export function openEvent(id: string, tab: Tab = 'x'): void {
+/** Trang sự kiện mở từ bảng Nhân vật / Sử liệu / Hồ sơ (và thẻ nhân vật đang mở): đóng thì về lại đó, không về bản đồ trống.
+    Đích quay về ghi trên chính trang (data-ret), suy từ những gì đang thật sự mở (không từ thanh tab, có thể đã cũ). */
+type Ret = { tab: TabId; fig?: string };
+export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
-  if (!layer.querySelector(':scope > .ov')) { // mở từ bảng / thẻ nhân vật (không phải từ một trang sự kiện khác)
-    const t = (document.querySelector<HTMLElement>('#tabs .tab.on')?.dataset.t || 'map') as TabId;
-    const fig = [...layer.querySelectorAll<HTMLElement>(':scope > .scrim[data-fig]')].pop()?.dataset.fig;
-    ret = t !== 'map' || fig ? { tab: t, fig } : null;
+  const prevOv = layer.querySelector<HTMLElement>(':scope > .ov');
+  let ret: string | undefined = retIn ?? prevOv?.dataset.ret; // từ trang sự kiện khác / phần xem lại: giữ đích cũ
+  if (retIn === undefined && !prevOv) {
+    const pane = layer.querySelector(':scope > .pane'), fig = [...layer.querySelectorAll<HTMLElement>(':scope > .scrim[data-fig]')].pop()?.dataset.fig;
+    const t = (pane ? document.querySelector<HTMLElement>('#tabs .tab.on')?.dataset.t || 'map' : 'map') as TabId;
+    ret = t !== 'map' || fig ? JSON.stringify({ tab: t, fig } as Ret) : undefined;
   }
   const who = document.activeElement; // đóng trang thì tiêu điểm về nút đã mở nó
   if (document.getElementById('replb')) closeReplay(false); // đang xem lại diễn biến: dừng hẳn trước khi mở trang
@@ -53,7 +56,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
      ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:16px;margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
      <p class="muted" style="font-size:14px;margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
      ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}</div>`;
-    pageFocus(who);
+    pageFocus(who, ret);
     return;
   }
 
@@ -109,12 +112,13 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   });
   show(tab);
   loadHero(v);
-  pageFocus(who);
+  pageFocus(who, ret);
 }
 /** Trang sự kiện vừa mở: tiêu điểm lên tiêu đề (trình đọc đọc tên sự kiện), nhớ nút đã mở để đóng thì trả về. */
-function pageFocus(who: Element | null): void {
+function pageFocus(who: Element | null, ret?: string): void {
   const ov = layer.querySelector<HTMLElement>(':scope > .ov'), h1 = ov?.querySelector<HTMLElement>('h1');
   if (!ov) return;
+  if (ret) ov.dataset.ret = ret;
   remember(ov, who);
   if (h1) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
 }
@@ -215,14 +219,18 @@ on('goev', el => {
   S.year = v.y;
   rt.focusEv = v;
   save();
-  openEvent(v.id);
-  ret = { tab: 'map' }; // chủ ý "đến sự kiện": đóng trang thì ở lại bản đồ năm đó
+  openEvent(v.id, 'x', JSON.stringify({ tab: 'map' } as Ret)); // chủ ý "đến sự kiện": đóng trang thì ở lại bản đồ năm đó
 });
 // Closing an overlay returns to where it was opened from: a pane (and the figure sheet), else the refreshed map.
-on('close', () => {
-  const r = ret;
-  ret = null;
-  if (r && r.tab !== 'map') { setTab(r.tab); if (r.fig) openFig(r.fig); return; }
+// Chỉ nút đóng của chính trang sự kiện mới dùng đích quay về của nó (nút "close" khác: về bản đồ như cũ).
+on('close', el => {
+  const raw = el.closest<HTMLElement>('.ov')?.dataset.ret, r: Ret | null = raw ? JSON.parse(raw) : null;
+  if (r && r.tab !== 'map') {
+    setTab(r.tab);
+    if (r.fig) openFig(r.fig);
+    if (isTouring()) resumeTour('overlay'); else hush(); // bảng không dừng tour; "▶ Nghe" của trang vừa đóng thì dừng
+    return;
+  }
   if (r) setTab('map'); else clearLayer(); // "Đến sự kiện" từ sử liệu: thanh tab trở về Bản đồ
   renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else resumeTour('overlay');
   if (r?.fig) openFig(r.fig);

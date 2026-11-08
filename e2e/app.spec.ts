@@ -207,6 +207,26 @@ test('reading mode: ❚❚ pressed while the map flies to the next stop, then �
   expect(errors).toEqual([]);
 });
 
+test('an event opened from Sử liệu returns there, through a replay too', async ({ page }) => {
+  const errors = await boot(page, midGame);
+  await page.locator('.tab[data-t=src]').click();
+  await page.locator('#sq').fill('dien bien');
+  await page.locator('#sl .src[data-a=ev][data-id=dbp]').click();
+  await expect(page.locator('.ov h1')).toContainText('Điện Biên Phủ');
+  await page.locator('.ov .hero .hplay').click(); // replay, then Đóng: back on the event page
+  await expect(page.locator('#replb')).toBeVisible();
+  await page.locator('#replb [data-t=rclose]').click();
+  await expect(page.locator('.ov h1')).toContainText('Điện Biên Phủ');
+  await page.keyboard.press('Escape'); // and the page closes back to the Sử liệu pane, not the bare map
+  await expect(page.locator('#layer .pane')).toBeVisible();
+  await expect(page.locator('.tab[data-t=src]')).toHaveClass(/on/);
+  await page.locator('.tab[data-t=map]').click();
+  await page.locator('#card .c').click(); // an event opened from the map closes to the map
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#layer .pane')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)
