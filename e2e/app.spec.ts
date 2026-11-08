@@ -101,6 +101,21 @@ test('turning points mark which options continue the family path (every path has
   }
 });
 
+test('play mode: a family diary page says what the family at home decided', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  const st = { step: 'play', mode: 'play', name: 'Họ Phan', surname: 'phan', home: 'na', year: 1861, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2 }, cardv: {}, res: { g: 40, d: 30, b: 25, u: 30 } };
+  await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
+  await page.goto('/');
+  for (let i = 0; i < 6 && !(await page.locator('#card').textContent())?.includes('Gò Công'); i++) await page.locator('#card [data-a=step][data-d="1"]').click();
+  await expect(page.locator('#card')).toContainText('Gò Công');
+  await expect(page.locator('#card')).toContainText('Ở nhà');
+  await expect(page.locator('#card')).toContainText('Than khóc rồi sống tiếp');
+  await expect(page.locator('#card')).toContainText('riêng bạn');
+  expect(errors).toEqual([]);
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)

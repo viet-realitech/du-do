@@ -1,4 +1,4 @@
-import { isPlay, cardOf, decided, choicesIn } from '../play';
+import { isPlay, cardOf, decided, homeChoice } from '../play';
 import { mood } from '../music';
 import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
@@ -44,12 +44,12 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   const e = evEra(v), pk = curPick(chYear(v)), mine = pk?.persp;
 
   if (v.diary) {
-    const real = EV.find(x => x.y === v.y), home0 = choicesIn(e.cy, v.y)[0]; // người viết nhật ký đi xa; ở nhà, cả họ đã quyết thế này
+    const real = EV.find(x => x.y === v.y), home0 = homeChoice(v); // người viết nhật ký đi xa; ở nhà, cả họ đã quyết thế này
     layer.innerHTML = `<div class="ov"><div class="row sb">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
      <div style="margin-top:22px"><span class="stamp acc">Nhật ký dòng họ · ${v.y}</span></div>
      <h1 style="margin:16px 0 6px;font-size:32px">${esc(v.t)}</h1><div class="dbl"></div>
      <p style="font:italic 400 21px/1.45 var(--serif)">${esc(v.s)}</p>
-     ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:16px;margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}</p></div>` : ''}
+     ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:16px;margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
      <p class="muted" style="font-size:14px;margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
      ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}</div>`;
     return;

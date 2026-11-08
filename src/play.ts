@@ -82,6 +82,13 @@ export function mustDecide(v: HistEvent): boolean {
   return c[1].split(',').some(r => r === g || (g === 'QT' && (r === 'T1' || r === 'T2')));
 }
 export const decided = (id: string) => id in S.cards;
+/** Trang nhật ký (người viết đi xa) và việc cả họ ở nhà vừa quyết gần nhất trong cùng chương: lựa chọn, và nó hợp (1) /
+    trái (-1) / không liên quan (0) với hướng thế hệ này theo. Trò chơi; null nếu chưa quyết thẻ nào. */
+export function homeChoice(v: HistEvent): { v: HistEvent; ch: Choice; al: -1 | 0 | 1 } | null {
+  if (!isPlay() || !v.diary) return null;
+  const x = choicesIn(evEra(v).cy, v.y)[0];
+  return x ? { ...x, al: alignment(x.ch[2], chYear(v)) } : null;
+}
 /** Các lựa chọn dòng họ đã chốt trên thẻ sự kiện trong các năm [y0, y1], mới nhất trước (Trò chơi). */
 export function choicesIn(y0: number, y1: number, era?: Era): { v: HistEvent; ch: Choice }[] {
   if (!isPlay()) return [];

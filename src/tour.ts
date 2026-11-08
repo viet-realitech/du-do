@@ -1,4 +1,4 @@
-import { isPlay, mustDecide, pendingCard, needsDecision, specialFor } from './play';
+import { isPlay, mustDecide, pendingCard, needsDecision, specialFor, homeChoice } from './play';
 import { openCard } from './screens/card';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
@@ -98,7 +98,8 @@ function tourStep(): void {
     rt.focusEv = v;
     tour!.cur = v.id;
     renderMain();
-    announce(`Chương ${tour!.e.n}, ${tour!.i + 1} trên ${tour!.L.length}: ${v.t}, ${v.y}`);
+    const hc = homeChoice(v);
+    announce(`Chương ${tour!.e.n}, ${tour!.i + 1} trên ${tour!.L.length}: ${v.t}, ${v.y}${hc ? `. Ở nhà, cả họ đã chọn: ${hc.ch[0]}` : ''}`);
     const fr = sceneFrame(v);
     if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH()); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân, chừa phụ đề
     SND.fly();
