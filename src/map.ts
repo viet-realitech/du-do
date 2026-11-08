@@ -4,7 +4,7 @@ import type { Topology, GeometryCollection } from 'topojson-specification';
 import type { Feature, MultiPolygon, Geometry } from 'geojson';
 import { F, PROVINCES, provGroup, provName, regionName, regime2, type HistEvent, type Region } from './data';
 import { S, save, rt, curPick, visEv } from './state';
-import { esc } from './ui/dom';
+import { esc, lite } from './ui/dom';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
@@ -188,6 +188,14 @@ export async function initMap(): Promise<void> {
     rescale();
     if (G.k > 1.3 && !S.zoomed) { S.zoomed = true; save(); checkBadges(); }
   });
+  // Máy yếu: lớp gợn sóng quanh bờ biển (12 đường viền cả khu vực, nét dày) là phần tốn công vẽ nhất khi bản đồ
+  // bay / kéo / chụm (đo với CPU chậm 4 lần: 20 → 60 khung hình/giây khi ẩn nó). Tạm ẩn trong lúc chuyển động.
+  // Chỉ khi bản đồ thật sự di chuyển (một cú chạm chọn tỉnh không làm gợn sóng nháy).
+  if (lite) {
+    let hid = false;
+    G.zoom.on('zoom.lite', () => { if (!hid) { hid = true; G.rip.style('visibility', 'hidden'); } })
+      .on('end.lite', () => { if (hid) { hid = false; G.rip.style('visibility', null); } });
+  }
   svg.call(G.zoom).on('dblclick.zoom', null);
   // nút zoom, chạm bản đồ nghiêng là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
   const byUser = () => { if (isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); } };

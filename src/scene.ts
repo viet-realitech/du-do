@@ -5,7 +5,7 @@ import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
-import { esc } from './ui/dom';
+import { esc, lite } from './ui/dom';
 import { speaking } from './narration';
 
 /* Cảnh động trong tour chương: trận đánh có bản đồ nghiêng 3D, mũi tiến quân vẽ dần, chớp lửa, khói, rung khung và
@@ -317,7 +317,6 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
   // máy yếu: bỏ cánh quạt quay, bụi xích (mọi thứ khác giữ nguyên)
-  const lite = (navigator.hardwareConcurrency || 8) <= 4 || ((navigator as { deviceMemory?: number }).deviceMemory || 8) <= 2;
   const old = v.y < 1900, sy = document.getElementById('mapwrap')?.classList.contains('tilt') ? 1.24 : 1;
   const holds = (sc?.hold || []).map(([lo, la, side]) => ({ side, ll: [lo, la] as [number, number], ringed: false }));
   const arrived = new Set<number>(), meets = sc?.meet || [];
