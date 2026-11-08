@@ -7,7 +7,7 @@ import { hush, speak } from './narration';
 import { evKey, evSpeech } from './speech';
 import { SND } from './audio';
 import { zoomFit, zoomK, paintMap } from './map';
-import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt } from './scene';
+import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, beforeClose } from './scene';
 import { renderMain } from './view';
 import { resumeTour } from './tour';
 import { openEvent } from './screens/event';
@@ -66,7 +66,7 @@ export function replayEvent(id: string): void {
   // trò chơi đang tạm dừng chạy tiếp sau lưng người chơi; chỉ Đóng / Back mới cho tour đi tiếp
   // lời kể một lần: trận đánh có sơ đồ đọc khi trận khép (bước nhịp tới đó thì đọc ngay)
   let said = false;
-  const say = () => { if (said || t !== tok || scenePaused() || !document.getElementById('replb')) return; said = true; speak(evSpeech(v), undefined, false, evKey(v)); };
+  const say = () => { if (said || t !== tok || scenePaused() || beforeClose(v.id) || !document.getElementById('replb')) return; said = true; speak(evSpeech(v), undefined, false, evKey(v)); };
   playScene(v, Infinity, () => { if (t === tok) closeReplay(false); }, undefined, undefined, say);
   pzState(bar); // sau khi cảnh mới chạy (cảnh cũ đang giữ thì nút không còn ở ▶)
   setTimeout(say, closeAt(v) ? voiceAt(v) + 4000 : voiceAt(v)); // trận có sơ đồ: cảnh tự gọi say khi khép; đây là bảo hiểm

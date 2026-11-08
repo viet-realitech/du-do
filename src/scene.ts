@@ -5,7 +5,7 @@ import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
-import { esc, lite } from './ui/dom';
+import { esc, lite, focusFallback } from './ui/dom';
 import { speaking } from './narration';
 
 /* Cảnh động trong tour chương: trận đánh có bản đồ nghiêng 3D, mũi tiến quân vẽ dần, chớp lửa, khói, rung khung và
@@ -34,7 +34,7 @@ interface Run {
   paused?: number;
 }
 /** Bố cục hai cột (bản đồ trái, cột truyện phải): như @media trong styles.css. */
-const wide = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px)');
+const wide = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 760px)'); // thấp hơn: cột bên không còn chỗ cho danh sách
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -197,7 +197,7 @@ function beatList(r: Run, v: HistEvent): HTMLElement | null {
   box.querySelectorAll<HTMLButtonElement>('li button').forEach((b, i) => (b.onclick = () => {
     if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: ▶ trước
     const t = r.marks[i], now = vnow(r);
-    if (t > now + 250) { jump(r, t - now); r.onStep?.(); }
+    if (t > now + 250) { jump(r, t - now + 20); r.onStep?.(); }
   }));
   return box;
 }
@@ -274,7 +274,7 @@ export function stepScene(): boolean {
   if (r.paused) resumeScene(); // bước khi đang giữ: chạy tiếp rồi sang nhịp
   const now = vnow(r), t = r.marks.filter(m => m > now + 250).sort((a, b) => a - b)[0];
   if (t === undefined) return false;
-  jump(r, t - now);
+  jump(r, t - now + 20); // quá mốc một chút: nhịp hẹn ngay sau mốc (vài ms) cũng chạy luôn
   r.onStep?.();
   return true;
 }
@@ -309,6 +309,8 @@ export const scenePaused = (): boolean => !!cur?.alive && !!cur.paused;
 /** Cảnh của sự kiện `id` đang chạy và có nhịp (sơ đồ trận / đường đi): ❚❚ giữ được nó. Cảnh khác (nhật ký, hiệp ước,
     sự kiện thường) thì ❚❚ dừng hẳn, ▶ kể lại bước đó. */
 export const holdable = (id: string | undefined): boolean => !!cur && cur.alive && cur.id === id && cur.marks.length > 0;
+/** Cảnh có nhịp của `id` đang chạy mà chưa tới phần khép: lời kể chờ khép (onClose), hẹn giờ dự phòng không chen vào. */
+export const beforeClose = (id: string): boolean => holdable(id) && vnow(cur!) < cur!.marks[cur!.marks.length - 1] - 50;
 /** Chạm phụ đề: sang nhịp kế; hết nhịp thì để người mở cảnh quyết (tour đi tiếp, xem lại đứng yên). */
 function tapCaption(r: Run): void {
   if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: chạm phụ đề không làm gì (▶ để chạy tiếp)
@@ -914,7 +916,11 @@ export function endScene(instant = false): void {
   r.alive = false;
   clearTimeout(r.qt);
   r.q = [];
-  if (r.list) { r.list.hidden = true; r.list.innerHTML = ''; }
+  if (r.list) {
+    const had = r.list.contains(document.activeElement);
+    r.list.hidden = true; r.list.innerHTML = '';
+    if (had) requestAnimationFrame(focusFallback); // đang đứng trên một nhịp của danh sách: không để tiêu điểm rơi về <body>
+  }
   if (r.raf) cancelAnimationFrame(r.raf);
   if (r.root) {
     const g = r.root;

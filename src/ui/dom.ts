@@ -29,11 +29,7 @@ if (mainEl) new MutationObserver(recs => {
     // nút đã mở bảng vừa đóng (vd. thẻ dưới bản đồ, nhân vật trong danh sách), nếu còn và không bị che
     if (back && back.isConnected && !back.closest('[inert]')) { back.focus({ preventScroll: true }); return; }
     if (layer.querySelector(':scope > .scrim, :scope > .ov, :scope > .pane')) return;
-    // theo thứ tự ưu tiên, bỏ qua nút đang ẩn (thanh tour bị che khi đang xem lại)
-    for (const q of ['#replb [data-t=again]', '#tourb [data-t=next]', '#tourb [data-t=resume]', '#card .c', '#play']) {
-      const b = document.querySelector<HTMLElement>(q);
-      if (b && b.getClientRects().length && !b.closest('[inert]')) { b.focus({ preventScroll: true }); break; }
-    }
+    focusFallback();
   });
 }).observe(layer, { childList: true });
 
@@ -110,4 +106,12 @@ export function announce(t: string): void {
   const box = n;
   box.textContent = '';
   setTimeout(() => { box.textContent = t; }, 120);
+}
+
+/** Tiêu điểm về nút điều khiển đang có, theo thứ tự ưu tiên, bỏ qua nút đang ẩn (thanh tour bị che khi đang xem lại). */
+export function focusFallback(): void {
+  for (const q of ['#replb [data-t=again]', '#tourb [data-t=next]', '#tourb [data-t=resume]', '#card .c', '#play']) {
+    const b = document.querySelector<HTMLElement>(q);
+    if (b && b.getClientRects().length && !b.closest('[inert]')) { b.focus({ preventScroll: true }); return; }
+  }
 }

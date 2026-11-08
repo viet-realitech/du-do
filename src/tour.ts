@@ -8,7 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable, beforeClose } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -124,7 +124,7 @@ function tourStep(): void {
     let said = false;
     const speechMs = () => Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)));
     const say = () => {
-      if (said || !voiced || !live() || scenePaused() || tour!.cur !== v.id || !S.narr) return;
+      if (said || !voiced || !live() || scenePaused() || tour!.cur !== v.id || !S.narr || beforeClose(v.id)) return; // trận còn nhịp: chờ khép
       said = true;
       next(speechMs() + 2500); // bảo hiểm tính từ lúc bắt đầu kể (bước nhịp / giữ cảnh trước đó đã hẹn ngắn hơn)
       speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(9000, sceneLeft() + (sceneLeft() ? 600 : 0)))), false, evKey(v));
