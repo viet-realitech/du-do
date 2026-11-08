@@ -15,7 +15,14 @@ import { speaking } from './narration';
 const NS = 'http://www.w3.org/2000/svg';
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 type Part = { t0: number; dur: number; step: (p: number) => void; done?: () => void };
-interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; stamp?: HTMLElement | null; len: number; t0: number; alive: boolean; onEnd?: () => void }
+/** Một cảnh đang chạy. Đồng hồ ảo: `t0` lúc bắt đầu, `skew` phần đã nhảy tới trước (bước nhịp); mọi hẹn giờ của cảnh
+    nằm trong hàng `q` (một setTimeout `qt` cho mục gần nhất), nên nhảy tới nhịp sau chỉ là cộng `skew`. `marks`: lúc
+    (đồng hồ ảo) mỗi nhịp và phần khép trận bắt đầu. */
+interface Run {
+  id: string; q: { at: number; f: () => void }[]; qt: number; skew: number; marks: number[]; parts: Part[]; raf: number;
+  root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; stamp?: HTMLElement | null;
+  len: number; t0: number; alive: boolean; onEnd?: () => void; onStep?: () => void;
+}
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -31,8 +38,8 @@ const ease = (p: number) => 1 - Math.pow(1 - p, 3);
 
 /* ---------- nhịp kể: mỗi mũi tên / đường đi một nhịp, phụ đề chân hình đọc ghi chú của nó ---------- */
 /** Thời gian (ms) đủ đọc một ghi chú. */
-const READ = (s: string, mv = false, up = false) => Math.min(mv ? 5200 : 4200, Math.max(up ? 2000 : 2300, 900 + 42 * s.length));
-const CAP = 15000; // cả cảnh không quá 15 s nhịp (khởi nghĩa 5 hướng, thuyền nhân 5 tuyến)
+const READ = (s: string, mv = false, up = false) => Math.min(mv ? 5600 : 4600, Math.max(up ? 2200 : 2800, 1000 + 45 * s.length));
+const CAP = 16000; // cả cảnh không quá 16 s nhịp (khởi nghĩa 5 hướng, thuyền nhân 5 tuyến); "›" / chạm phụ đề để đi nhanh
 /** Độ dài từng nhịp của cảnh v (rỗng nếu không có cảnh mũi tên / đường đi). */
 function beats(v: HistEvent): number[] {
   const sc = v.k === 'Trận đánh' ? SCENES[v.id] : undefined, mv = sc ? undefined : MOVES[v.id];
@@ -85,7 +92,7 @@ export function sceneLen(v: HistEvent): number {
   return b.length ? 1250 + 120 + lead(v) + b.reduce((a, x) => a + x, 0) + outro(v) : 0;
 }
 /** Cảnh đang chạy còn bao lâu nữa mới đọc xong nhịp cuối (0 nếu không có cảnh). */
-export const sceneLeft = (): number => (cur && cur.alive ? Math.max(0, cur.len - (performance.now() - cur.t0)) : 0);
+export const sceneLeft = (): number => (cur && cur.alive ? Math.max(0, cur.len - vnow(cur)) : 0);
 /** Chiều cao dành cho phụ đề chân hình (để khung bản đồ và khung tư liệu chừa chỗ). */
 export const capH = (): number => (innerWidth >= 700 ? 82 : 72);
 /** Thanh đang nằm dưới đáy bản đồ (thanh xem lại, hoặc thanh tour). */
@@ -114,8 +121,13 @@ function caption(r: Run, html: string, col: string, cls = ''): void {
   const wrap = document.getElementById('mapwrap');
   if (!wrap) return;
   let b = r.lt;
-  if (!b) { b = document.createElement('div'); b.setAttribute('role', 'status'); wrap.appendChild(b); r.lt = b; }
+  if (!b) {
+    b = document.createElement('div'); b.setAttribute('role', 'status'); wrap.appendChild(b); r.lt = b;
+    // chạm phụ đề: sang nhịp kế (như "›"); phần khép trận có nút riêng nên không bắt chạm
+    b.addEventListener('click', ev => { if (!(ev.target as Element).closest('button, a') && cur === r) stepScene(); });
+  }
   b.className = 'lt' + cls;
+  later(r, 0, () => b!.classList.toggle('step', sceneSteppable())); // sau khi nhịp này đã được đánh dấu
   b.setAttribute('aria-live', speaking() ? 'off' : 'polite'); // đang có lời kể: không đọc chồng
   b.style.setProperty('--c', col);
   const bar = barEl();
@@ -158,13 +170,57 @@ function closing(r: Run, parts: Element[][], sides: string[], y: number): void {
   caption(r, legendHtml(sides, y), 'var(--ink3)', ' leg');
 }
 
+const vnow = (r: Run) => performance.now() - r.t0 + r.skew;
 function later(r: Run, ms: number, f: () => void): void {
-  r.timers.push(window.setTimeout(() => { if (r.alive) f(); }, ms));
+  const at = vnow(r) + ms;
+  let i = r.q.length;
+  while (i > 0 && r.q[i - 1].at > at) i--; // giữ thứ tự hẹn cùng lúc
+  r.q.splice(i, 0, { at, f });
+  arm(r);
 }
+function arm(r: Run): void {
+  clearTimeout(r.qt);
+  if (r.alive && r.q.length) r.qt = window.setTimeout(() => tick(r), Math.max(0, r.q[0].at - vnow(r)));
+}
+function tick(r: Run): void {
+  if (!r.alive) return;
+  while (r.q.length && r.q[0].at <= vnow(r) + 1) {
+    const it = r.q.shift()!;
+    lateBy = Math.max(0, vnow(r) - it.at); // hẹn giờ chạy muộn (vừa nhảy nhịp): chuyển động bắt đầu từ chỗ lẽ ra đã tới
+    it.f();
+    lateBy = 0;
+    if (!r.alive) return;
+  }
+  arm(r);
+}
+let lateBy = 0;
+/** Đánh dấu một nhịp (hay phần khép trận) bắt đầu sau `ms` nữa: "›" / chạm phụ đề nhảy tới đó. */
+function mark(r: Run, ms: number): void { r.marks.push(vnow(r) + ms); }
+/** Nhảy đồng hồ của cảnh tới trước `d` ms: hẹn giờ tới hạn chạy ngay theo thứ tự, chuyển động đang dở chạy tới cuối. */
+function jump(r: Run, d: number): void {
+  if (d <= 0) return;
+  const now = performance.now();
+  r.skew += d;
+  for (const p of r.parts) p.t0 = Math.max(p.t0 - d, now - p.dur); // chạy hết, không bị coi là quá hạn (vẫn gọi done)
+  clearTimeout(r.qt);
+  tick(r);
+}
+/** Cảnh đang chạy còn nhịp phía trước thì nhảy tới nhịp đó (hay phần khép trận) và trả true; hết nhịp thì false. */
+export function stepScene(): boolean {
+  const r = cur;
+  if (!r || !r.alive) return false;
+  const now = vnow(r), t = r.marks.filter(m => m > now + 250).sort((a, b) => a - b)[0];
+  if (t === undefined) return false;
+  jump(r, t - now);
+  r.onStep?.();
+  return true;
+}
+/** Cảnh đang chạy có nhịp để bước (cho phép chạm phụ đề). */
+export const sceneSteppable = (): boolean => !!cur && cur.alive && cur.marks.some(m => m > vnow(cur!) + 250);
 function anim(r: Run, dur: number, step: (p: number) => void, delay = 0, done?: () => void): void {
   later(r, delay, () => {
     if (calm.matches) { step(1); done?.(); return; } // giảm chuyển động: vẽ thẳng trạng thái cuối
-    r.parts.push({ t0: performance.now(), dur, step, done });
+    r.parts.push({ t0: Math.max(performance.now() - lateBy, performance.now() - dur), dur, step, done });
     if (!r.raf) r.raf = requestAnimationFrame(t => frame(r, t));
   });
 }
@@ -368,6 +424,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     parts[i] = [under, line, head];
     if (arrows.length > 1) parts[i].push(badge(root, a, k, i + 1, col));
     later(r, start, () => beat(r, parts, i, beatHtml(side, v.y, note, i, arrows.length), col));
+    mark(r, start);
     // quân cờ đi theo mũi tên (nghi vấn thì không: sử liệu không chắc có lực lượng nào ở đó)
     const pc = act === 'doubt' ? null : drawPiece(kind, col, root, sy), airborne = kind === 'plane' || kind === 'para';
     if (pc) parts[i].push(pc.g);
@@ -458,6 +515,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   });
   if (arrows.length && sc) {
     later(r, L0 + total + OUTRO_AT, () => outcome(r, v, sc, hs, parts, k));
+    mark(r, L0 + total + OUTRO_AT);
     r.len = 1250 + L0 + total + OUTRO;
   }
   if (!arrows.length) { // chưa có dữ liệu mũi tên: vài chớp lửa tại chỗ
@@ -534,6 +592,7 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     parts[i] = [gU, gL];
     if (mv.paths.length > 1) parts[i].push(badge(root, pts[0], k, i + 1, col));
     later(r, start, () => beat(r, parts, i, beatHtml(side, v.y, note, i, mv.paths.length, MODE[mode] ? ' · ' + MODE[mode] : ''), col));
+    mark(r, start);
     if (mode === 'air') WAR.plane(start / 1000); // tiếng máy bay cùng lúc máy bay cất cánh
     let cur = 0;
     anim(r, dur, q => {
@@ -559,6 +618,7 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     });
   });
   later(r, T0 + total, () => closing(r, parts, mv.paths.map(x => x[3]), v.y));
+  mark(r, T0 + total);
   r.len = 1250 + T0 + total;
 }
 
@@ -701,12 +761,12 @@ function reelAt(v: HistEvent): number {
 export const sceneHold = (v: HistEvent): number => Math.min(24000, Math.max(6500, sceneLen(v) + 2500));
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
-export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void): void {
+export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onStep?: () => void): void {
   endScene();
   document.querySelectorAll('#mapwrap .lt.out').forEach(n => n.remove()); // phụ đề cảnh trước: gỡ ngay, không mờ dần dưới cảnh mới
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
-  const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd };
+  const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep };
   cur = r;
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
@@ -742,7 +802,8 @@ export function endScene(instant = false): void {
   m?.classList.remove('shake');
   if (!r) return;
   r.alive = false;
-  r.timers.forEach(clearTimeout);
+  clearTimeout(r.qt);
+  r.q = [];
   if (r.raf) cancelAnimationFrame(r.raf);
   if (r.root) {
     const g = r.root;

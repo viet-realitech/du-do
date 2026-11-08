@@ -42,7 +42,11 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await expect(lt.locator('.lt-h')).toContainText('1/3');
   await expect(lt.locator('.lt-h')).toContainText('2/3', { timeout: 7000 });
   expect(await page.locator('#map g.scene g.bd').count()).toBeGreaterThanOrEqual(2);
-  // "›" skips the rest of a long battle step
+  // "›" steps the battle beat by beat (a tap on the caption does the same), then moves on to the next event
+  await page.locator('#tourb [data-t=next]').click();
+  await expect(lt.locator('.lt-h')).toContainText('3/3', { timeout: 1500 });
+  await page.locator('#tourb [data-t=next]').click();
+  await expect(lt).toContainText(/khép trận/i, { timeout: 2500 });
   await page.locator('#tourb [data-t=next]').click();
   await expect(page.locator('#tourb')).toContainText('2/', { timeout: 5000 });
   // reading mode pauses instead of stopping: ❚❚ holds the step, ▶ goes on from it
@@ -262,6 +266,12 @@ test('an event page replays its battle scene; Back closes the replay without lea
   await expect(page.locator('#replb')).toContainText('Điện Biên Phủ');
   await expect(page.locator('#mapwrap.tilt')).toHaveCount(1, { timeout: 3000 });
   await expect(page.locator('#mapwrap .lt')).toContainText('Him Lam', { timeout: 6000 });
+  // the teacher can step the siege: › or a tap on the caption shows the next beat at once
+  await page.locator('#replb [data-t=rnext]').click();
+  await expect(page.locator('#mapwrap .lt')).toContainText('Độc Lập', { timeout: 1500 });
+  await page.locator('#mapwrap .lt').click();
+  await expect(page.locator('#mapwrap .lt')).toContainText('A1, C1', { timeout: 1500 });
+  await expect(page.locator('#map g.scene text.fx-at')).not.toHaveCount(0); // place names at the arrow heads
   await page.goBack();
   await expect(page.locator('#replb')).toHaveCount(0);
   expect(page.url()).toContain('localhost');
@@ -304,7 +314,7 @@ test('battle pieces follow the sources: a doubted attack, an engagement, an unop
   // the three fallen French positions greyed out, and a way into the perspectives
   await replay('dbp');
   await expect(page.locator('#map g.scene circle.fx-ring')).toHaveCount(1, { timeout: 16000 });
-  await expect(page.locator('#mapwrap .endw .stamp')).toHaveText('7.5.1954', { timeout: 12000 });
+  await expect(page.locator('#mapwrap .endw .stamp')).toHaveText('7.5.1954', { timeout: 18000 }); // beats are read at ≥2.8 s each
   await expect(page.locator('#mapwrap .lt.end p')).toContainText('thất thủ');
   await expect(page.locator('#map g.scene rect[fill-opacity="0"]')).toHaveCount(3, { timeout: 2000 });
   await page.locator('#mapwrap .lt.end [data-tab=v]').click();

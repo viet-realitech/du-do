@@ -5,10 +5,10 @@ import { ERAS, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
 import { $ } from './ui/dom';
 import { SND } from './audio';
-import { canSpeak, hush, speak } from './narration';
+import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -104,7 +104,9 @@ function tourStep(): void {
     const card = isPlay() && needsDecision(v), rush = !!tour!.rush, voiced = !rush && S.narr && canSpeak(evKey(v));
     // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s); "Điểm rẽ ›": bay tới, mở thẻ ngay
     const hold = fr ? sceneHold(v) : 0, cardAt = rush ? 1700 : fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
-    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
+    // bước nhịp (›, chạm phụ đề): cảnh ngắn lại thì hẹn lại bước tour; đang có lời kể thì để lời kể xong tự đi tiếp
+    const stepped = () => { if (live() && !speaking()) next(Math.max(900, sceneLeft() + (card ? 600 : 1200))); };
+    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
@@ -267,7 +269,8 @@ function tourBar(): void {
         }
         tourBar();
       }
-      else if (a === 'next') { if (tour && !tour.paused && tour.next) { hush(); tour.next(0); } } // bỏ qua bước đang chạy (bước có thẻ: mở thẻ ngay)
+      // "›": cảnh còn nhịp thì sang nhịp kế; hết nhịp thì bỏ qua bước đang chạy (bước có thẻ: mở thẻ ngay)
+      else if (a === 'next') { if (tour && !tour.paused && tour.next && !stepScene()) { hush(); tour.next(0); } }
       else if (a === 'skip') skipTour();
       else if (a === 'stop') stopTour();
       else if (a === 'resume') resumeTour();

@@ -7,7 +7,7 @@ import { hush, speak } from './narration';
 import { evKey, evSpeech } from './speech';
 import { SND } from './audio';
 import { zoomFit, zoomK, paintMap } from './map';
-import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt } from './scene';
+import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene } from './scene';
 import { renderMain } from './view';
 import { resumeTour } from './tour';
 
@@ -38,11 +38,12 @@ export function replayEvent(id: string): void {
     bar = document.createElement('div');
     bar.id = 'replb';
     bar.className = 'tour replay';
-    bar.innerHTML = '<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip" data-t="again">↻ Xem lại</button><button class="chip" data-t="rclose">Đóng</button>';
+    bar.innerHTML = '<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">›</button><button class="chip" data-t="again">↻ Xem lại</button><button class="chip" data-t="rclose">Đóng</button>';
     wrap.appendChild(bar);
     bar.addEventListener('click', ev => {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
-      if (a === 'again') replayEvent(bar!.dataset.id!);
+      if (a === 'rnext') stepScene();
+      else if (a === 'again') replayEvent(bar!.dataset.id!);
       else if (a === 'rclose') closeReplay();
     });
   }
