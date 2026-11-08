@@ -68,7 +68,9 @@ export function applyFx(fx: Fx): Fx {
 /** Thẻ của sự kiện; thẻ cả nước có lựa chọn riêng cho vùng quê của dòng họ (VARIANT) thì dùng lựa chọn đó. */
 export function cardOf(v: HistEvent): Card | undefined {
   if (v.diary) return undefined;
-  const c = CARD[v.id], va = c && VARIANT[v.id]?.find(x => x.regions.includes(home()[3]));
+  const c = CARD[v.id];
+  if (!c || S.cardv[v.id] === 'base') return c; // quyết trước khi có lựa chọn theo vùng: giữ bộ gốc
+  const picked = Object.values(S.picks), va = VARIANT[v.id]?.find(x => x.regions.includes(home()[3]) && !x.notPicks?.some(p => picked.includes(p)));
   return va ? [c[0], c[1], va.choices] : c;
 }
 /** Bắt buộc quyết định: cả nước, hoặc sự kiện chạm tới quê nhà. */

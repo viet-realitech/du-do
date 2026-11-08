@@ -20,9 +20,10 @@ const POW_KEYS = Object.keys(POWERS) as (keyof typeof POWERS)[];
 /** Chip hiệu ứng: tài nguyên và quan hệ, có dấu. */
 /** Chip hiệu ứng. Có `got` (phần đổi thực): khoản bị chặn ở 0 / 100 hiện mờ với lời giải thích thay vì biến mất.
     Không có `got` (đang chọn): quan hệ đã kịch trần / chạm đáy theo đúng chiều thì chip mờ, báo trước là không thêm được. */
-export function fxChipsPlay(fx: Fx, got?: Fx): string {
+export function fxChipsPlay(fx: Fx, got?: Fx, plain = false): string {
   const out: string[] = [];
   const capped = (k: keyof Fx, n: number) => {
+    if (plain) return false; // thẻ đã quyết mở lại: ghi đúng hiệu ứng đã chọn, không so với quan hệ hôm nay
     const cur = (k in S.res ? (S.res as Record<string, number>)[k] : (S.rel as Record<string, number>)[k]) ?? 50;
     return got ? !got[k] : (n > 0 && cur >= 100) || (n < 0 && cur <= 0);
   };
@@ -61,7 +62,7 @@ export function openCard(v: HistEvent, inTour = false): void {
     const picked = done && S.cards[v.id] === i;
     return `<button class="opt${picked ? ' sel' : ''}" data-i="${i}" role="radio" aria-checked="${picked}"${no || (done && !picked) ? ' disabled' : ''}>
       <div class="tt"><h3>${esc(ch[0])}</h3>${no ? `<span class="mono" style="color:var(--red)">${no}</span>` : al ? `<span class="al mono ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : ''}</div>
-      <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
+      <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2], undefined, done)}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
   }).join('')}</div>
   ${done ? '' : '<div style="height:10px"></div><button class="btn" id="cgo" disabled>Chọn một cách ứng xử</button>'}
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>

@@ -237,8 +237,14 @@ test('reaching the present opens the last quiz, then the ending', async ({ page 
   await expect(page.locator('.cine.film')).toHaveCount(0);
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
-  // the film can be held on a slide (Space or ❚❚) and resumed
+  // the film can be held on a slide (Space or ❚❚) and resumed; Space with focus on ✕ pauses, it does not close
   const pz = page.locator('.cine.film .pz');
+  await expect(page.locator('.cine.film .x')).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(pz).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.cine.film:not(.out)')).toHaveCount(1);
+  await page.keyboard.press('Space');
+  await expect(pz).toHaveAttribute('aria-pressed', 'false');
   await pz.click();
   await expect(pz).toHaveAttribute('aria-pressed', 'true');
   const w = await page.locator('.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width);
@@ -281,7 +287,17 @@ test('an event page replays its battle scene; Back closes the replay without lea
   await page.locator('.ov .hero .hplay').click();
   await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('2/', { timeout: 9000 });
   await page.locator('#replb [data-t=again]').click();
-  await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('1/', { timeout: 5000 });
+  // › during the fly-in goes to the first beat, not past the battle
+  await page.locator('#replb [data-t=rnext]').click();
+  await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('1/', { timeout: 1500 });
+  // tapping the caption through to the close, then once more: the replay stays (the tap never falls through to the map)
+  for (const t of ['2/', '3/', '4/']) { await page.locator('#mapwrap .lt').click(); await expect(page.locator('#mapwrap .lt .lt-h')).toContainText(t, { timeout: 1500 }); }
+  await page.locator('#mapwrap .lt').click();
+  await expect(page.locator('#mapwrap .lt.end')).toBeVisible({ timeout: 2500 });
+  await page.locator('#mapwrap .lt.end p').click();
+  await page.waitForTimeout(400);
+  await expect(page.locator('#replb')).toHaveCount(1);
+  await expect(page.locator('#mapwrap.tilt')).toHaveCount(1);
   await page.locator('#replb [data-t=rclose]').click();
   await expect(page.locator('#replb')).toHaveCount(0);
   // a treaty has no scene to replay

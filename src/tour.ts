@@ -67,6 +67,7 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
 
 export function startTour(eIn?: Era): void {
   stopTour();
+  live0();
   hidePop();
   const e = eIn || eraOf(S.year);
   if (!S.picks[e.id]) {
@@ -106,7 +107,8 @@ function tourStep(): void {
     const hold = fr ? sceneHold(v) : 0, cardAt = rush ? 1700 : fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
     // bước nhịp (›, chạm phụ đề): cảnh ngắn lại thì hẹn lại bước tour; đang có lời kể thì để lời kể xong tự đi tiếp
     const stepped = () => { if (live() && !speaking()) next(Math.max(900, sceneLeft() + (card ? 600 : 1200))); };
-    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped); // cảnh động: trận đánh, ấn triện, phim tư liệu
+    const onward = () => { if (live()) { hush(); next(0); } }; // chạm phụ đề khi đã hết nhịp: như "›"
+    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped, onward); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
@@ -158,6 +160,7 @@ function finishTour(): void {
 export function pauseForCard(v: HistEvent): boolean {
   if (!tour || tour.cur !== v.id || tour.paused) return false;
   clearTimeout(tour.t);
+  clearTimeout(mapIdle);
   endScene(); // cảnh chạy lại khi tour đi tiếp; không nổ pháo dưới thẻ quyết định
   tour.paused = 'card';
   tourBar();
@@ -211,10 +214,15 @@ export function stopTour(): void {
 }
 
 /** Trình đọc màn hình: báo bước tour mới (vùng ẩn, lịch sự, không chen lời đọc). */
-function announce(t: string): void {
+const live0 = (): HTMLElement => {
   let n = document.getElementById('tourlive');
   if (!n) { n = document.createElement('div'); n.id = 'tourlive'; n.className = 'sr'; n.setAttribute('aria-live', 'polite'); document.getElementById('app')!.appendChild(n); }
-  n.textContent = t;
+  return n;
+};
+function announce(t: string): void {
+  const n = live0();
+  n.textContent = '';
+  setTimeout(() => { n.textContent = t; }, 120); // vùng thông báo phải có sẵn (rỗng) trước khi điền thì trình đọc mới đọc
 }
 
 /** "Điểm rẽ ›": Đọc sử thì tới điểm rẽ ngay. Trò chơi còn sự kiện dòng họ phải quyết định thì không bật thẻ liền
@@ -227,12 +235,14 @@ function skipTour(): void {
     const must = (v: HistEvent) => !v.diary && needsDecision(v) && (mustDecide(v) || !!specialFor(v));
     const cur = tour.L[tour.i], rest = tour.L.slice(tour.i + 1).filter(must);
     if ((cur && must(cur)) || rest.length) {
+      clearTimeout(mapIdle); // tạm dừng vì cử chỉ bản đồ: đừng để hẹn "chạy tiếp sau 5 s" mở thêm thẻ đè lên thẻ này
       tour.L = [...tour.L.slice(0, tour.i + 1), ...rest];
       tour.rush = true;
       tour.paused = undefined;
-      if (cur && must(cur) && tour.cur === cur.id && tour.next) { endScene(); tourBar(); tour.next(0); return; } // thẻ của bước này mở ngay
+      tourBar(); // bỏ nút "Điểm rẽ ›" ngay, báo số quyết định còn lại
+      if (cur && must(cur) && tour.cur === cur.id && tour.next) { endScene(); tour.next(0); return; } // thẻ của bước này mở ngay
       endScene();
-      tour.i++;
+      if (!(cur && must(cur))) tour.i++; // bước đang bay tới một quyết định còn nợ: chạy lại chính bước đó (không bỏ mất)
       tourStep();
       return;
     }
@@ -262,9 +272,10 @@ function tourBar(): void {
         S.narr = !S.narr; save();
         if (!S.narr) { // không để bước hiện tại treo; cảnh động vẫn giữ đủ thời gian (sceneHold)
           hush();
-          if (tour && !tour.paused && tour.next) {
-            const v = tour.L[tour.i], el = performance.now() - (tour.t0 || 0);
-            tour.next(v && sceneFrame(v) ? Math.max(600, sceneHold(v) - el) : 600);
+          if (tour && !tour.paused && tour.next && !tour.rush) { // "Điểm rẽ ›": bước đã hẹn mở thẻ, không hẹn lại
+            const v = tour.L[tour.i], el = performance.now() - (tour.t0 || 0), left = sceneLeft();
+            // đang có cảnh: theo đồng hồ của cảnh (đã tính các lần bước nhịp); chưa / không có cảnh: theo thời gian đã qua
+            tour.next(v && sceneFrame(v) ? Math.max(600, left ? left + (needsDecision(v) && isPlay() ? 600 : 1200) : sceneHold(v) - el) : 600);
           }
         }
         tourBar();
@@ -282,7 +293,7 @@ function tourBar(): void {
   const state = paused === 'card' ? ' · chờ quyết định' : paused ? ' · tạm dừng' : '';
   const left = tour.rush ? L.slice(i).filter(v => needsDecision(v)).length : 0;
   b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định · Chương ${e.n}` : `${at}/${n} · Chương ${e.n}`}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
-    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Sự kiện kế tiếp" title="Sự kiện kế tiếp">›</button>'}${tour.rush ? '' : '<button class="chip" data-t="skip">Điểm rẽ ›</button>'}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
+    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Tiếp: nhịp trận kế tiếp, hết nhịp thì sự kiện kế tiếp" title="Nhịp / sự kiện kế tiếp">›</button>'}${tour.rush ? '' : '<button class="chip" data-t="skip">Điểm rẽ ›</button>'}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
   if (fk) (b.querySelector<HTMLElement>(`[data-t="${fk}"]`) || b.querySelector<HTMLElement>(fk === 'next' ? '[data-t=resume]' : '[data-t=stop]'))?.focus({ preventScroll: true });
   const pb = $('#play')!;
   pb.textContent = paused && paused !== 'card' ? '▶' : '❚❚';

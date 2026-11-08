@@ -140,7 +140,8 @@ export function montage(): void {
     if (paused) {
       seq++; clearTimeout(timer); hush();
       const b = bars[i];
-      if (b) { const w = b.parentElement!.getBoundingClientRect().width || 1; b.style.setProperty('transition', 'none', 'important'); b.style.width = `${(b.getBoundingClientRect().width / w) * 100}%`; }
+      // đọc độ rộng đang chạy trước khi tắt hiệu ứng (tắt trước thì trình duyệt nhảy luôn tới cuối)
+      if (b) { const w = b.parentElement!.getBoundingClientRect().width || 1, now = b.getBoundingClientRect().width; b.style.setProperty('transition', 'none', 'important'); b.style.width = `${(now / w) * 100}%`; }
     } else void show(i);
   };
   const back = document.activeElement as HTMLElement | null;
@@ -159,7 +160,8 @@ export function montage(): void {
   // Escape / Back do history.ts xử lý (bấm ✕); ở đây chỉ còn phím mũi tên
   const key = (ev: KeyboardEvent) => {
     if (ev.key === 'ArrowRight') void show(i + 1); else if (ev.key === 'ArrowLeft') void show(i - 1);
-    else if (ev.key === ' ' && !(ev.target as Element).closest?.('button')) { ev.preventDefault(); toggle(); }
+    // Space: tạm dừng / chạy tiếp (kể cả khi tiêu điểm đang ở ✕, nơi Space mặc định sẽ đóng phim); nút ❚❚ tự xử lý
+    else if (ev.key === ' ' && !(ev.target as Element).closest?.('.pz')) { ev.preventDefault(); toggle(); }
   };
   addEventListener('keydown', key);
   app.inert = true;

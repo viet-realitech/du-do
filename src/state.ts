@@ -1,5 +1,6 @@
 import { surnameKey } from './data/surnames';
 import { ERAS, EV, FIG, FIGERA, type Era, type HistEvent, type Option, type ValueKey } from './data';
+import { VARIANT } from './data/cards';
 
 export type Theme = 'archive' | 'night' | 'poster';
 export type Res = { g: number; d: number; b: number; u: number };
@@ -62,11 +63,13 @@ export interface State {
   mapTapped: boolean;
   shared: boolean;
   ended: boolean;
+  /** Thẻ đã quyết bằng bộ lựa chọn gốc trước khi có lựa chọn theo vùng (VARIANT): chỉ số lưu trong `cards` hiểu theo bộ gốc. */
+  cardv: Record<string, 'base'>;
 }
 
 const def: State = {
   step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false,
+  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {},
 };
 
 function load(mode = activeMode()): State {
@@ -77,6 +80,9 @@ function load(mode = activeMode()): State {
   // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
   if (!('xFrom' in raw)) s.xFrom = typeof raw.year === 'number' ? raw.year : Y0;
   s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])];
+  // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa)
+  s.cardv = { ...(s.cardv || {}) };
+  if (!('cardv' in raw)) for (const id of Object.keys(VARIANT)) if (s.cards && id in s.cards) s.cardv[id] = 'base';
   s.mode = mode;
   s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
   return s;
@@ -90,7 +96,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;

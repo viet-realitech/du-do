@@ -22,6 +22,10 @@ interface Run {
   id: string; q: { at: number; f: () => void }[]; qt: number; skew: number; marks: number[]; parts: Part[]; raf: number;
   root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; stamp?: HTMLElement | null;
   len: number; t0: number; alive: boolean; onEnd?: () => void; onStep?: () => void;
+  /** Chạm phụ đề khi hết nhịp: người mở cảnh quyết (tour: sang sự kiện kế; xem lại: không làm gì). */
+  onNext?: () => void;
+  /** Tiếng nền của trận (pháo xa / sóng): lúc hết (đồng hồ ảo), để nhảy nhịp thì phát lại phần còn lại. */
+  bed?: { kind: 'rumble' | 'waves'; end: number };
 }
 let cur: Run | null = null;
 
@@ -60,6 +64,8 @@ const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 4
 
 /** Tít mở trận: tên trận, thời gian, nơi, các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
 const TTL_AT = 550;
+/** Lúc (ms) cảnh bắt đầu vẽ: bản đồ đã bay tới nơi (zoomTo 1,2 s), kích thước tính theo zoom lúc đó. */
+const DRAW_AT = 1250;
 function titleCard(r: Run, v: HistEvent, sc: Scene): void {
   const wrap = document.getElementById('mapwrap');
   if (!wrap) return;
@@ -123,8 +129,9 @@ function caption(r: Run, html: string, col: string, cls = ''): void {
   let b = r.lt;
   if (!b) {
     b = document.createElement('div'); b.setAttribute('role', 'status'); wrap.appendChild(b); r.lt = b;
-    // chạm phụ đề: sang nhịp kế (như "›"); phần khép trận có nút riêng nên không bắt chạm
-    b.addEventListener('click', ev => { if (!(ev.target as Element).closest('button, a') && cur === r) stepScene(); });
+    // chạm phụ đề: sang nhịp kế (như "›"). Phụ đề nhận chạm suốt cảnh (CSS), nên chạm không lọt xuống bản đồ nghiêng
+    // (chạm bản đồ = cắt cảnh); nút trong phụ đề (Góc nhìn) đi theo đường data-a như mọi nút khác
+    b.addEventListener('click', ev => { if (!(ev.target as Element).closest('button, a')) tapCaption(r); });
   }
   b.className = 'lt' + cls;
   later(r, 0, () => b!.classList.toggle('step', sceneSteppable())); // sau khi nhịp này đã được đánh dấu
@@ -132,7 +139,7 @@ function caption(r: Run, html: string, col: string, cls = ''): void {
   b.style.setProperty('--c', col);
   const bar = barEl();
   b.style.bottom = `${(bar ? wrap.clientHeight - bar.offsetTop : 0) + 8}px`;
-  b.innerHTML = html;
+  b.innerHTML = `<div class="lt-i">${html}</div>`; // hiệu ứng lau chữ chạy trên lớp trong: khung ngoài luôn nhận chạm
   b.classList.remove('in');
   void b.offsetWidth;
   b.classList.add('in');
@@ -194,15 +201,21 @@ function tick(r: Run): void {
   arm(r);
 }
 let lateBy = 0;
-/** Đánh dấu một nhịp (hay phần khép trận) bắt đầu sau `ms` nữa: "›" / chạm phụ đề nhảy tới đó. */
-function mark(r: Run, ms: number): void { r.marks.push(vnow(r) + ms); }
 /** Nhảy đồng hồ của cảnh tới trước `d` ms: hẹn giờ tới hạn chạy ngay theo thứ tự, chuyển động đang dở chạy tới cuối. */
 function jump(r: Run, d: number): void {
   if (d <= 0) return;
   const now = performance.now();
   r.skew += d;
-  for (const p of r.parts) p.t0 = Math.max(p.t0 - d, now - p.dur); // chạy hết, không bị coi là quá hạn (vẫn gọi done)
   clearTimeout(r.qt);
+  // tiếng đã hẹn trên đồng hồ âm thanh không nhảy theo: cắt bus của cảnh, phát lại phần tiếng nền còn lại
+  WAR.close(); WAR.open();
+  const left = r.bed ? (r.bed.end - vnow(r)) / 1000 : 0;
+  if (r.bed && left > 1) WAR[r.bed.kind](left, 0);
+  // chuyển động mà cú nhảy đưa tới cuối: vẽ trạng thái cuối và gọi done() ngay, trước các nhịp sau (đầu mũi tên, nhãn
+  // địa danh có mặt kịp để nhịp sau làm mờ cùng mũi tên của chúng)
+  const fin: Part[] = [];
+  r.parts = r.parts.filter(p => { p.t0 = Math.max(p.t0 - d, now - p.dur); if (now - p.t0 >= p.dur) { fin.push(p); return false; } return true; });
+  for (const p of fin) { p.step(1); p.done?.(); if (!r.alive) return; }
   tick(r);
 }
 /** Cảnh đang chạy còn nhịp phía trước thì nhảy tới nhịp đó (hay phần khép trận) và trả true; hết nhịp thì false. */
@@ -214,6 +227,11 @@ export function stepScene(): boolean {
   jump(r, t - now);
   r.onStep?.();
   return true;
+}
+/** Chạm phụ đề: sang nhịp kế; hết nhịp thì để người mở cảnh quyết (tour đi tiếp, xem lại đứng yên). */
+function tapCaption(r: Run): void {
+  if (cur !== r || !r.alive) return;
+  if (!stepScene()) r.onNext?.();
 }
 /** Cảnh đang chạy có nhịp để bước (cho phép chạm phụ đề). */
 export const sceneSteppable = (): boolean => !!cur && cur.alive && cur.marks.some(m => m > vnow(cur!) + 250);
@@ -391,8 +409,8 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     anim(r, ringDur, q => { if (hd.stop) { ring.setAttribute('opacity', '0'); return; } const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
   }
   const bed = Math.max(5, Math.min(14, (L0 + total) / 1000)); // tiếng nền kéo suốt các nhịp
-  if (type === 'land' || type === 'siege') WAR.rumble(bed, T0 / 1000);
-  if (type === 'naval' || type === 'landing') WAR.waves(bed, T0 / 1000);
+  if (type === 'land' || type === 'siege') { WAR.rumble(bed, T0 / 1000); r.bed = { kind: 'rumble', end: vnow(r) + T0 + bed * 1000 }; }
+  if (type === 'naval' || type === 'landing') { WAR.waves(bed, T0 / 1000); r.bed = { kind: 'waves', end: vnow(r) + T0 + bed * 1000 }; }
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
   // máy yếu: bỏ cánh quạt quay, bụi xích (mọi thứ khác giữ nguyên)
@@ -424,11 +442,11 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     parts[i] = [under, line, head];
     if (arrows.length > 1) parts[i].push(badge(root, a, k, i + 1, col));
     later(r, start, () => beat(r, parts, i, beatHtml(side, v.y, note, i, arrows.length), col));
-    mark(r, start);
     // quân cờ đi theo mũi tên (nghi vấn thì không: sử liệu không chắc có lực lượng nào ở đó)
     const pc = act === 'doubt' ? null : drawPiece(kind, col, root, sy), airborne = kind === 'plane' || kind === 'para';
     if (pc) parts[i].push(pc.g);
-    if (pc) { if (airborne) WAR.plane(start / 1000); else if (kind === 'armour') WAR.tank(sdur / 1000, start / 1000); else if (kind === 'heli') WAR.heli(sdur / 1000, start / 1000); }
+    // tiếng động cơ theo nhịp, hẹn trên đồng hồ của cảnh (bước nhịp thì tiếng tới cùng mũi tên, không trễ)
+    if (pc) later(r, start, () => { if (airborne) WAR.plane(0); else if (kind === 'armour') WAR.tank(sdur / 1000, 0); else if (kind === 'heli') WAR.heli(sdur / 1000, 0); });
     // quân cờ đi sau đầu mũi tên và dừng ở khoảng 3/4 đường (không đè đầu mũi tên, vị trí giữ, khói)
     const put = (e: number, s = 1) => {
       if (!pc) return;
@@ -515,7 +533,6 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   });
   if (arrows.length && sc) {
     later(r, L0 + total + OUTRO_AT, () => outcome(r, v, sc, hs, parts, k));
-    mark(r, L0 + total + OUTRO_AT);
     r.len = 1250 + L0 + total + OUTRO;
   }
   if (!arrows.length) { // chưa có dữ liệu mũi tên: vài chớp lửa tại chỗ
@@ -592,8 +609,7 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     parts[i] = [gU, gL];
     if (mv.paths.length > 1) parts[i].push(badge(root, pts[0], k, i + 1, col));
     later(r, start, () => beat(r, parts, i, beatHtml(side, v.y, note, i, mv.paths.length, MODE[mode] ? ' · ' + MODE[mode] : ''), col));
-    mark(r, start);
-    if (mode === 'air') WAR.plane(start / 1000); // tiếng máy bay cùng lúc máy bay cất cánh
+    if (mode === 'air') later(r, start, () => WAR.plane(0)); // tiếng máy bay cùng lúc máy bay cất cánh
     let cur = 0;
     anim(r, dur, q => {
       const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2, h = e * N;
@@ -618,7 +634,6 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     });
   });
   later(r, T0 + total, () => closing(r, parts, mv.paths.map(x => x[3]), v.y));
-  mark(r, T0 + total);
   r.len = 1250 + T0 + total;
 }
 
@@ -761,15 +776,23 @@ function reelAt(v: HistEvent): number {
 export const sceneHold = (v: HistEvent): number => Math.min(24000, Math.max(6500, sceneLen(v) + 2500));
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
-export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onStep?: () => void): void {
+/** `onStep`: vừa nhảy nhịp (tour hẹn lại bước); `onNext`: chạm phụ đề khi đã hết nhịp. */
+export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onStep?: () => void, onNext?: () => void): void {
   endScene();
   document.querySelectorAll('#mapwrap .lt.out').forEach(n => n.remove()); // phụ đề cảnh trước: gỡ ngay, không mờ dần dưới cảnh mới
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
-  const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep };
+  const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep, onNext };
   cur = r;
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
+  // các mốc nhịp biết trước từ dữ liệu (cảnh vẽ lúc DRAW_AT): "›" khi bản đồ còn đang bay / thẻ tên trận còn hiện thì
+  // sang nhịp đầu, không bỏ qua cả trận
+  const bt = beats(v);
+  if (h && !v.diary && bt.length) {
+    const base = DRAW_AT + 120 + lead(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0);
+    r.marks = [...B.map(b => base + b), base + total + (lead(v) ? OUTRO_AT : 0)];
+  }
   // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng
   const at = reelAt(v);
   // bước sẽ dừng (mở thẻ) trước khi khung tư liệu kịp hiện ~2 s: bỏ, khỏi tải phim / ảnh rồi gỡ ngay
@@ -782,7 +805,7 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
     later(r, 120, () => { if (!speaking()) WAR.sting(sc.type); }); // một tiếng mở trận, xong trước lời kể (voiceAt)
   }
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó
-  later(r, 1250, () => {
+  later(r, DRAW_AT, () => {
     if (v.k === 'Trận đánh') battle(r, v, SCENES[v.id]);
     else if (MOVES[v.id]) movement(r, v, MOVES[v.id]);
     else if (v.k === 'Hiệp ước') treaty(r, v);

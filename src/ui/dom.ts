@@ -11,7 +11,12 @@ export const layer = document.getElementById('layer')!;
    màn hình không đọc lẫn (trước đây Tab đi vào bản đồ, các nút ẩn sau bảng). Bảng Nhân vật / Sử liệu / Hồ sơ
    (.pane) không phủ thanh thẻ nên không tính. */
 const mainEl = document.getElementById('main');
-if (mainEl) new MutationObserver(() => { mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov'); }).observe(layer, { childList: true });
+if (mainEl) new MutationObserver(() => {
+  mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov');
+  // bảng Nhân vật / Sử liệu / Hồ sơ phủ bản đồ: chỉ thanh tab còn dùng được, phần dưới bảng (dòng thời gian, nút zoom…) không nhận tiêu điểm
+  const pane = !!layer.querySelector(':scope > .pane');
+  for (const c of mainEl.children) if (c.id !== 'tabs') (c as HTMLElement).inert = pane;
+}).observe(layer, { childList: true });
 
 export const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);

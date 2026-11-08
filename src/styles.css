@@ -109,12 +109,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @keyframes flick { 0% { opacity: .85 } 100% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { #map { transition: none } .reel img, .reel.old .flick { animation: none } }
 /* phụ đề chân hình của cảnh động (scene.ts caption): mỗi nhịp một ghi chú, viền trái màu phe */
-.lt { position: absolute; left: 10px; right: 10px; max-width: 520px; z-index: 3; background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--acc)); border-radius: 10px; padding: 6px 10px 8px; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); transition: opacity .3s }
-.lt.in { animation: ltin .28s cubic-bezier(.2, .8, .2, 1) }
-.lt.step { pointer-events: auto; cursor: pointer }
+.lt { position: absolute; left: 10px; right: 10px; max-width: 520px; z-index: 3; background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--acc)); border-radius: 10px; padding: 6px 10px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); transition: opacity .3s } /* nhận chạm suốt cảnh (scene.ts caption) */
+.lt.in .lt-i { animation: ltin .28s cubic-bezier(.2, .8, .2, 1) } /* lau chữ trên lớp trong: khung ngoài vẫn nhận chạm */
+.lt.step { cursor: pointer }
 .lt.step .lt-h::after { content: '›'; margin-left: 10px; font-size: 15px; line-height: 1; color: var(--ink3) } /* gợi ý: chạm để sang nhịp kế */
 @keyframes ltin { from { clip-path: inset(0 100% 0 0) } to { clip-path: inset(0) } }
-.lt.out { opacity: 0 }
+.lt.out { opacity: 0; pointer-events: none }
 .lt-h { display: flex; gap: 7px; align-items: center; color: var(--ink2); font-size: 10.5px; letter-spacing: .04em }
 .lt-h i, .lt .lg i { width: 9px; height: 9px; border-radius: 2px; background: var(--c); border: 1px solid #111; flex: none; display: inline-block }
 .lt-h b { color: var(--ink); font-weight: 600 }
