@@ -1,6 +1,6 @@
 /* Kiểm dữ liệu cảnh trận đánh (src/data/scenes.ts): in bảng mọi mũi tên (bên, việc, quân cờ, ghi chú) để rà,
    kiểm các cặp giáp chiến (`meet`) và vòng vây, thoát mã 1 nếu có lỗi. Chạy: npm run scenes */
-import { SCENES, actOf } from '../src/data/scenes';
+import { SCENES, actOf, SIDE_COLOR } from '../src/data/scenes';
 import { kindOf } from '../src/units';
 import { EV, ERAS } from '../src/data';
 import { NEXT } from '../src/play';
@@ -51,6 +51,30 @@ ERAS.forEach((e, i) => {
   // mỗi hướng (trừ điểm rẽ cuối) phải có ít nhất một hướng tiếp nối: thiếu khoá thì mọi lựa chọn sau đều hiện "Rẽ hướng"
   if (nx) for (const o of e.opts) if (!NEXT[o.id]?.length) { console.error(`LỖI NEXT.${o.id}: không có hướng tiếp nối ở điểm rẽ ${nx.n}`); err++; }
 });
+// màu hai phe đối địch trong cùng một trận phải phân biệt được: ΔE76 (Lab) ≥ 30, và ≥ 15 khi mô phỏng mù màu lục
+// (deuteranopia, ma trận Machado 2009). Đồng minh được phép gần màu nhau.
+const ALLIES = [['phap', 'es'], ['vndcch', 'cmlt'], ['my', 'vnch'], ['dainam', 'cd'], ['dainam', 'nghiaquan']];
+const lin = (c: number) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+const rgbOf = (hex: string) => [1, 3, 5].map(i => lin(parseInt(hex.slice(i, i + 2), 16)));
+const DEU = [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]];
+const lab = ([r, g, b]: number[]) => {
+  const f = (t: number) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+  const X = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, Y = 0.2126 * r + 0.7152 * g + 0.0722 * b, Z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
+  return [116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))];
+};
+const dE = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const deu = (c: number[]) => DEU.map(row => Math.max(0, Math.min(1, row[0] * c[0] + row[1] * c[1] + row[2] * c[2])));
+const seenPair = new Set<string>();
+for (const [id, sc] of Object.entries(SCENES)) {
+  const sides = [...new Set([...sc.arrows.map(a => a[2]), ...sc.hold.map(h => h[2])])];
+  for (let i = 0; i < sides.length; i++) for (let j = i + 1; j < sides.length; j++) {
+    const [a, b] = [sides[i], sides[j]];
+    if (ALLIES.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) continue;
+    const ca = rgbOf(SIDE_COLOR[a] || '#f1e6c8'), cb = rgbOf(SIDE_COLOR[b] || '#f1e6c8');
+    const n = dE(lab(ca), lab(cb)), d = dE(lab(deu(ca)), lab(deu(cb)));
+    if (n < 30 || d < 15) { const k = [a, b].sort().join('/'); if (!seenPair.has(k)) { seenPair.add(k); console.error(`LỖI màu ${id}: ${a} ${SIDE_COLOR[a]} và ${b} ${SIDE_COLOR[b]} khó phân biệt (ΔE ${n.toFixed(0)}, mù màu lục ${d.toFixed(0)})`); err++; } }
+  }
+}
 // thẻ theo vùng: cùng số lựa chọn với thẻ gốc (S.cards lưu chỉ số), vùng hợp lệ
 for (const [id, vs] of Object.entries(VARIANT)) {
   if (!CARD[id]) { console.error(`LỖI VARIANT.${id}: không có thẻ gốc`); err++; continue; }

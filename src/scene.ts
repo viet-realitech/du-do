@@ -76,6 +76,8 @@ export function closeAt(v: HistEvent): number {
 /** Kiểu rung theo loại trận (Android; iOS không rung). */
 /** Cỡ quân cờ trên sa bàn (so với nét vẽ gốc ~18 px). */
 const PIECE = 1.35;
+/** Máy tính bảng / màn rộng: quân cờ to hơn một phần ba (đọc được từ cuối lớp). */
+const piece = () => PIECE * (innerWidth >= 700 ? 1.3 : 1);
 const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 40, 30, 90], naval: [25, 70, 25], landing: [30, 50, 60], uprising: [10, 110, 10, 110, 10], air: [18] };
 
 /** Tít mở trận: tên trận, thời gian, nơi, các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
@@ -453,7 +455,8 @@ const box = (x: number, y: number, rx: number, ry: number): Box => [x - rx, y - 
 /** Chỗ đặt nhãn địa danh cạnh điểm p (đơn vị bản đồ): thử trên, dưới, phải, trái, rồi xa hơn; chọn chỗ đầu tiên không đè
     lên nhãn / đầu mũi tên / vị trí giữ đã có (so bằng px màn hình), ghi chỗ đó vào `placed`. dx, dy tính bằng px. */
 function labelSpot(placed: Box[], p: [number, number], k: number, sy: number, t: string): { dx: number; dy: number; anchor: string } {
-  const w = t.length * 6.1 + 4, h = 12, x = p[0] * k, y = (p[1] * k) / sy; // bản đồ nghiêng: chiều dọc trên màn hình co lại sy lần
+  const fs = innerWidth >= 700 ? 1.2 : 1; // màn rộng: nhãn 12 px (styles.css .fx-at)
+  const w = t.length * 6.1 * fs + 4, h = 12 * fs, x = p[0] * k, y = (p[1] * k) / sy; // bản đồ nghiêng: chiều dọc trên màn hình co lại sy lần
   const tries: [number, number, string][] = [[0, -13, 'middle'], [0, 19, 'middle'], [11, 4, 'start'], [-11, 4, 'end'], [0, -27, 'middle'], [0, 33, 'middle'], [24, -10, 'start'], [-24, -10, 'end']];
   const rect = ([dx, dy, a]: [number, number, string]): Box => {
     const x0 = a === 'middle' ? x + dx - w / 2 : a === 'start' ? x + dx : x + dx - w;
@@ -529,7 +532,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     // quân cờ đi sau đầu mũi tên và dừng ở khoảng 3/4 đường (không đè đầu mũi tên, vị trí giữ, khói)
     const put = (e: number, s = 1) => {
       if (!pc) return;
-      const t = airborne ? e : e * 0.74, p = c.at(t), p2 = c.at(Math.min(1, t + 0.02)), z = s * PIECE;
+      const t = airborne ? e : e * 0.74, p = c.at(t), p2 = c.at(Math.min(1, t + 0.02)), z = s * piece();
       pc.g.setAttribute('transform', `translate(${p[0]},${p[1]}) scale(${z / k},${(z * sy) / k})`);
       pc.body.setAttribute('transform', `rotate(${(Math.atan2(p2[1] - p[1], p2[0] - p[0]) * 180) / Math.PI})`);
     };
@@ -586,7 +589,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
         }
         const ground = drawPiece('inf', col, root, sy);
         parts[i].push(ground.g);
-        const gp = c.at(0.74), z = 0.85 * PIECE;
+        const gp = c.at(0.74), z = 0.85 * piece();
         ground.g.setAttribute('transform', `translate(${gp[0]},${gp[1]}) scale(${z / k},${(z * sy) / k})`);
         later(r, calm.matches ? 0 : 1200, () => { const lineOp = parts[i][1].getAttribute('opacity'); if (lineOp === '0.45') { ground.g.setAttribute('data-op', '1'); ground.g.setAttribute('opacity', '0.45'); } else ground.g.setAttribute('opacity', '1'); });
       }

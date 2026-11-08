@@ -29,8 +29,8 @@ export const actOf = (a: Arrow): Act => a[4]?.act || (/(^|\s)rút(\s|,|$)/.test(
 
 /** Màu mũi tên theo bên (sáng, đọc được trên mọi màu lãnh thổ; luôn có viền tối). */
 export const SIDE_COLOR: Record<string, string> = {
-  dainam: '#f2c443', phap: '#5b8ef0', es: '#e9a23b', cd: '#c3cad4', jp: '#ff6159', th: '#7fb0ff',
-  vndcch: '#ff4b3e', cmlt: '#ff7d6b', linhtho: '#e7d3a8', vnch: '#ffd84a', bx: '#c58ae6', my: '#4fa3ff', kh: '#d0615c', cn: '#ff8a3d', nghiaquan: '#ffa04a',
+  dainam: '#f2c443', phap: '#5b8ef0', es: '#4fd1c5', cd: '#c3cad4', jp: '#ff6159', th: '#8ee07a',
+  vndcch: '#ff4b3e', cmlt: '#ff7d6b', linhtho: '#e7d3a8', vnch: '#ffd84a', bx: '#c58ae6', my: '#4fa3ff', kh: '#d0615c', cn: '#c77dff', nghiaquan: '#ffa04a',
 };
 export const SIDE_NAME: Record<string, string> = {
   dainam: 'Quân triều Nguyễn', phap: 'Quân Pháp', es: 'Quân Tây Ban Nha', cd: 'Quân Cờ Đen', jp: 'Quân Nhật', th: 'Quân Thái Lan',
