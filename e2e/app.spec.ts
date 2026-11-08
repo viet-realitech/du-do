@@ -143,7 +143,7 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await expect(page.locator('#res')).toBeVisible();
   await expect(page.locator('#map g.home g')).toHaveCount(1); // home marker
   // the first tour stop (Đà Nẵng 1858) touches Huế's region: its card opens by itself and pauses the tour
-  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 }); // opens ~4.5 s into the stop, narration or not
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 }); // opens once the battle scene has played out (~17 s), narration or not
   await expect(page.locator('#tourb')).toContainText('chờ quyết định');
   const before = await page.locator('#res .mt').first().locator('b').first().textContent();
   await page.locator('.scrim .opt').first().click();
@@ -244,6 +244,32 @@ test('battle pieces follow the sources: a doubted attack, an engagement, an unop
   await expect(page.locator('.ov #et button[data-k="v"]')).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('#replb')).toHaveCount(0);
   await expect(page.locator('#mapwrap .endw')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('play mode: a replay cut short by a tab switch keeps the paused tour paused', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: /Vào trò chơi/ }).click();
+  await page.getByRole('button', { name: 'Huế' }).click();
+  await page.getByRole('button', { name: 'Tôn Thất / Nguyễn Phúc' }).click();
+  await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
+  await page.goBack(); // skip the chapter opener
+  await page.locator('.opt').first().click();
+  await page.locator('#go').click();
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 15_000 });
+  // open the first stop's page (pauses the tour), replay its battle, then switch tab mid-replay
+  await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dn58'; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+  await page.locator('#goto').click();
+  await expect(page.locator('#tourb')).toContainText('tạm dừng');
+  await page.locator('.ov .hero .hplay').click();
+  await expect(page.locator('#replb')).toBeVisible();
+  await expect(page.locator('#mapwrap.tilt')).toHaveCount(1, { timeout: 3000 });
+  await page.locator('.tab[data-t=fig]').click();
+  await expect(page.locator('#replb')).toHaveCount(0);
+  await expect(page.locator('#mapwrap.tilt')).toHaveCount(0);
+  await expect(page.locator('#tourb')).toContainText('tạm dừng'); // the tour did not resume behind the pane
+  await page.waitForTimeout(1500);
+  await expect(page.locator('#mapwrap .lt')).toHaveCount(0); // no battle captions running behind the pane
   expect(errors).toEqual([]);
 });
 

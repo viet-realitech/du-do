@@ -8,7 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, sceneLeft, capH, hasScene, voiceAt } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -93,7 +93,7 @@ function tourStep(): void {
     // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
     const card = isPlay() && needsDecision(v), voiced = S.narr && canSpeak(evKey(v));
     // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s)
-    const hold = fr ? sceneHold(v) : 0, cardAt = Math.min(14000, Math.max(4500, hold));
+    const hold = fr ? sceneHold(v) : 0, cardAt = fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
     playScene(v, card && !voiced ? cardAt : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
@@ -109,7 +109,8 @@ function tourStep(): void {
       // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
       next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95), hold) + 2500));
       // kể xong mà cảnh còn nhịp chưa đọc: chờ thêm (tối đa 6 s) cho hết phụ đề
-      setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(6000, sceneLeft()))), false, evKey(v)); }, voiceAt(v));
+      // (Giọng tắt trước lúc này: nút Giọng đã hẹn lại theo cảnh, không đọc nữa)
+      setTimeout(() => { if (live() && tour!.cur === v.id && S.narr) speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(9000, sceneLeft() + (sceneLeft() ? 600 : 0)))), false, evKey(v)); }, voiceAt(v));
     }
     else next(card ? cardAt : fr ? hold : 2900); // không giọng đọc: cảnh động giữ đủ lâu để đọc hết phụ đề
   });
@@ -180,10 +181,12 @@ export function resumeTour(why?: 'overlay'): void {
 
 export function stopTour(): void {
   clearTimeout(mapIdle);
+  // gỡ tour trước khi dừng cảnh: onEnd của phần xem lại (closeReplay) không được khởi động lại bước tour
+  const t = tour;
+  tour = null;
+  if (t) clearTimeout(t.t);
   endScene();
-  if (tour) {
-    clearTimeout(tour.t);
-    tour = null;
+  if (t) {
     renderMain(); // clears the spotlight
     hush();
     mood('calm');

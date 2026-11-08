@@ -189,11 +189,11 @@ export async function initMap(): Promise<void> {
     if (G.k > 1.3 && !S.zoomed) { S.zoomed = true; save(); checkBadges(); }
   });
   svg.call(G.zoom).on('dblclick.zoom', null);
-  // chạm / cuộn trên bản đồ đang nghiêng: làm phẳng ngay trước khi d3 tính điểm neo (tránh bản đồ trượt dưới ngón tay)
-  const flat = () => { if (document.getElementById('mapwrap')?.classList.contains('tilt')) endScene(true); };
-  for (const t of ['pointerdown', 'touchstart', 'wheel']) svg.node()!.addEventListener(t, flat, { capture: true, passive: true });
-  // nút zoom là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
+  // nút zoom, chạm bản đồ nghiêng là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
   const byUser = () => { if (isTouring()) { if (isPlay()) pauseTour('map'); else stopTour(); } };
+  // chạm / cuộn trên bản đồ đang nghiêng: làm phẳng ngay trước khi d3 tính điểm neo (tránh bản đồ trượt dưới ngón tay)
+  const flat = () => { if (document.getElementById('mapwrap')?.classList.contains('tilt')) { endScene(true); byUser(); } }; // cảnh bị cắt: tour không đứng chờ trên bản đồ trống
+  for (const t of ['pointerdown', 'touchstart', 'wheel']) svg.node()!.addEventListener(t, flat, { capture: true, passive: true });
   document.getElementById('zin')!.onclick = () => { byUser(); svg.transition().duration(300).call(G.zoom.scaleBy, 1.6); };
   document.getElementById('zout')!.onclick = () => { byUser(); svg.transition().duration(300).call(G.zoom.scaleBy, 1 / 1.6); };
   document.getElementById('zrs')!.onclick = () => { byUser(); svg.transition().duration(400).call(G.zoom.transform, d3.zoomIdentity); hidePop(); };

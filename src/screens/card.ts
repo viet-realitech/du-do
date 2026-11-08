@@ -1,4 +1,5 @@
 import { type SpecialCard } from '../data/cards2';
+import { closeReplay } from '../replay';
 import { SURNAMES, surnameKey } from '../data/surnames';
 import type { HistEvent } from '../data';
 import type { Fx } from '../data/cards';
@@ -126,7 +127,12 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
   };
 }
 
-on('card', el => { const v = allEv().find(x => x.id === el.dataset.id); if (v && !pauseForCard(v)) openCard(v); });
+on('card', el => {
+  const v = allEv().find(x => x.id === el.dataset.id);
+  if (!v) return;
+  if (document.getElementById('replb')) closeReplay(false); // đang xem lại diễn biến: dừng hẳn trước khi mở thẻ
+  if (!pauseForCard(v)) openCard(v);
+});
 on('close-card', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); continueFlow(); });
 
 /** Chip quan hệ cho chú giải màn chính. */

@@ -350,7 +350,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 
 /* media */
 .hero { margin-top: 16px; height: 190px; border-radius: 14px; overflow: hidden; position: relative }
-.hplay { position: absolute; left: 8px; bottom: 8px; height: 44px; padding: 0 16px; border-radius: 22px; background: rgba(0, 0, 0, .6); color: #fff; font: 500 15px var(--serif); z-index: 1 }
+.hplay { position: absolute; right: 8px; bottom: 8px; /* góc trái dưới là dòng ghi nguồn ảnh (Wikimedia Commons) */ height: 44px; padding: 0 16px; border-radius: 22px; background: rgba(0, 0, 0, .6); color: #fff; font: 500 15px var(--serif); z-index: 1 }
 .tour.replay .rt { font: 600 15px var(--disp); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .mapwrap.replaying #tourb { display: none }
 .hzoom { position: absolute; right: 8px; top: 8px; width: 34px; height: 34px; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; font-size: 15px }

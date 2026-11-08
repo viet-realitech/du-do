@@ -25,8 +25,8 @@ for (const [id, sc] of Object.entries(SCENES)) {
   const ringed = new Set<number>();
   for (const a of sc.arrows) {
     if (actOf(a) !== 'fight' || !/(^|\s)(vây|siết)/.test(a[3]) || /bị vây/.test(a[3])) continue;
-    const t = sc.hold.map((h, j) => ({ j, d: Math.hypot(h[0] - a[1][0], h[1] - a[1][1]), side: h[2] })).filter(h => h.side !== a[2] && !ringed.has(h.j) && h.d <= 0.08).sort((p, q) => p.d - q.d)[0];
-    if (t) { ringed.add(t.j); rings++; console.log(`vòng vây    ${id}: ${a[3]}`); }
+    const t = sc.hold.map((h, j) => ({ j, d: Math.hypot(h[0] - a[1][0], h[1] - a[1][1]), side: h[2] })).filter(h => h.side !== a[2] && h.d <= 0.08).sort((p, q) => p.d - q.d)[0];
+    if (t && !ringed.has(t.j)) { ringed.add(t.j); rings++; console.log(`vòng vây    ${id}: hold ${t.j} (${sc.hold[t.j][2]}) ← ${a[3]}`); }
   }
 }
 // khép trận: chỉ số trong hold, không vừa thất thủ vừa bị bỏ; câu kết phải trích nguyên văn s / x của sự kiện
