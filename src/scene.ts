@@ -533,18 +533,21 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
 function treaty(r: Run, v: HistEvent): void {
   const h = fxHost();
   if (!h || !r.root) return;
-  const k = h.k(), p = h.proj(v.l);
+  // Ấn triện trung tính (vuông, màu son, ghi năm ký), không mang biểu tượng của bên nào; đóng lệch lên phải để không
+  // che tên thành phố.
+  const k = h.k(), p0 = h.proj(v.l), p: [number, number] = [p0[0] + 20 / k, p0[1] - 18 / k];
   const g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})`, opacity: 0 }, r.root);
-  el('circle', { r: 15, fill: '#9c2a22', stroke: '#e8c46a', 'stroke-width': 1.6 }, g);
-  el('circle', { r: 11, fill: 'none', stroke: '#e8c46a', 'stroke-width': 0.8 }, g);
-  el('path', { d: 'M0,-7 L2,-2 L7,-2 L3,1 L4.5,6 L0,3 L-4.5,6 L-3,1 L-7,-2 L-2,-2Z', fill: '#e8c46a' }, g);
+  el('rect', { x: -15, y: -15, width: 30, height: 30, rx: 2.5, fill: '#b23a2e', stroke: '#5c1a12', 'stroke-width': 1.2 }, g);
+  el('rect', { x: -11.5, y: -11.5, width: 23, height: 23, rx: 1.5, fill: 'none', stroke: '#f3e2c0', 'stroke-width': 1 }, g);
+  const t = el('text', { y: 4, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 700, fill: '#f3e2c0', style: 'font-family:var(--mono);letter-spacing:-.04em' }, g);
+  t.textContent = String(v.y);
   const T0 = 700;
   WAR.quill(0);
   anim(r, calm.matches ? 1 : 420, q => {
     const s = 2.4 - 1.4 * ease(q);
     g.setAttribute('opacity', String(Math.min(1, q * 2)));
-    g.setAttribute('transform', `translate(${p[0]},${p[1]}) scale(${s / k}) rotate(${-12 * (1 - q)})`);
-  }, T0, () => { SND.stamp(); buzz([10, 30, 40]); ripple(r, p, k, 0, '#e8c46a'); });
+    g.setAttribute('transform', `translate(${p[0]},${p[1]}) scale(${s / k}) rotate(${-8 - 10 * (1 - q)})`);
+  }, T0, () => { SND.stamp(); buzz([10, 30, 40]); ripple(r, p0, k, 0, '#e8c46a'); });
 }
 
 function ripple(r: Run, p: [number, number], k: number, delay: number, color: string): void {

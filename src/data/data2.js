@@ -53,10 +53,10 @@ const DIARY={
 };
 const CTX={
  e2:{chien:'Cha bạn ngã xuống ở đồn Chí Hoà. Bạn lớn lên với thanh gươm treo trên vách.',canhtan:'Cha bạn để lại một rương điều trần chép tay và vài cuốn sách chữ Tây.',hoa:'Cha bạn từng theo sứ bộ sang Pháp. Ông dặn: giữ người trước, giữ đất sau.'},
- e3:{canvuong:'Ông bạn mất trong rừng Hương Khê. Sổ của Pháp ghi gia đình là "phiến loạn".',dongdu:'Ông bạn từng sang Nhật, về nước mở hiệu thuốc bắc làm nơi liên lạc.',duytan:'Ông bạn dạy ở Đông Kinh Nghĩa Thục. Nhà còn cả tủ sách mới.'},
+ e3:{canvuong:'Cha bạn mất trong rừng Hương Khê. Sổ của Pháp ghi gia đình là "phiến loạn".',dongdu:'Cha bạn từng sang Nhật, về nước mở hiệu thuốc bắc làm nơi liên lạc.',duytan:'Cha bạn dạy ở Đông Kinh Nghĩa Thục. Nhà còn cả tủ sách mới.'},
  e4:{cs:'Cha bạn vừa ra tù Côn Đảo, đang liên lạc với những người ở Pác Bó.',qdd:'Cha bạn sống lưu vong ở Quảng Tây, vừa theo quân Trung Hoa Dân Quốc về nước.',laphien:'Cha bạn làm thông phán ở Hà Nội, quen cả quan Pháp lẫn nhà nho.'},
- e5:{vm:'Bạn vừa từ chiến khu về, áo còn mùi khói bếp.',qg:'Bạn là sĩ quan trẻ của Quân đội Quốc gia, đóng ở Hà Nội.',tl:'Làng bạn ở vùng xôi đậu. Bạn đã quen sống giữa hai làn đạn.'},
- e6:{bac:'Bạn vào Sài Gòn sau 21 năm, gặp lại họ hàng chưa từng biết mặt.',nam:'Bạn là cựu sĩ quan VNCH, vừa nhận giấy gọi trình diện "học tập cải tạo".',thuba:'Bạn từng xuống đường đòi hoà bình. Hoà bình đã đến, theo cách không ai lường trước.'}
+ e5:{vm:'Cha bạn vừa từ chiến khu về, áo còn mùi khói bếp.',qg:'Cha bạn là sĩ quan trẻ của Quân đội Quốc gia, đóng ở Hà Nội.',tl:'Làng nhà bạn ở vùng xôi đậu. Cha mẹ bạn đã quen sống giữa hai làn đạn.'},
+ e6:{bac:'Cha bạn vào Sài Gòn sau 21 năm, gặp lại họ hàng chưa từng biết mặt.',nam:'Cha bạn là cựu sĩ quan VNCH, vừa nhận giấy gọi trình diện "học tập cải tạo".',thuba:'Cha mẹ bạn từng xuống đường đòi hoà bình. Hoà bình đã đến, theo cách không ai lường trước.'}
 };
 D.ERAS.forEach(e=>{e.ctx=CTX[e.id]||null;e.opts.forEach(o=>{o.fx=FX[o.id];o.guide=GUIDE[o.id];o.diary=(DIARY[o.id]||[]).map((d,i)=>({id:'d-'+o.id+i,y:d[0],d:String(d[0]),k:'Nhật ký',t:d[1],l:d[2],s:d[3],p:'Nhật ký dòng họ (hư cấu)',v:[],src:[],diary:true,era:e.id}));});});
 D.ERAS[4].hist='Ngày 30.4.1975, lực lượng của VNDCCH và CH miền Nam VN vào Sài Gòn. Hai miền thống nhất năm 1976.';

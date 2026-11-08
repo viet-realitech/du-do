@@ -102,9 +102,10 @@ test('event detail tabs work offline and Back closes overlays without leaving th
   await expect(page.locator('#yr')).toBeVisible();
   // tabs + Escape
   await page.locator('.tab[data-t=src]').click();
-  await page.locator('#sq').fill('Genève');
-  await expect(page.locator('#sl .src').first()).toBeVisible();
-  await page.locator('#sl .src').first().click();
+  await page.locator('#sq').fill('geneve'); // không dấu vẫn khớp "Genève"; tìm cả sự kiện lẫn văn bản
+  await expect(page.locator('#sl .src[data-a=ev]').first()).toBeVisible();
+  await expect(page.locator('#sl .src[data-a=src]').first()).toBeVisible();
+  await page.locator('#sl .src[data-a=src]').first().click();
   await expect(page.locator('.scrim')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('.scrim')).toHaveCount(0);
