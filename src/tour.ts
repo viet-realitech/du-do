@@ -28,6 +28,8 @@ interface Tour {
   t0?: number;
   /** Trò chơi, sau "Điểm rẽ ›": chỉ còn các sự kiện dòng họ phải quyết định; mỗi bước bay tới rồi mở thẻ ngay. */
   rush?: boolean;
+  /** Đọc sử: lúc chạm "Điểm rẽ ›" lần đầu (đang chờ chạm lần hai để xác nhận bỏ qua chương). */
+  arm?: number;
 }
 let tour: Tour | null = null;
 let mapIdle: number | undefined;
@@ -73,9 +75,9 @@ export function startTour(eIn?: Era): void {
   live0();
   hidePop();
   const e = eIn || eraOf(S.year);
-  if (!S.picks[e.id]) {
-    // Trò chơi: điểm rẽ chưa chọn sớm nhất; Đọc sử: chỉ điểm rẽ của chính chương sắp xem
-    const g = isPlay() ? ERAS.find(x => !S.picks[x.id] && x.cy <= S.year) : e;
+  if (!S.picks[e.id] && isPlay()) {
+    // Trò chơi: điểm rẽ chưa chọn sớm nhất phải chọn trước. Đọc sử: xem chương không cần chọn (chip "◆ Chọn hướng" mời chọn)
+    const g = ERAS.find(x => !S.picks[x.id] && x.cy <= S.year);
     if (g) { openGate(g); return; }
   }
   if (S.year >= Y1) return;
@@ -155,13 +157,13 @@ function animYear(to: number, cb: () => void): void {
   requestAnimationFrame(f);
 }
 
-function finishTour(): void {
+function finishTour(skipped = false): void {
   const end = tour!.end, done = tour!.e.id;
   stopTour();
   zoomTo(null);
   // Trò chơi: thẻ bắt buộc còn sót (sau khi bỏ qua tour) mở lần lượt, rồi điểm rẽ kế hoặc kết cục (setYear).
   if (isPlay()) rt.flowTo = end;
-  else rt.toured = done; // Đọc sử: vừa xem hết chương này, câu đố của nó hỏi trước điểm rẽ kế
+  else rt.toured = skipped ? null : done; // Đọc sử: xem hết chương thì câu đố của nó hỏi trước điểm rẽ kế; bỏ qua thì không
   setTimeout(() => setYear(end, true), 950);
 }
 
@@ -261,7 +263,7 @@ function skipTour(): void {
       return;
     }
   }
-  finishTour();
+  finishTour(true);
 }
 
 /** Nút ▶ ở dòng thời gian: chạy / tạm dừng / chạy tiếp chương. */
@@ -296,7 +298,16 @@ function tourBar(): void {
       }
       // "›": cảnh còn nhịp thì sang nhịp kế; hết nhịp thì bỏ qua bước đang chạy (bước có thẻ: mở thẻ ngay)
       else if (a === 'next') { if (tour && !tour.paused && tour.next && !stepScene()) { hush(); tour.next(0); } }
-      else if (a === 'skip') skipTour();
+      else if (a === 'skip') {
+        // Đọc sử, còn nhiều bước: chạm lần đầu chỉ hỏi lại ("Bỏ N sự kiện? ›"), chạm lần nữa trong 3 s mới bỏ qua chương
+        const left = tour ? tour.L.length - tour.i - 1 : 0;
+        if (tour && !isPlay() && left > 1 && !(tour.arm && Date.now() - tour.arm < 3000)) {
+          const t = tour;
+          t.arm = Date.now();
+          tourBar();
+          setTimeout(() => { if (tour === t && t.arm) { t.arm = 0; tourBar(); } }, 3000);
+        } else skipTour();
+      }
       else if (a === 'stop') stopTour();
       else if (a === 'resume') resumeTour();
     });
@@ -307,7 +318,7 @@ function tourBar(): void {
   const state = paused === 'card' ? ' · chờ quyết định' : paused ? ' · tạm dừng' : '';
   const left = tour.rush ? L.slice(i).filter(v => needsDecision(v)).length : 0;
   b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định · Chương ${e.n}` : `${at}/${n} · Chương ${e.n}`}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
-    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Tiếp: nhịp trận kế tiếp, hết nhịp thì sự kiện kế tiếp" title="Nhịp / sự kiện kế tiếp">›</button>'}${tour.rush ? '' : '<button class="chip" data-t="skip">Điểm rẽ ›</button>'}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
+    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Tiếp: nhịp trận kế tiếp, hết nhịp thì sự kiện kế tiếp" title="Nhịp / sự kiện kế tiếp">›</button>'}${tour.rush ? '' : `<button class="chip${tour.arm ? ' on' : ''}" data-t="skip">${tour.arm ? `Bỏ ${L.length - i - 1} sự kiện? ›` : 'Điểm rẽ ›'}</button>`}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
   if (fk) (b.querySelector<HTMLElement>(`[data-t="${fk}"]`) || b.querySelector<HTMLElement>(fk === 'next' ? '[data-t=resume]' : '[data-t=stop]'))?.focus({ preventScroll: true });
   const pb = $('#play')!;
   pb.textContent = paused && paused !== 'card' ? '▶' : '❚❚';

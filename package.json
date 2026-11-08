@@ -16,7 +16,7 @@
     "voice": "node scripts/build-voice.mjs && tsx scripts/voice-script.ts",
     "voice:script": "tsx scripts/voice-script.ts",
     "voice:tts": "python3 scripts/tts/generate.py",
-    "scenes": "tsx scripts/check-scenes.ts"
+    "scenes": "tsx scripts/check-scenes.ts && tsx scripts/sim-loyal.ts --strict"
   },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "^5.3.0",

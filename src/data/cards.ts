@@ -143,7 +143,7 @@ export const CARDS: Card[] = [
     ['Đi lánh ở Vinh', 'Tránh cả hai bên.', { b: -6, g: -4 }, 'Trở về khi yên, thấy ruộng bỏ hoang một mùa.'],
   ]],
   ['mt36', 'all', [
-    ['Ra báo quốc ngữ', 'Mở tờ báo tỉnh, in tin Mặt trận Bình dân.', { b: -6, u: 6, vm: 6, ph: 3 }, 'Báo sống ba năm, đóng cửa năm 1939. Dòng họ có người biết viết.'],
+    ['Ra báo quốc ngữ', 'Mở tờ báo tỉnh, in tin Mặt trận Bình dân.', { b: -4, u: 6, vm: 6, ph: 3 }, 'Báo sống ba năm, đóng cửa năm 1939. Dòng họ có người biết viết.'],
     ['Mở hiệu buôn lớn', 'Thời làm ăn dễ.', { b: 12, g: 2 }, 'Hiệu buôn thành nhà mặt phố.'],
   ]],
   ['nh40', 'B', [
@@ -177,9 +177,9 @@ export const CARDS: Card[] = [
     ['Giấu gạo', 'Không giao dịch với lính nước ngoài.', { g: 2, lg: 3 }, 'Lính Tưởng lục soát hai lần, không thấy.'],
   ]],
   ['tk46', 'all', [
-    ['Tản cư theo kháng chiến', 'Bỏ nhà ra vùng tự do.', { g: -12, b: -10, d: -1, u: 7, vm: 20, ph: -20 }, 'Nhà bị đốt. Dòng họ sống bằng ruộng rẫy chín năm.'],
+    ['Tản cư theo kháng chiến', 'Bỏ nhà ra vùng tự do.', { g: -12, b: -6, d: -1, u: 7, vm: 20, ph: -20 }, 'Nhà bị đốt. Dòng họ sống bằng ruộng rẫy chín năm.'],
     ['Ở lại vùng tạm chiếm', 'Giữ nhà, giữ ruộng.', { g: 2, b: 4, vm: -12, ph: 8, qg: 5 }, 'Nhà còn, nhưng mỗi đêm nghe tiếng súng mà không biết nên mong ai thắng.'],
-    ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -4, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.'],
+    ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -2, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.'],
   ]],
   ['tu46', '', [
     ['Tin vào Tạm ước', 'Mở lại buôn bán với người Pháp.', { b: 6, ph: 5, vm: -3 }, 'Ba tháng sau súng nổ, hàng hoá cháy sạch.'],
@@ -191,7 +191,7 @@ export const CARDS: Card[] = [
   ]],
   ['el49', 'all', [
     ['Làm việc cho Quốc gia Việt Nam', 'Một người con vào làm công chức Bảo Đại.', { b: 10, u: 1, qg: 20, ph: 8, vm: -15 }, 'Lương tháng đều, nhưng trong họ bắt đầu chia hai lối.'],
-    ['Từ chối, theo kháng chiến', 'Không làm với chính phủ do Pháp dựng.', { b: -4, u: 4, vm: 12, qg: -15 }, 'Tên dòng họ trong sổ "bất hợp tác" của tỉnh.'],
+    ['Từ chối, theo kháng chiến', 'Không làm với chính phủ do Pháp dựng.', { u: 4, vm: 12, qg: -15 }, 'Tên dòng họ trong sổ "bất hợp tác" của tỉnh.'],
     ['Giữ trung lập', 'Buôn bán với cả hai.', { b: 5, vm: -3, qg: -3 }, 'Ai cũng mua hàng, không ai tin.'],
   ]],
   ['bg50', 'B', [
@@ -331,7 +331,7 @@ export const CARDS: Card[] = [
   ]],
   ['ct78', 'NE', [
     ['Bị kiểm kê, mất cửa hàng', 'Dòng họ buôn bán ở Chợ Lớn.', { b: -25, g: -5, u: -5, nn: -15 }, 'Cửa hàng ba đời thành cửa hàng mậu dịch.'],
-    ['Giao nộp sớm, xin việc nhà nước', 'Chủ động hợp tác.', { b: -15, nn: 8 }, 'Làm công nhân viên trong chính tiệm của mình.'],
+    ['Giao nộp sớm, xin việc nhà nước', 'Chủ động hợp tác.', { b: -10, nn: 8 }, 'Làm công nhân viên trong chính tiệm của mình.'],
     ['Giấu vàng, chuẩn bị đi', 'Chôn vàng, tìm đường.', { b: -5, nn: -10 }, 'Vàng này mua được chỗ trên ghe năm 1980.'],
   ]],
   ['cp79', 'NW', [

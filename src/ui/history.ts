@@ -14,7 +14,7 @@ function topmost(): Top {
   if (lb) return { close: () => lb.querySelector<HTMLElement>('.back')!.click() };
   const sc = [...layer.querySelectorAll<HTMLElement>('.scrim')].pop();
   if (sc) {
-    const own = sc.querySelector<HTMLElement>('[data-a="close-card"]'); // thẻ sự kiện: đóng = đi tiếp luồng
+    const own = sc.querySelector<HTMLElement>('[data-a="close-card"], [data-a="gate-later"]'); // thẻ sự kiện: đóng = đi tiếp luồng; điểm rẽ Đọc sử: chọn sau
     // bảng khoá (phải quyết) trừ thẻ tuỳ chọn có lối "Bỏ qua, đi tiếp ›": Back / Escape = bỏ qua
     if (sc.dataset.lock && !(own && own.matches('.lnk'))) return { locked: true };
     return { close: () => (own ? own.click() : ghost(sc)) };

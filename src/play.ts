@@ -213,6 +213,11 @@ const ALIGN: Record<string, [keyof Rel, 1 | -1][]> = {
   bac: [['vm', 1]], nam: [['qg', 1]], thuba: [['lg', 1]],
   baocap: [['nn', 1]], doimoi: [['nn', 1]], radi: [['my', 1]],
 };
+/** Dòng họ đứng vững thế nào trên đường mình theo (0–100), theo đúng các quan hệ ALIGN: thân với phe mình, xa phe đối lập. */
+export function standing(id: string): number {
+  const refs = ALIGN[id] || [];
+  return refs.length ? Math.round(refs.reduce((a, [k, sg]) => a + (sg > 0 ? S.rel[k] : 100 - S.rel[k]), 0) / refs.length) : 0;
+}
 /** Lựa chọn trên thẻ hợp (1) hay trái (-1) với đường dòng họ đang theo; 0 khi không liên quan hay khi hai chiều triệt nhau. */
 export function alignment(fx: Fx, y: number): -1 | 0 | 1 {
   const pk = curPick(y), refs = pk ? ALIGN[pk.id] : undefined;
@@ -231,7 +236,12 @@ export function harvest(lived: Era, y: number): Harvest | null {
   // bên cai quản quê trong thế hệ vừa sống (giữa thế hệ), không phải bên vừa tới lúc nó khép lại
   const r = ruler(Math.round((lived.cy + y) / 2)), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
   // phe dòng họ theo (nếu không phải bên cai quản): được che chở, có người, có tiếng — trung thành không thành gánh nặng
-  const pk = curPick(lived.cy), camp = pk ? CAMP[pk.id] : undefined, cv = camp && camp !== 'pt' && camp !== 'lg' && camp !== r ? S.rel[camp] : 0; // làng xóm đã có dòng riêng
+  // đường dòng họ theo, đo bằng chính cách đọc của nhãn Hợp/Trái (ALIGN): Cần Vương, Đông Du, Quốc dân đảng là chống Pháp
+  // (không phải lòng tin của triều đình bảo hộ); đường chỉ đọc qua làng xóm đã có dòng "Làng xóm"; bên cai quản mà là
+  // phe mình thì đã được trả ở dòng cai quản
+  const pk = curPick(lived.cy), refs = pk ? ALIGN[pk.id] || [] : [];
+  const onlyLg = refs.every(([k]) => k === 'lg'), rulesForUs = !!r && refs.some(([k, sg]) => k === r && sg > 0);
+  const st = pk && refs.length && !onlyLg && !rulesForUs ? standing(pk.id) : 0;
   // Thu nhập cố định; chi phí tăng theo quy mô (họ càng đông càng tốn gạo, càng giàu càng nặng thuế, danh tiếng phai dần):
   // không chọn gì cũng không thể giàu mãi, và không có tài nguyên nào kẹt ở mức trần.
   const { g, d, b, u } = S.res;
@@ -241,10 +251,10 @@ export function harvest(lived: Era, y: number): Harvest | null {
     ['Thuế và sưu dịch', { b: -Math.round((b * b) / 350) }],
     ['Danh tiếng phai theo thời gian', { u: -Math.max(4, Math.round((u * u) / 700)) }],
   ];
-  if (r) lines.push([`Bên cai quản ${home()[1]}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 6), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
+  if (r) lines.push([`Bên cai quản ${home()[1]}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 8), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
   else lines.push(['Vùng tranh chấp', { g: -6, d: -2 }]);
-  if (camp && camp !== 'pt' && cv >= 55) lines.push([`Phe bạn theo: ${POWERS[camp][0]} · ${relLabel(cv).toLowerCase()}`, { g: Math.round((cv - 40) / 6), d: 2, u: cv >= 75 ? 4 : 2 }]);
-  else if (camp === 'pt' && lg >= 55) lines.push(['Anh em trong phong trào', { d: 2, u: 3 }]);
+  if (pk && st >= 55) lines.push([`Đường bạn theo: ${pk.label} · ${st >= 75 ? 'son sắt' : 'vững vàng'}`, { g: Math.round((st - 40) / 6), d: 2, b: st >= 75 ? 3 : 2, u: st >= 75 ? 4 : 2 }]); // người cùng đường góp gạo, góp tiền
+  else if (pk && onlyLg && refs.length && CAMP[pk.id] === 'pt' && lg >= 55) lines.push(['Anh em trong phong trào', { d: 2, u: 3 }]);
   lines.push([`Làng xóm · ${relLabel(lg).toLowerCase()}`, { g: Math.round((lg - 50) / 8), u: Math.round((lg - 50) / 10) }]);
   if (d >= 60) lines.push(['Họ đông người', { g: 4, b: 4 }]);
   if (d < 20) lines.push(['Thiếu người làm', { g: -6 }]);

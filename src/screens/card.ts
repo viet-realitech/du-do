@@ -101,6 +101,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   };
 }
 
+const alTag = (al: number) => (al ? `<span class="al mono ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : '');
 const resRow = () => RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('');
 
 /** Mọi quyết định trên thẻ đã xong: nút tiếp tục, mở khoá đóng thẻ, vẽ lại màn chính. */
@@ -125,7 +126,7 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
   sh.insertAdjacentHTML('beforeend', `<div class="rule"></div><div class="mono" style="color:var(--acc)">◆ Biến cố riêng của ${esc(familyName())}</div>
   <h3 style="margin:6px 0 4px">${esc(sp.title)}</h3><p class="muted" style="margin-bottom:8px">${esc(sp.s)}</p>
   <div role="radiogroup" class="xopts">${sp.choices.map((ch, i) => `<button class="opt" data-x="${i}" role="radio" aria-checked="false"${noList[i] ? ' disabled' : ''}>
-    <div class="tt"><h3>${esc(ch[0])}</h3>${noList[i] ? `<span class="mono" style="color:var(--red)">${noList[i]}</span>` : ch[4] ? '<span class="al mono">Đổi họ</span>' : ''}</div><p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div></button>`).join('')}</div>
+    <div class="tt"><h3>${esc(ch[0])}</h3>${noList[i] ? `<span class="mono" style="color:var(--red)">${noList[i]}</span>` : ch[4] ? '<span class="al mono">Đổi họ</span>' : alTag(alignment(ch[2], chYear(v)))}</div><p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div></button>`).join('')}</div>
   <div id="xmom" hidden style="margin-top:10px"><div class="mono muted">Lấy họ mẹ</div><div class="homes" style="margin-top:6px">${moms.map((s, i) => `<button class="chip${i === 0 ? ' on' : ''}" data-m="${esc(s.names[0])}" aria-pressed="${i === 0}">${esc(s.names[0])}</button>`).join('')}</div></div>
   <div style="height:10px"></div><button class="btn" id="xgo" disabled>Quyết định</button>`);
   let sel = -1, mom = moms[0]?.names[0] || 'Nguyễn';

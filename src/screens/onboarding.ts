@@ -30,7 +30,7 @@ export function splash(): void {
 }
 
 const HOW: [string, string, string][] = [
-  ['◆', 'Mỗi thế hệ, một điểm rẽ', '1858, 1885, 1930, 1945, 1954, 1976. Lựa chọn của đời trước định hình câu chuyện của đời sau.'],
+  ['◆', 'Mỗi chương, một điểm rẽ', '1858, 1885, 1930, 1945, 1954, 1976. Chọn một hướng nếu muốn (mở nhật ký dòng họ), hoặc cứ đọc tiếp: không bắt buộc.'],
   ['⟷', 'Kéo dòng thời gian', 'Bản đồ đổi theo từng chính thể. Phóng to, chạm vào một vùng để xem nó thuộc về ai.'],
   ['✎', 'Nhật ký dòng họ', 'Mỗi lựa chọn mở thêm những trang nhật ký riêng trên dòng thời gian.'],
   ['❝', 'Nhiều góc nhìn', 'Mỗi sự kiện có quan điểm của các bên, kèm sử liệu công khai.'],
@@ -41,12 +41,12 @@ export function intro(): void {
   S.step = 'intro';
   save();
   layer.innerHTML = `<div class="ov intro">
-  <div class="mono muted">Cách chơi</div><h2 style="margin:8px 0 14px">Bạn là một dòng họ Việt đi qua sáu thế hệ.</h2>
+  <div class="mono muted">Cách đọc</div><h2 style="margin:8px 0 14px">Đi qua 168 năm lịch sử Việt Nam trên bản đồ.</h2>
   ${HOW.map(([i, t, d]) => `<div class="row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--rule)"><div style="width:30px;font:700 20px var(--disp);text-align:center;color:var(--acc)">${i}</div><div style="flex:1"><h3 style="font-size:17.5px">${t}</h3><p class="muted" style="font-size:15px;line-height:1.3;margin-top:2px">${d}</p></div></div>`).join('')}
   <div style="flex:1"></div>
   <div class="mono muted" style="margin:16px 0 8px">Phong cách</div>
   ${themeCards()}
-  <label class="mono muted" for="nm" style="margin:14px 0 6px;display:block">Họ của dòng họ bạn</label>
+  <label class="mono muted" for="nm" style="margin:14px 0 6px;display:block">Họ của bạn (không bắt buộc, dùng cho nhật ký)</label>
   <input class="f" id="nm" placeholder="Ví dụ: Họ Lê" value="${esc(S.name)}" maxlength="24" autocomplete="off">
   <div style="height:12px"></div>
   <button class="btn" data-a="begin">Bước vào năm 1858</button></div>`;

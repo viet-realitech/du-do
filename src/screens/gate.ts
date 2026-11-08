@@ -4,7 +4,7 @@ import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
-import { $, esc, sheet, clearLayer, ghost } from '../ui/dom';
+import { $, esc, sheet, clearLayer, ghost, calm } from '../ui/dom';
 import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
@@ -90,7 +90,8 @@ export function openQuiz(eid: string, done?: () => void): void {
       $<HTMLButtonElement>('#qn', d)!.disabled = false;
     }));
     $<HTMLButtonElement>('#qn', d)!.onclick = () => { i++; if (i < qs.length) show(); else fin(); };
-    $<HTMLButtonElement>('#qs', d)!.onclick = () => { while (res.length < qs.length) res.push(false); fin(); };
+    // Bỏ qua: chỉ ghi những câu đã trả lời (câu bỏ qua không tính sai; [] vẫn đánh dấu chương đã hỏi)
+    $<HTMLButtonElement>('#qs', d)!.onclick = () => fin();
   };
   show();
 }
@@ -121,6 +122,7 @@ function choice(e: Era, quiet: boolean): void {
     SND.tick();
   };
   const say = setTimeout(() => {
+    if (!d.isConnected) return; // đã đóng ("chọn sau") trước khi lời dẫn bắt đầu
     const spoke = speak(gateSpeech(e), () => { if (!sync) release(); }, false, gateKey(e));
     sync = false;
     if (!spoke) setTimeout(release, Math.min(6000, 1800 + e.q.length * 35));
@@ -141,12 +143,17 @@ function choice(e: Era, quiet: boolean): void {
   <div class="listen" id="lst"><i class="pulse"></i><span>Đang kể lời dẫn…</span><button class="lnk" id="lskip">Chọn ngay ›</button></div>
   <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="mono muted">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
-  <div style="height:12px"></div><button class="btn" id="go" disabled>Đi theo hướng này</button>`);
+  <div style="height:12px"></div><button class="btn" id="go" disabled>Đi theo hướng này</button>${isPlay() ? '' : '<button class="lnk" data-a="gate-later">Đọc chương trước, chọn sau ›</button>'}`);
+  // Đọc sử: điểm rẽ không bắt buộc (Back / Escape = "chọn sau"); Trò chơi: phải chọn
+  if (!isPlay()) delete d.dataset.lock;
   d.querySelector<HTMLButtonElement>('#lskip')!.onclick = () => { clearTimeout(say); hush(); release(); };
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
     selOpt = b.dataset.o!;
     d.querySelectorAll('.opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
-    $<HTMLButtonElement>('#go', d)!.disabled = false;
+    const go = $<HTMLButtonElement>('#go', d)!;
+    go.disabled = false;
+    go.textContent = `Đi theo hướng “${e.opts.find(o => o.id === selOpt)!.label}”`; // nút chốt gọi tên lựa chọn (như "Quyết định" trên thẻ)
+    go.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' }); // điện thoại: nút chốt thường nằm dưới mép màn hình
     SND.tick();
     buzz(8);
   }));
@@ -212,3 +219,6 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
 }
 
 on('watch', el => { clearLayer(); renderMain(); checkBadges(); startTour(ERAS.find(x => x.id === el.dataset.e)); });
+
+/** Đọc sử: "Đọc chương trước, chọn sau ›" — đóng điểm rẽ, ở lại năm đó; chip "◆ Chọn hướng" ở đầu trang vẫn mời chọn. */
+on('gate-later', el => { hush(); const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); rt.gate = null; renderMain(); });

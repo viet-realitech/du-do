@@ -81,7 +81,7 @@ export const SPECIAL: SpecialCard[] = [
     choices: [
       ["Dời cả họ sang phủ khác", "Bỏ ruộng vườn, lập nghiệp nơi không ai biết mặt.", {"u": 3, "g": -10, "b": -6, "d": -3}, "Dòng họ làm lại từ mấy sào ruộng thuê ở làng mới, tập nói giọng khác. Ba đời sau mới có người về quê cũ tìm mộ."],
       ["Lấy họ mẹ, ở lại làng", "Lý trưởng sửa sổ đinh; cả họ đổi cách xưng tên.", {"u": -8, "b": -3, "ph": 5, "lg": -5}, "Sổ đinh ghi một họ mới. Khi lính đồn hỏi 'nhà phiến loạn', lý trưởng chỉ sang hướng khác; trong làng ai cũng biết, nhưng không ai nói.", "mother"],
-      ["Ra thú với công sứ", "Nộp gươm, ăn thề ở đình, được tha.", {"u": -12, "g": 3, "ph": 12, "tr": 5, "lg": -10}, "Được tha, giữ được ruộng. Lễ ăn thề làm trước mặt công sứ và quan huyện; làng gọi dòng họ là 'nhà ra thú' hết một đời người."],
+      ["Ra thú với công sứ", "Nộp gươm, ăn thề ở đình, được tha.", {"u": -12, "g": 3, "ph": 12, "lg": -10}, "Được tha, giữ được ruộng. Lễ ăn thề làm trước mặt công sứ và quan huyện; làng gọi dòng họ là 'nhà ra thú' hết một đời người."],
     ],
     note: "Sau khi Phan Đình Phùng mất (12.1895) và Hương Khê tan rã đầu 1896, chính quyền bảo hộ cùng triều đình Thành Thái vừa truy bắt vừa chiêu dụ 'ra thú'; nhiều gia đình nghĩa quân đổi họ, dời làng hoặc đầu thú để giữ ruộng và người, như trước đó Pháp từng bắt thân nhân và đào mộ tổ họ Phan ở Đông Thái để gây sức ép.",
   },

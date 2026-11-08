@@ -116,6 +116,31 @@ test('play mode: a family diary page says what the family at home decided', asyn
   expect(errors).toEqual([]);
 });
 
+test('reading mode never forces a side: the turning point can wait, tours run without a pick, skipping asks first and brings no quiz', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
+  await expect(page.getByText('Đi qua 168 năm lịch sử Việt Nam trên bản đồ.')).toBeVisible();
+  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
+  await expect(page.locator('#layer .scrim .opt').first()).toBeAttached();
+  await page.keyboard.press('Escape'); // "Đọc chương trước, chọn sau"
+  await expect(page.locator('#layer .scrim')).toHaveCount(0);
+  await expect(page.locator('#yr')).toHaveText('1858');
+  await expect(page.locator('#eraR')).toHaveText('◆ Chọn hướng');
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('#layer .scrim')).toHaveCount(0); // no gate forced before the tour
+  const skip = page.locator('#tourb [data-t=skip]');
+  await skip.click();
+  await expect(skip).toContainText('Bỏ'); // first tap only asks
+  await expect(page.locator('#tourb')).toBeVisible();
+  await skip.click();
+  await expect(page.locator('#tourb')).toHaveCount(0, { timeout: 3000 });
+  if (await page.locator('.cine').count()) await page.goBack(); // chapter 2 opener
+  await expect(page.locator('#layer .scrim .opt').first()).toBeAttached({ timeout: 8000 }); // next turning point (optional)
+  await expect(page.getByText(/Đố nhanh/i)).toHaveCount(0); // a skipped chapter is not quizzed
+  expect(errors).toEqual([]);
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)
@@ -245,10 +270,10 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await page.locator('.tab[data-t=me]').click();
   await expect(page.getByText('Gia sản dòng họ · Huế')).toBeVisible();
   await page.getByRole('button', { name: /Sang Đọc sử/ }).click();
-  await expect(page.getByText('Bạn là một dòng họ Việt đi qua sáu thế hệ.')).toBeVisible();
+  await expect(page.getByText('Đi qua 168 năm lịch sử Việt Nam trên bản đồ.')).toBeVisible();
   await expect(page.locator('#res')).toBeHidden();
   await page.reload();
-  await expect(page.getByText('Bạn là một dòng họ Việt đi qua sáu thế hệ.')).toBeVisible();
+  await expect(page.getByText('Đi qua 168 năm lịch sử Việt Nam trên bản đồ.')).toBeVisible();
   expect(errors).toEqual([]);
 });
 
