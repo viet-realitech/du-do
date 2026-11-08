@@ -132,6 +132,8 @@ export async function initMap(): Promise<void> {
   G.jpr = R0.append('rect').attr('clip-path', 'url(#vnclip)').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('fill', 'url(#p-jp)').attr('opacity', 0).style('pointer-events', 'none');
   G.edge = R0.append('path').attr('d', path(vn)).attr('clip-path', 'url(#vnclip)').attr('fill', 'none').style('stroke', 'var(--ink)')
     .attr('stroke-opacity', 0.3).attr('stroke-width', 8).style('pointer-events', 'none');
+  // cảnh trận đánh: phủ một lớp màu giấy lên lãnh thổ để mũi tên, quân cờ cùng màu với nền (đỏ trên đỏ, vàng trên vàng) nổi lên
+  R0.append('rect').attr('class', 'dimr').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).style('pointer-events', 'none');
   G.l17 = R0.append('line').attr('clip-path', 'url(#vnclip)').attr('x1', -PAD).attr('x2', W + PAD).attr('y1', y17).attr('y2', y17).style('stroke', 'var(--ink)')
     .attr('stroke-width', 2.2).attr('stroke-dasharray', '5 3').attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
   G.sel = R0.append('path').attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 2).attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');

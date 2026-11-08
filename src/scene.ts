@@ -96,7 +96,7 @@ function diagPx(): number {
   const w = document.getElementById('mapwrap');
   if (!w) return 150;
   const bar = barEl(), low = (bar ? w.clientHeight - bar.offsetTop : 0) + capH() + 16;
-  return Math.max(140, Math.min(420, Math.min(w.clientWidth - 110, w.clientHeight - 44 - low) * 0.72));
+  return Math.max(150, Math.min(440, Math.min(w.clientWidth - 80, w.clientHeight - 40 - low) * 0.84));
 }
 
 /** Phụ đề chân hình của cảnh: một khung, đổi nội dung theo nhịp (hiệu ứng lau chữ mỗi lần đổi). */
@@ -286,6 +286,22 @@ function outcome(r: Run, v: HistEvent, sc: Scene, hs: HoldEl[], parts: Element[]
   caption(r, `<div class="lt-h mono"><b>Khép trận</b><button class="chip" data-a="ev" data-id="${v.id}" data-tab="v">Góc nhìn · ${v.v.length}</button></div><p>${esc(lines.join(' '))}</p>`, 'var(--ink3)', ' end');
 }
 
+type Box = [number, number, number, number];
+const box = (x: number, y: number, rx: number, ry: number): Box => [x - rx, y - ry, x + rx, y + ry];
+/** Chỗ đặt nhãn địa danh cạnh điểm p (đơn vị bản đồ): thử trên, dưới, phải, trái, rồi xa hơn; chọn chỗ đầu tiên không đè
+    lên nhãn / đầu mũi tên / vị trí giữ đã có (so bằng px màn hình), ghi chỗ đó vào `placed`. dx, dy tính bằng px. */
+function labelSpot(placed: Box[], p: [number, number], k: number, sy: number, t: string): { dx: number; dy: number; anchor: string } {
+  const w = t.length * 6.1 + 4, h = 12, x = p[0] * k, y = (p[1] * k) / sy; // bản đồ nghiêng: chiều dọc trên màn hình co lại sy lần
+  const tries: [number, number, string][] = [[0, -13, 'middle'], [0, 19, 'middle'], [11, 4, 'start'], [-11, 4, 'end'], [0, -27, 'middle'], [0, 33, 'middle'], [24, -10, 'start'], [-24, -10, 'end']];
+  const rect = ([dx, dy, a]: [number, number, string]): Box => {
+    const x0 = a === 'middle' ? x + dx - w / 2 : a === 'start' ? x + dx : x + dx - w;
+    return [x0, y + dy - h + 3, x0 + w, y + dy + 3];
+  };
+  const hit = (b: Box) => placed.some(q => b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1]);
+  const pick = tries.find(c => !hit(rect(c))) || tries[0];
+  placed.push(rect(pick));
+  return { dx: pick[0], dy: pick[1], anchor: pick[2] };
+}
 function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const h = fxHost();
   if (!h || !r.root) return;
@@ -320,6 +336,9 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const old = v.y < 1900, sy = document.getElementById('mapwrap')?.classList.contains('tilt') ? 1.24 : 1;
   const holds = (sc?.hold || []).map(([lo, la, side]) => ({ side, ll: [lo, la] as [number, number], ringed: false }));
   const arrived = new Set<number>(), meets = sc?.meet || [];
+  // chỗ đã chiếm (px màn hình): đầu mũi tên, vị trí giữ; nhãn địa danh tránh đè lên nhau và lên chúng
+  const placed: Box[] = arrows.map(a => { const q = P(a[1]); return box(q[0] * k, (q[1] * k) / sy, 7, 7); })
+    .concat((sc?.hold || []).map(x => { const q = P([x[0], x[1]]); return box(q[0] * k, (q[1] * k) / sy, 6, 6); }));
   root.dataset.contacts = '0';
   arrows.forEach((arw, i) => {
     const [from, to, side, note] = arw;
@@ -380,6 +399,16 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     }, start, () => {
       head.setAttribute('opacity', '1');
       arrived.add(i);
+      // tên nơi mũi tên tới (Him Lam, Quang Hòa…): chữ sáng viền tối, đứng thẳng, phía trên đầu mũi tên
+      const at = arw[4]?.at;
+      if (at) {
+        const o = labelSpot(placed, b, k, sy, at);
+        const tg = el('g', { transform: `translate(${b[0] + o.dx / k},${b[1] + (o.dy * sy) / k}) scale(${1 / k},${sy / k})`, opacity: 0 }, root);
+        const tx = el('text', { class: 'fx-at', 'text-anchor': o.anchor, 'font-size': 10, fill: '#f6efdd', stroke: '#111', 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'paint-order': 'stroke' }, tg);
+        tx.textContent = at;
+        parts[i].push(tg);
+        anim(r, 350, q => tg.setAttribute('opacity', String(q)), 0);
+      }
       // quân cờ tới nơi: máy bay bay khỏi; lính dù bung dù rồi đứng lại; trực thăng hạ cánh tung bụi; còn lại dừng trước đầu mũi tên
       if (pc && !airborne) { put(1, 0.85); if (act === 'retreat') pc.g.setAttribute(pc.g.hasAttribute('data-op') ? 'data-op' : 'opacity', '0.7'); }
       if (pc && kind === 'heli' && !calm.matches) {

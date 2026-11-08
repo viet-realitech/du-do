@@ -14,7 +14,8 @@ for (const [id, sc] of Object.entries(SCENES)) {
     const act = actOf(a), kind = kindOf(a[3], sc.type, a[4]);
     kinds[kind] = (kinds[kind] || 0) + 1;
     acts[act] = (acts[act] || 0) + 1;
-    rows.push(`${id.padEnd(5)} ${i} ${a[2].padEnd(9)} ${act.padEnd(7)} ${(act === 'doubt' ? '-' : kind).padEnd(6)} ${a[3]}`);
+    rows.push(`${id.padEnd(5)} ${i} ${a[2].padEnd(9)} ${act.padEnd(7)} ${(act === 'doubt' ? '-' : kind).padEnd(6)} ${a[3]}${a[4]?.at ? `  ⟶ ${a[4].at}` : ''}`);
+    if (a[4]?.at !== undefined && (!a[4].at || !a[3].includes(a[4].at))) { console.error(`LỖI ${id} ${i}: nhãn "${a[4].at}" không có nguyên văn trong ghi chú`); err++; }
   });
   for (const [x, y] of sc.meet || []) {
     if (!sc.arrows[x] || !sc.arrows[y]) { console.error(`LỖI ${id}: meet [${x}, ${y}] ngoài số mũi tên`); err++; continue; }
