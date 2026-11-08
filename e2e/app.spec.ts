@@ -28,7 +28,12 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await page.getByRole('button', { name: /Xem chương 1 diễn ra/ }).click();
   await expect(page.locator('#tourb')).toBeVisible();
   await expect(page.locator('#map g.co')).toHaveCount(1); // tour callout on the map
-  // the first stop (Đà Nẵng 1858) tells its battle beat by beat: a lower-third caption per arrow, numbered on the map
+  // the first stop (Đà Nẵng 1858) opens with a title card (sides, no ranking), then a small slug replaces the population tag
+  await expect(page.locator('#mapwrap .ttl')).toContainText('Trận đánh');
+  expect(await page.locator('#mapwrap .ttl .sides span').count()).toBeGreaterThanOrEqual(1);
+  await expect(page.locator('#mapwrap .slug')).toContainText('1858', { timeout: 4000 });
+  await expect(page.locator('#mapwrap .ttl')).toHaveCount(0);
+  // ...and tells its battle beat by beat: a lower-third caption per arrow, numbered on the map
   const lt = page.locator('#mapwrap .lt');
   await expect(lt).toBeVisible({ timeout: 8000 });
   await expect(lt.locator('.lt-h')).toContainText('1/3');
@@ -37,6 +42,8 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await page.locator('#tourb [data-t=stop]').click();
   await expect(page.locator('#tourb')).toHaveCount(0);
   await expect(lt).toHaveCount(0, { timeout: 1000 });
+  await expect(page.locator('#mapwrap .slug')).toHaveCount(0);
+  await expect(page.locator('#mapwrap.scn')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

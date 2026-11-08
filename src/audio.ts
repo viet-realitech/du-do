@@ -9,6 +9,9 @@ let FX: GainNode | null = null;
 let NOISE: AudioBuffer | null = null;
 /** Bus riêng của cảnh động đang chạy (WAR.open/close): cắt được ngay khi tour sang bước khác. */
 let SCN: GainNode | null = null;
+/** Lọc thông thấp trên bus cảnh: khi có lời kể, tiếng súng / tiếng nổ chói dịu đi, tiếng ầm vẫn nghe (không át giọng). */
+let SCNF: BiquadFilterNode | null = null;
+let voiced = false;
 
 /** Lazily create / resume the audio context; call from a user gesture. */
 export function ac(): AudioContext | null {
@@ -38,10 +41,12 @@ export const bus = (): GainNode | null => (ac() ? FX : null);
 
 /** Duck effects/music under narration (`on`) and bring them back afterwards. */
 export function duck(on: boolean): void {
+  voiced = on;
   if (!AC || !FX) return;
   const t = AC.currentTime;
   FX.gain.cancelScheduledValues(t);
   FX.gain.setTargetAtTime(on ? 0.35 : 1, t, on ? 0.08 : 0.4);
+  if (SCNF) { SCNF.frequency.cancelScheduledValues(t); SCNF.frequency.setTargetAtTime(on ? 1200 : 18000, t, on ? 0.08 : 0.5); }
 }
 
 const live = () => { const a = ac(); return a && S.sound && FX ? a : null; };
@@ -178,7 +183,8 @@ export const WAR = {
   /** Distant rolling front: a low bed with a few far booms. */
   rumble(d = 5, delay = 0) {
     thud(d, 220, 90, 0.12, delay);
-    for (let i = 0; i < 4; i++) WAR.boom(delay + 0.4 + Math.random() * (d - 0.8), 0.8);
+    const n = Math.max(2, Math.min(8, Math.round(d / 1.4)));
+    for (let i = 0; i < n; i++) WAR.boom(delay + 0.4 + Math.random() * (d - 0.8), 0.8);
   },
   /** Aircraft passing overhead (pitch drops as it passes) and a bomb whistle into a blast. */
   plane(delay = 0) {
@@ -194,7 +200,7 @@ export const WAR = {
   },
   bomb(delay = 0) { tone(1700, 0.9, 'sine', 0.05, delay, 420, sc()); WAR.boom(delay + 0.85, 0.1); },
   /** Sea: slow swells of filtered noise; with the cannons, a naval scene. */
-  waves(d = 5, delay = 0) { for (let i = 0; i < 3; i++) noise(1.8, 300, 900, 0.08, 0.5, delay + i * 1.5, 0.7, sc()); void d; },
+  waves(d = 5, delay = 0) { const n = Math.max(3, Math.min(8, Math.ceil(d / 1.5))); for (let i = 0; i < n; i++) noise(1.8, 300, 900, 0.08, 0.5, delay + i * 1.5, 0.7, sc()); },
   /** Crowd / uprising: murmur swell with drums. */
   crowd(delay = 0) { noise(3.5, 400, 900, 0.09, 0.4, delay, 1.2, sc()); drum(delay + 0.3, 0.3, 80, sc()); drum(delay + 0.9, 0.3, 80, sc()); drum(delay + 1.5, 0.35, 76, sc()); },
   /** Treaty: quill scratches, then the seal. */
@@ -203,14 +209,31 @@ export const WAR = {
   horn(delay = 0) { tone(110, 1.6, 'sawtooth', 0.05, delay, undefined, sc()); tone(165, 1.6, 'sawtooth', 0.035, delay, undefined, sc()); tone(110, 1.1, 'sawtooth', 0.04, delay + 1.9, undefined, sc()); },
   /** Nhịp hành quân: trống đều. */
   march(n = 8, delay = 0) { for (let i = 0; i < n; i++) drum(delay + i * 0.42, i % 2 ? 0.16 : 0.24, i % 2 ? 120 : 95, sc()); },
+  /** Tiếng mở trận theo loại trận (xong trước khi lời kể bắt đầu, ~1,1 s). */
+  sting(type: string) {
+    if (type === 'naval' || type === 'landing') { drum(0, 0.45, 66, sc()); tone(98, 0.6, 'sawtooth', 0.04, 0.1, undefined, sc()); tone(147, 0.5, 'sawtooth', 0.025, 0.1, undefined, sc()); }
+    else if (type === 'air') { tone(180, 0.7, 'sawtooth', 0.022, 0, 360, sc()); drum(0.45, 0.35, 58, sc()); }
+    else if (type === 'uprising') { [0, 0.2, 0.34, 0.45, 0.54].forEach((t, i) => drum(t, 0.22 + i * 0.04, 80, sc())); }
+    else { drum(0, 0.5, 62, sc()); drum(0.16, 0.55, 52, sc()); noise(0.6, 120, 380, 0.07, 0.5, 0.16, 0.08, sc()); }
+  },
   /** Mở bus riêng cho một cảnh (gọi khi cảnh bắt đầu). */
-  open() { WAR.close(); const a = live(); if (!a) return; SCN = a.createGain(); SCN.connect(FX!); },
+  open() {
+    WAR.close();
+    const a = live();
+    if (!a) return;
+    SCN = a.createGain();
+    SCNF = a.createBiquadFilter();
+    SCNF.type = 'lowpass';
+    SCNF.Q.value = 0.7;
+    SCNF.frequency.value = voiced ? 1200 : 18000;
+    SCN.connect(SCNF).connect(FX!);
+  },
   /** Cắt mọi tiếng của cảnh đang chạy (đã hẹn trước hay chưa): hạ nhanh rồi ngắt bus. */
   close() {
-    const g = SCN; SCN = null;
+    const g = SCN, f = SCNF; SCN = null; SCNF = null;
     if (!g || !AC) return;
     g.gain.setTargetAtTime(0, AC.currentTime, 0.05);
-    setTimeout(() => { try { g.disconnect(); } catch { /* đã ngắt */ } }, 400);
+    setTimeout(() => { try { g.disconnect(); f?.disconnect(); } catch { /* đã ngắt */ } }, 400);
   },
 };
 

@@ -119,6 +119,17 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .lt .lg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink) }
 .lt .lg span { display: inline-flex; align-items: center; gap: 5px }
 @media (min-width: 700px) { .lt { left: 14px; max-width: 560px } .lt p { font-size: 17px } }
+/* tít mở trận (scene.ts titleCard), rồi dòng nhỏ góc trên thay nhãn dân số trong lúc cảnh chạy */
+.ttl { position: absolute; left: 50%; top: 40%; z-index: 2; width: min(calc(100% - 100px), 440px); transform: translate(-50%, -50%) translateY(8px); opacity: 0; transition: opacity .45s, transform .45s cubic-bezier(.2, .8, .2, 1); text-align: center; background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); pointer-events: none }
+.ttl.on { opacity: 1; transform: translate(-50%, -50%) }
+.ttl.out { opacity: 0 }
+.ttl .mono { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--acc) }
+.ttl h2 { margin: 6px 0 2px; font: 700 clamp(24px, 7vw, 40px)/1.05 var(--disp); color: var(--ink); text-wrap: balance }
+.ttl p { margin: 0 0 8px; font: italic 15px var(--serif); color: var(--ink2) }
+.ttl .sides { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 13px; color: var(--ink) }
+.ttl .sides i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); border: 1px solid #111; margin-right: 5px; vertical-align: -1px }
+.slug { position: absolute; left: 10px; top: 10px; z-index: 2; max-width: calc(100% - 70px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--paper); padding: 5px 8px; border-radius: 6px; font-size: 9.5px; letter-spacing: .06em; color: var(--ink2); pointer-events: none }
+.mapwrap.scn #popl { visibility: hidden }
 
 .mtag { position: absolute; left: 10px; top: 10px; font: 500 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); background: var(--paper); opacity: .92; padding: 5px 8px; border-radius: 6px; pointer-events: none; z-index: 2 }
 .zoomc { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 2 }

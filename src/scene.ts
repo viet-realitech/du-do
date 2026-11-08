@@ -14,7 +14,7 @@ import { speaking } from './narration';
 const NS = 'http://www.w3.org/2000/svg';
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 type Part = { t0: number; dur: number; step: (p: number) => void; done?: () => void };
-interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; len: number; t0: number; alive: boolean }
+interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; len: number; t0: number; alive: boolean }
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -41,8 +41,38 @@ function beats(v: HistEvent): number[] {
 }
 /** Lúc bắt đầu của từng nhịp (tính từ đầu phần vẽ). */
 const offsets = (b: number[]) => b.map((_, i) => b.slice(0, i).reduce((a, x) => a + x, 0));
-/** Khoảng mở đầu trước nhịp đầu (tít mở trận dùng). */
-const lead = (_v: HistEvent) => 0;
+/** Khoảng mở đầu trước nhịp đầu: trận đánh có tít mở trận (~2,2 s, trong lúc bản đồ bay tới và nghiêng). */
+const lead = (v: HistEvent) => (v.k === 'Trận đánh' && SCENES[v.id] && !v.diary ? 1000 : 0);
+/** Lời kể của bước tour bắt đầu lúc nào (ms): trận đánh chờ tiếng mở trận xong. */
+export const voiceAt = (v: HistEvent): number => (lead(v) ? 1200 : 700);
+/** Kiểu rung theo loại trận (Android; iOS không rung). */
+const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 40, 30, 90], naval: [25, 70, 25], landing: [30, 50, 60], uprising: [10, 110, 10, 110, 10], air: [18] };
+
+/** Tít mở trận: tên trận, thời gian, nơi, các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
+function titleCard(r: Run, v: HistEvent, sc: Scene): void {
+  const wrap = document.getElementById('mapwrap');
+  if (!wrap) return;
+  const sides = [...new Set([...sc.arrows.map(a => a[2]), ...sc.hold.map(h => h[2])])];
+  const card = document.createElement('div');
+  card.className = 'ttl';
+  card.setAttribute('aria-hidden', 'true'); // thẻ dưới bản đồ đã có tên trận cho trình đọc màn hình
+  card.innerHTML = `<div class="mono">Trận đánh · ${esc(v.d)}</div><h2>${esc(v.t)}</h2>${v.p ? `<p>${esc(v.p)}</p>` : ''}<div class="sides">${sides.map(sd => `<span><i style="--c:${SIDE_COLOR[sd] || '#f1e6c8'}"></i>${esc(SIDE_NAME[sd] || sd)}</span>`).join('')}</div>`;
+  wrap.appendChild(card);
+  wrap.classList.add('scn');
+  r.ttl = card;
+  requestAnimationFrame(() => card.classList.add('on'));
+  later(r, 2200, () => card.classList.add('out'));
+  later(r, 2700, () => {
+    card.remove();
+    r.ttl = null;
+    const sl = document.createElement('div');
+    sl.className = 'slug mono';
+    sl.setAttribute('aria-hidden', 'true');
+    sl.textContent = `${v.y} · ${v.t}`;
+    wrap.appendChild(sl);
+    r.slug = sl;
+  });
+}
 /** Độ dài cảnh (ms từ lúc playScene) tới khi nhịp cuối đọc xong; 0 nếu không có nhịp. */
 export function sceneLen(v: HistEvent): number {
   const b = beats(v);
@@ -202,8 +232,9 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     el('rect', { x: -4, y: -4, width: 8, height: 8, transform: 'rotate(45)', fill: SIDE_COLOR[side] || '#fff', stroke: '#111', 'stroke-width': 1.2 }, g);
     anim(r, ringDur, q => { const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
   }
-  if (type === 'land' || type === 'siege') WAR.rumble(5.5, T0 / 1000);
-  if (type === 'naval' || type === 'landing') WAR.waves(5, T0 / 1000);
+  const bed = Math.max(5, Math.min(14, (L0 + total) / 1000)); // tiếng nền kéo suốt các nhịp
+  if (type === 'land' || type === 'siege') WAR.rumble(bed, T0 / 1000);
+  if (type === 'naval' || type === 'landing') WAR.waves(bed, T0 / 1000);
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
   arrows.forEach(([from, to, side], i) => {
@@ -241,7 +272,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
       if (sounds++ < 6) {
         if (type === 'air') WAR.bomb(0); else WAR.boom(0, i ? 0.25 : 0);
         if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2);
-        if (i === 0) { shake(r); buzz([25, 40, 60]); }
+        if (i === 0) { shake(r); buzz(HAPTIC[type] || [25, 40, 60]); } else if (type === 'air' && i < 3) buzz(18);
       }
     });
   });
@@ -252,7 +283,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (!arrows.length) { // chưa có dữ liệu mũi tên: vài chớp lửa tại chỗ
     const p = h.proj(v.l);
     for (let j = 0; j < 4; j++) explode(r, root, [p[0] + (Math.random() - 0.5) * 18 / k, p[1] + (Math.random() - 0.5) * 12 / k], k, T0 + j * 420, 0.9);
-    later(r, T0, () => { WAR.boom(0); WAR.crackle(2.4, 12, 0.2); shake(r); buzz([25, 40, 60]); });
+    later(r, T0, () => { WAR.boom(0); WAR.crackle(2.4, 12, 0.2); shake(r); buzz(HAPTIC[type] || [25, 40, 60]); });
     void v;
   }
 }
@@ -475,6 +506,11 @@ export function playScene(v: HistEvent, hold = Infinity): void {
   if (at && hold - at < 2000) { /* không chiếu tư liệu */ } else if (at) later(r, at, () => void reel(r, v)); else void reel(r, v);
   if (v.diary) return;
   if (v.k === 'Trận đánh' && !calm.matches) document.getElementById('mapwrap')?.classList.add('tilt');
+  const sc = v.k === 'Trận đánh' ? SCENES[v.id] : undefined;
+  if (sc) {
+    titleCard(r, v, sc);
+    later(r, 120, () => { if (!speaking()) WAR.sting(sc.type); }); // một tiếng mở trận, xong trước lời kể (voiceAt)
+  }
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó
   later(r, 1250, () => {
     if (v.k === 'Trận đánh') battle(r, v, SCENES[v.id]);
@@ -505,6 +541,9 @@ export function endScene(instant = false): void {
     setTimeout(() => g.remove(), 520);
   }
   if (r.lt) { const b = r.lt; b.classList.add('out'); setTimeout(() => b.remove(), 320); }
+  r.ttl?.remove();
+  r.slug?.remove();
+  wrap?.classList.remove('scn');
   if (r.reel) { const b = r.reel; b.classList.remove('on'); b.querySelector('video')?.pause(); setTimeout(() => { const vd = b.querySelector('video'); if (vd) { vd.removeAttribute('src'); vd.load(); } b.remove(); }, 520); }
 }
 
