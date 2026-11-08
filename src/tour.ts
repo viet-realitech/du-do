@@ -8,7 +8,7 @@ import { SND } from './audio';
 import { canSpeak, hush, speak } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, hasScene } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, sceneLeft, capH, hasScene } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -86,13 +86,15 @@ function tourStep(): void {
     tour!.cur = v.id;
     renderMain();
     const fr = sceneFrame(v);
-    if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5)); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân
+    if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH()); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân, chừa phụ đề
     SND.fly();
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
     // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
     const card = isPlay() && needsDecision(v), voiced = S.narr && canSpeak(evKey(v));
-    playScene(v, card && !voiced ? 4500 : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
+    // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s)
+    const hold = fr ? sceneHold(v) : 0, cardAt = Math.min(14000, Math.max(4500, hold));
+    playScene(v, card && !voiced ? cardAt : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
@@ -105,10 +107,11 @@ function tourStep(): void {
     tour!.t0 = performance.now();
     if (voiced) {
       // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
-      next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95)) + 2500));
-      setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(card ? 500 : 900), false, evKey(v)); }, 700);
+      next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95), hold) + 2500));
+      // kể xong mà cảnh còn nhịp chưa đọc: chờ thêm (tối đa 6 s) cho hết phụ đề
+      setTimeout(() => { if (live() && tour!.cur === v.id) speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(6000, sceneLeft()))), false, evKey(v)); }, 700);
     }
-    else next(card ? 4500 : sceneFrame(v) ? sceneHold(v) : 2900); // không giọng đọc: cảnh động giữ đủ lâu để vẽ xong, hiện tư liệu
+    else next(card ? cardAt : fr ? hold : 2900); // không giọng đọc: cảnh động giữ đủ lâu để đọc hết phụ đề
   });
 }
 

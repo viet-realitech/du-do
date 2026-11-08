@@ -28,8 +28,15 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await page.getByRole('button', { name: /Xem chương 1 diễn ra/ }).click();
   await expect(page.locator('#tourb')).toBeVisible();
   await expect(page.locator('#map g.co')).toHaveCount(1); // tour callout on the map
+  // the first stop (Đà Nẵng 1858) tells its battle beat by beat: a lower-third caption per arrow, numbered on the map
+  const lt = page.locator('#mapwrap .lt');
+  await expect(lt).toBeVisible({ timeout: 8000 });
+  await expect(lt.locator('.lt-h')).toContainText('1/3');
+  await expect(lt.locator('.lt-h')).toContainText('2/3', { timeout: 7000 });
+  expect(await page.locator('#map g.scene g.bd').count()).toBeGreaterThanOrEqual(2);
   await page.locator('#tourb [data-t=stop]').click();
   await expect(page.locator('#tourb')).toHaveCount(0);
+  await expect(lt).toHaveCount(0, { timeout: 1000 });
   expect(errors).toEqual([]);
 });
 

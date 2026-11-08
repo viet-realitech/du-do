@@ -424,13 +424,14 @@ export function zoomK(v: HistEvent): number {
 /** Mức thu nhỏ nhất (dưới 1 = nhỏ hơn khung, để trọn hải trình dài trên điện thoại). */
 const K_MIN = 0.7;
 
-export function zoomFit(pts: [number, number][], kMax: number, ms?: number): void {
+/** Bay tới khung vừa mọi điểm `pts`, chừa nhãn trên, thanh tour dưới và thêm `padBot` px (phụ đề chân hình của cảnh). */
+export function zoomFit(pts: [number, number][], kMax: number, ms?: number, padBot = 0): void {
   if (!ready || !pts.length) return;
   const n = G.svg.node()!, vb = n.viewBox.baseVal, vw = vb.width || W, px = n.clientWidth / vw || 1;
   // phần bản đồ bị che (px màn hình): nhãn dân số / tiêu đề ở trên, thanh tour ở dưới; khung vừa dải còn lại
   // đo theo bố cục (offsetTop), không theo getBoundingClientRect: thanh tour vừa gắn còn đang trượt lên (translateY 40 px)
   const wrap = document.getElementById('mapwrap'), bar = document.getElementById('tourb');
-  const top = 44, bot = (bar && wrap ? Math.max(0, wrap.clientHeight - bar.offsetTop) : 0) + 8;
+  const top = 44, bot = (bar && wrap ? Math.max(0, wrap.clientHeight - bar.offsetTop) : 0) + 8 + padBot;
   const vh = Math.max(60, (vb.height || H) - (top + bot) / px);
   const xy = pts.map(l => proj(l)!), xs = xy.map(p => p[0]), ys = xy.map(p => p[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);

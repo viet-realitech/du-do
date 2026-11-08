@@ -25,6 +25,8 @@ export const hasVoice = () => !!VOICE;
 export const canSpeak = (key?: string) => !!recording(key) || (hasTTS && !!VOICE);
 
 let clip: HTMLAudioElement | null = null;
+/** Đang có lời kể (bản thu hoặc giọng hệ thống): phụ đề cảnh không đọc chồng cho trình đọc màn hình, tiếng trận dịu lại. */
+export const speaking = (): boolean => !!clip || (hasTTS && speechSynthesis.speaking);
 
 let run = 0; // bumps on every new speech / hush so stale queues stop
 

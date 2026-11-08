@@ -1,9 +1,11 @@
 import type { HistEvent } from './data';
-import { SCENES, MOVES, SIDE_COLOR, type Scene, type Move } from './data/scenes';
+import { SCENES, MOVES, SIDE_COLOR, SIDE_NAME, type Scene, type Move } from './data/scenes';
 import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
+import { esc } from './ui/dom';
+import { speaking } from './narration';
 
 /* Cảnh động trong tour chương: trận đánh có bản đồ nghiêng 3D, mũi tiến quân vẽ dần, chớp lửa, khói, rung khung và
    âm thanh chiến trường; hiệp ước có ấn triện đóng xuống; mọi sự kiện có khung "phim tư liệu" với ảnh của chính sự
@@ -12,7 +14,7 @@ import { wikiFor, probe, videoUrl } from './wiki';
 const NS = 'http://www.w3.org/2000/svg';
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 type Part = { t0: number; dur: number; step: (p: number) => void; done?: () => void };
-interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; alive: boolean }
+interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; len: number; t0: number; alive: boolean }
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -25,6 +27,79 @@ const el = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
   return n;
 };
 const ease = (p: number) => 1 - Math.pow(1 - p, 3);
+
+/* ---------- nhịp kể: mỗi mũi tên / đường đi một nhịp, phụ đề chân hình đọc ghi chú của nó ---------- */
+/** Thời gian (ms) đủ đọc một ghi chú. */
+const READ = (s: string, mv = false, up = false) => Math.min(mv ? 5200 : 4200, Math.max(up ? 2000 : 2300, 900 + 42 * s.length));
+const CAP = 15000; // cả cảnh không quá 15 s nhịp (khởi nghĩa 5 hướng, thuyền nhân 5 tuyến)
+/** Độ dài từng nhịp của cảnh v (rỗng nếu không có cảnh mũi tên / đường đi). */
+function beats(v: HistEvent): number[] {
+  const sc = v.k === 'Trận đánh' ? SCENES[v.id] : undefined, mv = sc ? undefined : MOVES[v.id];
+  const raw = sc ? sc.arrows.map(a => READ(a[3], false, sc.type === 'uprising')) : mv ? mv.paths.map(p => READ(p[4], true)) : [];
+  const sum = raw.reduce((a, b) => a + b, 0);
+  return sum > CAP ? raw.map(x => Math.max(2000, (x * CAP) / sum)) : raw;
+}
+/** Lúc bắt đầu của từng nhịp (tính từ đầu phần vẽ). */
+const offsets = (b: number[]) => b.map((_, i) => b.slice(0, i).reduce((a, x) => a + x, 0));
+/** Khoảng mở đầu trước nhịp đầu (tít mở trận dùng). */
+const lead = (_v: HistEvent) => 0;
+/** Độ dài cảnh (ms từ lúc playScene) tới khi nhịp cuối đọc xong; 0 nếu không có nhịp. */
+export function sceneLen(v: HistEvent): number {
+  const b = beats(v);
+  return b.length ? 1250 + 120 + lead(v) + b.reduce((a, x) => a + x, 0) : 0;
+}
+/** Cảnh đang chạy còn bao lâu nữa mới đọc xong nhịp cuối (0 nếu không có cảnh). */
+export const sceneLeft = (): number => (cur && cur.alive ? Math.max(0, cur.len - (performance.now() - cur.t0)) : 0);
+/** Chiều cao dành cho phụ đề chân hình (để khung bản đồ và khung tư liệu chừa chỗ). */
+export const capH = (): number => (innerWidth >= 700 ? 74 : 64);
+/** Thanh đang nằm dưới đáy bản đồ (thanh tour). */
+const barEl = () => document.getElementById('tourb');
+
+/** Phụ đề chân hình của cảnh: một khung, đổi nội dung theo nhịp (hiệu ứng lau chữ mỗi lần đổi). */
+function caption(r: Run, html: string, col: string, cls = ''): void {
+  const wrap = document.getElementById('mapwrap');
+  if (!wrap) return;
+  let b = r.lt;
+  if (!b) { b = document.createElement('div'); b.setAttribute('role', 'status'); wrap.appendChild(b); r.lt = b; }
+  b.className = 'lt' + cls;
+  b.setAttribute('aria-live', speaking() ? 'off' : 'polite'); // đang có lời kể: không đọc chồng
+  b.style.setProperty('--c', col);
+  const bar = barEl();
+  b.style.bottom = `${(bar ? wrap.clientHeight - bar.offsetTop : 0) + 8}px`;
+  b.innerHTML = html;
+  b.classList.remove('in');
+  void b.offsetWidth;
+  b.classList.add('in');
+}
+/** Nội dung một nhịp: phe (màu), thứ tự, ngày (nếu ghi chú kết thúc bằng ngày trong ngoặc), ghi chú. */
+function beatHtml(side: string, note: string, i: number, n: number, extra = ''): string {
+  const m = note.match(/\s*\(([^()]*\d[^()]*)\)\s*$/), text = m ? note.slice(0, m.index) : note;
+  return `<div class="lt-h mono"><i></i><b>${esc((SIDE_NAME[side] || side) + extra)}</b>${n > 1 ? `<span>${i + 1}/${n}</span>` : ''}${m ? `<em>${esc(m[1])}</em>` : ''}</div><p>${esc(text)}</p>`;
+}
+/** Chú giải cuối cảnh: mỗi phe một ô màu. */
+function legendHtml(sides: string[]): string {
+  return `<div class="lg mono">${[...new Set(sides)].map(sd => `<span><i style="--c:${SIDE_COLOR[sd] || '#f1e6c8'}"></i>${esc(SIDE_NAME[sd] || sd)}</span>`).join('')}</div>`;
+}
+/** Số thứ tự ở gốc mũi tên (đứng thẳng cả khi bản đồ nghiêng). */
+function badge(root: SVGGElement, p: [number, number], k: number, n: number, col: string): SVGGElement {
+  const sy = document.getElementById('mapwrap')?.classList.contains('tilt') ? 1.24 : 1;
+  const g = el('g', { class: 'bd', transform: `translate(${p[0]},${p[1]}) scale(${1 / k},${sy / k})`, opacity: 0 }, root);
+  el('circle', { r: 6.5, fill: col, stroke: '#111', 'stroke-width': 1 }, g);
+  const t = el('text', { y: 3, 'text-anchor': 'middle', 'font-size': 8.5, 'font-weight': 700, fill: '#111', style: 'font-family:var(--mono)' }, g);
+  t.textContent = String(n);
+  return g;
+}
+/** Nhịp i bắt đầu: phụ đề đổi, các mũi tên trước mờ đi, số thứ tự hiện. */
+function beat(r: Run, parts: Element[][], i: number, html: string, col: string): void {
+  caption(r, html, col);
+  parts.forEach((ps, j) => { if (j < i) ps.forEach(e => e.setAttribute('opacity', '0.45')); });
+  parts[i]?.forEach(e => { if (e.classList.contains('bd')) e.setAttribute('opacity', '1'); });
+}
+/** Hết nhịp: trả độ đậm cho mọi mũi tên, phụ đề thành chú giải các phe. */
+function closing(r: Run, parts: Element[][], sides: string[]): void {
+  parts.forEach(ps => ps.forEach(e => { if (!e.classList.contains('bd') || e.getAttribute('opacity') !== '0') e.setAttribute('opacity', '1'); }));
+  caption(r, legendHtml(sides), 'var(--ink3)', ' leg');
+}
 
 function later(r: Run, ms: number, f: () => void): void {
   r.timers.push(window.setTimeout(() => { if (r.alive) f(); }, ms));
@@ -116,12 +191,16 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
   const arrows = sc?.arrows.length ? sc.arrows : [];
   const T0 = 120; // gọi sau khi bản đồ đã bay tới (playScene hẹn 1,25 s), để hệ số zoom k đã đúng
-  // vị trí được giữ: vòng sáng nhấp nháy
+  // nhịp kể: mũi tên thứ i vẽ khi nhịp i bắt đầu, phụ đề đọc ghi chú của nó
+  const bt = beats(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0), L0 = T0 + lead(v);
+  const parts: Element[][] = [];
+  // vị trí được giữ: vòng sáng nhấp nháy suốt các nhịp
+  const ringDur = Math.max(5200, total + 1500);
   for (const [lo, la, side] of sc?.hold || []) {
     const p = P([lo, la]), g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
     const ring = el('circle', { r: 9, fill: 'none', stroke: SIDE_COLOR[side] || '#fff', 'stroke-width': 2, opacity: 0 }, g);
     el('rect', { x: -4, y: -4, width: 8, height: 8, transform: 'rotate(45)', fill: SIDE_COLOR[side] || '#fff', stroke: '#111', 'stroke-width': 1.2 }, g);
-    anim(r, 5200, q => { const w = (q * 4) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
+    anim(r, ringDur, q => { const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
   }
   if (type === 'land' || type === 'siege') WAR.rumble(5.5, T0 / 1000);
   if (type === 'naval' || type === 'landing') WAR.waves(5, T0 / 1000);
@@ -138,7 +217,10 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     for (const p of [under, line]) if (!(type === 'naval' || type === 'landing') || p === under) { p.setAttribute('stroke-dasharray', `${len} ${len}`); p.setAttribute('stroke-dashoffset', String(len)); }
     const head = el('g', { transform: `translate(${b[0]},${b[1]}) rotate(${c.ang}) scale(${1 / k})`, opacity: 0 }, root);
     el('path', { d: 'M-2,-7 L9,0 L-2,7 L1,0Z', fill: col, stroke: '#111', 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, head);
-    const start = T0 + i * (type === 'uprising' ? 260 : 520), dur = calm.matches ? 1 : type === 'air' ? 1500 : 1900;
+    const start = L0 + B[i], dur = calm.matches ? 1 : type === 'air' ? 1500 : 1900;
+    parts[i] = [under, line, head];
+    if (arrows.length > 1) parts[i].push(badge(root, a, k, i + 1, col));
+    later(r, start, () => beat(r, parts, i, beatHtml(side, arrows[i][3], i, arrows.length), col));
     const mover = type === 'naval' || type === 'landing' || type === 'air' ? glyph(type, root, col) : null;
     if (mover) mover.setAttribute('opacity', '0');
     if (type === 'air') WAR.plane(start / 1000);
@@ -163,6 +245,10 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
       }
     });
   });
+  if (arrows.length) {
+    later(r, L0 + total, () => closing(r, parts, [...arrows.map(x => x[2]), ...(sc?.hold || []).map(x => x[2])]));
+    r.len = 1250 + L0 + total;
+  }
   if (!arrows.length) { // chưa có dữ liệu mũi tên: vài chớp lửa tại chỗ
     const p = h.proj(v.l);
     for (let j = 0; j < 4; j++) explode(r, root, [p[0] + (Math.random() - 0.5) * 18 / k, p[1] + (Math.random() - 0.5) * 12 / k], k, T0 + j * 420, 0.9);
@@ -199,7 +285,9 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   else if (land && mv.type === 'march') WAR.march(8, T0 / 1000);
   else if (land && mv.type === 'withdrawal') WAR.rumble(4, T0 / 1000);
   if (sea) { WAR.horn(T0 / 1000 + 0.2); WAR.waves(5, T0 / 1000 + 1); }
-  mv.paths.forEach(([from, via, to, side, , mode], i) => {
+  const bt = beats(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0), parts: Element[][] = [];
+  const MODE: Record<string, string> = { land: 'Đường bộ', sea: 'Đường biển', air: 'Đường không' };
+  mv.paths.forEach(([from, via, to, side, note, mode], i) => {
     const pts = [P(from), ...via.map(P), P(to)], d = smooth(pts);
     const col = SIDE_COLOR[side] || '#f1e6c8', thin = mv.type === 'exodus' || mv.type === 'uprising' || mv.type === 'crowd';
     const under = el('path', { d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.5, 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, root);
@@ -215,7 +303,10 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     else if (mv.type === 'march' || mv.type === 'withdrawal') { for (let j = 0; j < 3; j++) el('rect', { x: -9 + j * 6, y: -2.5, width: 4.5, height: 5, rx: 1, fill: col, stroke: '#111', 'stroke-width': 0.7 }, g); }
     else { el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
     const lenPx = len * k, dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
-    const start = T0 + i * (thin ? 280 : 700);
+    const start = T0 + B[i];
+    parts[i] = [under, line];
+    if (mv.paths.length > 1) parts[i].push(badge(root, pts[0], k, i + 1, col));
+    later(r, start, () => beat(r, parts, i, beatHtml(side, note, i, mv.paths.length, MODE[mode] ? ' · ' + MODE[mode] : ''), col));
     if (mode === 'air') WAR.plane(start / 1000); // tiếng máy bay cùng lúc máy bay cất cánh
     anim(r, dur, q => {
       const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
@@ -231,7 +322,8 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
       else { const dot = el('circle', { cx: end[0], cy: end[1], r: 3.2 / k, fill: col, stroke: '#111', 'stroke-width': 1 / k }, root); void dot; }
     });
   });
-  void v;
+  later(r, T0 + total, () => closing(r, parts, mv.paths.map(x => x[3])));
+  r.len = 1250 + T0 + total;
 }
 
 /* ---------- hiệp ước ---------- */
@@ -296,8 +388,8 @@ async function reel(r: Run, v: HistEvent): Promise<void> {
 function place(box: HTMLElement, r: Run): void {
   const wrap = document.getElementById('mapwrap');
   if (!wrap || !r.root || wrap.classList.contains('tilt')) return;
-  const R = wrap.getBoundingClientRect(), bar = document.getElementById('tourb')?.getBoundingClientRect();
-  const bw = Math.min(R.width * 0.4, 230), bh = Math.min(bw * 0.75, R.height * 0.32), low = (bar ? R.bottom - bar.top : 0) + 10;
+  const R = wrap.getBoundingClientRect(), bar = barEl()?.getBoundingClientRect();
+  const bw = Math.min(R.width * 0.4, 230), bh = Math.min(bw * 0.75, R.height * 0.32), low = (bar ? R.bottom - bar.top : 0) + 10 + capH() + 8;
   const pts: [number, number][] = [];
   const add = (m: DOMMatrix | null, x: number, y: number) => { if (m) pts.push([m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]); };
   r.root.querySelectorAll<SVGPathElement>('path').forEach(p => {
@@ -362,18 +454,18 @@ export const hasScene = (v: HistEvent): boolean => (v.k === 'Trận đánh' && !
 
 /** Lúc (ms từ đầu cảnh) khung tư liệu bắt đầu tải: trận đánh / cảnh di chuyển chờ các mũi tên vẽ gần xong để không che chúng. */
 function reelAt(v: HistEvent): number {
-  const nA = v.k === 'Trận đánh' ? SCENES[v.id]?.arrows.length || 0 : MOVES[v.id] ? 2 : 0;
-  return nA ? 1250 + 120 + Math.min(nA, 6) * 520 + 1600 : 0;
+  const b = beats(v);
+  return b.length ? 1250 + 120 + lead(v) + offsets(b)[Math.min(2, b.length - 1)] + 1600 : 0;
 }
-/** Bước tour không có giọng đọc giữ cảnh bao lâu: đủ để cảnh vẽ xong và khung tư liệu kịp hiện vài giây. */
-export const sceneHold = (v: HistEvent): number => Math.min(11000, Math.max(6500, reelAt(v) + 4500));
+/** Bước tour không có giọng đọc giữ cảnh bao lâu: đủ đọc hết các nhịp (phụ đề) rồi nhìn thêm chút. */
+export const sceneHold = (v: HistEvent): number => Math.min(20000, Math.max(6500, sceneLen(v) + 2500));
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
 export function playScene(v: HistEvent, hold = Infinity): void {
   endScene();
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
-  const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, alive: true };
+  const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true };
   cur = r;
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
@@ -412,6 +504,7 @@ export function endScene(instant = false): void {
     g.style.opacity = '0';
     setTimeout(() => g.remove(), 520);
   }
+  if (r.lt) { const b = r.lt; b.classList.add('out'); setTimeout(() => b.remove(), 320); }
   if (r.reel) { const b = r.reel; b.classList.remove('on'); b.querySelector('video')?.pause(); setTimeout(() => { const vd = b.querySelector('video'); if (vd) { vd.removeAttribute('src'); vd.load(); } b.remove(); }, 520); }
 }
 
