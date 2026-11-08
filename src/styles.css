@@ -149,6 +149,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .tour .chip { height: 30px; font-size: 13.5px }
 .tour .chip.ic { width: 34px; padding: 0; justify-content: center; font-size: 20px; font-weight: 600; line-height: 1; flex: none }
 .tour .chip.ic[data-t=stop] { font-size: 13px }
+.tour .mono { white-space: nowrap; overflow: hidden; text-overflow: ellipsis } /* thanh hẹp: nhãn chương một dòng */
+@media (max-width: 400px) { .tour { gap: 6px } }
 .tour .prog { height: 2px; background: var(--rule); margin-top: 7px }
 .tour .prog i { display: block; height: 100%; background: var(--acc); transition: width .4s }
 #pop { position: absolute; left: 12px; right: 56px; bottom: 8px; z-index: 3; background: var(--paper); border: 1px solid var(--ink); border-radius: 12px; padding: 9px 12px; animation: up .2s; box-shadow: 0 6px 20px rgba(0, 0, 0, .25) }

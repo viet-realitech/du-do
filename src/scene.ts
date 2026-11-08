@@ -473,15 +473,21 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     for (let j = 0; j <= N; j++) { const q = probe.getPointAtLength((len * j) / N); L.push([q.x, q.y]); }
     probe.remove();
     const S_ = Math.max(3, Math.min(24, Math.round(lenPx / 40))), per = N / S_;
-    const gU = el('g', {}, root), gL = el('g', {}, root);
+    // viền tối: các đoạn tô đặc, độ trong 0,5 đặt ở cả nhóm (ghép một lần, chỗ nối không đậm lên)
+    const gU = el('g', {}, root), gU2 = el('g', { opacity: 0.5 }, gU), gL = el('g', {}, root), P_ = 10 / k;
+    let cum = 0;
     const segs = Array.from({ length: S_ }, (_, j) => {
       const a = Math.round(j * per), b = Math.round((j + 1) * per), sd = 'M' + L.slice(a, b + 1).map(p => `${p[0]},${p[1]}`).join(' L');
-      const u = el('path', { d: sd, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.5, 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, gU);
+      const u = el('path', { d: sd, fill: 'none', stroke: '#0b0b0b', 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, gU2);
       const ln = el('path', { d: sd, fill: 'none', stroke: col, 'stroke-width': (thin ? 2.2 : 3) / k, 'stroke-linecap': 'round' }, gL);
       const sl = u.getTotalLength() || 0.001;
-      u.setAttribute('stroke-dasharray', `${sl} ${sl}`); u.setAttribute('stroke-dashoffset', String(sl));
-      if (mv.type === 'withdrawal') { ln.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`); ln.setAttribute('opacity', '0'); } // rút quân: nét đứt hiện theo đoạn
-      else { ln.setAttribute('stroke-dasharray', `${sl} ${sl}`); ln.setAttribute('stroke-dashoffset', String(sl)); }
+      // ẩn bằng khoảng trống dài hơn đoạn: không còn vạch dài 0 ở cuối đoạn (Chrome vẽ thành chấm tròn)
+      const hide = `${sl} ${sl * 2 + 1}`;
+      u.setAttribute('stroke-dasharray', hide); u.setAttribute('stroke-dashoffset', String(sl));
+      if (mv.type === 'withdrawal') { // rút quân: nét đứt hiện theo đoạn, nối tiếp nhịp nét của đoạn trước
+        ln.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`); ln.setAttribute('stroke-dashoffset', String(cum % P_)); ln.setAttribute('opacity', '0');
+      } else { ln.setAttribute('stroke-dasharray', hide); ln.setAttribute('stroke-dashoffset', String(sl)); }
+      cum += sl;
       return { a, b, sl, u, ln, done: false };
     });
     // quân cờ trên đường: tàu (đường biển), máy bay, đoàn người (di cư, khởi nghĩa), đoàn quân (hành quân, rút quân);

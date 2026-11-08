@@ -191,10 +191,12 @@ export async function initMap(): Promise<void> {
   // Máy yếu: lớp gợn sóng quanh bờ biển (12 đường viền cả khu vực, nét dày) là phần tốn công vẽ nhất khi bản đồ
   // bay / kéo / chụm (đo với CPU chậm 4 lần: 20 → 60 khung hình/giây khi ẩn nó). Tạm ẩn trong lúc chuyển động.
   // Chỉ khi bản đồ thật sự di chuyển (một cú chạm chọn tỉnh không làm gợn sóng nháy).
+  // Bảo hiểm: d3 có thể không báo 'end' (phần tử dưới ngón tay bị gỡ giữa cử chỉ): hiện lại sau 300 ms yên.
   if (lite) {
-    let hid = false;
-    G.zoom.on('zoom.lite', () => { if (!hid) { hid = true; G.rip.style('visibility', 'hidden'); } })
-      .on('end.lite', () => { if (hid) { hid = false; G.rip.style('visibility', null); } });
+    let hid = false, t = 0;
+    const show = () => { clearTimeout(t); if (hid) { hid = false; G.rip.style('visibility', null); } };
+    G.zoom.on('zoom.lite', () => { if (!hid) { hid = true; G.rip.style('visibility', 'hidden'); } clearTimeout(t); t = window.setTimeout(show, 300); })
+      .on('end.lite', show);
   }
   svg.call(G.zoom).on('dblclick.zoom', null);
   // nút zoom, chạm bản đồ nghiêng là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
