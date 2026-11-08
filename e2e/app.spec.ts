@@ -162,7 +162,7 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   // the tour goes on by itself: progress advances past 1/n, no Play press needed
   await expect(page.locator('#tourb')).toBeVisible();
   await expect(page.locator('#tourb')).not.toContainText('chờ quyết định');
-  await expect(page.locator('#tourb')).not.toContainText('· 1/');
+  await expect(page.locator('#tourb .mono')).not.toHaveText(/^1\//);
   expect(await page.locator('#res .mt').first().locator('b').first().textContent()).not.toBe(before);
   await page.locator('#tourb [data-t=stop]').click();
   // the reading flow is a separate save: switching lands on its own intro, no resources
@@ -193,6 +193,11 @@ test('reaching the present opens the last quiz, then the ending', async ({ page 
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   await page.locator('.cine.film .x').click();
   await expect(page.locator('.cine.film')).toHaveCount(0);
+  // starting over asks first; Huỷ keeps the ending
+  await page.getByRole('button', { name: 'Chọn lại từ 1858' }).click();
+  await expect(page.getByText('và bắt đầu lại từ 1858?')).toBeVisible();
+  await page.getByRole('button', { name: 'Huỷ' }).click();
+  await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

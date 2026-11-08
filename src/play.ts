@@ -81,7 +81,7 @@ export const pendingCard = (y: number): HistEvent | undefined =>
 
 /** Điều kiện có thể chọn: không để tài nguyên âm quá sức. */
 export function canAfford(fx: Fx): string | null {
-  for (const [k, , name] of RES) {
+  for (const [k, name] of RES) {
     const n = fx[k] || 0;
     if (n < 0 && S.res[k] + n < 0) return `Không đủ ${name.toLowerCase()}`;
   }

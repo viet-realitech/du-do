@@ -8,7 +8,7 @@ import type { Faction } from '../data';
 import { BADGES, ERAS, FIG, VAL } from '../data';
 import { S, save, optOf, archetype, quizCorrect, values, pct, familyName } from '../state';
 import { on } from '../ui/actions';
-import { esc, layer } from '../ui/dom';
+import { esc, layer, sheet, ghost } from '../ui/dom';
 import { SND, buzz } from '../audio';
 import { hasTTS, hasVoice, speak } from '../narration';
 import { openShare, resetAll } from './ending';
@@ -91,7 +91,16 @@ on('set', el => {
 });
 on('rate', el => { S.rate = +el.dataset.r!; save(); paneMe(); speak(`Tốc độ ${el.dataset.l!.toLowerCase()}.`); });
 on('share', () => openShare());
-on('reset', () => resetAll());
+// Xoá cả dòng họ / tiến trình: hỏi lại trước (nút Huỷ được chọn sẵn)
+on('reset', () => {
+  const who = isPlay() ? familyName() : 'tiến trình đọc sử';
+  const d = sheet(`<div class="mono muted">Bắt đầu lại</div><h2 style="margin:8px 0 6px">Xoá ${esc(who)} và bắt đầu lại từ 1858?</h2>
+    <p class="muted" style="margin:0 0 16px">Các lựa chọn, thẻ quyết định và gia sản sẽ mất; không hoàn tác được.</p>
+    <div class="row" style="gap:10px"><button class="btn ghost" data-a="reset-no">Huỷ</button><button class="btn" data-a="reset-yes">Xoá, bắt đầu lại</button></div>`, true);
+  d.querySelector<HTMLElement>('[data-a=reset-no]')!.focus();
+});
+on('reset-no', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); });
+on('reset-yes', () => resetAll());
 
 /* Appearance: theme, faction palette and map style (shared by onboarding and settings). */
 on('theme', el => {

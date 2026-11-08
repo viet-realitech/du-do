@@ -463,17 +463,19 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number, padB
   const k = Math.max(K_MIN, Math.min(kMax, vw / bw, vh / bh));
   const cy = (y0 + y1) / 2 + (bot - top) / 2 / px / k;
   const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -cy);
-  G.svg.transition().duration(ms || 1200).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
+  fly(t, ms || 1200);
+}
+
+/** Bay tới phép biến đổi `t`; giảm chuyển động: đặt ngay, không bay. */
+function fly(t: d3.ZoomTransform, ms: number): void {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { G.svg.interrupt().call(G.zoom.transform, t); return; }
+  G.svg.transition().duration(ms).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }
 
 /** Fly to a lon/lat at scale k, or back to the overview when `l` is null. */
 export function zoomTo(l: [number, number] | null, k = 1, ms?: number): void {
   if (!ready) return;
-  if (!l) {
-    G.svg.transition().duration(ms || 900).ease(d3.easeCubicInOut).call(G.zoom.transform, d3.zoomIdentity);
-    return;
-  }
+  if (!l) { fly(d3.zoomIdentity, ms || 900); return; }
   const p = proj(l)!;
-  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-p[0], -p[1]);
-  G.svg.transition().duration(ms || 1200).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
+  fly(d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-p[0], -p[1]), ms || 1200);
 }

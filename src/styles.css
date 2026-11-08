@@ -410,7 +410,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .ri { vertical-align: -2px; margin-right: 2px; flex: none }
 .resrow i, .fx i, .gs .mono i { font-style: normal }
 .res .mt > span b { color: var(--ink); font-weight: 600 }
-.res .mt.low > span b, .res .mt.low i b { color: var(--red); background: var(--red) }
+.res .mt.low > span b { color: var(--red) }
+.res .mt.low i b { background: var(--red) }
 .res .mt i b { background: var(--ink2) }
 .res .mt > span { position: relative }
 .res .delta { position: absolute; right: 0; top: -2px; font: 700 12px var(--mono); animation: floatup 1.6s ease-out forwards; pointer-events: none }
