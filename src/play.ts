@@ -1,7 +1,7 @@
 import { surnameKey, asFamily, ARCHETYPES, type Archetype } from './data/surnames';
 import { SPECIAL, type SpecialCard } from './data/cards2';
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
-import { CARD, type Fx } from './data/cards';
+import { CARD, VARIANT, type Card, type Choice, type Fx } from './data/cards';
 import { S, save, curPick, type Res, type Rel, renameFamily, matchStats } from './state';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
@@ -65,7 +65,12 @@ export function applyFx(fx: Fx): Fx {
 }
 
 /* ---------- thẻ sự kiện ---------- */
-export const cardOf = (v: HistEvent) => (v.diary ? undefined : CARD[v.id]);
+/** Thẻ của sự kiện; thẻ cả nước có lựa chọn riêng cho vùng quê của dòng họ (VARIANT) thì dùng lựa chọn đó. */
+export function cardOf(v: HistEvent): Card | undefined {
+  if (v.diary) return undefined;
+  const c = CARD[v.id], va = c && VARIANT[v.id]?.find(x => x.regions.includes(home()[3]));
+  return va ? [c[0], c[1], va.choices] : c;
+}
 /** Bắt buộc quyết định: cả nước, hoặc sự kiện chạm tới quê nhà. */
 export function mustDecide(v: HistEvent): boolean {
   const c = cardOf(v);
@@ -75,6 +80,13 @@ export function mustDecide(v: HistEvent): boolean {
   return c[1].split(',').some(r => r === g || (g === 'QT' && (r === 'T1' || r === 'T2')));
 }
 export const decided = (id: string) => id in S.cards;
+/** Các lựa chọn dòng họ đã chốt trên thẻ sự kiện trong các năm [y0, y1], mới nhất trước (Trò chơi). */
+export function choicesIn(y0: number, y1: number): { v: HistEvent; ch: Choice }[] {
+  if (!isPlay()) return [];
+  return EV.filter(v => !v.diary && v.y >= y0 && v.y <= y1 && decided(v.id))
+    .map(v => ({ v, ch: cardOf(v)?.[2][S.cards[v.id]] }))
+    .filter((x): x is { v: HistEvent; ch: Choice } => !!x.ch).reverse();
+}
 /** Thẻ bắt buộc (hay biến cố riêng) đầu tiên còn bỏ ngỏ tính đến năm y (dừng dòng thời gian ở đó). */
 export const pendingCard = (y: number): HistEvent | undefined =>
   isPlay() ? EV.find(v => v.y <= y && needsDecision(v) && (mustDecide(v) || !!specialFor(v))) : undefined;
@@ -180,11 +192,22 @@ export const NEXT: Record<string, string[]> = {
   bac: ['baocap', 'doimoi'], nam: ['radi', 'doimoi'], thuba: ['doimoi'],
 };
 export const continues = (prev: string | undefined, next: string) => !!prev && (NEXT[prev] || []).includes(next);
-/** Lựa chọn trên thẻ hợp (1) hay trái (-1) với đường dòng họ đang theo, xét quan hệ với phe đó; 0 khi không liên quan. */
+/** Đường mỗi hướng theo, đọc qua quan hệ: [thế lực, +1 thân / −1 chống]. Phong trào (Đông Du, Quốc dân đảng) không có
+    thế lực riêng nên đọc qua việc chống Pháp; Cần Vương chống Pháp (sau 1888 triều đình về tay bảo hộ, nên không đọc
+    qua Triều đình: ra thú cũng làm Triều đình hài lòng); Duy Tân, trung lập, thứ ba đọc qua làng xóm. */
+const ALIGN: Record<string, [keyof Rel, 1 | -1][]> = {
+  chien: [['tr', 1], ['ph', -1]], canhtan: [['tr', 1]], hoa: [['tr', 1]],
+  canvuong: [['ph', -1]], dongdu: [['ph', -1]], duytan: [['lg', 1]],
+  cs: [['vm', 1]], qdd: [['ph', -1]], laphien: [['ph', 1]],
+  vm: [['vm', 1]], qg: [['qg', 1]], tl: [['lg', 1]],
+  bac: [['vm', 1]], nam: [['qg', 1]], thuba: [['lg', 1]],
+  baocap: [['nn', 1]], doimoi: [['nn', 1]], radi: [['my', 1]],
+};
+/** Lựa chọn trên thẻ hợp (1) hay trái (-1) với đường dòng họ đang theo; 0 khi không liên quan hay khi hai chiều triệt nhau. */
 export function alignment(fx: Fx, y: number): -1 | 0 | 1 {
-  const pk = curPick(y), c = pk && CAMP[pk.id];
-  if (!c || c === 'pt') return 0;
-  const n = fx[c] || 0;
+  const pk = curPick(y), refs = pk ? ALIGN[pk.id] : undefined;
+  if (!refs) return 0;
+  const n = refs.reduce((a, [k, sg]) => a + sg * Math.sign(fx[k] || 0), 0);
   return n > 0 ? 1 : n < 0 ? -1 : 0;
 }
 
@@ -195,7 +218,10 @@ export interface Harvest { lines: [string, Fx][]; total: Fx }
     Phụ thuộc bên cai quản quê nhà và làng xóm nghĩ gì về dòng họ. */
 export function harvest(lived: Era, y: number): Harvest | null {
   if (!isPlay() || S.harvests.includes(lived.id)) return null;
-  const r = ruler(y), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
+  // bên cai quản quê trong thế hệ vừa sống (giữa thế hệ), không phải bên vừa tới lúc nó khép lại
+  const r = ruler(Math.round((lived.cy + y) / 2)), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
+  // phe dòng họ theo (nếu không phải bên cai quản): được che chở, có người, có tiếng — trung thành không thành gánh nặng
+  const pk = curPick(lived.cy), camp = pk ? CAMP[pk.id] : undefined, cv = camp && camp !== 'pt' && camp !== 'lg' && camp !== r ? S.rel[camp] : 0; // làng xóm đã có dòng riêng
   // Thu nhập cố định; chi phí tăng theo quy mô (họ càng đông càng tốn gạo, càng giàu càng nặng thuế, danh tiếng phai dần):
   // không chọn gì cũng không thể giàu mãi, và không có tài nguyên nào kẹt ở mức trần.
   const { g, d, b, u } = S.res;
@@ -205,8 +231,10 @@ export function harvest(lived: Era, y: number): Harvest | null {
     ['Thuế và sưu dịch', { b: -Math.round((b * b) / 350) }],
     ['Danh tiếng phai theo thời gian', { u: -Math.max(4, Math.round((u * u) / 700)) }],
   ];
-  if (r) lines.push([`${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 6), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
+  if (r) lines.push([`Bên cai quản ${home()[1]}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 6), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
   else lines.push(['Vùng tranh chấp', { g: -6, d: -2 }]);
+  if (camp && camp !== 'pt' && cv >= 55) lines.push([`Phe bạn theo: ${POWERS[camp][0]} · ${relLabel(cv).toLowerCase()}`, { g: Math.round((cv - 40) / 6), d: 2, u: cv >= 75 ? 4 : 2 }]);
+  else if (camp === 'pt' && lg >= 55) lines.push(['Anh em trong phong trào', { d: 2, u: 3 }]);
   lines.push([`Làng xóm · ${relLabel(lg).toLowerCase()}`, { g: Math.round((lg - 50) / 8), u: Math.round((lg - 50) / 10) }]);
   if (d >= 60) lines.push(['Họ đông người', { g: 4, b: 4 }]);
   if (d < 20) lines.push(['Thiếu người làm', { g: -6 }]);

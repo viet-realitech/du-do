@@ -5,7 +5,7 @@ import type { HistEvent } from '../data';
 import type { Fx } from '../data/cards';
 import { S, rt, familyName, allEv } from '../state';
 import { on } from '../ui/actions';
-import { esc, sheet, toast, ghost } from '../ui/dom';
+import { esc, sheet, toast, ghost, calm } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { SND, buzz } from '../audio';
 import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial } from '../play';
@@ -18,16 +18,23 @@ import { checkBadges } from '../badges';
 const POW_KEYS = Object.keys(POWERS) as (keyof typeof POWERS)[];
 
 /** Chip hiệu ứng: tài nguyên và quan hệ, có dấu. */
+/** Chip hiệu ứng. Có `got` (phần đổi thực): khoản bị chặn ở 0 / 100 hiện mờ với lời giải thích thay vì biến mất.
+    Không có `got` (đang chọn): quan hệ đã kịch trần / chạm đáy theo đúng chiều thì chip mờ, báo trước là không thêm được. */
 export function fxChipsPlay(fx: Fx, got?: Fx): string {
-  const src = got || fx;
   const out: string[] = [];
+  const capped = (k: keyof Fx, n: number) => {
+    const cur = (k in S.res ? (S.res as Record<string, number>)[k] : (S.rel as Record<string, number>)[k]) ?? 50;
+    return got ? !got[k] : (n > 0 && cur >= 100) || (n < 0 && cur <= 0);
+  };
   for (const [k, name, ic] of RES) {
-    const n = src[k]; if (!n) continue;
+    const n = got ? got[k] || fx[k] : fx[k]; if (!n) continue;
+    if (got && capped(k, n)) { out.push(`<span class="fx cap">${ic} ${name} ${n > 0 ? 'đã đầy' : 'đã cạn'}</span>`); continue; }
     out.push(`<span class="fx ${n > 0 ? 'up' : 'dn'}">${ic} ${n > 0 ? '+' : ''}${n} ${name}</span>`);
   }
   for (const k of POW_KEYS) {
-    const n = src[k]; if (!n) continue;
+    const n = got ? got[k] || fx[k] : fx[k]; if (!n) continue;
     const [name, fac] = POWERS[k];
+    if (capped(k, n)) { out.push(`<span class="fx rel cap" title="Không đổi thêm được">${fac ? flag(fac) : ''}${name} ${n > 0 ? '· đã tin cậy tối đa' : '· đã thù địch tột độ'}</span>`); continue; }
     out.push(`<span class="fx rel ${n > 0 ? 'up' : 'dn'}">${fac ? flag(fac) : ''}${name} ${n > 0 ? '+' : ''}${n}</span>`);
   }
   return out.join('');
@@ -56,17 +63,32 @@ export function openCard(v: HistEvent, inTour = false): void {
       <div class="tt"><h3>${esc(ch[0])}</h3>${no ? `<span class="mono" style="color:var(--red)">${no}</span>` : al ? `<span class="al mono ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : ''}</div>
       <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
   }).join('')}</div>
+  ${done ? '' : '<div style="height:10px"></div><button class="btn" id="cgo" disabled>Chọn một cách ứng xử</button>'}
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
   ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done && !spPending);
   d.dataset.card = v.id;
   if (done) { if (sp0 && spPending) { d.querySelector('.btn.ghost[data-a="close-card"]')?.remove(); mountSpecial(d, v, sp0, inTour); } return; }
+  // chạm để chọn, bấm "Quyết định" mới chốt (như điểm rẽ và biến cố riêng): một lần chạm nhầm không tiêu mất gia sản
+  const cgo = d.querySelector<HTMLButtonElement>('#cgo')!;
+  let sel = -1;
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
-    if (decided(v.id)) return; // một thẻ chỉ quyết một lần: chạm lại không áp hiệu ứng thêm
-    const i = +b.dataset.i!, ch = c[2][i];
+    if (decided(v.id)) return;
+    sel = +b.dataset.i!;
+    d.querySelectorAll('.opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
+    cgo.disabled = false;
+    cgo.textContent = 'Quyết định';
+    cgo.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' });
+    SND.tick();
+    buzz(8);
+  }));
+  cgo.onclick = () => {
+    if (sel < 0 || decided(v.id)) return; // một thẻ chỉ quyết một lần: chạm lại không áp hiệu ứng thêm
+    const i = sel, ch = c[2][i], b = d.querySelector<HTMLButtonElement>(`.opt[data-i="${i}"]`)!;
     const got = decide(v, i);
     SND.stamp();
     buzz([10, 30, 40]);
-    d.querySelectorAll<HTMLButtonElement>('.opt').forEach(x => { x.disabled = true; x.classList.toggle('sel', x === b); });
+    cgo.remove();
+    d.querySelectorAll<HTMLButtonElement>('.opt').forEach(x => { x.disabled = true; x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
     d.querySelector('.lnk[data-a="close-card"]')?.remove();
     b.insertAdjacentHTML('beforeend', `<p class="out">${esc(ch[3])}</p>`);
     d.querySelector('.resrow')!.innerHTML = RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('');
@@ -75,7 +97,7 @@ export function openCard(v: HistEvent, inTour = false): void {
       ${warn.length ? `<p style="color:var(--red);margin-top:8px">Cạn ${warn.join(', ')}: mùa màng thế hệ tới sẽ khó khăn.</p>` : ''}`);
     const sp = specialFor(v);
     if (sp && !specialDecided(sp)) mountSpecial(d, v, sp, inTour); else finish(d, v, inTour);
-  }));
+  };
 }
 
 const resRow = () => RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('');
@@ -109,6 +131,7 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
     sh.querySelectorAll('.xopts .opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
     xmom.hidden = sp.choices[sel][4] !== 'mother';
     xgo.disabled = false;
+    xgo.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' });
     SND.tick();
   }));
   sh.querySelectorAll<HTMLButtonElement>('#xmom .chip').forEach(b => (b.onclick = () => { mom = b.dataset.m!; sh.querySelectorAll('#xmom .chip').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); }); }));

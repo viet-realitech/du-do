@@ -5,7 +5,7 @@ import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost } from '../ui/dom';
-import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, type Harvest } from '../play';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
@@ -16,6 +16,20 @@ import { layer } from '../ui/dom';
 import { renderMain, invalidateTrack } from '../view';
 import { opener } from './cinema';
 import { fxOn } from '../scene';
+import { loreOf, surnameKey } from '../data/surnames';
+
+/** Nhân vật cùng họ với dòng họ người chơi trong một hướng (người đồng hành trước, rồi những người được nêu tên);
+    chỉ nói cùng họ, không nhận họ hàng. `birth`: cùng họ khai sinh (Lê Đức Thọ vốn họ Phan…). */
+export function kinIn(o: Option): { id: string; fam: string; birth: boolean } | null {
+  const l = loreOf(S.surname || surnameKey(S.name));
+  if (!l) return null;
+  const nm = (id: string) => FIG[id][0].replace(/\s*\(.*\)\s*$/, '');
+  const ids = [o.guide, ...l.kin.filter(id => id !== o.guide && FIG[id] && o.who.includes(nm(id)))].filter(id => l.kin.includes(id) && FIG[id]);
+  if (!ids.length) return null;
+  const id = ids[0];
+  return { id, fam: l.names[0], birth: !l.names.some(n => nm(id).startsWith(n + ' ')) };
+}
+const kinLabel = (k: { fam: string; birth: boolean }) => `Cùng họ ${k.fam}${k.birth ? ' (khai sinh)' : ''}`;
 
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
@@ -110,13 +124,20 @@ function choice(e: Era, quiet: boolean): void {
     if (!spoke) setTimeout(release, Math.min(6000, 1800 + e.q.length * 35));
   }, 1200);
   const prevE = ERAS[ERAS.indexOf(e) - 1], pp = prevE && S.picks[prevE.id], ctx = e.ctx && pp ? e.ctx[pp] : null;
-  const tag = (id: string) => (pp ? (continues(pp, id) ? '<div class="alrow"><span class="al mono ok">Tiếp nối đường cũ</span></div>' : '<div class="alrow"><span class="al mono">Rẽ hướng</span></div>') : '');
+  // những việc thế hệ trước đã làm ở các thẻ bắt buộc (tối đa ba, theo thời gian): lựa chọn nhỏ cũng thành gia sử
+  const did = prevE ? choicesIn(prevE.cy, e.cy - 1).filter(x => mustDecide(x.v)).slice(0, 3).reverse() : [];
+  // nhãn của mỗi hướng: tiếp nối / rẽ khỏi đường thế hệ trước, và người cùng họ dẫn đầu hướng đó
+  const tag = (o: Option) => {
+    const k = kinIn(o), t = (pp ? (continues(pp, o.id) ? '<span class="al mono ok">Tiếp nối đường cũ</span>' : '<span class="al mono">Rẽ hướng</span>') : '') +
+      (k ? `<span class="al mono akin" title="${esc(FIG[k.id][0])}">${esc(kinLabel(k))}</span>` : '');
+    return t ? `<div class="alrow">${t}</div>` : '';
+  };
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
   <h2 style="margin:8px 0 8px">${e.title}</h2>
-  ${ctx ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div><p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p></div>` : ''}
+  ${ctx || did.length ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div>${ctx ? `<p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p>` : ''}${did.length ? `<ul class="did">${did.map(x => `<li><span class="mono muted">${x.v.y}</span> ${esc(x.ch[0])}</li>`).join('')}</ul>` : ''}</div>` : ''}
   <p class="muted" style="margin-bottom:14px">${e.q}</p>
   <div class="listen" id="lst"><i class="pulse"></i><span>Đang kể lời dẫn…</span><button class="lnk" id="lskip">Chọn ngay ›</button></div>
-  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="mono muted">${TAG_LABEL[o.tag]}</span></div>${tag(o.id)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
+  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="mono muted">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
   <div style="height:12px"></div><button class="btn" id="go" disabled>Đi theo hướng này</button>`);
   d.querySelector<HTMLButtonElement>('#lskip')!.onclick = () => { clearTimeout(say); hush(); release(); };
@@ -146,15 +167,16 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   clearLayer();
   mood('calm');
   renderMain();
-  const fs = Object.keys(FIG).filter(id => FIGERA[id] === e.id);
+  const fs = Object.keys(FIG).filter(id => FIGERA[id] === e.id), kin = kinIn(o);
   if (fxOn()) SND.vow();
   // ngọn cờ của hướng vừa chọn mở ra, người đồng hành bước vào: dòng họ đứng về một phía
   sheet(`<div class="unfurl">${o.fac ? flag(o.fac) : `<i class="flag nf"></i>`}<div class="uf-t"><span class="mono">Thế hệ ${e.n} chọn · ${e.cy}</span><b>${o.label}</b></div>${av(o.guide, 52)}</div>
   <h2 style="margin:14px 0 8px">Con đường của bạn</h2><p>${o.out}</p>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${fxChips(o.fx)}</div>
-  ${isPlay() && Object.keys(got).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(got)}</div>` : ''}
+  ${isPlay() && Object.keys(eraFx(o.id)).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(eraFx(o.id), got)}</div>` : ''}
   <div class="rule"></div>
   <button class="row" style="width:100%;text-align:left" data-a="fig" data-id="${o.guide}">${av(o.guide, 46)}<span style="flex:1"><span class="mono muted">Người đồng hành</span><br><b style="font:700 18px var(--disp)">${FIG[o.guide][0]}</b> <span class="muted" style="font-size:14px">· ${FIG[o.guide][2]}</span></span><span class="muted">›</span></button>
+  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])} cũng đi con đường này.</p>` : ''}
   <div class="rule"></div><div class="mono" style="color:var(--acc)">Mở khoá ${fs.length} nhân vật</div>
   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center">${av(id, 48)}<span>${FIG[id][0].replace(/\s*\(.*\)\s*$/, '').split(' ').slice(-2).join(' ')}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết ›</span></button>` : ''}</div>
   ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">✎ Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${d.y}</span> · ${esc(d.t)}</div>`).join('')}` : ''}

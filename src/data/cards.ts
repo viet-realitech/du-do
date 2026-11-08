@@ -400,3 +400,30 @@ export const CARDS: Card[] = [
 ];
 
 export const CARD = Object.fromEntries(CARDS.map(c => [c[0], c])) as Record<string, Card>;
+
+/** Thẻ cả nước viết cho một vùng: lựa chọn thay thế theo vùng quê (B, T1, T2, NE, NW), cùng số lựa chọn với thẻ gốc
+    (S.cards lưu chỉ số lựa chọn). npm run scenes kiểm số lựa chọn. */
+export const VARIANT: Record<string, { regions: string[]; choices: Choice[] }[]> = {
+  // Hiệp ước Nhâm Tuất nhượng ba tỉnh miền Đông; ba tỉnh miền Tây còn thuộc Đại Nam tới 1867, Bắc và Trung còn xa chiến sự.
+  // Hoà ước buộc Đại Nam bồi thường bốn triệu đồng trong mười năm.
+  nt62: [
+    { regions: ['NW'], choices: [
+      ['Đón người miền Đông chạy sang', 'Nhiều nhà ở Gia Định, Định Tường bỏ đất nhượng, sang ba tỉnh miền Tây.', { g: -6, u: 4, lg: 5, tr: 3 }, 'Người miền Đông sang ở nhờ, dạy chữ cho con cháu trong họ. Ai cũng biết ba tỉnh còn lại chẳng yên được lâu.'],
+      ['Gửi thóc cho nghĩa quân Trương Định', 'Lén chở thóc sang Gò Công, nơi nghĩa quân chưa chịu giải giáp.', { g: -8, u: 5, ph: -8, tr: -2 }, 'Ghe thóc đi đêm. Quan triều đình làm ngơ, quan Tây thì bắt đầu dò hỏi.'],
+      ['Than khóc rồi nộp thuế', 'Làm lễ cáo tổ tiên, rồi sống tiếp.', { lg: 3 }, 'Ruộng vẫn cày. Chuyện hiệp ước thành câu chuyện kể bên bếp.'],
+    ] },
+    { regions: ['B', 'T1', 'T2'], choices: [
+      ['Đóng thuế đền chiến phí', 'Triều đình tăng thuế để trả khoản bồi thường cho Pháp và Tây Ban Nha.', { b: -6, u: 2, tr: 6 }, 'Rương bạc vơi đi. Quan huyện khen nhà đóng đủ, đóng sớm.'],
+      ['Đón bà con Nam Kỳ chạy ra', 'Cho một nhà từ Gia Định chạy loạn ra ở nhờ.', { g: -5, d: 1, u: 4, lg: 4 }, 'Người khách kể về những đồn luỹ đã mất. Cả nhà ngồi nghe đến khuya.'],
+      ['Than khóc rồi sống tiếp', 'Làm lễ cáo tổ tiên, rồi sống tiếp.', { lg: 3 }, 'Ruộng vẫn cày. Chuyện mất đất phương Nam thành câu chuyện kể bên bếp.'],
+    ] },
+  ],
+  // 30.4.1975 với một nhà ở miền Bắc: không di tản, không đón quân vào thành phố mình.
+  sg75: [
+    { regions: ['B', 'T1'], choices: [
+      ['Vào Nam tìm người thân', 'Lên xe vào Nam tìm nhánh họ di cư từ năm 1954.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Hai nhánh họ gặp lại sau hai mươi mốt năm. Có người mừng, có người ngượng ngùng.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
+    ] },
+  ],
+};

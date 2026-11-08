@@ -181,7 +181,14 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 }); // opens once the battle scene has played out (~17 s), narration or not
   await expect(page.locator('#tourb')).toContainText('chờ quyết định');
   const before = await page.locator('#res .mt').first().locator('b').first().textContent();
+  // a tap only selects: nothing is spent until "Quyết định"
+  await expect(page.locator('#cgo')).toBeDisabled();
   await page.locator('.scrim .opt').first().click();
+  expect(await page.locator('#res .mt').first().locator('b').first().textContent()).toBe(before);
+  await expect(page.locator('.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
+  await page.locator('#cgo').click();
+  await expect(page.locator('.scrim .opt').first()).toBeDisabled();
+  await expect(page.locator('.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
   // the tour goes on by itself: progress advances past 1/n, no Play press needed
   await expect(page.locator('#tourb')).toBeVisible();

@@ -16,7 +16,7 @@ if (mainEl) new MutationObserver(() => { mainEl.inert = !!layer.querySelector(':
 export const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-const calm = matchMedia('(prefers-reduced-motion: reduce)');
+export const calm = matchMedia('(prefers-reduced-motion: reduce)');
 
 /** Let `els` play their exit animation outside the live layer (inert, no ids), then drop them.
     The layer itself is empty at once, so callers can render the next screen immediately. */
