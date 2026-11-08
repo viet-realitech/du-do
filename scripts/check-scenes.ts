@@ -48,6 +48,8 @@ for (const [id, sc] of Object.entries(SCENES)) {
 ERAS.forEach((e, i) => {
   const nx = ERAS[i + 1];
   for (const o of e.opts) for (const t of NEXT[o.id] || []) if (!nx || !nx.opts.some(x => x.id === t)) { console.error(`LỖI NEXT.${o.id} → ${t}: không phải hướng của điểm rẽ ${nx ? nx.n : '(hết)'}`); err++; }
+  // mỗi hướng (trừ điểm rẽ cuối) phải có ít nhất một hướng tiếp nối: thiếu khoá thì mọi lựa chọn sau đều hiện "Rẽ hướng"
+  if (nx) for (const o of e.opts) if (!NEXT[o.id]?.length) { console.error(`LỖI NEXT.${o.id}: không có hướng tiếp nối ở điểm rẽ ${nx.n}`); err++; }
 });
 // thẻ theo vùng: cùng số lựa chọn với thẻ gốc (S.cards lưu chỉ số), vùng hợp lệ
 for (const [id, vs] of Object.entries(VARIANT)) {

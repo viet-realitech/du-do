@@ -88,6 +88,19 @@ test('reading mode: the timeline moves freely past unchosen turning points; the 
   expect(errors).toEqual([]);
 });
 
+test('turning points mark which options continue the family path (every path has a successor)', async ({ page }) => {
+  for (const [e2, cont] of [['duytan', ['qdd', 'laphien']], ['canvuong', ['cs', 'qdd']]] as const) {
+    const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1930, picks: { e1: 'canhtan', e2 }, quiz: { e1: [true, true], e2: [true, true] } });
+    if (await page.locator('.cine').count()) await page.goBack(); // chapter opener
+    await expect(page.locator('#layer .opt[data-o="cs"]')).toBeAttached({ timeout: 8000 });
+    for (const o of ['cs', 'qdd', 'laphien']) {
+      const tag = page.locator(`#layer .opt[data-o="${o}"] .al`).first();
+      await expect(tag).toHaveText(cont.includes(o as never) ? /Tiếp nối đường cũ/i : /Rẽ hướng/i);
+    }
+    expect(errors).toEqual([]);
+  }
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)

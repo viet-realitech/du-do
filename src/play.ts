@@ -188,7 +188,8 @@ export const CAMP: Record<string, keyof Rel | 'pt'> = {
 /** Hướng ở điểm rẽ sau được xem là "tiếp nối" hướng trước (cùng phe hoặc kế thừa tinh thần). */
 export const NEXT: Record<string, string[]> = {
   chien: ['canvuong'], canhtan: ['duytan', 'dongdu'], hoa: ['duytan'],
-  canvuong: ['cs', 'qdd'], dongdu: ['cs', 'qdd'], // Cần Vương → đấu tranh vũ trang (Phan Bội Châu, Nguyễn Thái Học, Nguyễn Ái Quốc) duytan: ['qdd', 'laphien'],
+  // Cần Vương, Đông Du → đấu tranh vũ trang (Nguyễn Ái Quốc, Nguyễn Thái Học); Duy Tân → Quốc dân đảng, lập hiến
+  canvuong: ['cs', 'qdd'], dongdu: ['cs', 'qdd'], duytan: ['qdd', 'laphien'],
   cs: ['vm'], qdd: ['qg'], laphien: ['qg', 'tl'],
   vm: ['bac'], qg: ['nam'], tl: ['thuba'],
   bac: ['baocap', 'doimoi'], nam: ['radi', 'doimoi'], thuba: ['doimoi'],

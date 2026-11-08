@@ -267,6 +267,9 @@ export const WAR = {
 };
 
 export function buzz(p: number | number[]): void {
+  // trình duyệt chặn (và báo lỗi) rung trước lần chạm đầu tiên, vd. điểm rẽ mở ngay khi tải lại trang
+  const ua = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+  if (ua && !ua.hasBeenActive) return;
   if (S.haptic && navigator.vibrate) {
     try { navigator.vibrate(p); } catch { /* ignore */ }
   }
