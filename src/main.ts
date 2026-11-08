@@ -46,12 +46,12 @@ import './styles.css';
 import './ui/image-slot';
 import { registerSW } from 'virtual:pwa-register';
 import { ERAS } from './data';
-import { S, setFocus, rt, Y1 } from './state';
+import { S, setFocus, save, eraOf } from './state';
 import { initMap } from './map';
 import { initMainControls, renderMain, setYear } from './view';
 import { initTabs } from './tabs';
 import { initHistory } from './ui/history';
-import { togglePlay } from './tour';
+import { togglePlay, startTour } from './tour';
 import { pendingCard } from './play';
 import { ac } from './audio';
 import { applyTheme } from './theme';
@@ -70,7 +70,7 @@ mood('calm');
 document.getElementById('play')!.addEventListener('click', () => { ac(); togglePlay(); });
 setFocus();
 applyTheme(); // also renders the main screen
-initMap().then(renderMain);
+const mapReady = initMap().then(renderMain);
 
 // iOS leaves the page scrolled after the keyboard closes; the app never scrolls as a document.
 addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) scrollTo(0, 0); }, 60));
@@ -78,7 +78,13 @@ addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) sc
 if (S.step === 'splash') splash();
 else if (S.step === 'intro') (S.mode === 'play' ? gameIntro : intro)();
 else if (ERAS.find(e => !S.picks[e.id] && e.cy <= S.year)) setYear(S.year, true);
-// Trò chơi: tải lại giữa chương với thẻ bắt buộc đang chờ → mở lại thẻ rồi đi tiếp tới điểm rẽ kế.
-else if (S.mode === 'play' && pendingCard(S.year)) { const nx = ERAS.find(e => !S.picks[e.id]); rt.flowTo = nx ? nx.cy : Y1; setYear(S.year, true); }
+// Trò chơi: tải lại giữa chương với thẻ bắt buộc đang chờ → dựng lại tour chương từ sự kiện đó (bay tới, cảnh, lời kể,
+// rồi mới mở thẻ), không bật liền các thẻ còn lại trên bản đồ đứng yên.
+else if (S.mode === 'play' && pendingCard(S.year)) {
+  const pc = pendingCard(S.year)!;
+  S.year = pc.y;
+  save();
+  void mapReady.then(() => { if (!document.querySelector('#layer > *')) startTour(eraOf(pc.y)); });
+}
 
 registerSW({ immediate: true });

@@ -374,6 +374,22 @@ test('play mode: "Điểm rẽ ›" still flies to each decision the family owes
   expect(errors).toEqual([]);
 });
 
+test('play mode: reloading mid-chapter resumes the tour at the owed card instead of stacking cards', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  const st = { step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year: 1874, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2 },
+    res: { g: 40, d: 30, b: 25, u: 30 } };
+  await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
+  await page.goto('/');
+  // the chapter tour is rebuilt from the owed event: tour bar first, the card only after its step plays
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('#layer .scrim')).toHaveCount(0);
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('#tourb')).toContainText('chờ quyết định');
+  expect(errors).toEqual([]);
+});
+
 test.describe('iPad layouts', () => {
   for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
     test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {
