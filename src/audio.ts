@@ -174,7 +174,12 @@ export const WAR = {
     if (far < 0.5) noise(0.06, 3200, 1500, v * 0.4, 1, delay, 0.001, sc());
   },
   /** Rifle / machine-gun fire: scattered short cracks over `d` seconds. */
-  crackle(d = 2.5, n = 18, delay = 0) {
+  crackle(d = 2.5, n = 18, delay = 0, old = false) {
+    if (old) { // súng hoả mai, súng trường thế kỷ 19: từng loạt bắn đồng loạt, không phải tiếng liên thanh
+      const vol = Math.max(2, Math.round(n / 5));
+      for (let i = 0; i < vol; i++) { const at = delay + (i * d) / vol + Math.random() * 0.15; for (let j = 0; j < 5; j++) noise(0.09, 1200 + Math.random() * 1000, 500, 0.06, 1, at + j * 0.025, 0.002, sc()); }
+      return;
+    }
     for (let i = 0; i < n; i++) {
       const at = delay + Math.random() * d, burst = Math.random() < 0.3 ? 3 : 1;
       for (let j = 0; j < burst; j++) noise(0.05, 2600 + Math.random() * 1500, 900, 0.05 + Math.random() * 0.06, 1.4, at + j * 0.07, 0.001, sc());
@@ -209,6 +214,30 @@ export const WAR = {
   horn(delay = 0) { tone(110, 1.6, 'sawtooth', 0.05, delay, undefined, sc()); tone(165, 1.6, 'sawtooth', 0.035, delay, undefined, sc()); tone(110, 1.1, 'sawtooth', 0.04, delay + 1.9, undefined, sc()); },
   /** Nhịp hành quân: trống đều. */
   march(n = 8, delay = 0) { for (let i = 0; i < n; i++) drum(delay + i * 0.42, i % 2 ? 0.16 : 0.24, i % 2 ? 120 : 95, sc()); },
+  /** Xe tăng / thiết giáp: tiếng máy trầm và tiếng xích lách cách trong `d` giây. */
+  tank(d = 2, delay = 0) {
+    const a = live();
+    if (!a) return;
+    const t = a.currentTime + delay, o = a.createOscillator(), lp = a.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.value = 42;
+    lp.type = 'lowpass'; lp.frequency.value = 160;
+    o.connect(lp).connect(env(a, t, 0.05, 0.3, d)).connect(sc());
+    o.start(t); o.stop(t + d + 0.1);
+    const n = Math.min(18, Math.floor(d / 0.11));
+    for (let i = 0; i < n; i++) noise(0.03, 1800, 1200, 0.025, 3, delay + i * 0.11, 0.001, sc());
+  },
+  /** Trực thăng: tiếng cánh quạt đập đều (nhiễu lọc, nhịp 13 Hz) trong `d` giây. */
+  heli(d = 2, delay = 0) {
+    const a = live();
+    if (!a || !NOISE) return;
+    const t = a.currentTime + delay, s = a.createBufferSource(), bp = a.createBiquadFilter(), am = a.createGain(), lfo = a.createOscillator(), depth = a.createGain();
+    s.buffer = NOISE; s.loop = true;
+    bp.type = 'bandpass'; bp.frequency.value = 380; bp.Q.value = 2;
+    am.gain.value = 0.5; lfo.frequency.value = 13; depth.gain.value = 0.5;
+    lfo.connect(depth).connect(am.gain);
+    s.connect(bp).connect(am).connect(env(a, t, 0.09, 0.4, d)).connect(sc());
+    s.start(t); lfo.start(t); s.stop(t + d + 0.05); lfo.stop(t + d + 0.05);
+  },
   /** Tiếng mở trận theo loại trận (xong trước khi lời kể bắt đầu, ~1,1 s). */
   sting(type: string) {
     if (type === 'naval' || type === 'landing') { drum(0, 0.45, 66, sc()); tone(98, 0.6, 'sawtooth', 0.04, 0.1, undefined, sc()); tone(147, 0.5, 'sawtooth', 0.025, 0.1, undefined, sc()); }

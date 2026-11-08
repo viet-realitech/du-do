@@ -1,5 +1,6 @@
 import type { HistEvent } from './data';
-import { SCENES, MOVES, SIDE_COLOR, SIDE_NAME, type Scene, type Move } from './data/scenes';
+import { SCENES, MOVES, SIDE_COLOR, SIDE_NAME, actOf, type Scene, type Move, type Kind } from './data/scenes';
+import { kindOf, drawPiece } from './units';
 import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
@@ -46,6 +47,8 @@ const lead = (v: HistEvent) => (v.k === 'Trận đánh' && SCENES[v.id] && !v.di
 /** Lời kể của bước tour bắt đầu lúc nào (ms): trận đánh chờ tiếng mở trận xong. */
 export const voiceAt = (v: HistEvent): number => (lead(v) ? 1200 : 700);
 /** Kiểu rung theo loại trận (Android; iOS không rung). */
+/** Cỡ quân cờ trên sa bàn (so với nét vẽ gốc ~18 px). */
+const PIECE = 1.35;
 const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 40, 30, 90], naval: [25, 70, 25], landing: [30, 50, 60], uprising: [10, 110, 10, 110, 10], air: [18] };
 
 /** Tít mở trận: tên trận, thời gian, nơi, các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
@@ -85,6 +88,14 @@ export const capH = (): number => (innerWidth >= 700 ? 74 : 64);
 /** Thanh đang nằm dưới đáy bản đồ (thanh xem lại, hoặc thanh tour). */
 const barEl = () => document.getElementById('replb') || document.getElementById('tourb');
 
+/** Cỡ sơ đồ (px màn hình) cho trận / cảnh gọn: theo phần bản đồ còn trống (trừ nhãn trên, phụ đề, thanh dưới, cột nút zoom). */
+function diagPx(): number {
+  const w = document.getElementById('mapwrap');
+  if (!w) return 150;
+  const bar = barEl(), low = (bar ? w.clientHeight - bar.offsetTop : 0) + capH() + 16;
+  return Math.max(140, Math.min(420, Math.min(w.clientWidth - 110, w.clientHeight - 44 - low) * 0.72));
+}
+
 /** Phụ đề chân hình của cảnh: một khung, đổi nội dung theo nhịp (hiệu ứng lau chữ mỗi lần đổi). */
 function caption(r: Run, html: string, col: string, cls = ''): void {
   const wrap = document.getElementById('mapwrap');
@@ -122,12 +133,12 @@ function badge(root: SVGGElement, p: [number, number], k: number, n: number, col
 /** Nhịp i bắt đầu: phụ đề đổi, các mũi tên trước mờ đi, số thứ tự hiện. */
 function beat(r: Run, parts: Element[][], i: number, html: string, col: string): void {
   caption(r, html, col);
-  parts.forEach((ps, j) => { if (j < i) ps.forEach(e => e.setAttribute('opacity', '0.45')); });
+  parts.forEach((ps, j) => { if (j < i) ps.forEach(e => { if (e.getAttribute('opacity') !== '0') e.setAttribute('opacity', '0.45'); }); });
   parts[i]?.forEach(e => { if (e.classList.contains('bd')) e.setAttribute('opacity', '1'); });
 }
 /** Hết nhịp: trả độ đậm cho mọi mũi tên, phụ đề thành chú giải các phe. */
 function closing(r: Run, parts: Element[][], sides: string[]): void {
-  parts.forEach(ps => ps.forEach(e => { if (!e.classList.contains('bd') || e.getAttribute('opacity') !== '0') e.setAttribute('opacity', '1'); }));
+  parts.forEach(ps => ps.forEach(e => { if (e.getAttribute('opacity') !== '0') e.setAttribute('opacity', '1'); }));
   caption(r, legendHtml(sides), 'var(--ink3)', ' leg');
 }
 
@@ -202,11 +213,27 @@ function shake(r: Run): void {
   later(r, 450, () => m.classList.remove('shake'));
 }
 
-function glyph(type: Scene['type'], root: SVGGElement, color: string): SVGGElement {
-  const g = el('g', {}, root);
-  if (type === 'air') el('path', { d: 'M0,-7 L1.6,-2 L8,1 L8,2.6 L1.6,1.4 L1,5 L3,6.6 L3,7.6 L0,7 L-3,7.6 L-3,6.6 L-1,5 L-1.6,1.4 L-8,2.6 L-8,1 L-1.6,-2Z', fill: color, stroke: '#111', 'stroke-width': 0.8, transform: 'rotate(90)' }, g);
-  else el('path', { d: 'M-8,-2.5 L6,-2.5 L9,0 L6,2.5 L-8,2.5 L-6,0Z', fill: color, stroke: '#111', 'stroke-width': 0.8 }, g);
-  return g;
+/** Khói bụi sau xích xe tăng. */
+function dust(r: Run, root: SVGGElement, p: [number, number], k: number): void {
+  const c = el('circle', { cx: p[0], cy: p[1], r: 2 / k, fill: 'url(#fx-puff-d)', opacity: 0.6 }, root);
+  anim(r, 900, q => { c.setAttribute('r', String((2 + 5 * q) / k)); c.setAttribute('opacity', String(0.6 * (1 - q))); }, 0, () => c.remove());
+}
+
+/** Hai mũi tên giáp nhau (cặp `meet` có nguồn trong dữ liệu): loạt đạn vạch chéo giữa hai đầu mũi, hay khói súng hoả mai. */
+function contact(r: Run, root: SVGGElement, pA: [number, number], pB: [number, number], k: number, cA: string, cB: string, old: boolean): void {
+  root.dataset.contacts = String(+(root.dataset.contacts || 0) + 1);
+  WAR.crackle(1.2, 10, 0, old);
+  if (calm.matches) return;
+  for (let j = 0; j < 4; j++) {
+    const [p, q, c] = j % 2 ? [pB, pA, cB] : [pA, pB, cA];
+    if (old) {
+      const pf = el('circle', { cx: p[0] + (q[0] - p[0]) * 0.15, cy: p[1] + (q[1] - p[1]) * 0.15, r: 2 / k, fill: '#f4f1ea', opacity: 0.8 }, root);
+      anim(r, 1200, t => { pf.setAttribute('r', String((2 + 5 * t) / k)); pf.setAttribute('opacity', String(0.8 * (1 - t))); }, j * 120, () => pf.remove());
+    } else {
+      const ln = el('line', { x1: p[0], y1: p[1], x2: p[0] + (q[0] - p[0]) * 0.7, y2: p[1] + (q[1] - p[1]) * 0.7, stroke: c, 'stroke-width': 1.4 / k, 'stroke-linecap': 'round', opacity: 0 }, root);
+      anim(r, 120, t => ln.setAttribute('opacity', String(1 - t)), j * 80, () => ln.remove());
+    }
+  }
 }
 
 function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
@@ -216,8 +243,8 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const k = h.k(), root = r.root, type = sc?.type || 'land';
   // Trận gọn trong vài km: phóng sơ đồ quanh vị trí sự kiện cho tới khi chiếm gần nửa khung (minh hoạ, không phải tỉ lệ thật)
   const c0 = h.proj(v.l), pts = (sc?.arrows || []).flatMap(a => [h.proj(a[0]), h.proj(a[1])]).concat((sc?.hold || []).map(x => h.proj([x[0], x[1]])));
-  const span = pts.length ? Math.max(...pts.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * k : 0;
-  const f = span > 0 ? Math.max(1, 150 / span) : 1;
+  const span = pts.length ? Math.max(...pts.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * h.ppu() : 0; // px màn hình
+  const f = span > 0 ? Math.max(1, diagPx() / span) : 1;
   const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
   const arrows = sc?.arrows.length ? sc.arrows : [];
   const T0 = 120; // gọi sau khi bản đồ đã bay tới (playScene hẹn 1,25 s), để hệ số zoom k đã đúng
@@ -237,43 +264,108 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (type === 'naval' || type === 'landing') WAR.waves(bed, T0 / 1000);
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
-  arrows.forEach(([from, to, side], i) => {
+  // máy yếu: bỏ cánh quạt quay, bụi xích (mọi thứ khác giữ nguyên)
+  const lite = (navigator.hardwareConcurrency || 8) <= 4 || ((navigator as { deviceMemory?: number }).deviceMemory || 8) <= 2;
+  const old = v.y < 1900, sy = document.getElementById('mapwrap')?.classList.contains('tilt') ? 1.24 : 1;
+  const holds = (sc?.hold || []).map(([lo, la, side]) => ({ side, ll: [lo, la] as [number, number], ringed: false }));
+  const arrived = new Set<number>(), meets = sc?.meet || [];
+  root.dataset.contacts = '0';
+  arrows.forEach((arw, i) => {
+    const [from, to, side, note] = arw;
+    const act = actOf(arw), kind: Kind = kindOf(note, type, arw[4]);
     const a = P(from), b = P(to), c = curve(a, b, (i % 2 ? -1 : 1) * 0.16);
-    const col = SIDE_COLOR[side] || '#ffd84a';
+    const col = SIDE_COLOR[side] || '#ffd84a', ink = act === 'doubt' ? '#9a9a9a' : col;
+    // nét: giao chiến / hành quân vẽ dần; rút lui nét đứt chạy; thuỷ chiến nét đứt chạy; nghi vấn nét chấm xám
+    const marching = act === 'retreat' || (act !== 'doubt' && (type === 'naval' || type === 'landing')), reveal = act !== 'doubt' && !marching;
     // nét tính theo đơn vị bản đồ chia cho zoom (không dùng non-scaling-stroke: nó làm pathLength / nét đứt sai trên Chrome)
     const under = el('path', { d: c.d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.55, 'stroke-width': 7 / k, 'stroke-linecap': 'round' }, root);
-    const line = el('path', { d: c.d, fill: 'none', stroke: col, 'stroke-width': (type === 'uprising' ? 2.4 : 3.4) / k, 'stroke-linecap': 'round' }, root);
-    if (type === 'naval' || type === 'landing') line.setAttribute('stroke-dasharray', `${7 / k} ${5 / k}`);
+    const line = el('path', { d: c.d, fill: 'none', stroke: ink, 'stroke-width': (type === 'uprising' ? 2.4 : 3.4) / k, 'stroke-linecap': 'round' }, root);
+    if (act === 'doubt') { line.setAttribute('stroke-opacity', '0.55'); line.setAttribute('stroke-dasharray', `${0.01 / k} ${4.5 / k}`); }
+    else if (act === 'retreat') line.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`);
+    else if (marching) line.setAttribute('stroke-dasharray', `${7 / k} ${5 / k}`);
     const len = line.getTotalLength() || 1;
-    for (const p of [under, line]) if (!(type === 'naval' || type === 'landing') || p === under) { p.setAttribute('stroke-dasharray', `${len} ${len}`); p.setAttribute('stroke-dashoffset', String(len)); }
+    for (const p of reveal ? [under, line] : [under]) { p.setAttribute('stroke-dasharray', `${len} ${len}`); p.setAttribute('stroke-dashoffset', String(len)); }
     const head = el('g', { transform: `translate(${b[0]},${b[1]}) rotate(${c.ang}) scale(${1 / k})`, opacity: 0 }, root);
-    el('path', { d: 'M-2,-7 L9,0 L-2,7 L1,0Z', fill: col, stroke: '#111', 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, head);
-    const start = L0 + B[i], dur = calm.matches ? 1 : type === 'air' ? 1500 : 1900;
+    el('path', { d: 'M-2,-7 L9,0 L-2,7 L1,0Z', fill: ink, stroke: '#111', 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, head);
+    const start = L0 + B[i], dur = calm.matches ? 1 : (type === 'air' ? 1500 : 1900) * (act === 'retreat' ? 1.4 : 1);
     parts[i] = [under, line, head];
     if (arrows.length > 1) parts[i].push(badge(root, a, k, i + 1, col));
-    later(r, start, () => beat(r, parts, i, beatHtml(side, arrows[i][3], i, arrows.length), col));
-    const mover = type === 'naval' || type === 'landing' || type === 'air' ? glyph(type, root, col) : null;
-    if (mover) mover.setAttribute('opacity', '0');
-    if (type === 'air') WAR.plane(start / 1000);
-    let lastB = -1;
+    later(r, start, () => beat(r, parts, i, beatHtml(side, note, i, arrows.length), col));
+    // quân cờ đi theo mũi tên (nghi vấn thì không: sử liệu không chắc có lực lượng nào ở đó)
+    const pc = act === 'doubt' ? null : drawPiece(kind, col, root, sy), airborne = kind === 'plane' || kind === 'para';
+    if (pc) parts[i].push(pc.g);
+    if (pc) { if (airborne) WAR.plane(start / 1000); else if (kind === 'armour') WAR.tank(dur / 1000, start / 1000); else if (kind === 'heli') WAR.heli(dur / 1000, start / 1000); }
+    // quân cờ đi sau đầu mũi tên và dừng ở khoảng 3/4 đường (không đè đầu mũi tên, vị trí giữ, khói)
+    const put = (e: number, s = 1) => {
+      if (!pc) return;
+      const t = airborne ? e : e * 0.74, p = c.at(t), p2 = c.at(Math.min(1, t + 0.02)), z = s * PIECE;
+      pc.g.setAttribute('transform', `translate(${p[0]},${p[1]}) scale(${z / k},${(z * sy) / k})`);
+      pc.body.setAttribute('transform', `rotate(${(Math.atan2(p2[1] - p[1], p2[0] - p[0]) * 180) / Math.PI})`);
+    };
+    // vòng vây: ghi chú nói "vây" / "siết" (không phải "bị vây", không phải địa danh Làng Vây) → vòng siết quanh vị trí bên kia gần mũi tên
+    if (act === 'fight' && /(^|\s)(vây|siết)/.test(note) && !/bị vây/.test(note)) {
+      const tgt = holds.filter(hd => hd.side !== side && !hd.ringed && Math.hypot(hd.ll[0] - to[0], hd.ll[1] - to[1]) <= 0.08)
+        .sort((x, y) => Math.hypot(x.ll[0] - to[0], x.ll[1] - to[1]) - Math.hypot(y.ll[0] - to[0], y.ll[1] - to[1]))[0];
+      if (tgt) {
+        tgt.ringed = true;
+        const hp = P(tgt.ll), ring = el('circle', { class: 'fx-ring', cx: hp[0], cy: hp[1], r: 34 / k, fill: 'none', stroke: col, 'stroke-width': 1.6 / k, 'stroke-dasharray': `${3 / k} ${3 / k}`, opacity: 0 }, root);
+        anim(r, Math.max(dur, 1), q => { ring.setAttribute('r', String((34 - 19 * ease(q)) / k)); ring.setAttribute('opacity', '0.9'); }, start);
+      }
+    }
+    let lastB = -1, puff = 0;
     anim(r, dur, q => {
       const e = ease(q);
       under.setAttribute('stroke-dashoffset', String(len * (1 - e)));
-      if (!(type === 'naval' || type === 'landing')) line.setAttribute('stroke-dashoffset', String(len * (1 - e)));
-      else line.setAttribute('stroke-dashoffset', String(-e * 60 / k));
-      if (mover) { const p = c.at(e), p2 = c.at(Math.min(1, e + 0.02)); mover.setAttribute('opacity', q > 0.97 ? '0' : '1'); mover.setAttribute('transform', `translate(${p[0]},${p[1]}) rotate(${(Math.atan2(p2[1] - p[1], p2[0] - p[0]) * 180) / Math.PI}) scale(${1 / k})`); }
+      if (reveal) line.setAttribute('stroke-dashoffset', String(len * (1 - e)));
+      else if (marching) line.setAttribute('stroke-dashoffset', String((act === 'retreat' ? -e * 40 : -e * 60) / k));
+      if (pc) {
+        pc.g.setAttribute('opacity', airborne && q > 0.97 ? '0' : '1');
+        put(e);
+        if (pc.rotor && !lite) pc.rotor.setAttribute('transform', `rotate(${q * dur * 1.5})`);
+        if (kind === 'armour' && !lite && puff < 3 && q > (puff + 1) * 0.25) { puff++; dust(r, root, c.at(e * 0.74), k); }
+      }
       const bk = Math.floor(q * 10);
-      if (type === 'air' && q > 0.55 && bk !== lastB && bursts < 14) { lastB = bk; bursts++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55); }
+      if (type === 'air' && act === 'fight' && q > 0.55 && bk !== lastB && bursts < 14) { lastB = bk; bursts++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55); }
     }, start, () => {
       head.setAttribute('opacity', '1');
-      // tới mục tiêu: chớp lửa, khói, tiếng nổ
-      const big = type === 'siege' ? 1.25 : type === 'uprising' ? 0.6 : 1;
-      for (let j = 0; j < (type === 'uprising' ? 1 : 3); j++) explode(r, root, [b[0] + (Math.random() - 0.5) * 14 / k, b[1] + (Math.random() - 0.5) * 10 / k], k, j * 260, big * (1 - j * 0.2));
-      if (sounds++ < 6) {
-        if (type === 'air') WAR.bomb(0); else WAR.boom(0, i ? 0.25 : 0);
-        if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2);
-        if (i === 0) { shake(r); buzz(HAPTIC[type] || [25, 40, 60]); } else if (type === 'air' && i < 3) buzz(18);
+      arrived.add(i);
+      // quân cờ tới nơi: máy bay bay khỏi; lính dù bung dù rồi đứng lại; trực thăng hạ cánh tung bụi; còn lại dừng trước đầu mũi tên
+      if (pc && !airborne) { put(1, 0.85); if (act === 'retreat') pc.g.setAttribute('opacity', '0.7'); }
+      if (pc && kind === 'heli' && !calm.matches) {
+        const tp = c.at(0.74), dr = el('circle', { cx: tp[0], cy: tp[1], r: 4 / k, fill: 'none', stroke: '#c9bfa8', 'stroke-width': 1.2 / k, opacity: 0.8 }, root);
+        anim(r, 700, q => { dr.setAttribute('r', String((4 + 10 * q) / k)); dr.setAttribute('opacity', String(0.8 * (1 - q))); }, 0, () => dr.remove());
       }
+      if (pc && kind === 'para') {
+        for (let j = -1; j <= 1; j++) {
+          const cg = el('g', { transform: `translate(${b[0] + (j * 7) / k},${b[1] - 16 / k}) scale(${1 / k},${sy / k})`, opacity: 1 }, root);
+          el('path', { d: 'M-4,0 A4,4 0 0 1 4,0Z', fill: '#f3ecdc', stroke: '#111', 'stroke-width': 0.6 }, cg);
+          el('line', { x1: 0, y1: 0, x2: 0, y2: 5, stroke: '#111', 'stroke-width': 0.6 }, cg);
+          anim(r, 1100, q => { cg.setAttribute('transform', `translate(${b[0] + (j * 7) / k},${b[1] - (16 * (1 - q)) / k}) scale(${1 / k},${sy / k})`); cg.setAttribute('opacity', String(q < 0.7 ? 1 : (1 - q) / 0.3)); }, j * 120 + 120, () => cg.remove());
+        }
+        const ground = drawPiece('inf', col, root, sy);
+        parts[i].push(ground.g);
+        const gp = c.at(0.74), z = 0.85 * PIECE;
+        ground.g.setAttribute('transform', `translate(${gp[0]},${gp[1]}) scale(${z / k},${(z * sy) / k})`);
+        later(r, calm.matches ? 0 : 1200, () => ground.g.setAttribute('opacity', '1'));
+      }
+      if (act === 'fight') {
+        // tới mục tiêu: chớp lửa, khói, tiếng nổ
+        const big = type === 'siege' ? 1.25 : type === 'uprising' ? 0.6 : 1;
+        for (let j = 0; j < (type === 'uprising' ? 1 : 3); j++) explode(r, root, [b[0] + (Math.random() - 0.5) * 14 / k, b[1] + (Math.random() - 0.5) * 10 / k], k, j * 260, big * (1 - j * 0.2));
+        if (sounds++ < 6) {
+          if (type === 'air') WAR.bomb(0); else WAR.boom(0, i ? 0.25 : 0);
+          if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2, old);
+          if (i === 0) { shake(r); buzz(HAPTIC[type] || [25, 40, 60]); } else if (type === 'air' && i < 3) buzz(18);
+        }
+      } else if (act === 'move') ripple(r, b, k, 0, col);
+      else if (act === 'doubt') {
+        const qg = el('g', { transform: `translate(${b[0]},${b[1] - 8 / k}) scale(${1 / k},${sy / k})` }, root);
+        const tx = el('text', { class: 'fx-q', 'text-anchor': 'middle', y: 0, 'font-size': 13, 'font-weight': 700, fill: '#d8d2c4', stroke: '#111', 'stroke-width': 0.6, 'paint-order': 'stroke', style: 'font-family:var(--mono)' }, qg);
+        tx.textContent = '?';
+        parts[i].push(qg);
+      }
+      // giáp chiến: khi cả hai mũi tên của một cặp đã tới
+      for (const [x, y] of meets) if ((x === i || y === i) && arrived.has(x) && arrived.has(y)) contact(r, root, P(arrows[x][1]), P(arrows[y][1]), k, SIDE_COLOR[arrows[x][2]] || '#fff', SIDE_COLOR[arrows[y][2]] || '#fff', old);
     });
   });
   if (arrows.length) {
@@ -307,8 +399,8 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   const k = h.k(), root = r.root, T0 = 120;
   // mít tinh / khởi nghĩa gọn trong một vùng: phóng sơ đồ như với trận đánh
   const c0 = h.proj(v.l), all = mv.paths.flatMap(p => [p[0], ...p[1], p[2]]).map(l => h.proj(l));
-  const span = Math.max(...all.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * k;
-  const f = span > 0 ? Math.max(1, 120 / span) : 1;
+  const span = Math.max(...all.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * h.ppu(); // px màn hình
+  const f = span > 0 ? Math.max(1, (diagPx() * 0.8) / span) : 1;
   const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
   // âm thanh theo lối đi: chỉ có tàu thì còi tàu, sóng; có đường bộ thì tiếng đoàn người / bước quân; có máy bay thì tiếng động cơ
   const sea = mv.paths.some(p => p[5] === 'sea'), land = mv.paths.some(p => p[5] === 'land');
@@ -327,12 +419,12 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     const len = line.getTotalLength() || 1;
     under.setAttribute('stroke-dasharray', `${len} ${len}`); under.setAttribute('stroke-dashoffset', String(len));
     if (mv.type !== 'withdrawal') { line.setAttribute('stroke-dasharray', `${len} ${len}`); line.setAttribute('stroke-dashoffset', String(len)); }
-    // vật đi trên đường: tàu (đường biển), máy bay, đoàn quân / đoàn người (đường bộ)
-    const g = el('g', { opacity: 0 }, root);
-    if (mode === 'air') el('path', { d: 'M9,0 L4,-1.2 L-1,-8 L-3,-8 L-0.5,-1.4 L-6,-1.2 L-8,-4 L-9.5,-4 L-8.5,0 L-9.5,4 L-8,4 L-6,1.2 L-0.5,1.4 L-3,8 L-1,8 L4,1.2Z', fill: col, stroke: '#111', 'stroke-width': 0.8 }, g);
-    else if (mode === 'sea') el('path', { d: 'M-8,-2.5 L6,-2.5 L9,0 L6,2.5 L-8,2.5 L-6,0Z', fill: col, stroke: '#111', 'stroke-width': 0.8 }, g);
-    else if (mv.type === 'march' || mv.type === 'withdrawal') { for (let j = 0; j < 3; j++) el('rect', { x: -9 + j * 6, y: -2.5, width: 4.5, height: 5, rx: 1, fill: col, stroke: '#111', 'stroke-width': 0.7 }, g); }
-    else { el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
+    // quân cờ trên đường: tàu (đường biển), máy bay, đoàn người (di cư, khởi nghĩa), đoàn quân (hành quân, rút quân);
+    // chuyến đi của một người: chấm sáng
+    const pk: Kind | null = mode === 'air' ? 'plane' : mode === 'sea' ? 'boat' : thin ? 'crowd' : mv.type === 'march' || mv.type === 'withdrawal' ? kindOf(note, 'land') : null;
+    let g: SVGGElement;
+    if (pk) g = drawPiece(pk, col, root).g;
+    else { g = el('g', { opacity: 0 }, root); el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
     const lenPx = len * k, dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
     const start = T0 + B[i];
     parts[i] = [under, line];

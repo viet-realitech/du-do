@@ -30,6 +30,8 @@ const G = {} as {
   k: number;
   /** Extra scale for labels/markers so a big map frame doesn't blow them up ×2 (1 on phones). */
   f: number;
+  /** px màn hình cho một đơn vị viewBox (khi k = 1). */
+  px: number;
   svg: Sel<SVGSVGElement>;
   Z: Sel<SVGGElement>;
   defs: Sel<SVGDefsElement>;
@@ -47,6 +49,7 @@ const G = {} as {
 };
 G.k = 1;
 G.f = 1;
+G.px = 1;
 let proj: d3.GeoProjection;
 let path: d3.GeoPath;
 let ready = false;
@@ -250,6 +253,7 @@ function fitViewBox(): void {
   // cho kéo bản đồ lên khỏi thanh tour (~90 px dưới) và xuống khỏi nhãn trên cùng (~44 px): mũi Cà Mau không bị che
   G.zoom.extent(box).translateExtent([[box[0][0], box[0][1] - 44 / px], [box[1][0], box[1][1] + 90 / px]]);
   G.f = Math.min(1, 1.3 / px);
+  G.px = px;
   rescale();
 }
 
@@ -406,9 +410,10 @@ function highlight(): void {
 }
 
 /** Lớp hiệu ứng cho cảnh động (scene.ts): nhóm SVG trong lớp zoom, phép chiếu, hệ số zoom hiện tại, defs. */
-export function fxHost(): { g: SVGGElement; defs: SVGDefsElement; proj: (l: [number, number]) => [number, number]; k: () => number } | null {
+export function fxHost(): { g: SVGGElement; defs: SVGDefsElement; proj: (l: [number, number]) => [number, number]; k: () => number; ppu: () => number } | null {
   if (!ready) return null;
-  return { g: G.fx.node()!, defs: G.defs.node()!, proj: l => proj(l) as [number, number], k: () => (G.k || 1) / G.f };
+  // k: chia cho k để nét / chữ giữ cỡ cố định; ppu: px màn hình cho một đơn vị chiếu ở mức zoom hiện tại
+  return { g: G.fx.node()!, defs: G.defs.node()!, proj: l => proj(l) as [number, number], k: () => (G.k || 1) / G.f, ppu: () => (G.k || 1) * (G.px || 1) };
 }
 
 /** Zoom level that frames the province (or Laos/Cambodia) containing the event. */

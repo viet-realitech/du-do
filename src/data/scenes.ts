@@ -4,14 +4,24 @@
 
 export type SceneType = 'land' | 'siege' | 'naval' | 'air' | 'uprising' | 'landing';
 export type LonLat = [number, number];
-/** [từ, tới, bên, ghi chú] */
-export type Arrow = [LonLat, LonLat, string, string];
+/** Mũi tên làm gì: giao chiến (mặc định), chỉ hành quân, rút lui, hay sử liệu nghi ngờ có xảy ra. */
+export type Act = 'fight' | 'move' | 'retreat' | 'doubt';
+/** Quân cờ trên mũi tên. */
+export type Kind = 'inf' | 'armour' | 'heli' | 'para' | 'boat' | 'plane' | 'crowd';
+export interface ArrowOpt { act?: Act; unit?: Kind }
+/** [từ, tới, bên, ghi chú, ghi đè (act / unit, mỗi chỗ có câu trích của sự kiện làm nguồn)] */
+export type Arrow = [LonLat, LonLat, string, string, ArrowOpt?];
 export interface Scene {
   type: SceneType;
   arrows: Arrow[];
   /** Vị trí được giữ: [kinh độ, vĩ độ, bên]. */
   hold: [number, number, string][];
+  /** Cặp mũi tên giáp nhau (chỉ khi nội dung sự kiện nói hai bên giao chiến trực tiếp). */
+  meet?: [number, number][];
 }
+
+/** Mũi tên rút lui: ghi chú nói "rút" mà không nói "đánh"; còn lại theo ghi đè, mặc định giao chiến. */
+export const actOf = (a: Arrow): Act => a[4]?.act || (/(^|\s)rút(\s|,|$)/.test(a[3]) && !/đánh/.test(a[3]) ? 'retreat' : 'fight');
 
 /** Màu mũi tên theo bên (sáng, đọc được trên mọi màu lãnh thổ; luôn có viền tối). */
 export const SIDE_COLOR: Record<string, string> = {
@@ -35,7 +45,7 @@ export const SCENES: Record<string, Scene> = {
     hold: [[106.52, 10.56, "phap"]] },
   td64: { type: "land", arrows: [[[106.67, 10.36], [106.74, 10.41], "phap", "Quân Pháp từ Gò Công, Huỳnh Công Tấn dẫn đường, tập kích ban đêm"], [[106.71, 10.33], [106.75, 10.41], "phap", "Cánh thứ hai từ hướng Tân Hòa khép vòng vây"]],
     hold: [[106.75, 10.42, "dainam"]] },
-  vl67: { type: "naval", arrows: [[[106.36, 10.35], [105.98, 10.26], "phap", "La Grandière cùng pháo thuyền đến Vĩnh Long (20.6)"], [[105.95, 10.27], [105.12, 10.7], "phap", "Ngược sông lên Châu Đốc (22.6)"], [[105.06, 10.6], [104.49, 10.39], "phap", "Tiến tới Hà Tiên (24.6)"]],
+  vl67: { type: "naval", arrows: [[[106.36, 10.35], [105.98, 10.26], "phap", "La Grandière cùng pháo thuyền đến Vĩnh Long (20.6)", { act: 'move' }], [[105.95, 10.27], [105.12, 10.7], "phap", "Ngược sông lên Châu Đốc (22.6)", { act: 'move' }], [[105.06, 10.6], [104.49, 10.39], "phap", "Tiến tới Hà Tiên (24.6)", { act: 'move' }]],
     hold: [[105.97, 10.25, "dainam"], [105.12, 10.7, "dainam"], [104.48, 10.38, "dainam"]] },
   hn73: { type: "siege", arrows: [[[105.92, 20.97], [105.86, 21.04], "phap", "Pháo thuyền Scorpion, Espingole bắn từ sông Hồng"], [[105.89, 20.97], [105.84, 21.03], "phap", "Garnier đánh cửa Đông Nam"], [[105.5, 21.14], [105.8, 21.03], "cd", "Quân Cờ Đen từ Sơn Tây phục kích ở Cầu Giấy (21.12)"]],
     hold: [[105.84, 21.04, "dainam"]] },
@@ -75,12 +85,12 @@ export const SCENES: Record<string, Scene> = {
     hold: [[106.33, 10.13, "vnch"]] },
   ab63: { type: "land", arrows: [[[106.34, 10.43], [106.19, 10.47], "vnch", "Trực thăng Mỹ chở Trung đoàn 11 từ Tân Hiệp"], [[106.21, 10.35], [106.2, 10.43], "vnch", "Hai chiến đoàn Bảo an tiến từ phía nam"], [[106.12, 10.39], [106.18, 10.44], "vnch", "Đại đội M113 vượt kênh từ phía tây nam"], [[106.66, 10.82], [106.18, 10.43], "vnch", "Tiểu đoàn 8 Dù nhảy dù chiều 2.1"]],
     hold: [[106.2, 10.44, "cmlt"], [106.19, 10.45, "cmlt"]] },
-  vb64: { type: "naval", arrows: [[[105.93, 19.37], [106.5, 19.76], "vndcch", "Ba tàu phóng lôi Hải đội 3, Đoàn 135 xuất kích từ Hòn Mê"], [[106.3, 19.2], [106.53, 19.78], "my", "Tàu khu trục Maddox tuần tra DESOTO"], [[107.6, 18.6], [106.45, 19.7], "my", "F-8 từ tàu sân bay Ticonderoga đánh tàu phóng lôi"], [[107.1, 19.05], [107.35, 19.6], "my", "Maddox và Turner Joy, đêm 4.8"]],
-    hold: [[105.93, 19.37, "vndcch"]] },
-  dn65: { type: "landing", arrows: [[[108.3, 16.28], [108.15, 16.1], "my", "Tiểu đoàn 3/9 TQLC đổ bộ bãi Đỏ (Nam Ô)"], [[108.6, 16.2], [108.2, 16.05], "my", "Tiểu đoàn 1/3 TQLC không vận vào sân bay Đà Nẵng"], [[108.14, 16.11], [108.17, 16.04], "my", "Lên chốt giữ Đồi 327"]],
+  vb64: { type: "naval", arrows: [[[105.93, 19.37], [106.5, 19.76], "vndcch", "Ba tàu phóng lôi Hải đội 3, Đoàn 135 xuất kích từ Hòn Mê"], [[106.3, 19.2], [106.53, 19.78], "my", "Tàu khu trục Maddox tuần tra DESOTO"], [[107.6, 18.6], [106.45, 19.7], "my", "F-8 từ tàu sân bay Ticonderoga đánh tàu phóng lôi"], [[107.1, 19.05], [107.35, 19.6], "my", "Maddox và Turner Joy, đêm 4.8", { act: 'doubt' }]],
+    hold: [[105.93, 19.37, "vndcch"]], meet: [[0, 1]] /* 'Tàu khu trục Maddox đụng độ tàu phóng lôi VNDCCH' */ },
+  dn65: { type: "landing", arrows: [[[108.3, 16.28], [108.15, 16.1], "my", "Tiểu đoàn 3/9 TQLC đổ bộ bãi Đỏ (Nam Ô)", { act: 'move' }], [[108.6, 16.2], [108.2, 16.05], "my", "Tiểu đoàn 1/3 TQLC không vận vào sân bay Đà Nẵng", { act: 'move' }], [[108.14, 16.11], [108.17, 16.04], "my", "Lên chốt giữ Đồi 327", { act: 'move', unit: 'inf' }]],
     hold: [[108.2, 16.04, "my"]] },
   id65: { type: "land", arrows: [[[107.92, 13.62], [107.71, 13.57], "my", "Tiểu đoàn 1/7 Kỵ binh đổ quân bằng trực thăng xuống X-Ray"], [[107.65, 13.49], [107.71, 13.56], "vndcch", "Trung đoàn 66 từ khối núi Chư Prông đánh xuống"], [[107.62, 13.55], [107.7, 13.57], "vndcch", "Các đơn vị Trung đoàn 33 đánh từ phía tây"], [[107.65, 13.66], [107.72, 13.6], "vndcch", "Tiểu đoàn 8 Trung đoàn 66 phục kích ở Albany (17.11)"]],
-    hold: [[107.71, 13.57, "my"], [107.72, 13.6, "my"]] },
+    hold: [[107.71, 13.57, "my"], [107.72, 13.6, "my"]], meet: [[0, 1], [0, 2]] /* 'Trận đánh lớn đầu tiên giữa quân Mỹ và Quân đội Nhân dân Việt Nam' */ },
   mt68: { type: "land", arrows: [[[107.46, 16.44], [107.57, 16.47], "vndcch", "Trung đoàn 6 đánh vào Thành nội, Mang Cá"], [[107.53, 16.36], [107.59, 16.46], "vndcch", "Trung đoàn 4 đánh khu bờ nam sông Hương"], [[106.5, 10.98], [106.65, 10.82], "cmlt", "Quân Giải phóng đánh sân bay Tân Sơn Nhứt"], [[106.52, 10.62], [106.65, 10.76], "cmlt", "Tiến vào Chợ Lớn, trường đua Phú Thọ"]],
     hold: [[107.58, 16.48, "vnch"], [107.59, 16.46, "my"], [106.66, 10.82, "vnch"]] },
   ks68: { type: "siege", arrows: [[[106.62, 16.76], [106.69, 16.69], "vndcch", "Sư đoàn 325C vây các điểm cao phía tây bắc"], [[106.53, 16.61], [106.67, 16.6], "vndcch", "Sư đoàn 304 cùng xe tăng PT-76 đánh Làng Vây (7.2)"], [[106.66, 16.56], [106.72, 16.64], "vndcch", "Sư đoàn 304 siết vòng vây phía tây nam"], [[106.85, 16.7], [106.74, 16.65], "my", "Sư đoàn Kỵ binh 1 giải toả theo Đường 9 (4.1968)"]],
@@ -92,7 +102,7 @@ export const SCENES: Record<string, Scene> = {
   lb72: { type: "air", arrows: [[[104.9, 21.85], [105.92, 21.08], "my", "B-52 vào từ tây bắc (đêm 18–20.12)"], [[107.2, 20.45], [105.84, 21], "my", "Các tốp B-52 từ vịnh Bắc Bộ (đêm 26.12)"], [[107.3, 20.65], [106.68, 20.86], "my", "B-52 đánh kho xăng, ga Hải Phòng"]],
     hold: [[105.85, 21.03, "vndcch"], [106.68, 20.86, "vndcch"]] },
   hs74: { type: "naval", arrows: [[[111.4, 16.38], [111.66, 16.44], "vnch", "HQ-4, HQ-5, HQ-16, HQ-10 tiến về Quang Hòa"], [[111.64, 16.4], [111.71, 16.45], "vnch", "Biệt hải đổ bộ đảo Quang Hòa"], [[112.28, 16.78], [111.76, 16.47], "cn", "Tàu 271, 274 từ Phú Lâm xuống, cùng 389, 396 chặn tàu VNCH"], [[111.76, 16.58], [111.62, 16.53], "cn", "Trung Quốc đổ bộ chiếm Hoàng Sa, Hữu Nhật (20.1)"]],
-    hold: [[111.61, 16.53, "vnch"], [111.72, 16.45, "cn"]] },
+    hold: [[111.61, 16.53, "vnch"], [111.72, 16.45, "cn"]], meet: [[0, 2]] /* 'Hải quân VNCH giao chiến với hải quân Trung Quốc' */ },
   sg75: { type: "land", arrows: [[[106.64, 11.15], [106.67, 10.8], "vndcch", "Quân đoàn 1 từ hướng bắc, đánh Bộ Tổng tham mưu"], [[106.4, 11.06], [106.65, 10.82], "vndcch", "Quân đoàn 3 qua Đồng Dù, vào Tân Sơn Nhất"], [[106.99, 10.96], [106.71, 10.79], "vndcch", "Quân đoàn 4 qua Biên Hòa, Hố Nai vào nội thành"], [[107.02, 10.7], [106.7, 10.78], "vndcch", "Quân đoàn 2 qua Long Thành, cầu Sài Gòn vào Dinh Độc Lập"]],
     hold: [[106.7, 10.78, "vnch"], [106.66, 10.82, "vnch"]] },
   bmt75: { type: "siege", arrows: [[[107.93, 12.76], [108.03, 12.69], "vndcch", "Trung đoàn 174 và xe tăng đánh từ tây bắc"], [[108.13, 12.8], [108.06, 12.69], "vndcch", "Trung đoàn 95B đánh từ đông bắc"], [[108.1, 12.53], [108.05, 12.66], "vndcch", "Sư đoàn 316 (Trung đoàn 149) đánh từ phía nam"], [[108.3, 12.71], [108.17, 12.69], "vnch", "Sư đoàn 23 phản kích từ Phước An"]],
@@ -104,9 +114,9 @@ export const SCENES: Record<string, Scene> = {
   bb79: { type: "land", arrows: [[[106.78, 22.1], [106.76, 21.86], "cn", "Quân đoàn 43, 54, 55 qua Đồng Đăng đánh Lạng Sơn"], [[106.36, 22.92], [106.27, 22.68], "cn", "Cánh bắc qua Trà Lĩnh đánh Cao Bằng"], [[106.62, 22.52], [106.29, 22.66], "cn", "Cánh đông từ Thủy Khẩu qua Tà Lùng"], [[103.88, 22.68], [103.98, 22.45], "cn", "Quân đoàn 13, 14 qua Hà Khẩu đánh Lào Cai"]],
     hold: [[106.76, 21.85, "vndcch"], [106.26, 22.67, "vndcch"], [103.97, 22.49, "vndcch"]] },
   vx84: { type: "land", arrows: [[[104.75, 23.05], [104.82, 22.92], "cn", "Sư đoàn 40 (Quân đoàn 14 TQ) chiếm các điểm cao 1509, 772"], [[104.81, 23.03], [104.9, 22.94], "cn", "Quân Trung Quốc từ Thiên Bảo chiếm điểm cao 1030 bờ đông sông Lô"], [[104.88, 22.8], [104.83, 22.91], "vndcch", "Sư đoàn 356, 316 phản công 772, 685, 233 (12.7.1984)"], [[104.98, 22.84], [104.91, 22.93], "vndcch", "Trung đoàn 141 (Sư đoàn 312) đánh điểm cao 1030"]],
-    hold: [[104.82, 22.92, "cn"], [104.87, 22.87, "vndcch"]] },
+    hold: [[104.82, 22.92, "cn"], [104.87, 22.87, "vndcch"]], meet: [[0, 2], [1, 3]] /* ghi chú: Trung Quốc chiếm 772, 1030; Việt Nam phản công chính các điểm cao đó */ },
   gm88: { type: "naval", arrows: [[[114.48, 9.9], [114.3, 9.73], "cn", "Tàu hộ vệ 502, 531, 556 từ hướng đá Tư Nghĩa"], [[114, 9.84], [114.27, 9.72], "vndcch", "HQ-604 từ Cam Ranh đến giữ Gạc Ma"], [[113.88, 10.03], [114.25, 9.77], "vndcch", "HQ-505 từ đá Lớn đến Cô Lin"], [[114.1, 9.1], [114.37, 9.78], "vndcch", "HQ-605 từ đá Đông qua Tốc Tan đến giữ Len Đao"]],
-    hold: [[114.28, 9.72, "vndcch"], [114.25, 9.77, "vndcch"], [114.37, 9.78, "vndcch"]] },
+    hold: [[114.28, 9.72, "vndcch"], [114.25, 9.77, "vndcch"], [114.37, 9.78, "vndcch"]], meet: [[0, 1]] /* 'Hải quân Trung Quốc tấn công' */ },
 };
 
 /* Cảnh di chuyển cho sự kiện không phải trận đánh: chuyến đi, cuộc di cư, hành quân, rút quân, khởi nghĩa, mít tinh.

@@ -215,6 +215,31 @@ test('an event page replays its battle scene; Back closes the replay without lea
   expect(errors).toEqual([]);
 });
 
+test('battle pieces follow the sources: a doubted attack, an engagement, an unopposed advance, a siege ring', async ({ page }) => {
+  test.setTimeout(90000);
+  const errors = await boot(page, midGame);
+  const replay = async (id: string) => {
+    await page.evaluate(id => { document.getElementById('goto')?.remove(); const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = id; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); }, id);
+    await page.locator('#goto').click();
+    await page.locator('.ov .hero .hplay').click();
+  };
+  // Vịnh Bắc Bộ: the 4.8 attack is shown dotted with a "?" (declassified 2005); Maddox and the torpedo boats engage
+  await replay('vb64');
+  await expect(page.locator('#map g.scene text.fx-q')).toHaveCount(1, { timeout: 20000 });
+  await expect(page.locator('#map g.scene[data-contacts="1"]')).toHaveCount(1);
+  await expect(page.locator('#map g.scene g.pc[data-kind=boat]').first()).toBeAttached();
+  // Vĩnh Long 1867: handed over without resistance, so no explosions
+  await replay('vl67');
+  await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('3/3', { timeout: 15000 });
+  await page.waitForTimeout(2500);
+  await expect(page.locator('#map g.scene circle[fill="url(#fx-boom)"]')).toHaveCount(0);
+  // Điện Biên Phủ: the siege of Hồng Cúm draws a ring
+  await replay('dbp');
+  await expect(page.locator('#map g.scene circle.fx-ring')).toHaveCount(1, { timeout: 16000 });
+  await page.locator('#replb [data-t=rclose]').click();
+  expect(errors).toEqual([]);
+});
+
 test.describe('iPad layouts', () => {
   for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
     test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {
