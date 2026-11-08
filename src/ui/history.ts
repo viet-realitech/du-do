@@ -24,6 +24,9 @@ function topmost(): Top {
     return { close: () => (c ? c.click() : (clearLayer(), renderMain())) };
   }
   if (layer.querySelector('.pane')) return { close: () => setTab('map') };
+  // đang xem lại diễn biến một sự kiện (thanh dưới bản đồ): Back = Đóng
+  const rb = document.getElementById('replb');
+  if (rb) return { close: () => rb.querySelector<HTMLElement>('[data-t=rclose]')!.click() };
   return null;
 }
 
@@ -51,6 +54,8 @@ export function initHistory(): void {
   new MutationObserver(sync).observe(layer, { childList: true, subtree: true });
   new MutationObserver(sync).observe(app, { childList: true });
   new MutationObserver(sync).observe(document.body, { childList: true }); // .cine
+  const mw = document.getElementById('mapwrap');
+  if (mw) new MutationObserver(sync).observe(mw, { childList: true }); // #replb
 
   addEventListener('popstate', () => {
     if (skipPop) { skipPop = false; return; }

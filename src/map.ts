@@ -323,9 +323,9 @@ const cyOf = new WeakMap<Prov, number>();
 let lastShift = 0;
 
 /** Repaint for the current year; `quiet` skips the regime-change wave (used for look changes). */
-export function paintMap(quiet = false): void {
+export function paintMap(quiet = false, y = S.year): void {
   if (!ready) return;
-  const y = S.year, R = regime2(y), pk = curPick(y);
+  const R = regime2(y), pk = curPick(y);
   const dim = !!(pk && pk.fac && R.legend.includes(pk.fac));
   const op = (d: Prov) => (dim && R.reg[regOf(d.g)] !== pk!.fac ? 0.5 : 1);
   const before = new Map<SVGPathElement, string | null>();
@@ -430,7 +430,7 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number, padB
   const n = G.svg.node()!, vb = n.viewBox.baseVal, vw = vb.width || W, px = n.clientWidth / vw || 1;
   // phần bản đồ bị che (px màn hình): nhãn dân số / tiêu đề ở trên, thanh tour ở dưới; khung vừa dải còn lại
   // đo theo bố cục (offsetTop), không theo getBoundingClientRect: thanh tour vừa gắn còn đang trượt lên (translateY 40 px)
-  const wrap = document.getElementById('mapwrap'), bar = document.getElementById('tourb');
+  const wrap = document.getElementById('mapwrap'), bar = document.getElementById('replb') || document.getElementById('tourb');
   const top = 44, bot = (bar && wrap ? Math.max(0, wrap.clientHeight - bar.offsetTop) : 0) + 8 + padBot;
   const vh = Math.max(60, (vb.height || H) - (top + bot) / px);
   const xy = pts.map(l => proj(l)!), xs = xy.map(p => p[0]), ys = xy.map(p => p[1]);

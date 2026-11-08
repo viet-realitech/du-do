@@ -15,6 +15,7 @@ import { renderMain } from '../view';
 import { wikiFor, cachedWiki, probe, type WikiInfo } from '../wiki';
 import { openMedia } from './lightbox';
 import { openSrc } from './sources';
+import { canReplay, closeReplay } from '../replay';
 import type { HistEvent } from '../data';
 
 type Tab = 'x' | 'v' | 'm' | 's';
@@ -27,6 +28,7 @@ const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">‹</b
 export function openEvent(id: string, tab: Tab = 'x'): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
+  if (document.getElementById('replb')) closeReplay(false); // đang xem lại diễn biến: dừng hẳn trước khi mở trang
   if (isPlay() && isTouring()) pauseTour('overlay'); else stopTour();
   hidePop();
   if (!S.seen.includes(id)) { S.seen.push(id); save(); }
@@ -46,7 +48,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
   const vs = [...v.v].sort((a, b) => Number(b[0] === mine) - Number(a[0] === mine));
   layer.innerHTML = `<div class="ov">
   <div class="row sb">${closeBtn}<span class="mono muted" style="flex:1;text-align:center">Chương ${e.n}</span>${isPlay() && cardOf(v) ? `<button class="chip${decided(v.id) ? '' : ' on'}" data-a="card" data-id="${v.id}">${decided(v.id) ? '✓ Đã quyết' : '◆ Dòng họ làm gì?'}</button>` : ''}<button class="chip nbtn" data-a="listen" data-id="${v.id}">▶ Nghe</button></div>
-  <div class="hero"><image-slot id="ev-${v.id}" shape="rect" busy placeholder="Đang tìm ảnh tư liệu…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">⤢</button></div>
+  <div class="hero"><image-slot id="ev-${v.id}" shape="rect" busy placeholder="Đang tìm ảnh tư liệu…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">⤢</button>${canReplay(v) ? `<button class="hplay" data-a="replay" data-id="${v.id}">▶ Xem diễn biến</button>` : ''}</div>
   <div style="margin-top:14px" class="mono"><span style="color:var(--red)">${KIND_ICON[v.k] || '●'} ${v.k}</span> · ${v.d}</div>
   <h1 style="margin:8px 0 6px;font-size:30px">${esc(v.t)}</h1>
   <div class="muted" style="font-style:italic;font-size:16px">${esc(v.p)}</div>

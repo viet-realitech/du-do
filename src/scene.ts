@@ -14,7 +14,7 @@ import { speaking } from './narration';
 const NS = 'http://www.w3.org/2000/svg';
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 type Part = { t0: number; dur: number; step: (p: number) => void; done?: () => void };
-interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; len: number; t0: number; alive: boolean }
+interface Run { id: string; timers: number[]; parts: Part[]; raf: number; root: SVGGElement | null; reel: HTMLElement | null; lt: HTMLElement | null; ttl?: HTMLElement | null; slug?: HTMLElement | null; len: number; t0: number; alive: boolean; onEnd?: () => void }
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -82,8 +82,8 @@ export function sceneLen(v: HistEvent): number {
 export const sceneLeft = (): number => (cur && cur.alive ? Math.max(0, cur.len - (performance.now() - cur.t0)) : 0);
 /** Chiều cao dành cho phụ đề chân hình (để khung bản đồ và khung tư liệu chừa chỗ). */
 export const capH = (): number => (innerWidth >= 700 ? 74 : 64);
-/** Thanh đang nằm dưới đáy bản đồ (thanh tour). */
-const barEl = () => document.getElementById('tourb');
+/** Thanh đang nằm dưới đáy bản đồ (thanh xem lại, hoặc thanh tour). */
+const barEl = () => document.getElementById('replb') || document.getElementById('tourb');
 
 /** Phụ đề chân hình của cảnh: một khung, đổi nội dung theo nhịp (hiệu ứng lau chữ mỗi lần đổi). */
 function caption(r: Run, html: string, col: string, cls = ''): void {
@@ -492,11 +492,11 @@ function reelAt(v: HistEvent): number {
 export const sceneHold = (v: HistEvent): number => Math.min(20000, Math.max(6500, sceneLen(v) + 2500));
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
-export function playScene(v: HistEvent, hold = Infinity): void {
+export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void): void {
   endScene();
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
-  const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true };
+  const r: Run = { id: v.id, timers: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd };
   cur = r;
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
@@ -545,6 +545,9 @@ export function endScene(instant = false): void {
   r.slug?.remove();
   wrap?.classList.remove('scn');
   if (r.reel) { const b = r.reel; b.classList.remove('on'); b.querySelector('video')?.pause(); setTimeout(() => { const vd = b.querySelector('video'); if (vd) { vd.removeAttribute('src'); vd.load(); } b.remove(); }, 520); }
+  const f = r.onEnd;
+  r.onEnd = undefined;
+  f?.();
 }
 
 // thẻ trình duyệt bị ẩn / khoá máy: dừng cảnh (rAF dừng nhưng hẹn giờ vẫn chạy, tránh dồn hiệu ứng khi quay lại)

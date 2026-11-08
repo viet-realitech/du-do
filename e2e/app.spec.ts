@@ -185,6 +185,36 @@ test('reaching the present opens the last quiz, then the ending', async ({ page 
   expect(errors).toEqual([]);
 });
 
+test('an event page replays its battle scene; Back closes the replay without leaving the app', async ({ page }) => {
+  const errors = await boot(page, midGame);
+  await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dbp'; b.id = 'goto-dbp'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+  await page.locator('#goto-dbp').click();
+  await expect(page.locator('.ov .hero .hplay')).toBeVisible();
+  await page.locator('.ov .hero .hplay').click();
+  await expect(page.locator('.ov')).toHaveCount(0);
+  await expect(page.locator('#replb')).toContainText('Điện Biên Phủ');
+  await expect(page.locator('#mapwrap.tilt')).toHaveCount(1, { timeout: 3000 });
+  await expect(page.locator('#mapwrap .lt')).toContainText('Him Lam', { timeout: 6000 });
+  await page.goBack();
+  await expect(page.locator('#replb')).toHaveCount(0);
+  expect(page.url()).toContain('localhost');
+  await expect(page.locator('#mapwrap.tilt')).toHaveCount(0);
+  // again: the replay restarts from the first beat, and Đóng closes it
+  await page.locator('#goto-dbp').click();
+  await page.locator('.ov .hero .hplay').click();
+  await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('2/', { timeout: 9000 });
+  await page.locator('#replb [data-t=again]').click();
+  await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('1/', { timeout: 5000 });
+  await page.locator('#replb [data-t=rclose]').click();
+  await expect(page.locator('#replb')).toHaveCount(0);
+  // a treaty has no scene to replay
+  await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'el49'; b.id = 'goto-el'; b.style.cssText = 'position:fixed;left:20px;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+  await page.locator('#goto-el').click();
+  await expect(page.locator('.ov .hero')).toBeVisible();
+  await expect(page.locator('.ov .hero .hplay')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test.describe('iPad layouts', () => {
   for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
     test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {
