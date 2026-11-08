@@ -2,13 +2,13 @@ import { isPlay, mustDecide, pendingCard, needsDecision, specialFor } from './pl
 import { openCard } from './screens/card';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
-import { S, save, rt, Y1, eraOf, allEv, setFocus } from './state';
+import { S, save, rt, Y1, eraOf, evEra, allEv, setFocus } from './state';
 import { $ } from './ui/dom';
 import { SND } from './audio';
 import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene } from './scene';
+import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
 import { openGate } from './screens/gate';
@@ -34,6 +34,8 @@ let mapIdle: number | undefined;
 
 export const isTouring = () => !!tour;
 export const isTourPaused = () => !!tour?.paused;
+/** Chương tour đang kể (đầu đề màn chính theo chương này khi tour đi qua mốc khép chương cùng năm với điểm rẽ sau). */
+export const tourEra = (): Era | null => tour?.e || null;
 
 /** Đọc sử: mốc khép / mở các chương, luôn có trong tour của chương chứa nó. */
 const MUST = ['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86'];
@@ -42,7 +44,8 @@ const spread = (j: number, need: number, len: number) => (need <= 1 || len <= 1 
 
 function tourList(e: Era): { L: HistEvent[]; end: number } {
   const i = ERAS.indexOf(e), nx = ERAS[i + 1], end = nx ? nx.cy : Y1;
-  let L = allEv().filter(v => v.y >= Math.max(e.cy, S.year) && v.y < (nx ? nx.cy : Y1 + 1));
+  // sự kiện của chương (evEra: trang nhật ký theo hướng đã mở nó, Điện Biên Phủ / Genève khép chương 4), từ năm đang đứng
+  let L = allEv().filter(v => evEra(v) === e && v.y >= Math.max(e.cy, S.year));
   if (isPlay()) {
     // Trò chơi: mọi thẻ bắt buộc còn bỏ ngỏ và nhật ký luôn có mặt, phần còn lại lấy đều, ưu tiên sự kiện có thẻ.
     const must = L.filter(v => !v.diary && (mustDecide(v) || !!specialFor(v)) && needsDecision(v)), d = L.filter(v => v.diary);
@@ -106,9 +109,12 @@ function tourStep(): void {
     // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s); "Điểm rẽ ›": bay tới, mở thẻ ngay
     const hold = fr ? sceneHold(v) : 0, cardAt = rush ? 1700 : fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
     // bước nhịp (›, chạm phụ đề): cảnh ngắn lại thì hẹn lại bước tour; đang có lời kể thì để lời kể xong tự đi tiếp
+    // lời kể (một lần): trận đánh có sơ đồ đọc khi trận khép, kể cả khi người xem bước nhịp tới đó sớm
+    let said = false;
+    const say = () => { if (said || !voiced || !live() || scenePaused() || tour!.cur !== v.id || !S.narr) return; said = true; speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(9000, sceneLeft() + (sceneLeft() ? 600 : 0)))), false, evKey(v)); };
     const stepped = () => { if (live() && !speaking()) next(Math.max(900, sceneLeft() + (card ? 600 : 1200))); };
     const onward = () => { if (live()) { hush(); next(0); } }; // chạm phụ đề khi đã hết nhịp: như "›"
-    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped, onward); // cảnh động: trận đánh, ấn triện, phim tư liệu
+    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped, onward, say); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
@@ -121,10 +127,12 @@ function tourStep(): void {
     tour!.t0 = performance.now();
     if (voiced) {
       // bảo hiểm: lời kể bị cắt (đổi tốc độ, bật/tắt giọng ở Hồ sơ…) thì bước này vẫn đi tiếp; onend thay hẹn giờ này
-      next(Math.round(Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95), hold) + 2500));
-      // kể xong mà cảnh còn nhịp chưa đọc: chờ thêm (tối đa 6 s) cho hết phụ đề
+      next(Math.round(Math.max(hold, voiceAt(v) + Math.max(9000, evSpeechFull(v).length * 120 / ((S.rate || 0.95) / 0.95))) + 2500));
+      // kể xong mà cảnh còn nhịp chưa đọc: chờ thêm (tối đa 9 s) cho hết phụ đề
       // (Giọng tắt trước lúc này: nút Giọng đã hẹn lại theo cảnh, không đọc nữa)
-      setTimeout(() => { if (live() && tour!.cur === v.id && S.narr) speak(evSpeech(v), () => next(Math.max(card ? 500 : 900, Math.min(9000, sceneLeft() + (sceneLeft() ? 600 : 0)))), false, evKey(v)); }, voiceAt(v));
+      // trận có sơ đồ: cảnh gọi say khi khép (theo đồng hồ của cảnh: bước nhịp, giữ cảnh đều đúng); hẹn giờ này chỉ là
+      // bảo hiểm khi cảnh không vẽ được; cảnh khác: đọc ngay sau tiếng mở
+      setTimeout(say, closeAt(v) ? voiceAt(v) + 4000 : voiceAt(v));
     }
     else next(card ? cardAt : fr ? hold : 2900); // không giọng đọc: cảnh động giữ đủ lâu để đọc hết phụ đề
   });
@@ -176,7 +184,8 @@ export function pauseTour(why: 'overlay' | 'map' | 'user'): void {
   if (tour.paused) { if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000); return; }
   clearTimeout(tour.t);
   hush();
-  endScene(why === 'map'); // cử chỉ bản đồ: làm phẳng ngay, không trượt dưới ngón tay
+  // ❚❚: giữ nguyên trận đang kể (chỉ vào mũi tên được); cử chỉ bản đồ: làm phẳng ngay, không trượt dưới ngón tay
+  if (!(why === 'user' && pauseScene())) endScene(why === 'map');
   tour.paused = why;
   tourBar();
   if (why === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000);
@@ -193,6 +202,8 @@ export function resumeTour(why?: 'overlay'): void {
   tour.paused = undefined;
   if (was === 'card') tour.i++;
   tourBar();
+  // ▶ sau ❚❚: cảnh đã giữ chạy tiếp từ chỗ dừng (lời kể đã cắt thì không đọc lại); bước hẹn lại theo đồng hồ của cảnh
+  if (was === 'user' && resumeScene() && tour.next) { const v = tour.L[tour.i]; tour.next(Math.max(900, sceneLeft() + (v && isPlay() && needsDecision(v) ? 600 : 1500))); return; }
   tourStep();
 }
 
@@ -207,10 +218,12 @@ export function stopTour(): void {
     renderMain(); // clears the spotlight
     hush();
     mood('calm');
+    zoomTo(null); // dừng giữa chừng (■, kéo thanh năm): về toàn cảnh, không đứng ở mức phóng của một trận nơi khác
   }
-  $('#tourb')?.remove();
+  const tb = $('#tourb'), had = !!tb?.contains(document.activeElement);
+  tb?.remove();
   const p = $('#play');
-  if (p) { p.textContent = '▶'; p.setAttribute('aria-label', 'Chạy chương này'); }
+  if (p) { p.textContent = '▶'; p.setAttribute('aria-label', 'Chạy chương này'); if (had) p.focus({ preventScroll: true }); } // ■: tiêu điểm sang ▶
 }
 
 /** Trình đọc màn hình: báo bước tour mới (vùng ẩn, lịch sự, không chen lời đọc). */

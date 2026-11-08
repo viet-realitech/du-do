@@ -24,10 +24,14 @@ interface Run {
   len: number; t0: number; alive: boolean; onEnd?: () => void; onStep?: () => void;
   /** Chạm phụ đề khi hết nhịp: người mở cảnh quyết (tour: sang sự kiện kế; xem lại: không làm gì). */
   onNext?: () => void;
+  /** Trận khép (dòng kết hiện), theo đồng hồ của cảnh: lời kể bắt đầu ở đây. */
+  onClose?: () => void;
   /** Tiếng nền của trận (pháo xa / sóng): lúc hết (đồng hồ ảo), để nhảy nhịp thì phát lại phần còn lại. */
   bed?: { kind: 'rumble' | 'waves'; end: number };
   /** Màn hình ngang: danh sách các nhịp ở cột bên (#beats). */
   list?: HTMLElement | null;
+  /** Đang tạm dừng (❚❚): lúc bắt đầu dừng (performance.now), 0 khi đang chạy. Đồng hồ ảo đứng yên trong lúc dừng. */
+  paused?: number;
 }
 /** Bố cục hai cột (bản đồ trái, cột truyện phải): như @media trong styles.css. */
 const wide = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px)');
@@ -59,8 +63,16 @@ function beats(v: HistEvent): number[] {
 const offsets = (b: number[]) => b.map((_, i) => b.slice(0, i).reduce((a, x) => a + x, 0));
 /** Khoảng mở đầu trước nhịp đầu: trận đánh có tít mở trận (~2,2 s, trong lúc bản đồ bay tới và nghiêng). */
 const lead = (v: HistEvent) => (v.k === 'Trận đánh' && SCENES[v.id] && !v.diary ? 1000 : 0);
-/** Lời kể của bước tour bắt đầu lúc nào (ms): trận đánh chờ tiếng mở trận xong. */
-export const voiceAt = (v: HistEvent): number => (lead(v) ? 1200 : 700);
+/** Lời kể bắt đầu lúc nào (ms từ playScene). Trận đánh có sơ đồ: khi trận khép (dòng kết hiện), để lời kể (vốn mở đầu
+    bằng kết cục) không chồng lên các nhịp phụ đề kể diễn biến; cảnh khác: ngay sau tiếng mở. */
+export const voiceAt = (v: HistEvent): number => closeAt(v) || (lead(v) ? 1200 : 700);
+/** Lúc (ms từ playScene) phần khép của trận đánh có sơ đồ bắt đầu; 0 nếu không có (Cảnh động tắt, không có sơ đồ). */
+export function closeAt(v: HistEvent): number {
+  if (!fxOn() || v.diary || !lead(v)) return 0;
+  const bt = beats(v);
+  return bt.length ? DRAW_AT + 120 + lead(v) + bt.reduce((a, x) => a + x, 0) + OUTRO_AT : 0;
+}
+
 /** Kiểu rung theo loại trận (Android; iOS không rung). */
 /** Cỡ quân cờ trên sa bàn (so với nét vẽ gốc ~18 px). */
 const PIECE = 1.35;
@@ -209,7 +221,7 @@ function closing(r: Run, parts: Element[][], sides: string[], y: number): void {
   caption(r, legendHtml(sides, y), 'var(--ink3)', ' leg');
 }
 
-const vnow = (r: Run) => performance.now() - r.t0 + r.skew;
+const vnow = (r: Run) => (r.paused || performance.now()) - r.t0 + r.skew;
 /** Lúc "bây giờ" theo kịch bản: trong một hẹn giờ chạy muộn (vừa nhảy nhịp) là lúc lẽ ra nó chạy, để những gì nó hẹn
     tiếp (vd. battle() hẹn các nhịp) vẫn đúng mốc đã tính trước (marks). */
 const vat = (r: Run) => vnow(r) - lateBy;
@@ -222,7 +234,7 @@ function later(r: Run, ms: number, f: () => void): void {
 }
 function arm(r: Run): void {
   clearTimeout(r.qt);
-  if (r.alive && r.q.length) r.qt = window.setTimeout(() => tick(r), Math.max(0, r.q[0].at - vnow(r)));
+  if (r.alive && !r.paused && r.q.length) r.qt = window.setTimeout(() => tick(r), Math.max(0, r.q[0].at - vnow(r)));
 }
 function tick(r: Run): void {
   if (!r.alive) return;
@@ -257,15 +269,44 @@ function jump(r: Run, d: number): void {
 export function stepScene(): boolean {
   const r = cur;
   if (!r || !r.alive) return false;
+  if (r.paused) resumeScene(); // bước khi đang giữ: chạy tiếp rồi sang nhịp
   const now = vnow(r), t = r.marks.filter(m => m > now + 250).sort((a, b) => a - b)[0];
   if (t === undefined) return false;
   jump(r, t - now);
   r.onStep?.();
   return true;
 }
+/** ❚❚: giữ nguyên cảnh (mũi tên, phụ đề, nghiêng) để chỉ vào bản đồ; đồng hồ, chuyển động, tiếng của cảnh dừng lại. */
+export function pauseScene(): boolean {
+  const r = cur;
+  if (!r || !r.alive || r.paused) return false;
+  r.paused = performance.now();
+  clearTimeout(r.qt);
+  if (r.raf) { cancelAnimationFrame(r.raf); r.raf = 0; }
+  WAR.close(); // tiếng đã hẹn trên đồng hồ âm thanh: cắt; chạy tiếp thì phát lại phần nền còn lại
+  r.reel?.querySelector('video')?.pause();
+  return true;
+}
+/** Chạy tiếp cảnh đã giữ: dời mọi mốc theo thời gian đã dừng. */
+export function resumeScene(): boolean {
+  const r = cur;
+  if (!r || !r.alive || !r.paused) return false;
+  const d = performance.now() - r.paused;
+  r.paused = 0;
+  r.t0 += d;
+  for (const p of r.parts) p.t0 += d;
+  WAR.open();
+  const left = r.bed ? (r.bed.end - vnow(r)) / 1000 : 0;
+  if (r.bed && left > 1) WAR[r.bed.kind](left, 0);
+  void r.reel?.querySelector('video')?.play().catch(() => { /* bị chặn tự phát: để khung đứng */ });
+  arm(r);
+  if (r.parts.length && !r.raf) r.raf = requestAnimationFrame(t => frame(r, t));
+  return true;
+}
+export const scenePaused = (): boolean => !!cur?.alive && !!cur.paused;
 /** Chạm phụ đề: sang nhịp kế; hết nhịp thì để người mở cảnh quyết (tour đi tiếp, xem lại đứng yên). */
 function tapCaption(r: Run): void {
-  if (cur !== r || !r.alive) return;
+  if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: chạm phụ đề không làm gì (▶ để chạy tiếp)
   if (!stepScene()) r.onNext?.();
 }
 /** Cảnh đang chạy có nhịp để bước (cho phép chạm phụ đề). */
@@ -371,6 +412,7 @@ const endOf = (d: string) => (/[–-]/.test(d) ? d.split(/\s*[–-]\s*/).pop()!.
 function outcome(r: Run, v: HistEvent, sc: Scene, hs: HoldEl[], parts: Element[][], k: number): void {
   undim(parts);
   listAt(r, Infinity);
+  later(r, 0, () => r.onClose?.()); // sau khi dòng kết đã dựng xong
   const wrap = document.getElementById('mapwrap'), m = document.getElementById('map'), end = sc.end || {};
   const fought = sc.arrows.some(a => actOf(a) === 'fight'); // giao thành không kháng cự (Vĩnh Long 1867): không khói
   if (!calm.matches && wrap?.classList.contains('tilt') && m) { m.style.transitionDuration = '2.4s'; wrap.style.setProperty('--rx', '31deg'); wrap.style.setProperty('--cs', '1.15'); } // máy quay nâng nhẹ
@@ -814,12 +856,12 @@ export const sceneHold = (v: HistEvent): number => Math.min(24000, Math.max(6500
 
 /** Phát cảnh cho bước tour đang ở sự kiện v (gọi ngay khi bản đồ bắt đầu bay tới). */
 /** `onStep`: vừa nhảy nhịp (tour hẹn lại bước); `onNext`: chạm phụ đề khi đã hết nhịp. */
-export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onStep?: () => void, onNext?: () => void): void {
+export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onStep?: () => void, onNext?: () => void, onClose?: () => void): void {
   endScene();
   document.querySelectorAll('#mapwrap .lt.out').forEach(n => n.remove()); // phụ đề cảnh trước: gỡ ngay, không mờ dần dưới cảnh mới
   if (!fxOn() || document.hidden || document.querySelector('#layer .pane')) return; // bảng Nhân vật / Sử liệu / Hồ sơ đang phủ bản đồ
   const h = fxHost();
-  const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep, onNext };
+  const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep, onNext, onClose };
   cur = r;
   WAR.open();
   if (h) r.root = el('g', { class: 'scene' }, h.g);
@@ -838,6 +880,7 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
   if (v.diary) return;
   if (v.k === 'Trận đánh' && !calm.matches) document.getElementById('mapwrap')?.classList.add('tilt');
   const sc = v.k === 'Trận đánh' ? SCENES[v.id] : undefined;
+  if (!sc && MOVES[v.id]) document.getElementById('mapwrap')?.classList.add('scn'); // cảnh di chuyển: nền lùi, nhãn dân số / tên sự kiện nhường chỗ
   if (sc) {
     titleCard(r, v, sc);
     later(r, 120, () => { if (!speaking()) WAR.sting(sc.type); }); // một tiếng mở trận, xong trước lời kể (voiceAt)

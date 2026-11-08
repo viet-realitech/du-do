@@ -1,5 +1,5 @@
 import { ERAS, F, VAL, pop, regime2, type Era } from './data';
-import { S, save, rt, Y0, Y1, eraOf, curPick, values, allEv, visEv, setFocus, pct } from './state';
+import { S, save, rt, Y0, Y1, eraOf, curPick, optOf, chYear, values, allEv, visEv, setFocus, pct } from './state';
 import { on } from './ui/actions';
 import { $, esc } from './ui/dom';
 import { av, flag } from './ui/bits';
@@ -7,7 +7,7 @@ import { paintMap, paintHome } from './map';
 import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
-import { stopTour, isTourPaused, resumeTour, canResumeChapter } from './tour';
+import { stopTour, isTourPaused, resumeTour, canResumeChapter, tourEra } from './tour';
 import { endGame } from './screens/ending';
 import { openGate } from './screens/gate';
 import { openEvent, SIDE_PV } from './screens/event';
@@ -34,8 +34,15 @@ function showYear(y: number): void {
   if (!raf) raf = requestAnimationFrame(step);
 }
 
+/** Chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
+function legendEdge(): void {
+  const lg = $('#legend')!;
+  const upd = () => { lg.classList.toggle('over', lg.scrollWidth > lg.clientWidth + 2); lg.classList.toggle('end', lg.scrollLeft + lg.clientWidth >= lg.scrollWidth - 2); };
+  if (!lg.dataset.w) { lg.dataset.w = '1'; lg.addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); }
+  upd();
+}
 export function renderMain(): void {
-  const y = S.year, R = regime2(y), e = eraOf(y), pk = curPick(y);
+  const y = S.year, R = regime2(y), e = tourEra() || eraOf(y), pk = optOf(e);
   showYear(y);
   $('#eraNo')!.textContent = `Chương ${e.n}/6 · Thế hệ ${e.n}`;
   $('#eraT')!.textContent = e.title;
@@ -50,6 +57,7 @@ export function renderMain(): void {
   $('#legend')!.innerHTML = R.legend
     .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
     .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(relChip).join('') : '');
+  legendEdge();
   paintMap();
   paintHome(isPlay() ? home()[2] : null);
   renderVals();
@@ -97,7 +105,7 @@ function renderCard(): void {
     c.innerHTML = `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.</div></button><button class="rb" data-a="end" aria-label="Xem kết luận">→</button>`;
     return;
   }
-  const v = rt.focusEv, pk = v ? curPick(v.y) : undefined;
+  const v = rt.focusEv, pk = v ? curPick(chYear(v)) : undefined;
   // Trò chơi: thẻ trên bản đồ đọc sự kiện bằng giọng của phe dòng họ đang theo (tóm tắt vẫn có trong lời kể và màn chi tiết)
   const minePv = isPlay() && pk && SIDE_PV.includes(pk.persp) ? v?.v?.find(([p]) => p === pk.persp)?.[1] : undefined;
   c.className = 'card' + (v && v.diary ? ' diary' : '');

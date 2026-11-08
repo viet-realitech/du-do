@@ -193,7 +193,8 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await expect(page.locator('#res')).toBeVisible();
   await expect(page.locator('#map g.home g')).toHaveCount(1); // home marker
   // the first tour stop (Đà Nẵng 1858) touches Huế's region: its card opens by itself and pauses the tour
-  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 }); // opens once the battle scene has played out (~17 s), narration or not
+  // opens once the battle has played out and the narrator, who speaks over the close, has finished (~30 s)
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 50_000 });
   await expect(page.locator('#tourb')).toContainText('chờ quyết định');
   const before = await page.locator('#res .mt').first().locator('b').first().textContent();
   // a tap only selects: nothing is spent until "Quyết định"
@@ -405,7 +406,7 @@ test('play mode: reloading mid-chapter resumes the tour at the owed card instead
   // the chapter tour is rebuilt from the owed event: tour bar first, the card only after its step plays
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('#layer .scrim')).toHaveCount(0);
-  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 50_000 });
   await expect(page.locator('#tourb')).toContainText('chờ quyết định');
   expect(errors).toEqual([]);
 });

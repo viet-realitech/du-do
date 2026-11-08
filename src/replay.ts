@@ -7,7 +7,7 @@ import { hush, speak } from './narration';
 import { evKey, evSpeech } from './speech';
 import { SND } from './audio';
 import { zoomFit, zoomK, paintMap } from './map';
-import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene } from './scene';
+import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt } from './scene';
 import { renderMain } from './view';
 import { resumeTour } from './tour';
 import { openEvent } from './screens/event';
@@ -44,16 +44,18 @@ export function replayEvent(id: string): void {
     bar = document.createElement('div');
     bar.id = 'replb';
     bar.className = 'tour replay';
-    bar.innerHTML = '<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">›</button><button class="chip" data-t="again">↻ Xem lại</button><button class="chip" data-t="rclose">Đóng</button>';
+    bar.innerHTML = '<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rpause" aria-label="Giữ cảnh" aria-pressed="false" title="Giữ cảnh">❚❚</button><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">›</button><button class="chip" data-t="again">↻ Xem lại</button><button class="chip" data-t="rclose">Đóng</button>';
     wrap.appendChild(bar);
     bar.addEventListener('click', ev => {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
-      if (a === 'rnext') stepScene();
+      if (a === 'rpause') { if (scenePaused()) resumeScene(); else { pauseScene(); hush(); } pzState(bar!); }
+      else if (a === 'rnext') { stepScene(); pzState(bar!); }
       else if (a === 'again') replayEvent(bar!.dataset.id!);
       else if (a === 'rclose') closeReplay();
     });
   }
   bar.dataset.id = id;
+  pzState(bar);
   bar.querySelector('.mono')!.textContent = `Xem lại · ${v.y}`;
   bar.querySelector('.rt')!.innerHTML = esc(v.t);
   wrap.classList.add('replaying');
@@ -63,8 +65,20 @@ export function replayEvent(id: string): void {
   SND.fly();
   // cảnh bị cắt (chạm bản đồ nghiêng, đổi thẻ, ẩn app, kéo thanh năm): đóng phần xem lại nhưng không cho tour
   // trò chơi đang tạm dừng chạy tiếp sau lưng người chơi; chỉ Đóng / Back mới cho tour đi tiếp
-  playScene(v, Infinity, () => { if (t === tok) closeReplay(false); });
-  setTimeout(() => { if (t === tok && document.getElementById('replb')) speak(evSpeech(v), undefined, false, evKey(v)); }, voiceAt(v));
+  // lời kể một lần: trận đánh có sơ đồ đọc khi trận khép (bước nhịp tới đó thì đọc ngay)
+  let said = false;
+  const say = () => { if (said || t !== tok || scenePaused() || !document.getElementById('replb')) return; said = true; speak(evSpeech(v), undefined, false, evKey(v)); };
+  playScene(v, Infinity, () => { if (t === tok) closeReplay(false); }, undefined, undefined, say);
+  setTimeout(say, closeAt(v) ? voiceAt(v) + 4000 : voiceAt(v)); // trận có sơ đồ: cảnh tự gọi say khi khép; đây là bảo hiểm
+}
+
+/** Nút giữ cảnh của thanh xem lại theo trạng thái cảnh. */
+function pzState(bar: HTMLElement): void {
+  const b = bar.querySelector<HTMLElement>('[data-t=rpause]'), p = scenePaused();
+  if (!b) return;
+  b.textContent = p ? '▶' : '❚❚';
+  b.setAttribute('aria-pressed', String(p));
+  b.setAttribute('aria-label', p ? 'Chạy tiếp cảnh' : 'Giữ cảnh');
 }
 
 /** Đóng phần xem lại; `resume`: tour trò chơi đang tạm dừng thì đi tiếp (chỉ khi người chơi bấm Đóng / Back). */

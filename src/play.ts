@@ -2,7 +2,7 @@ import { surnameKey, asFamily, ARCHETYPES, type Archetype } from './data/surname
 import { SPECIAL, type SpecialCard } from './data/cards2';
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
 import { CARD, VARIANT, type Card, type Choice, type Fx } from './data/cards';
-import { S, save, curPick, type Res, type Rel, renameFamily, matchStats } from './state';
+import { S, save, curPick, chYear, evEra, type Res, type Rel, renameFamily, matchStats } from './state';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
    và "mùa màng" ở mỗi thế hệ. Lịch sử vẫn diễn ra như đã diễn ra; chỉ vận mệnh dòng họ đổi. */
@@ -83,9 +83,9 @@ export function mustDecide(v: HistEvent): boolean {
 }
 export const decided = (id: string) => id in S.cards;
 /** Các lựa chọn dòng họ đã chốt trên thẻ sự kiện trong các năm [y0, y1], mới nhất trước (Trò chơi). */
-export function choicesIn(y0: number, y1: number): { v: HistEvent; ch: Choice }[] {
+export function choicesIn(y0: number, y1: number, era?: Era): { v: HistEvent; ch: Choice }[] {
   if (!isPlay()) return [];
-  return EV.filter(v => !v.diary && v.y >= y0 && v.y <= y1 && decided(v.id))
+  return EV.filter(v => !v.diary && (era ? evEra(v) === era : v.y >= y0 && v.y <= y1) && decided(v.id))
     .map(v => ({ v, ch: cardOf(v)?.[2][S.cards[v.id]] }))
     .filter((x): x is { v: HistEvent; ch: Choice } => !!x.ch).reverse();
 }
@@ -128,7 +128,7 @@ export function specialFor(v: HistEvent): SpecialCard | undefined {
   if (!isPlay() || v.diary) return undefined;
   if (v.id in S.xs) return SPECIAL.find(c => c.id === S.xs[v.id]);
   if (decided(v.id) || v.y < S.xFrom) return undefined;
-  return SPECIAL.find(c => c.ev === v.id && matches(c.when, v.y));
+  return SPECIAL.find(c => c.ev === v.id && matches(c.when, chYear(v)));
 }
 export const specialDecided = (c: SpecialCard) => 'x:' + c.id in S.cards;
 export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: string): Fx {

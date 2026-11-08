@@ -118,6 +118,12 @@ export const rt = {
 /** Còn điểm rẽ chưa chọn tính đến năm hiện tại. */
 export const ERAS_PENDING = () => ERAS.some(e => !S.picks[e.id] && e.cy <= S.year);
 export const eraOf = (y: number): Era => [...ERAS].reverse().find(e => y >= e.from) || ERAS[0];
+/** Sự kiện đầu năm 1954 khép chương 4 (Điện Biên Phủ, Genève) dù cùng năm với điểm rẽ 5, vốn hỏi "sau Genève, ở lại đâu?". */
+const CH: Record<string, string> = { dbp: 'e4', gnv: 'e4' };
+/** Chương của một sự kiện: trang nhật ký theo hướng đã mở nó; vài mốc khép chương theo CH; còn lại theo năm. */
+export const evEra = (v: HistEvent): Era => ERAS.find(e => e.id === (v.diary ? v.era : CH[v.id])) || eraOf(v.y);
+/** Năm đại diện của sự kiện trong chương của nó (tra hướng đã chọn, biến cố riêng…): Điện Biên Phủ → 1953. */
+export const chYear = (v: HistEvent): number => { const e = evEra(v), nx = ERAS[ERAS.indexOf(e) + 1]; return Math.max(e.cy, Math.min(v.y, nx ? nx.cy - 1 : v.y)); };
 export const optOf = (e: Era): Option | undefined => e.opts.find(o => o.id === S.picks[e.id]);
 export const curPick = (y: number) => optOf(eraOf(y));
 export const picked = (): Option[] => ERAS.map(optOf).filter((o): o is Option => !!o);

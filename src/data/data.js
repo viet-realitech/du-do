@@ -209,7 +209,7 @@ function regime(y){
   if(y<1859){b=['dainam','dainam','dainam','dainam'];label='Đại Nam thống nhất dưới triều Nguyễn';}
   else if(y<1867){b=['dainam','dainam','dainam','dnph'];label=y<1862?'Liên quân đánh chiếm Gia Định':'Ba tỉnh miền Đông Nam Kỳ thuộc Pháp';}
   else if(y<1884){b=['dainam','dainam','dainam','phap'];label='Nam Kỳ lục tỉnh thành thuộc địa Pháp';}
-  else if(y<1945){b=['phap_bh','phap_bh','phap_bh','phap'];jp=y>=1940;label=jp?'Pháp – Nhật cùng cai trị Đông Dương':'Đông Dương thuộc Pháp: Nam Kỳ thuộc địa, Trung & Bắc Kỳ bảo hộ';}
+  else if(y<1945){b=['phap_bh','phap_bh','phap_bh','phap'];jp=y>=1940;label=jp?'Pháp – Nhật cùng cai trị Đông Dương':'Pháp thuộc: Nam Kỳ thuộc địa, Trung – Bắc Kỳ bảo hộ';}
   else if(y<1946){b=['vndcch','vndcch','vndcch','tc'];label='VNDCCH ra đời; Pháp trở lại Nam Bộ';}
   else if(y<1954){b=['tc','vndcch','tc','tc'];label='Kháng chiến: vùng tự do và vùng tạm chiếm xen kẽ';}
   else if(y<1975){b=['vndcch','vndcch','vnch','vnch'];l17=true;label=y<1955?'Tạm chia tại vĩ tuyến 17 theo Hiệp định Genève':'Hai miền: VN Dân chủ Cộng hoà – VN Cộng hoà';}

@@ -114,8 +114,10 @@ function choice(e: Era, quiet: boolean): void {
   const release = () => {
     if (open || !d.isConnected) return;
     open = true;
+    const had = !!d.querySelector('#lst')?.contains(document.activeElement); // "Chọn ngay ›" đang giữ tiêu điểm
     d.querySelector('#lst')?.remove();
     d.querySelectorAll<HTMLButtonElement>('.opt').forEach((b, i) => { b.disabled = false; b.style.animationDelay = `${i * 90}ms`; b.classList.add('in'); });
+    if (had) d.querySelector<HTMLElement>('.opt')?.focus({ preventScroll: true });
     SND.tick();
   };
   const say = setTimeout(() => {
@@ -125,7 +127,7 @@ function choice(e: Era, quiet: boolean): void {
   }, 1200);
   const prevE = ERAS[ERAS.indexOf(e) - 1], pp = prevE && S.picks[prevE.id], ctx = e.ctx && pp ? e.ctx[pp] : null;
   // những việc thế hệ trước đã làm ở các thẻ bắt buộc (tối đa ba, theo thời gian): lựa chọn nhỏ cũng thành gia sử
-  const did = prevE ? choicesIn(prevE.cy, e.cy - 1).filter(x => mustDecide(x.v)).slice(0, 3).reverse() : [];
+  const did = prevE ? choicesIn(0, 0, prevE).filter(x => mustDecide(x.v)).slice(0, 3).reverse() : [];
   // nhãn của mỗi hướng: tiếp nối / rẽ khỏi đường thế hệ trước, và người cùng họ dẫn đầu hướng đó
   const tag = (o: Option) => {
     const k = kinIn(o), t = (pp ? (continues(pp, o.id) ? '<span class="al mono ok">Tiếp nối đường cũ</span>' : '<span class="al mono">Rẽ hướng</span>') : '') +

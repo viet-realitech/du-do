@@ -3,7 +3,7 @@ import { closeReplay } from '../replay';
 import { SURNAMES, surnameKey } from '../data/surnames';
 import type { HistEvent } from '../data';
 import type { Fx } from '../data/cards';
-import { S, rt, familyName, allEv } from '../state';
+import { S, rt, familyName, allEv, chYear } from '../state';
 import { on } from '../ui/actions';
 import { esc, sheet, toast, ghost, calm } from '../ui/dom';
 import { flag } from '../ui/bits';
@@ -58,7 +58,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   ${near ? `<div class="mono" style="color:var(--acc);margin-bottom:10px">⌂ Chạm tới quê nhà ${esc(h[1])}</div>` : '<div style="height:6px"></div>'}
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div role="radiogroup">${c[2].map((ch, i) => {
-    const no = noList[i], al = alignment(ch[2], v.y);
+    const no = noList[i], al = alignment(ch[2], chYear(v));
     const picked = done && S.cards[v.id] === i;
     return `<button class="opt${picked ? ' sel' : ''}" data-i="${i}" role="radio" aria-checked="${picked}"${no || (done && !picked) ? ' disabled' : ''}>
       <div class="tt"><h3>${esc(ch[0])}</h3>${no ? `<span class="mono" style="color:var(--red)">${no}</span>` : al ? `<span class="al mono ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : ''}</div>

@@ -16,6 +16,13 @@ if (mainEl) new MutationObserver(() => {
   // bảng Nhân vật / Sử liệu / Hồ sơ phủ bản đồ: chỉ thanh tab còn dùng được, phần dưới bảng (dòng thời gian, nút zoom…) không nhận tiêu điểm
   const pane = !!layer.querySelector(':scope > .pane');
   for (const c of mainEl.children) if (c.id !== 'tabs') (c as HTMLElement).inert = pane;
+  // bảng / trang vừa đóng mang theo tiêu điểm: đưa về nút điều khiển đang có (tour, xem lại, ▶), không để rơi về <body>
+  requestAnimationFrame(() => {
+    const a = document.activeElement;
+    if (a && a !== document.body && a.isConnected) return;
+    if (layer.querySelector(':scope > .scrim, :scope > .ov, :scope > .pane')) return;
+    document.querySelector<HTMLElement>('#tourb [data-t=next], #tourb [data-t=resume], #replb [data-t=again], #play')?.focus({ preventScroll: true });
+  });
 }).observe(layer, { childList: true });
 
 export const esc = (s: unknown) =>

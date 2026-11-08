@@ -2,7 +2,7 @@ import { isPlay, cardOf, decided, choicesIn } from '../play';
 import { mood } from '../music';
 import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
-import { S, save, rt, allEv, eraOf, curPick, figOpen } from '../state';
+import { S, save, rt, allEv, evEra, chYear, curPick, figOpen } from '../state';
 import { av } from '../ui/bits';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer } from '../ui/dom';
@@ -17,6 +17,8 @@ import { openMedia } from './lightbox';
 import { openSrc } from './sources';
 import { canReplay, closeReplay } from '../replay';
 import type { HistEvent } from '../data';
+import { setTab, type TabId } from '../tabs';
+import { openFig } from './figures';
 
 type Tab = 'x' | 'v' | 'm' | 's';
 /** Góc nhìn sử học nào là "của phe" dòng họ theo (sử liệu quốc tế, Pháp không phải tiếng nói của phe người chơi). */
@@ -25,14 +27,21 @@ const TABS: [Tab, string][] = [['x', 'Diễn biến'], ['v', 'Góc nhìn'], ['m'
 const KIND_ICON: Record<string, string> = { 'Trận đánh': '◆', 'Hiệp ước': '■' };
 const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">‹</button>`;
 
+/** Trang sự kiện mở từ bảng Nhân vật / Sử liệu / Hồ sơ (và thẻ nhân vật đang mở): đóng thì về lại đó, không về bản đồ trống. */
+let ret: { tab: TabId; fig?: string } | null = null;
 export function openEvent(id: string, tab: Tab = 'x'): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
+  if (!layer.querySelector(':scope > .ov')) { // mở từ bảng / thẻ nhân vật (không phải từ một trang sự kiện khác)
+    const t = (document.querySelector<HTMLElement>('#tabs .tab.on')?.dataset.t || 'map') as TabId;
+    const fig = [...layer.querySelectorAll<HTMLElement>(':scope > .scrim[data-fig]')].pop()?.dataset.fig;
+    ret = t !== 'map' || fig ? { tab: t, fig } : null;
+  }
   if (document.getElementById('replb')) closeReplay(false); // đang xem lại diễn biến: dừng hẳn trước khi mở trang
   if (isTouring()) pauseTour('overlay'); else stopTour(); // đóng trang thì tour chạy tiếp từ đúng bước này (cả Đọc sử)
   hidePop();
   if (!S.seen.includes(id)) { S.seen.push(id); save(); }
-  const e = eraOf(v.y), pk = curPick(v.y), mine = pk?.persp;
+  const e = evEra(v), pk = curPick(chYear(v)), mine = pk?.persp;
 
   if (v.diary) {
     const real = EV.find(x => x.y === v.y), home0 = choicesIn(e.cy, v.y)[0]; // người viết nhật ký đi xa; ở nhà, cả họ đã quyết thế này
@@ -197,6 +206,14 @@ on('goev', el => {
   rt.focusEv = v;
   save();
   openEvent(v.id);
+  ret = { tab: 'map' }; // chủ ý "đến sự kiện": đóng trang thì ở lại bản đồ năm đó
 });
-// Closing an overlay returns to the refreshed map.
-on('close', () => { clearLayer(); renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else resumeTour('overlay'); });
+// Closing an overlay returns to where it was opened from: a pane (and the figure sheet), else the refreshed map.
+on('close', () => {
+  const r = ret;
+  ret = null;
+  if (r && r.tab !== 'map') { setTab(r.tab); if (r.fig) openFig(r.fig); return; }
+  if (r) setTab('map'); else clearLayer(); // "Đến sự kiện" từ sử liệu: thanh tab trở về Bản đồ
+  renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else resumeTour('overlay');
+  if (r?.fig) openFig(r.fig);
+});
