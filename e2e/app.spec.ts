@@ -39,6 +39,9 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await expect(lt.locator('.lt-h')).toContainText('1/3');
   await expect(lt.locator('.lt-h')).toContainText('2/3', { timeout: 7000 });
   expect(await page.locator('#map g.scene g.bd').count()).toBeGreaterThanOrEqual(2);
+  // "›" skips the rest of a long battle step
+  await page.locator('#tourb [data-t=next]').click();
+  await expect(page.locator('#tourb')).toContainText('2/', { timeout: 5000 });
   await page.locator('#tourb [data-t=stop]').click();
   await expect(page.locator('#tourb')).toHaveCount(0);
   await expect(lt).toHaveCount(0, { timeout: 1000 });

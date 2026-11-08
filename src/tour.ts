@@ -232,6 +232,7 @@ function tourBar(): void {
         }
         tourBar();
       }
+      else if (a === 'next') { if (tour && !tour.paused && tour.next) { hush(); tour.next(0); } } // bỏ qua bước đang chạy (bước có thẻ: mở thẻ ngay)
       else if (a === 'skip') skipTour();
       else if (a === 'stop') stopTour();
       else if (a === 'resume') resumeTour();
@@ -240,7 +241,7 @@ function tourBar(): void {
   const { e, L, i, paused } = tour, n = Math.max(1, L.length), at = Math.min(i + 1, n);
   const state = paused === 'card' ? ' · chờ quyết định' : paused ? ' · tạm dừng' : '';
   b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">Chương ${e.n} · ${at}/${n}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
-    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}<button class="chip" data-t="skip">Điểm rẽ ›</button><button class="chip" data-t="stop">Dừng</button>`;
+    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Sự kiện kế tiếp" title="Sự kiện kế tiếp">›</button>'}<button class="chip" data-t="skip">Điểm rẽ ›</button><button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
   $('#play')!.textContent = paused && paused !== 'card' ? '▶' : '❚❚';
 }
 
