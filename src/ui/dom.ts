@@ -7,6 +7,11 @@ export const app = document.getElementById('app')!;
 /** Máy yếu (≤ 4 nhân hoặc ≤ 2 GB RAM): bớt hiệu ứng tốn công vẽ. */
 export const lite = (navigator.hardwareConcurrency || 8) <= 4 || ((navigator as { deviceMemory?: number }).deviceMemory || 8) <= 2;
 export const layer = document.getElementById('layer')!;
+/* Bảng chọn / trang chi tiết / màn mở đầu đang phủ: phần chính phía sau không nhận tiêu điểm bàn phím, trình đọc
+   màn hình không đọc lẫn (trước đây Tab đi vào bản đồ, các nút ẩn sau bảng). Bảng Nhân vật / Sử liệu / Hồ sơ
+   (.pane) không phủ thanh thẻ nên không tính. */
+const mainEl = document.getElementById('main');
+if (mainEl) new MutationObserver(() => { mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov'); }).observe(layer, { childList: true });
 
 export const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -60,6 +65,10 @@ export function sheet(html: string, dismiss = false): HTMLElement {
   const swap = [...app.querySelectorAll('.exiting')].filter(g => g.querySelector(':scope > .scrim'));
   if (swap.length) { swap.forEach(g => g.classList.add('swap')); d.classList.add('cont'); }
   layer.appendChild(d);
+  const sh = d.querySelector<HTMLElement>('.sheet')!, h = sh.querySelector('h2');
+  if (h) { h.id ||= 'sh-' + Math.random().toString(36).slice(2, 8); sh.setAttribute('aria-labelledby', h.id); }
+  sh.tabIndex = -1;
+  requestAnimationFrame(() => { if (d.isConnected && !sh.contains(document.activeElement)) sh.focus({ preventScroll: true }); });
   SND.whoosh();
   const s = d.firstElementChild as HTMLElement;
   s.tabIndex = -1;

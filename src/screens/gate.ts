@@ -1,4 +1,4 @@
-import { gateKey, gateSpeech } from '../speech';
+import { gateKey, gateSpeech, outKey, outSpeech } from '../speech';
 import type { Fx } from '../data/cards';
 import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
@@ -168,7 +168,7 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   const go = () => { if (!armed || !layer.contains(d)) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
   // speak() gọi callback ngay (đồng bộ) khi không có giọng: khi đó dùng bộ đếm thay vì kết thúc lời đọc.
   let sync = true;
-  const spoke = speak(`Con đường của bạn. ${o.out}`, () => { if (!sync && armed) setTimeout(go, 700); });
+  const spoke = speak(outSpeech(o.out), () => { if (!sync && armed) setTimeout(go, 700); }, false, outKey(o.id)); // giọng thu sẵn (như lời dẫn điểm rẽ)
   sync = false;
   const ms = spoke ? Math.max(6000, o.out.length * 95) : Math.max(5000, 3000 + o.out.length * 60);
   bar.style.animationDuration = ms + 'ms';
@@ -182,6 +182,8 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   }, true);
   d.querySelector('.sheet')!.addEventListener('scroll', disarm, { passive: true });
   d.querySelector('.sheet')!.addEventListener('pointerdown', ev => { if (!(ev.target as Element).closest('.btn.go')) disarm(); }, true);
+  // bàn phím / trình đọc màn hình: di chuyển trong bảng (Tab, mũi tên) cũng là đang đọc → không tự chuyển
+  d.addEventListener('keydown', ev => { if (ev.key !== 'Enter' && ev.key !== ' ') disarm(); });
 }
 
 on('watch', el => { clearLayer(); renderMain(); checkBadges(); startTour(ERAS.find(x => x.id === el.dataset.e)); });

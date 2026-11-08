@@ -20,6 +20,8 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await page.locator('#nm').fill('Họ Trần');
   await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
   await expect(page.getByText('Tiếng súng Sơn Trà').first()).toBeVisible();
+  // the open turning point owns the keyboard: the map, timeline and tabs behind it are inert
+  await expect(page.locator('#main')).toHaveJSProperty('inert', true);
   const go = page.locator('#go');
   await expect(go).toBeDisabled();
   await page.locator('.opt').first().click();
@@ -27,6 +29,7 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await expect(page.getByText('Con đường của bạn')).toBeVisible();
   await page.getByRole('button', { name: /Xem chương 1 diễn ra/ }).click();
   await expect(page.locator('#tourb')).toBeVisible();
+  await expect(page.locator('#main')).toHaveJSProperty('inert', false);
   await expect(page.locator('#map g.co')).toHaveCount(1); // tour callout on the map
   // the first stop (Đà Nẵng 1858) opens with a title card (sides, no ranking), then a small slug replaces the population tag
   await expect(page.locator('#mapwrap .ttl')).toContainText('Trận đánh');

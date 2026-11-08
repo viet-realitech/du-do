@@ -1,6 +1,6 @@
 # Dư Đồ · Kịch bản thu giọng thuyết minh
 
-184 đoạn, tổng khoảng 39 phút đọc. Người thật đã thu: 0/184; giọng máy VieNeu: 184.
+202 đoạn, tổng khoảng 41 phút đọc. Người thật đã thu: 0/202; giọng máy VieNeu: 202.
 
 ## Hướng dẫn thu
 
@@ -19,6 +19,24 @@
 *Điểm rẽ 1 (1858), đọc khi người chơi đứng trước lựa chọn · ~12 giây*
 
 > Điểm rẽ thứ 1, năm 1858. Tiếng súng Sơn Trà. Tháng 9.1858, chiến thuyền Pháp – Tây Ban Nha nã pháo vào Đà Nẵng. Triều đình Tự Đức chia rẽ. Bạn đứng về phía nào?
+
+### `out-chien` · giọng máy
+
+*Điểm rẽ 1 · kết cục của hướng "Chủ chiến" (màn Con đường của bạn) · ~9 giây*
+
+> Con đường của bạn. Bạn theo các đồn luỹ Liên Trì, Chí Hoà. Ở Nam Kỳ, nghĩa quân vẫn đánh cả khi triều đình đã ký hoà.
+
+### `out-canhtan` · giọng máy
+
+*Điểm rẽ 1 · kết cục của hướng "Canh tân" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn dâng điều trần xin mở trường, đóng tàu, gửi người đi học. Triều đình phần lớn gác lại.
+
+### `out-hoa` · giọng máy
+
+*Điểm rẽ 1 · kết cục của hướng "Chủ hoà" (màn Con đường của bạn) · ~9 giây*
+
+> Con đường của bạn. Bạn theo đoàn sứ thần sang Sài Gòn, rồi sang Paris xin chuộc đất. Ván cờ ngoại giao rất mỏng manh.
 
 ### `dn58` · giọng máy
 
@@ -142,6 +160,24 @@
 *Điểm rẽ 2 (1885), đọc khi người chơi đứng trước lựa chọn · ~11 giây*
 
 > Điểm rẽ thứ 2, năm 1885. Chiếu Cần Vương. Kinh thành Huế thất thủ, vua Hàm Nghi xuất bôn. Người Việt tìm đường cứu nước theo nhiều ngả. Ngả của bạn?
+
+### `out-canvuong` · giọng máy
+
+*Điểm rẽ 2 · kết cục của hướng "Cần Vương" (màn Con đường của bạn) · ~9 giây*
+
+> Con đường của bạn. Bạn lên núi Vụ Quang, Yên Thế. Hơn mười năm du kích, nhưng các cuộc khởi nghĩa lần lượt tan rã.
+
+### `out-dongdu` · giọng máy
+
+*Điểm rẽ 2 · kết cục của hướng "Đông Du" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn xuống tàu sang Yokohama. Năm 1909 Nhật trục xuất du học sinh theo thoả thuận với Pháp.
+
+### `out-duytan` · giọng máy
+
+*Điểm rẽ 2 · kết cục của hướng "Duy Tân" (màn Con đường của bạn) · ~9 giây*
+
+> Con đường của bạn. Bạn dạy ở Đông Kinh Nghĩa Thục, cắt tóc ngắn, mặc âu phục. Trường bị đóng cửa sau vài tháng.
 
 ### `cv85` · giọng máy
 
@@ -278,6 +314,24 @@
 
 > Điểm rẽ thứ 3, năm 1930. Ngọn cờ mới. Năm 1930: khởi nghĩa Yên Bái vừa bị dập tắt, một đảng mới vừa thành lập ở Hồng Kông. Bạn gia nhập phong trào nào?
 
+### `out-cs` · giọng máy
+
+*Điểm rẽ 3 · kết cục của hướng "Cộng sản" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn hoạt động bí mật, qua Xô viết Nghệ Tĩnh, nhà tù Côn Đảo, rồi về Pác Bó dựng Việt Minh.
+
+### `out-qdd` · giọng máy
+
+*Điểm rẽ 3 · kết cục của hướng "Quốc dân đảng" (màn Con đường của bạn) · ~9 giây*
+
+> Con đường của bạn. Bạn sống sót sau Yên Bái, lưu vong sang Vân Nam. Phong trào phân tán, dựa vào Trung Hoa Dân Quốc.
+
+### `out-laphien` · giọng máy
+
+*Điểm rẽ 3 · kết cục của hướng "Lập hiến" (màn Con đường của bạn) · ~6 giây*
+
+> Con đường của bạn. Bạn viết báo, vận động Hội đồng Quản hạt. Pháp nhượng bộ rất ít.
+
 ### `cs30` · giọng máy
 
 *Chính trị · 3.2.1930 · ~17 giây*
@@ -377,6 +431,24 @@
 
 > Điểm rẽ thứ 4, năm 1945. Mùa thu 1945. Nhật đầu hàng, Bảo Đại thoái vị, Pháp sắp quay lại. Một nhà nước mới ra đời ở Hà Nội. Bạn chọn đi đâu?
 
+### `out-vm` · giọng máy
+
+*Điểm rẽ 4 · kết cục của hướng "Theo Việt Minh" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn lên chiến khu Việt Bắc. Chín năm kháng chiến, từ du kích đến những chiến dịch lớn.
+
+### `out-qg` · giọng máy
+
+*Điểm rẽ 4 · kết cục của hướng "Giải pháp Bảo Đại" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn làm việc cho Quốc gia Việt Nam (1949), giữa hai lằn đạn và một nền độc lập còn hạn chế.
+
+### `out-tl` · giọng máy
+
+*Điểm rẽ 4 · kết cục của hướng "Đứng ngoài" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn ở lại vùng xôi đậu, ban ngày một chính quyền, ban đêm một chính quyền khác.
+
 ### `ng45` · giọng máy
 
 *Chính trị · 9.3 – 2.9.1945 · ~27 giây*
@@ -469,6 +541,24 @@
 *Điểm rẽ 5 (1954), đọc khi người chơi đứng trước lựa chọn · ~12 giây*
 
 > Điểm rẽ thứ 5, năm 1954. Vĩ tuyến 17. Điện Biên Phủ vừa thất thủ. Hiệp định Genève tạm chia đất nước tại sông Bến Hải, hẹn tổng tuyển cử năm 1956. Bạn ở lại đâu?
+
+### `out-bac` · giọng máy
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn tập kết ra Bắc hoặc ở lại Hà Nội. Cải cách ruộng đất, rồi đường Trường Sơn.
+
+### `out-nam` · giọng máy
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" (màn Con đường của bạn) · ~11 giây*
+
+> Con đường của bạn. Bạn di cư vào Nam năm 1954, hoặc vốn là người Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-thuba` · giọng máy
+
+*Điểm rẽ 5 · kết cục của hướng "Thành phần thứ ba" (màn Con đường của bạn) · ~7 giây*
+
+> Con đường của bạn. Bạn xuống đường đòi hoà bình ở Sài Gòn. Cả hai phía đều nghi ngờ bạn.
 
 ### `dbp` · giọng máy
 
@@ -688,6 +778,24 @@
 *Điểm rẽ 6 (1976), đọc khi người chơi đứng trước lựa chọn · ~11 giây*
 
 > Điểm rẽ thứ 6, năm 1976. Sau tiếng súng. Đất nước thống nhất nhưng kiệt quệ: cấm vận, hai cuộc chiến biên giới, lạm phát. Bạn chọn con đường nào?
+
+### `out-baocap` · giọng máy
+
+*Điểm rẽ 6 · kết cục của hướng "Giữ kế hoạch hoá" (màn Con đường của bạn) · ~8 giây*
+
+> Con đường của bạn. Bạn xếp hàng mua gạo bằng tem phiếu. Đến giữa thập niên 1980, lạm phát lên mức ba con số.
+
+### `out-doimoi` · giọng máy
+
+*Điểm rẽ 6 · kết cục của hướng "Đổi Mới" (màn Con đường của bạn) · ~6 giây*
+
+> Con đường của bạn. Bạn mở một xưởng nhỏ sau năm 1986. Khoán 10, rồi ASEAN, rồi WTO.
+
+### `out-radi` · giọng máy
+
+*Điểm rẽ 6 · kết cục của hướng "Ra đi" (màn Con đường của bạn) · ~9 giây*
+
+> Con đường của bạn. Bạn vượt biển, qua trại tị nạn, định cư ở Mỹ, Pháp, Úc. Sau 1995, bạn có thể quay về thăm quê.
 
 ### `tn76` · giọng máy
 

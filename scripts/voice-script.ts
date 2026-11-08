@@ -2,13 +2,14 @@
 // keyed by the file name the recording must have. Run: npm run voice:script
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { ERAS, EV, type HistEvent } from '../src/data';
-import { evKey, evSpeechFull, gateKey, gateSpeech, chrKey, linKey, epiKey } from '../src/speech';
+import { evKey, evSpeechFull, gateKey, gateSpeech, chrKey, linKey, epiKey, outKey, outSpeech } from '../src/speech';
 import { CHRONICLE, ARCHETYPES, EPILOGUES, SURNAMES } from '../src/data/surnames';
 
 type Row = { key: string; ch: number; ctx: string; text: string };
 const rows: Row[] = [];
 for (const e of ERAS) {
   rows.push({ key: gateKey(e), ch: e.n, ctx: `Điểm rẽ ${e.n} (${e.cy}), đọc khi người chơi đứng trước lựa chọn`, text: gateSpeech(e) });
+  for (const o of e.opts) rows.push({ key: outKey(o.id), ch: e.n, ctx: `Điểm rẽ ${e.n} · kết cục của hướng "${o.label}" (màn Con đường của bạn)`, text: outSpeech(o.out) });
   const evs: HistEvent[] = EV.filter(v => (v.era ? v.era === e.id : v.y >= e.cy && (!ERAS[e.n] || v.y < ERAS[e.n].cy)));
   for (const v of evs) rows.push({ key: evKey(v), ch: e.n, ctx: `${v.k} · ${v.d}`, text: evSpeechFull(v) });
   for (const o of e.opts) for (const v of o.diary) rows.push({ key: evKey(v), ch: e.n, ctx: `Nhật ký dòng họ, nếu chọn "${o.label}" · ${v.y}`, text: evSpeechFull(v) });
