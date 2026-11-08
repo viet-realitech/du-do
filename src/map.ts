@@ -38,7 +38,7 @@ const G = {} as {
   laF: Feature<Geometry>;
   khF: Feature<Geometry>;
   pv: Sel<SVGPathElement, Prov>;
-  la: Sel; kh: Sel; qtn: Sel; edge: Sel; sel: Sel; hl: Sel; indo: Sel;
+  la: Sel; kh: Sel; qtn: Sel; edge: Sel; sel: Sel; hl: Sel; indo: Sel; base: Sel;
   jpr: Sel<SVGRectElement>; spot: Sel<SVGRectElement>; spotC: Sel<SVGCircleElement>;
   l17: Sel<SVGLineElement>;
   sea: Sel<SVGRectElement>; vig: Sel<SVGRectElement>; grat: Sel; rip: Sel<SVGGElement>; r0: Sel<SVGGElement>; modern: Sel;
@@ -109,13 +109,15 @@ export async function initMap(): Promise<void> {
 
   // Radar-like ripples around the coastline.
   const land = topojson.merge(topo, topo.objects.countries.geometries.filter(g => g.type) as any);
-  const rip = G.rip = Z.append('g').attr('fill', 'none').style('pointer-events', 'none');
+  const rip = G.rip = Z.append('g').attr('class', 'rip').attr('fill', 'none').style('pointer-events', 'none');
   [26, 20, 15, 10.5, 7, 4].forEach((w, i) => {
     rip.append('path').attr('d', path(land)).style('stroke', 'var(--rip)').attr('stroke-opacity', 0.14 + i * 0.06).attr('stroke-width', w);
     rip.append('path').attr('class', 'seaS').attr('d', path(land)).attr('stroke-width', w - 1.3);
   });
 
   const R0 = G.r0 = Z.append('g');
+  // nền đất đặc dưới mọi lớp tô: nửa trong của các vệt đồng mức (nét vẽ đè đường bờ) không lộ qua màu thuộc địa / tranh chấp trong mờ
+  G.base = R0.append('path').attr('d', path(land)).style('pointer-events', 'none');
   G.others = R0.append('g').selectAll('path').data(others).join('path').attr('d', path).style('stroke', 'var(--ink3)')
     .attr('stroke-width', 0.6).attr('vector-effect', 'non-scaling-stroke').on('click', hidePop);
   G.la = R0.append('path').attr('d', path(la)).style('stroke', 'var(--ink2)').attr('stroke-width', 0.7).attr('vector-effect', 'non-scaling-stroke')
@@ -239,8 +241,10 @@ export function themeMap(): void {
   const th = S.theme, co = th === 'archive' && S.mstyle !== 'flat';
   G.sea.attr('fill', th === 'poster' ? 'url(#p-sea)' : seaC());
   G.rip.selectAll('.seaS').attr('stroke', seaC());
-  G.rip.attr('opacity', co || th === 'night' ? 1 : 0).attr('filter', co ? 'url(#rough)' : null);
+  G.rip.classed('off', !(co || th === 'night')).attr('filter', co ? 'url(#rough)' : null); // ẩn / hiện bằng lớp CSS (cảnh trận làm mờ thêm)
   G.others.attr('fill', landC()).attr('stroke-width', th === 'poster' ? 1.2 : 0.6);
+  G.base.attr('fill', landC());
+  document.getElementById('mapwrap')?.style.setProperty('--seac', seaC()); // nền khung = màu biển: bản đồ nghiêng không để lộ dải đen phía trên
   G.r0.attr('filter', co ? 'url(#rough)' : null);
   G.vig.attr('opacity', co ? 1 : 0);
   G.edge.attr('opacity', th === 'poster' ? 0 : 1);

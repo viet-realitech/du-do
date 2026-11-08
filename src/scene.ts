@@ -92,11 +92,21 @@ export const capH = (): number => (innerWidth >= 700 ? 82 : 72);
 const barEl = () => document.getElementById('replb') || document.getElementById('tourb');
 
 /** Cỡ sơ đồ (px màn hình) cho trận / cảnh gọn: theo phần bản đồ còn trống (trừ nhãn trên, phụ đề, thanh dưới, cột nút zoom). */
-function diagPx(): number {
+/** Khoảng trống (px màn hình, rộng × cao) cho sơ đồ cảnh: trừ nút zoom, nhãn trên, phụ đề và thanh tour dưới. */
+function diagBox(): [number, number] {
   const w = document.getElementById('mapwrap');
-  if (!w) return 150;
+  if (!w) return [150, 150];
   const bar = barEl(), low = (bar ? w.clientHeight - bar.offsetTop : 0) + capH() + 16;
-  return Math.max(150, Math.min(440, Math.min(w.clientWidth - 80, w.clientHeight - 40 - low) * 0.84));
+  return [Math.max(150, w.clientWidth - 80), Math.max(130, w.clientHeight - 40 - low)];
+}
+/** Phóng sơ đồ (minh hoạ, không phải tỉ lệ thật) quanh tâm khung các điểm `lls` (khung mà bản đồ vừa bay tới, như
+    sceneFrame) cho tới khi chiếm `share` khoảng trống theo chiều chật hơn; không bao giờ thu nhỏ. */
+function fitScale(h: NonNullable<ReturnType<typeof fxHost>>, lls: [number, number][], share: number): (l: [number, number]) => [number, number] {
+  const ps = lls.map(l => h.proj(l)), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
+  const c = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+  const bw = (Math.max(...xs) - Math.min(...xs)) * h.ppu(), bh = (Math.max(...ys) - Math.min(...ys)) * h.ppu(), [aw, ah] = diagBox();
+  const f = bw > 0 || bh > 0 ? Math.max(1, Math.min(30, (aw * share) / Math.max(bw, 1), (ah * share) / Math.max(bh, 1))) : 1;
+  return l => { const p = h.proj(l); return [c[0] + (p[0] - c[0]) * f, c[1] + (p[1] - c[1]) * f]; };
 }
 
 /** Phụ đề chân hình của cảnh: một khung, đổi nội dung theo nhịp (hiệu ứng lau chữ mỗi lần đổi). */
@@ -307,11 +317,8 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (!h || !r.root) return;
   ensureDefs(h.defs);
   const k = h.k(), root = r.root, type = sc?.type || 'land';
-  // Trận gọn trong vài km: phóng sơ đồ quanh vị trí sự kiện cho tới khi chiếm gần nửa khung (minh hoạ, không phải tỉ lệ thật)
-  const c0 = h.proj(v.l), pts = (sc?.arrows || []).flatMap(a => [h.proj(a[0]), h.proj(a[1])]).concat((sc?.hold || []).map(x => h.proj([x[0], x[1]])));
-  const span = pts.length ? Math.max(...pts.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * h.ppu() : 0; // px màn hình
-  const f = span > 0 ? Math.max(1, diagPx() / span) : 1;
-  const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
+  // Trận gọn trong vài km: phóng sơ đồ quanh tâm khung cho tới khi chiếm phần lớn chỗ trống (minh hoạ, không phải tỉ lệ thật)
+  const P = fitScale(h, [v.l, ...(sc?.arrows || []).flatMap(a => [a[0], a[1]]), ...(sc?.hold || []).map(x => [x[0], x[1]] as [number, number])], 0.8);
   const arrows = sc?.arrows.length ? sc.arrows : [];
   const T0 = 120; // gọi sau khi bản đồ đã bay tới (playScene hẹn 1,25 s), để hệ số zoom k đã đúng
   // nhịp kể: mũi tên thứ i vẽ khi nhịp i bắt đầu, phụ đề đọc ghi chú của nó
@@ -479,10 +486,7 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   ensureDefs(h.defs);
   const k = h.k(), root = r.root, T0 = 120;
   // mít tinh / khởi nghĩa gọn trong một vùng: phóng sơ đồ như với trận đánh
-  const c0 = h.proj(v.l), all = mv.paths.flatMap(p => [p[0], ...p[1], p[2]]).map(l => h.proj(l));
-  const span = Math.max(...all.map(p => Math.max(Math.abs(p[0] - c0[0]), Math.abs(p[1] - c0[1])))) * 2 * h.ppu(); // px màn hình
-  const f = span > 0 ? Math.max(1, (diagPx() * 0.8) / span) : 1;
-  const P = (l: [number, number]): [number, number] => { const p = h.proj(l); return [c0[0] + (p[0] - c0[0]) * f, c0[1] + (p[1] - c0[1]) * f]; };
+  const P = fitScale(h, [v.l, ...mv.paths.flatMap(p => [p[0], ...p[1], p[2]])], 0.7);
   // âm thanh theo lối đi: chỉ có tàu thì còi tàu, sóng; có đường bộ thì tiếng đoàn người / bước quân; có máy bay thì tiếng động cơ
   const sea = mv.paths.some(p => p[5] === 'sea'), land = mv.paths.some(p => p[5] === 'land');
   if (mv.type === 'uprising' || mv.type === 'crowd') WAR.crowd(T0 / 1000);
