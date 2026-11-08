@@ -427,6 +427,23 @@ test.describe('iPad layouts', () => {
         expect(b.y).toBeGreaterThan(map.y);
         expect(b.y + b.height).toBeLessThan(map.y + map.height);
       }
+      // a battle replay lists its beats in the side panel (landscape only); tapping a later beat jumps to it
+      await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dbp'; b.id = 'goto-dbp'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+      await page.locator('#goto-dbp').click();
+      await page.locator('.ov .hero .hplay').click();
+      if (twoCol) {
+        await expect(page.locator('#beats li')).toHaveCount(4);
+        const side = (await page.locator('#beats').boundingBox())!;
+        expect(side.x).toBeGreaterThan(map.x + map.width - 1);
+        await page.locator('#beats li').nth(2).locator('button').click();
+        await expect(page.locator('#beats li').nth(2)).toHaveClass(/on/, { timeout: 1500 });
+        await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('3/4');
+        await page.locator('#replb [data-t=rclose]').click();
+        await expect(page.locator('#beats')).toBeHidden();
+      } else {
+        await expect(page.locator('#mapwrap .lt')).toBeVisible({ timeout: 8000 });
+        await expect(page.locator('#beats')).toBeHidden();
+      }
       expect(errors).toEqual([]);
     });
   }

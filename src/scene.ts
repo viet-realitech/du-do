@@ -26,7 +26,11 @@ interface Run {
   onNext?: () => void;
   /** Tiếng nền của trận (pháo xa / sóng): lúc hết (đồng hồ ảo), để nhảy nhịp thì phát lại phần còn lại. */
   bed?: { kind: 'rumble' | 'waves'; end: number };
+  /** Màn hình ngang: danh sách các nhịp ở cột bên (#beats). */
+  list?: HTMLElement | null;
 }
+/** Bố cục hai cột (bản đồ trái, cột truyện phải): như @media trong styles.css. */
+const wide = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px)');
 let cur: Run | null = null;
 
 /** Hiệu ứng sống động bật (Hồ sơ → Cài đặt). */
@@ -163,8 +167,35 @@ function badge(root: SVGGElement, p: [number, number], k: number, n: number, col
   return g;
 }
 /** Nhịp i bắt đầu: phụ đề đổi, các mũi tên trước mờ đi, số thứ tự hiện. */
+/** Màn hình ngang: mọi nhịp của cảnh thành một danh sách ở cột bên (đọc được từ cuối lớp); nhịp đang kể sáng lên,
+    nhịp đã qua mờ đi; chạm một nhịp phía sau để nhảy tới. */
+function beatList(r: Run, v: HistEvent): HTMLElement | null {
+  const box = document.getElementById('beats');
+  if (!box || !wide.matches) return null;
+  const sc = v.k === 'Trận đánh' ? SCENES[v.id] : undefined, mv = sc ? undefined : MOVES[v.id];
+  const items: [string, string][] = sc ? sc.arrows.map(a => [a[2], a[3]]) : mv ? mv.paths.map(p => [p[3], p[4]]) : [];
+  if (!items.length) return null;
+  box.innerHTML = `<div class="mono muted">Diễn biến · ${esc(v.t)}</div><ol>${items.map(([side, note], i) => {
+    const m = note.match(/\s*\(([^()]*\d[^()]*)\)\s*$/), text = m ? note.slice(0, m.index) : note;
+    return `<li data-i="${i}" style="--c:${SIDE_COLOR[side] || '#f1e6c8'}"><button type="button"><span class="bn">${i + 1}</span><span><b>${esc(sideName(side, v.y))}</b>${m ? ` <em>${esc(m[1])}</em>` : ''}<br>${esc(text)}</span></button></li>`;
+  }).join('')}</ol>`;
+  box.hidden = false;
+  box.querySelectorAll<HTMLButtonElement>('li button').forEach((b, i) => (b.onclick = () => {
+    if (cur !== r || !r.alive) return;
+    const t = r.marks[i], now = vnow(r);
+    if (t > now + 250) { jump(r, t - now); r.onStep?.(); }
+  }));
+  return box;
+}
+function listAt(r: Run, i: number): void {
+  r.list?.querySelectorAll<HTMLElement>('li').forEach((li, j) => {
+    li.classList.toggle('on', j === i); li.classList.toggle('done', j < i);
+    if (j === i) li.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' }); // nhịp đang kể luôn trong khung
+  });
+}
 function beat(r: Run, parts: Element[][], i: number, html: string, col: string): void {
   caption(r, html, col);
+  listAt(r, i);
   parts.forEach((ps, j) => { if (j < i) ps.forEach(e => { const op = e.getAttribute('opacity'); if (op === '0' || e.hasAttribute('data-op')) return; e.setAttribute('data-op', op || '1'); e.setAttribute('opacity', '0.45'); }); });
   parts[i]?.forEach(e => { if (e.classList.contains('bd')) e.setAttribute('opacity', '1'); });
 }
@@ -174,12 +205,16 @@ function undim(parts: Element[][]): void {
 }
 function closing(r: Run, parts: Element[][], sides: string[], y: number): void {
   undim(parts);
+  listAt(r, Infinity);
   caption(r, legendHtml(sides, y), 'var(--ink3)', ' leg');
 }
 
 const vnow = (r: Run) => performance.now() - r.t0 + r.skew;
+/** Lúc "bây giờ" theo kịch bản: trong một hẹn giờ chạy muộn (vừa nhảy nhịp) là lúc lẽ ra nó chạy, để những gì nó hẹn
+    tiếp (vd. battle() hẹn các nhịp) vẫn đúng mốc đã tính trước (marks). */
+const vat = (r: Run) => vnow(r) - lateBy;
 function later(r: Run, ms: number, f: () => void): void {
-  const at = vnow(r) + ms;
+  const at = vat(r) + ms;
   let i = r.q.length;
   while (i > 0 && r.q[i - 1].at > at) i--; // giữ thứ tự hẹn cùng lúc
   r.q.splice(i, 0, { at, f });
@@ -335,6 +370,7 @@ const endOf = (d: string) => (/[–-]/.test(d) ? d.split(/\s*[–-]\s*/).pop()!.
     trích nguyên văn của sự kiện và lối vào "Góc nhìn". Không số thương vong, không tô màu bên thắng. */
 function outcome(r: Run, v: HistEvent, sc: Scene, hs: HoldEl[], parts: Element[][], k: number): void {
   undim(parts);
+  listAt(r, Infinity);
   const wrap = document.getElementById('mapwrap'), m = document.getElementById('map'), end = sc.end || {};
   const fought = sc.arrows.some(a => actOf(a) === 'fight'); // giao thành không kháng cự (Vĩnh Long 1867): không khói
   if (!calm.matches && wrap?.classList.contains('tilt') && m) { m.style.transitionDuration = '2.4s'; wrap.style.setProperty('--rx', '31deg'); wrap.style.setProperty('--cs', '1.15'); } // máy quay nâng nhẹ
@@ -409,8 +445,9 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     anim(r, ringDur, q => { if (hd.stop) { ring.setAttribute('opacity', '0'); return; } const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
   }
   const bed = Math.max(5, Math.min(14, (L0 + total) / 1000)); // tiếng nền kéo suốt các nhịp
-  if (type === 'land' || type === 'siege') { WAR.rumble(bed, T0 / 1000); r.bed = { kind: 'rumble', end: vnow(r) + T0 + bed * 1000 }; }
-  if (type === 'naval' || type === 'landing') { WAR.waves(bed, T0 / 1000); r.bed = { kind: 'waves', end: vnow(r) + T0 + bed * 1000 }; }
+  // tiếng nền: vẽ muộn vì vừa nhảy nhịp thì chỉ phát phần còn lại
+  const bedLeft = bed - lateBy / 1000, kindBed = type === 'land' || type === 'siege' ? 'rumble' : type === 'naval' || type === 'landing' ? 'waves' : null;
+  if (kindBed) { if (bedLeft > 1) WAR[kindBed](bedLeft, lateBy ? 0 : T0 / 1000); r.bed = { kind: kindBed, end: vat(r) + T0 + bed * 1000 }; }
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
   // máy yếu: bỏ cánh quạt quay, bụi xích (mọi thứ khác giữ nguyên)
@@ -792,6 +829,7 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
   if (h && !v.diary && bt.length) {
     const base = DRAW_AT + 120 + lead(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0);
     r.marks = [...B.map(b => base + b), base + total + (lead(v) ? OUTRO_AT : 0)];
+    r.list = beatList(r, v);
   }
   // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng
   const at = reelAt(v);
@@ -827,6 +865,7 @@ export function endScene(instant = false): void {
   r.alive = false;
   clearTimeout(r.qt);
   r.q = [];
+  if (r.list) { r.list.hidden = true; r.list.innerHTML = ''; }
   if (r.raf) cancelAnimationFrame(r.raf);
   if (r.root) {
     const g = r.root;

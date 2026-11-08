@@ -85,6 +85,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .mt i { height: 2px; background: var(--rule); overflow: hidden; display: block }
 .mt i b { display: block; height: 100%; background: var(--acc); transition: width .7s cubic-bezier(.2, .8, .2, 1) }
 
+.beats { display: none }
 .mapwrap { position: relative; flex: 1; min-height: 0; margin: 12px 14px 0; border: 1px solid var(--ink3); border-radius: 16px; overflow: hidden; background: var(--seac, var(--paper)) }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; overflow: hidden; cursor: grab; transition: transform 1.1s cubic-bezier(.2, .8, .2, 1); transform-origin: 50% 64% }
 /* Cảnh động (scene.ts): bản đồ nghiêng như sa bàn khi vào trận, rung khung khi pháo nổ, khung phim tư liệu */
@@ -570,7 +571,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--side);
     grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "map hd" "map lbl" "map vals" "map res" "map legend" "map card" "map ." "scrub scrub" "tabs tabs";
+    grid-template-areas: "map hd" "map lbl" "map vals" "map res" "map legend" "map card" "map beats" "scrub scrub" "tabs tabs";
   }
   .hd { grid-area: hd; padding: calc(var(--sat) + 26px) var(--gut) 0 8px }
   .yr { font-size: 92px }
@@ -586,6 +587,15 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .card .c .t { white-space: normal; font-size: 24px; line-height: 1.15; margin: 6px 0 6px }
   .card .c .s { font-size: 16.5px; line-height: 1.38; -webkit-line-clamp: 6 }
   .card .nav { flex-direction: column }
+  /* cảnh trận / di chuyển: các nhịp thành danh sách ở cột bên, đọc được từ xa; nhịp đang kể sáng, nhịp đã qua mờ */
+  .beats:not([hidden]) { display: block; grid-area: beats; min-height: 0; overflow-y: auto; margin: 16px var(--gut) 0 8px; padding-bottom: 8px }
+  .beats ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px }
+  .beats li button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--rule); border-left: 4px solid var(--c); background: var(--paper); color: var(--ink2); font: 400 17px/1.3 var(--serif); opacity: .75; transition: opacity .3s, background .3s }
+  .beats li button b { font: 600 12px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink) }
+  .beats li button em { font: 400 12px var(--mono); font-style: normal; color: var(--ink3) }
+  .beats .bn { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--c); color: #111; font: 700 12px/22px var(--mono); text-align: center; margin-top: 1px }
+  .beats li.on button { opacity: 1; background: var(--paper2); color: var(--ink); box-shadow: 0 0 0 1px var(--c) inset }
+  .beats li.done button { opacity: .45 }
   .mapwrap { grid-area: map; margin: calc(var(--sat) + 20px) 16px 0 var(--gut) }
   .scrub { grid-area: scrub; margin-top: 10px }
   .tabs { grid-area: tabs }
