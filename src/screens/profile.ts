@@ -6,7 +6,7 @@ import { applyTheme, themeCards } from '../theme';
 import { flag } from '../ui/bits';
 import type { Faction } from '../data';
 import { BADGES, ERAS, FIG, VAL } from '../data';
-import { S, save, optOf, archetype, quizCorrect, values, pct, familyName } from '../state';
+import { S, save, optOf, archetype, quizCorrect, values, pct, familyName, Y1 } from '../state';
 import { on } from '../ui/actions';
 import { esc, layer, sheet, ghost } from '../ui/dom';
 import { SND, buzz } from '../audio';
@@ -71,7 +71,7 @@ export function paneMe(): void {
   ${sw('fx', 'Cảnh động <span class="muted" style="font-size:13px">· trận đánh 3D, phim tư liệu</span>', S.fx)}
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
-  ${done === 6 ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
+  ${done === 6 || (!isPlay() && S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
   <button class="btn ghost" data-a="about">Giới thiệu & nguồn dữ liệu</button>
   <button class="lnk" data-a="reset">Chơi lại từ đầu</button></div>`;
   layer.querySelector('.pane')!.scrollTop = keep;

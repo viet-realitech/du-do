@@ -52,9 +52,14 @@ export function ghost(...els: Element[]): void {
   setTimeout(() => g.remove(), 320);
 }
 
+/** Thanh tab sáng ở thẻ `t` (aria-current theo), không dựng lại bảng. */
+export function markTab(t: string): void {
+  document.querySelectorAll<HTMLElement>('.tab').forEach(b => { const on = b.dataset.t === t; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+}
+
 export function clearLayer(): void {
   // bảng Nhân vật / Sử liệu / Hồ sơ bị dọn đi (điểm rẽ, xem lại…): thanh tab trở về Bản đồ, không sáng nhầm thẻ cũ
-  if (layer.querySelector(':scope > .pane')) document.querySelectorAll<HTMLElement>('.tab').forEach(b => { const on = b.dataset.t === 'map'; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  if (layer.querySelector(':scope > .pane')) markTab('map');
   ghost(...layer.children);
   if (!isTouring()) hush();
 }

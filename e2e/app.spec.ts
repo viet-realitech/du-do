@@ -92,8 +92,12 @@ test('reading mode: the timeline moves freely past unchosen turning points; the 
 test('turning points mark which options continue the family path (every path has a successor)', async ({ page }) => {
   for (const [e2, cont] of [['duytan', ['qdd', 'laphien']], ['canvuong', ['cs', 'qdd']]] as const) {
     const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1930, picks: { e1: 'canhtan', e2 }, quiz: { e1: [true, true], e2: [true, true] } });
-    if (await page.locator('.cine').count()) await page.goBack(); // chapter opener
-    await expect(page.locator('#layer .opt[data-o="cs"]')).toBeAttached({ timeout: 8000 });
+    // reading mode: a turning point left for later does not reopen by itself on load; the header chip offers it
+    await page.waitForTimeout(1200);
+    await expect(page.locator('body > .cine')).toHaveCount(0);
+    await expect(page.locator('#layer .scrim')).toHaveCount(0);
+    await page.locator('#eraR').click();
+    await expect(page.locator('#layer .opt[data-o="cs"]')).toBeAttached({ timeout: 12000 });
     for (const o of ['cs', 'qdd', 'laphien']) {
       const tag = page.locator(`#layer .opt[data-o="${o}"] .al`).first();
       await expect(tag).toHaveText(cont.includes(o as never) ? /Tiếp nối đường cũ/i : /Rẽ hướng/i);
@@ -139,6 +143,22 @@ test('reading mode never forces a side: the turning point can wait, tours run wi
   if (await page.locator('.cine').count()) await page.goBack(); // chapter 2 opener
   await expect(page.locator('#layer .scrim .opt').first()).toBeAttached({ timeout: 8000 }); // next turning point (optional)
   await expect(page.getByText(/Đố nhanh/i)).toHaveCount(0); // a skipped chapter is not quizzed
+  expect(errors).toEqual([]);
+});
+
+test('reading mode: ▶ late in a chapter tours what is left of it; 2026 offers the conclusion with a turning point still open', async ({ page }) => {
+  let errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1920, picks: { e1: 'canhtan', e2: 'duytan' }, quiz: { e1: [true, true] } });
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 5000 }); // not a jump straight to 1930 and its quiz
+  await expect(page.locator('#tourb .mono')).toContainText('Chương 2');
+  await expect(page.locator('#card')).toContainText('Thanh niên', { timeout: 6000 }); // 1925, after the chapter's last sampled stop
+  await expect(page.getByText(/Đố nhanh/i)).toHaveCount(0);
+  expect(errors).toEqual([]);
+  errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 2026, picks: { e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' }, quiz: { e6: [true, true] } });
+  await expect(page.locator('#card [data-a=end].c')).toContainText('Xem kết luận');
+  await expect(page.locator('#card [data-a=pickera]')).toHaveAttribute('data-id', 'e1'); // the earliest open turning point
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible({ timeout: 6000 });
   expect(errors).toEqual([]);
 });
 

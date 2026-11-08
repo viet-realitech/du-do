@@ -70,7 +70,7 @@ export const SPECIAL: SpecialCard[] = [
     choices: [
       ["Khai họ Nguyễn, bỏ chữ Tôn Thất", "Thành một nhà họ Nguyễn như mọi nhà.", {"u": -6, "b": -3, "vm": 8, "lg": 5}, "Giấy tờ mới ghi Nguyễn. Bài vị trong từ đường vẫn chép Tôn Thất; con cháu lớn lên học hai cái tên, một để khai, một để cúng.", "Nguyễn"],
       ["Giữ họ Tôn Thất", "Tổ tiên sao thì mình vậy, bất kể thời thế.", {"u": 5, "vm": -10, "lg": -5}, "Uỷ ban xã gọi lên hỏi về lộc điền và quan hệ với Đại Nội. Lộc điền bị thu; cái họ còn nguyên, và mỗi lần kê khai lại phải giải thích."],
-      ["Có người trong họ theo Việt Minh", "Một người cháu vào Vệ quốc đoàn, giữ nguyên họ.", {"u": 3, "d": -3, "b": -4, "vm": 12}, "Người cháu làm thầy thuốc ở chiến khu, ký tên Tôn Thất trên bệnh án. Cái họ hoàng tộc thành bằng chứng ngược: nhà có người đi kháng chiến."],
+      ["Có người trong họ theo Việt Minh", "Một người cháu vào Vệ quốc đoàn, giữ nguyên họ.", {"u": 3, "d": -3, "b": -2, "vm": 12}, "Người cháu làm thầy thuốc ở chiến khu, ký tên Tôn Thất trên bệnh án. Cái họ hoàng tộc thành bằng chứng ngược: nhà có người đi kháng chiến."],
     ],
     note: "Sau khi Bảo Đại thoái vị (30.8.1945), con cháu hoàng tộc mang họ Tôn Thất hoặc tên lót theo Đế hệ thi (Bửu, Vĩnh…) ở nhiều nơi bị nhìn như 'con cháu phong kiến'; có nhà khai con cháu là Nguyễn Phúc hay Nguyễn, nhiều người khác giữ tên dòng và theo chính quyền mới, như bác sĩ Tôn Thất Tùng.",
   },
@@ -125,7 +125,7 @@ export const SPECIAL: SpecialCard[] = [
     choices: [
       ["Khai đầy đủ, đúng sự thật", "Không giấu gì; chấp nhận bị xếp diện.", {"u": 5, "b": -6, "nn": -10}, "Hồ sơ ghi 'gia đình có người đi cải tạo'. Đứa cháu thi đủ điểm vẫn không được gọi nhập học; đến đầu thập niên 1990 mới có đứa thứ hai vào đại học."],
       ["Chuyển các cháu sang họ mẹ", "Nhập khẩu về bên ngoại, khai cha 'mất tích'.", {"u": -8, "b": -4, "nn": 5, "lg": -5}, "Mấy đứa trẻ mang họ mẹ, hộ khẩu ở nhà ngoại, và một đứa đỗ đại học. Về quê giỗ họ, nó không biết xưng tên nào trước bàn thờ.", "mother"],
-      ["Tìm đường ra đi", "Bán nốt vàng, mua chỗ trên ghe.", {"g": -8, "b": -15, "d": -3, "nn": -20, "my": 10}, "Ghe rời Rạch Giá một đêm tháng 5; ba người tới trại Songkhla, hai người không. Thư đầu tiên về năm 1980, kèm một tờ 20 đô la gấp tư."],
+      ["Tìm đường ra đi", "Bán nốt vàng, bán cả ruộng, mua chỗ trên ghe.", {"g": -8, "b": -8, "d": -3, "nn": -20, "my": 10}, "Ghe rời Rạch Giá một đêm tháng 5; ba người tới trại Songkhla, hai người không. Thư đầu tiên về năm 1980, kèm một tờ 20 đô la gấp tư."],
     ],
     note: "Sau 1975, lý lịch ba đời và hộ khẩu quyết định việc học, việc làm; con em các gia đình bị xếp diện 'nguỵ quân, nguỵ quyền' thường bị hạn chế xét tuyển đại học cho đến cuối thập niên 1980. Làn sóng vượt biên lên cao nhất 1978–1979, trùng với đợt cải tạo công thương nghiệp ở miền Nam.",
   },
@@ -157,8 +157,8 @@ export const SPECIAL: SpecialCard[] = [
     s: "Sau tiếng súng biên giới, phường rà soát người gốc Hoa; họ Lý của bạn bị gọi lên hỏi gốc gác, dù gia phả chép tổ tiên là người Việt đã nhiều đời.",
     choices: [
       ["Đưa gia phả, xin ghi dân tộc Kinh", "Nhờ người biết chữ Hán dịch gia phả; chờ xác minh.", {"u": 3, "b": -5, "nn": 5, "lg": -5}, "Hộ khẩu ghi 'Kinh'. Người Hoa cùng phố đi gần hết, cửa hàng bên cạnh đóng cửa; dòng họ ở lại trong một dãy phố bỗng vắng."],
-      ["Đi 'bán chính thức' như người Hoa", "Nộp vàng theo chuyến, xuống ghe ra Hồng Kông.", {"g": -8, "b": -15, "d": -3, "nn": -15, "my": 5}, "Mỗi đầu người gần mười lượng vàng. Ghe tới Hồng Kông sau chín ngày; năm 1981 có thư từ Toronto, năm 1990 có thùng quà đầu tiên gửi về."],
-      ["Ở lại, chịu bị để ý", "Không đi, không chứng minh; sống qua ngày.", {"u": -4, "b": -6, "nn": -8}, "Hai người bị cho thôi việc ở cơ quan 'vì lý do an ninh'. Sau 1986 mới có người được nhận lại; cửa hàng mở lại nhờ Đổi Mới."],
+      ["Đi 'bán chính thức' như người Hoa", "Nộp vàng theo chuyến, bán nhà, xuống ghe ra Hồng Kông.", {"g": -8, "b": -5, "d": -3, "nn": -15, "my": 5}, "Mỗi đầu người gần mười lượng vàng. Ghe tới Hồng Kông sau chín ngày; năm 1981 có thư từ Toronto, năm 1990 có thùng quà đầu tiên gửi về."],
+      ["Ở lại, chịu bị để ý", "Không đi, không chứng minh; sống qua ngày.", {"u": -4, "g": -5, "nn": -8}, "Hai người bị cho thôi việc ở cơ quan 'vì lý do an ninh'. Sau 1986 mới có người được nhận lại; cửa hàng mở lại nhờ Đổi Mới."],
     ],
     note: "Năm 1978–1979, quan hệ Việt – Trung xấu đi kéo theo 'nạn kiều': khoảng 250.000 người Hoa ở miền Bắc sang Trung Quốc bằng đường bộ, hàng trăm nghìn người ở miền Nam ra đi bằng ghe, phần lớn theo đường 'bán chính thức' có nộp vàng, và người gốc Hoa bị đưa ra khỏi các vị trí nhạy cảm. Họ Lý (李) ở Việt Nam có người Kinh, người Tày, Nùng, Dao ở miền núi phía Bắc và người Hoa cùng mang, nên khi rà soát gốc gác dễ bị đánh đồng.",
   },

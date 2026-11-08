@@ -100,9 +100,13 @@ function renderRes(): void {
 
 function renderCard(): void {
   const c = $('#card')!, y = S.year;
-  if (y >= Y1 && ERAS.every(e => S.picks[e.id])) {
+  // Đọc sử: điểm rẽ không bắt buộc, nên tới 2026 là xem được kết luận (chương chưa chọn để trống), kèm lối quay lại
+  // điểm rẽ sớm nhất còn bỏ ngỏ. Trò chơi: luôn đủ sáu (điểm rẽ chặn dòng thời gian).
+  const miss = ERAS.filter(e => !S.picks[e.id]);
+  if (y >= Y1 && (!isPlay() || !miss.length)) {
     c.className = 'card cta';
-    c.innerHTML = `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.</div></button><button class="rb" data-a="end" aria-label="Xem kết luận">→</button>`;
+    const m = miss[0];
+    c.innerHTML = `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">◆</button>` : '<button class="rb" data-a="end" aria-label="Xem kết luận">→</button>'}`;
     return;
   }
   const v = rt.focusEv, pk = v ? curPick(chYear(v)) : undefined;

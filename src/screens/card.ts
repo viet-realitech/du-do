@@ -51,7 +51,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   const noList = done ? c[2].map(() => null) : c[2].map(ch => canAfford(ch[2]));
   if (!done && noList.every(Boolean)) { const cheap = c[2].reduce((b, ch, i) => (cost(ch[2]) < cost(c[2][b][2]) ? i : b), 0); noList[cheap] = null; }
   if (inTour) { buzz(must ? [15, 30, 15] : 10); }
-  const near = c[1] !== 'all' && must;
+  const near = c[1] !== 'all' && c[1] !== '' && mustDecide(v); // thẻ bị biến cố riêng buộc (tn25 của họ Nguyễn) không phải vì chạm tới quê
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ ${must ? 'Dòng họ phải quyết định' : 'Dòng họ có thể hành động'} · ${v.y}</span><span class="mono muted">${esc(familyName())} · ${esc(h[1])}</span></div>
   <h2 style="margin:8px 0 6px">${esc(v.t)}</h2>
   <p class="muted" style="margin-bottom:6px">${esc(v.s)}</p>

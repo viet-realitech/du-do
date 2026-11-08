@@ -5,6 +5,7 @@ import { kindOf } from '../src/units';
 import { EV, ERAS } from '../src/data';
 import { NEXT } from '../src/play';
 import { CARD, VARIANT } from '../src/data/cards';
+import { SPECIAL } from '../src/data/cards2';
 
 let err = 0;
 const kinds: Record<string, number> = {}, acts: Record<string, number> = {};
@@ -80,7 +81,11 @@ for (const [id, vs] of Object.entries(VARIANT)) {
   if (!CARD[id]) { console.error(`LỖI VARIANT.${id}: không có thẻ gốc`); err++; continue; }
   for (const va of vs) {
     if (va.choices.length !== CARD[id][2].length) { console.error(`LỖI VARIANT.${id} ${va.regions}: ${va.choices.length} lựa chọn, thẻ gốc ${CARD[id][2].length}`); err++; }
-    for (const r of va.regions) if (!['B', 'T1', 'T2', 'NE', 'NW'].includes(r)) { console.error(`LỖI VARIANT.${id}: vùng ${r}`); err++; }
+    for (const r of va.regions || []) if (!['B', 'T1', 'T2', 'NE', 'NW'].includes(r)) { console.error(`LỖI VARIANT.${id}: vùng ${r}`); err++; }
+    for (const a of va.after || []) {
+      const [k, i] = a.split('='), sp = k.startsWith('x:') ? SPECIAL.find(c => c.id === k.slice(2)) : undefined, n = sp ? sp.choices.length : CARD[k]?.[2].length;
+      if (!n || !(+i >= 0 && +i < n)) { console.error(`LỖI VARIANT.${id}: after ${a} không có lựa chọn đó`); err++; }
+    }
   }
 }
 console.log('\n' + rows.join('\n'));

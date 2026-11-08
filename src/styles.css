@@ -123,11 +123,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .lt p { margin: 2px 0 0; font: 400 15px/1.3 var(--serif); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden }
 .lt .lg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink) }
 .lt .lg span { display: inline-flex; align-items: center; gap: 5px }
-@media (min-width: 700px) {
-  .lt { left: 14px; max-width: 560px } .lt p { font-size: 17px }
-  .lt-h { font-size: 13px } .slug { font-size: 12.5px; padding: 6px 10px } .fx-at { font-size: 12px }
-}
-@media (min-width: 1000px) { .lt p { font-size: 20px } .ttl h2 { font-size: 52px } }
 /* tít mở trận (scene.ts titleCard), rồi dòng nhỏ góc trên thay nhãn dân số trong lúc cảnh chạy */
 .ttl { position: absolute; left: 50%; top: 40%; z-index: 2; width: min(calc(100% - 100px), 440px); transform: translate(-50%, -50%) translateY(8px); opacity: 0; transition: opacity .45s, transform .45s cubic-bezier(.2, .8, .2, 1); text-align: center; background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); pointer-events: none }
 .ttl.on { opacity: 1; transform: translate(-50%, -50%) }
@@ -139,6 +134,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .ttl .sides i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); border: 1px solid #111; margin-right: 5px; vertical-align: -1px }
 .slug { position: absolute; left: 10px; top: 10px; z-index: 2; max-width: calc(100% - 70px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--paper); padding: 5px 8px; border-radius: 6px; font-size: 9.5px; letter-spacing: .06em; color: var(--ink2); pointer-events: none }
 .mapwrap.scn #popl { visibility: hidden }
+/* máy tính bảng / màn rộng: sau các luật gốc (.slug, .ttl h2, .fx-at) để thắng chúng (cùng độ ưu tiên) */
+@media (min-width: 700px) {
+  .lt { left: 14px; max-width: 560px } .lt p { font-size: 17px }
+  .lt-h { font-size: 13px } .slug { font-size: 12.5px; padding: 6px 10px } .fx-at { font-size: 12px }
+}
+@media (min-width: 1000px) { .lt p { font-size: 20px } .ttl { width: min(calc(100% - 100px), 560px) } .ttl h2 { font-size: 52px } }
 #map .dimr { fill: var(--paper); opacity: 0; transition: opacity .7s }
 .mapwrap.scn #map .dimr { opacity: .55 }
 #map .rip { transition: opacity .7s }

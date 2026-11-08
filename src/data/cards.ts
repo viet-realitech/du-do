@@ -126,7 +126,7 @@ export const CARDS: Card[] = [
     ['Nộp tiền để khỏi đi', 'Lo lót để không bị bắt lính.', { b: -10 }, 'Người giữ được, bạc mất.'],
   ]],
   ['tn25', '', [
-    ['Gửi con sang Quảng Châu', 'Theo lớp huấn luyện của Nguyễn Ái Quốc.', { d: -1, b: -6, u: 4, vm: 15, ph: -10 }, 'Người ấy về nước năm 1928, mang theo tờ báo Thanh Niên và một cái tên khác.'],
+    ['Gửi con sang Quảng Châu', 'Theo lớp huấn luyện của Nguyễn Ái Quốc.', { d: -1, b: -1, g: -3, u: 4, vm: 15, ph: -10 }, 'Người ấy về nước năm 1928, mang theo tờ báo Thanh Niên và một cái tên khác.'],
     ['Không biết chuyện này', 'Tin đến làng rất muộn.', {}, 'Một người cháu họ xa đi mà không ai hay.'],
   ]],
   ['cs30', 'all', [
@@ -143,7 +143,7 @@ export const CARDS: Card[] = [
     ['Đi lánh ở Vinh', 'Tránh cả hai bên.', { b: -6, g: -4 }, 'Trở về khi yên, thấy ruộng bỏ hoang một mùa.'],
   ]],
   ['mt36', 'all', [
-    ['Ra báo quốc ngữ', 'Mở tờ báo tỉnh, in tin Mặt trận Bình dân.', { b: -4, u: 6, vm: 6, ph: 3 }, 'Báo sống ba năm, đóng cửa năm 1939. Dòng họ có người biết viết.'],
+    ['Ra báo quốc ngữ', 'Mở tờ báo tỉnh, in tin Mặt trận Bình dân.', { b: -2, u: 6, vm: 6, ph: 3 }, 'Báo sống ba năm, đóng cửa năm 1939. Dòng họ có người biết viết.'],
     ['Mở hiệu buôn lớn', 'Thời làm ăn dễ.', { b: 12, g: 2 }, 'Hiệu buôn thành nhà mặt phố.'],
   ]],
   ['nh40', 'B', [
@@ -177,7 +177,7 @@ export const CARDS: Card[] = [
     ['Giấu gạo', 'Không giao dịch với lính nước ngoài.', { g: 2, lg: 3 }, 'Lính Tưởng lục soát hai lần, không thấy.'],
   ]],
   ['tk46', 'all', [
-    ['Tản cư theo kháng chiến', 'Bỏ nhà ra vùng tự do.', { g: -12, b: -6, d: -1, u: 7, vm: 20, ph: -20 }, 'Nhà bị đốt. Dòng họ sống bằng ruộng rẫy chín năm.'],
+    ['Tản cư theo kháng chiến', 'Bỏ nhà ra vùng tự do.', { g: -12, d: -1, u: 7, vm: 20, ph: -20 }, 'Nhà bị đốt. Dòng họ sống bằng ruộng rẫy chín năm.'],
     ['Ở lại vùng tạm chiếm', 'Giữ nhà, giữ ruộng.', { g: 2, b: 4, vm: -12, ph: 8, qg: 5 }, 'Nhà còn, nhưng mỗi đêm nghe tiếng súng mà không biết nên mong ai thắng.'],
     ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -2, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.'],
   ]],
@@ -331,7 +331,7 @@ export const CARDS: Card[] = [
   ]],
   ['ct78', 'NE', [
     ['Bị kiểm kê, mất cửa hàng', 'Dòng họ buôn bán ở Chợ Lớn.', { b: -25, g: -5, u: -5, nn: -15 }, 'Cửa hàng ba đời thành cửa hàng mậu dịch.'],
-    ['Giao nộp sớm, xin việc nhà nước', 'Chủ động hợp tác.', { b: -10, nn: 8 }, 'Làm công nhân viên trong chính tiệm của mình.'],
+    ['Giao nộp sớm, xin việc nhà nước', 'Chủ động hợp tác.', { b: -6, nn: 8 }, 'Làm công nhân viên trong chính tiệm của mình.'],
     ['Giấu vàng, chuẩn bị đi', 'Chôn vàng, tìm đường.', { b: -5, nn: -10 }, 'Vàng này mua được chỗ trên ghe năm 1980.'],
   ]],
   ['cp79', 'NW', [
@@ -403,8 +403,10 @@ export const CARD = Object.fromEntries(CARDS.map(c => [c[0], c])) as Record<stri
 
 /** Thẻ cả nước viết cho một vùng: lựa chọn thay thế theo vùng quê (B, T1, T2, NE, NW), cùng số lựa chọn với thẻ gốc
     (S.cards lưu chỉ số lựa chọn). npm run scenes kiểm số lựa chọn. */
-/** `notPicks`: không dùng bộ này nếu dòng họ đã chọn một trong các hướng đó (vd. nhà miền Bắc đã di cư vào Nam năm 1954). */
-export const VARIANT: Record<string, { regions: string[]; notPicks?: string[]; choices: Choice[] }[]> = {
+/** `notPicks`: không dùng bộ này nếu dòng họ đã chọn một trong các hướng đó (vd. nhà miền Bắc đã di cư vào Nam năm 1954).
+    `regions` bỏ trống: mọi vùng. `after`: chỉ dùng khi dòng họ đã chọn một trong các lựa chọn đó trước ('khoá=chỉ số'
+    như trong S.cards; biến cố riêng là 'x:id'), vd. đã có người vượt biên năm 1978 thì năm 1980 có đường bảo lãnh. */
+export const VARIANT: Record<string, { regions?: string[]; notPicks?: string[]; after?: string[]; choices: Choice[] }[]> = {
   // Hiệp ước Nhâm Tuất nhượng ba tỉnh miền Đông; ba tỉnh miền Tây còn thuộc Đại Nam tới 1867, Bắc và Trung còn xa chiến sự.
   // Hoà ước buộc Đại Nam bồi thường bốn triệu đồng trong mười năm.
   nt62: [
@@ -417,6 +419,16 @@ export const VARIANT: Record<string, { regions: string[]; notPicks?: string[]; c
       ['Đóng thuế đền chiến phí', 'Triều đình tăng thuế để trả khoản bồi thường cho Pháp và Tây Ban Nha.', { b: -6, u: 2, tr: 6 }, 'Rương bạc vơi đi. Quan huyện khen nhà đóng đủ, đóng sớm.'],
       ['Đón bà con Nam Kỳ chạy ra', 'Cho một nhà từ Gia Định chạy loạn ra ở nhờ.', { g: -5, d: 1, u: 4, lg: 4 }, 'Người khách kể về những đồn luỹ đã mất. Cả nhà ngồi nghe đến khuya.'],
       ['Than khóc rồi sống tiếp', 'Làm lễ cáo tổ tiên, rồi sống tiếp.', { lg: 3 }, 'Ruộng vẫn cày. Chuyện mất đất phương Nam thành câu chuyện kể bên bếp.'],
+    ] },
+  ],
+  // Đã có người trong họ đi trước (lý lịch 1978: "Tìm đường ra đi"; họ Lý 1979: "bán chính thức"): người tới nơi gửi
+  // thư, gửi tiền, và từ năm 1979 bảo lãnh được theo Chương trình Ra đi có trật tự (ODP, thoả thuận UNHCR – Việt Nam
+  // tháng 5.1979). Cùng thứ tự với thẻ gốc: đi cả nhà / ở lại / một đường hẹp hơn.
+  tn80: [
+    { after: ['x:x-lylich78=2', 'x:x-ly79=1'], choices: [
+      ['Cả nhà theo đường người đi trước', 'Người đi trước gửi về tên chủ ghe, nơi đón; bán nhà mua chỗ.', { b: -10, g: -8, d: -3, u: -3, nn: -20, my: 15 }, 'Lần này cả nhà đi. Ghe tới Pulau Bidong sau sáu ngày; người trong họ đi trước đứng chờ ở trại.'],
+      ['Ở lại, chờ thư', 'Sống bằng sổ gạo và những lá thư từ trại tị nạn.', { g: -6, nn: 5 }, 'Thư về đều đặn. Ở nhà vẫn xếp hàng mua gạo, nhưng biết người đi đã tới nơi.'],
+      ['Làm đơn xin đi diện đoàn tụ', 'Người đã tới nơi bảo lãnh; nộp đơn theo Chương trình Ra đi có trật tự (ODP).', { d: -1, u: -2, nn: -5, my: 8 }, 'Hồ sơ đi qua nhiều văn phòng và nhiều năm chờ; rồi một chuyến bay rời Tân Sơn Nhất, không phải một chiếc ghe.'],
     ] },
   ],
   // 30.4.1975 với một nhà còn ở miền Bắc: không di tản, không đón quân vào thành phố mình. Nhà đã di cư vào Nam năm 1954

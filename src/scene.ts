@@ -26,6 +26,8 @@ interface Run {
   onNext?: () => void;
   /** Trận khép (dòng kết hiện), theo đồng hồ của cảnh: lời kể bắt đầu ở đây. */
   onClose?: () => void;
+  /** Cảnh sẽ gọi onClose (trận đánh có sơ đồ và phần khép); cảnh di chuyển thì không, lời kể đọc ngay. */
+  closes?: boolean;
   /** Tiếng nền của trận (pháo xa / sóng): lúc hết (đồng hồ ảo), để nhảy nhịp thì phát lại phần còn lại. */
   bed?: { kind: 'rumble' | 'waves'; end: number };
   /** Màn hình ngang: danh sách các nhịp ở cột bên (#beats). */
@@ -118,7 +120,7 @@ export function sceneLen(v: HistEvent): number {
 /** Cảnh đang chạy còn bao lâu nữa mới đọc xong nhịp cuối (0 nếu không có cảnh). */
 export const sceneLeft = (): number => (cur && cur.alive ? Math.max(0, cur.len - vnow(cur)) : 0);
 /** Chiều cao dành cho phụ đề chân hình (để khung bản đồ và khung tư liệu chừa chỗ). */
-export const capH = (): number => (innerWidth >= 700 ? 82 : 72);
+export const capH = (): number => (innerWidth >= 1000 ? 100 : innerWidth >= 700 ? 82 : 72); // phụ đề 20 px (≥1000 px) cao ~96 px
 /** Thanh đang nằm dưới đáy bản đồ (thanh xem lại, hoặc thanh tour). */
 const barEl = () => document.getElementById('replb') || document.getElementById('tourb');
 
@@ -309,8 +311,9 @@ export const scenePaused = (): boolean => !!cur?.alive && !!cur.paused;
 /** Cảnh của sự kiện `id` đang chạy và có nhịp (sơ đồ trận / đường đi): ❚❚ giữ được nó. Cảnh khác (nhật ký, hiệp ước,
     sự kiện thường) thì ❚❚ dừng hẳn, ▶ kể lại bước đó. */
 export const holdable = (id: string | undefined): boolean => !!cur && cur.alive && cur.id === id && cur.marks.length > 0;
-/** Cảnh có nhịp của `id` đang chạy mà chưa tới phần khép: lời kể chờ khép (onClose), hẹn giờ dự phòng không chen vào. */
-export const beforeClose = (id: string): boolean => holdable(id) && vnow(cur!) < cur!.marks[cur!.marks.length - 1] - 50;
+/** Trận có phần khép của `id` đang chạy mà chưa tới lúc khép: lời kể chờ khép (onClose), hẹn giờ dự phòng không chen
+    vào. Cảnh di chuyển không có phần khép (không gọi onClose): không chờ. */
+export const beforeClose = (id: string): boolean => holdable(id) && !!cur!.closes && vnow(cur!) < cur!.marks[cur!.marks.length - 1] - 50;
 /** Chạm phụ đề: sang nhịp kế; hết nhịp thì để người mở cảnh quyết (tour đi tiếp, xem lại đứng yên). */
 function tapCaption(r: Run): void {
   if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: chạm phụ đề không làm gì (▶ để chạy tiếp)
@@ -879,6 +882,7 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
   if (h && !v.diary && bt.length) {
     const base = DRAW_AT + 120 + lead(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0);
     r.marks = [...B.map(b => base + b), base + total + (lead(v) ? OUTRO_AT : 0)];
+    r.closes = !!lead(v);
     r.list = beatList(r, v);
   }
   // trận đánh: khung tư liệu hiện sau khi các mũi tiến quân đã tới, để không che chúng

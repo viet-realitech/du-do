@@ -26,8 +26,9 @@ async function load(e: Era, big: boolean): Promise<string | null> {
   const m = w?.media.find(x => x.type === 'image' && !x.bad);
   if (!m) return null;
   const src = big ? m.src : m.thumb || m.src;
-  // phim hành trình (toàn màn hình): ảnh thu nhỏ của Commons (…/500px-…) thì thử bản 1600 px trước
-  const wide = big ? src.replace(/\/(\d+)px-/, (x, n) => (+n < 1280 ? '/1600px-' : x)) : src;
+  // phim hành trình (toàn màn hình): ảnh thu nhỏ của Commons (…/500px-…) thì thử bản 1280 px trước (Commons chỉ cấp
+  // các cỡ chuẩn: 1280 / 1920…; 1600 bị từ chối 400). Ảnh gốc nhỏ hơn thì probe hỏng, dùng lại ảnh thu nhỏ.
+  const wide = big ? src.replace(/\/(\d+)px-/, (x, n) => (+n < 1280 ? '/1280px-' : x)) : src;
   if (wide !== src && (await probe(wide, 600))) return wide;
   return (await probe(src, 120)) ? src : null;
 }

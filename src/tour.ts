@@ -81,15 +81,28 @@ export function startTour(eIn?: Era): void {
   live0();
   hidePop();
   const pc0 = !eIn && isPlay() ? pendingCard(S.year) : undefined;
-  const e = eIn || (pc0 ? evEra(pc0) : eraOf(S.year)); // thẻ còn nợ của chương trước (ĐBP 1954): kể tiếp chương ấy
+  // Đọc sử: dừng (■) ở Điện Biên Phủ (1954, chương 4) rồi ▶: kể tiếp chương của sự kiện đang xem khi chương ấy còn sự
+  // kiện sau nó (Genève, câu đố chương 4, điểm rẽ 5), không lặng lẽ sang chương 5
+  const f = !eIn && !isPlay() && rt.focusEv && rt.focusEv.y === S.year ? rt.focusEv : null, fe = f ? evEra(f) : undefined;
+  const all = fe && fe !== eraOf(S.year) ? allEv() : [], fi = f ? all.indexOf(f) : -1;
+  const cont = fi >= 0 && all.some((v, j) => j > fi && evEra(v) === fe);
+  const e = eIn || (pc0 ? evEra(pc0) : cont ? fe! : eraOf(S.year)); // thẻ còn nợ của chương trước (ĐBP 1954): kể tiếp chương ấy
   if (!S.picks[e.id] && isPlay()) {
     // Trò chơi: điểm rẽ chưa chọn sớm nhất phải chọn trước. Đọc sử: xem chương không cần chọn (chip "◆ Chọn hướng" mời chọn)
     const g = ERAS.find(x => !S.picks[x.id] && x.cy <= S.year);
     if (g) { openGate(g); return; }
   }
   if (S.year >= Y1) return;
-  const { L, end } = tourList(e);
-  const i0 = L.findIndex(v => v.y >= S.year); // bắt đầu từ năm đang đứng; đã qua hết các bước thì khép chương ngay
+  const tl = tourList(e), end = tl.end;
+  let L = tl.L, i0 = L.findIndex(v => v.y >= S.year); // bắt đầu từ năm đang đứng (đếm bước theo danh sách cả chương)
+  if (i0 < 0 && !isPlay()) {
+    // Đọc sử, chạy sau bước mẫu cuối của chương (vd. 1920: còn Thanh niên 1925): kể nốt các sự kiện còn lại của chương,
+    // không nhảy thẳng tới điểm rẽ kế
+    const tail = allEv().filter(v => evEra(v) === e && v.y >= S.year && v.y >= e.cy && !L.includes(v)), need = Math.min(4, tail.length);
+    const add = [...new Set(Array.from({ length: need }, (_, j) => tail[spread(j, need, tail.length)]))];
+    if (add.length) { i0 = L.length; L = [...L, ...add]; }
+  }
+  // không còn bước nào: khép chương ngay (tourStep), không tính là đã xem (không đố chương chưa xem)
   tour = { e, L, i: i0 < 0 ? L.length : i0, end, t: undefined, step: 0 };
   void preloadEra(ERAS[ERAS.indexOf(e) + 1]); // ảnh cho màn mở chương kế tiếp
   mood(eraMood(e.id));
@@ -100,7 +113,7 @@ export function startTour(eIn?: Era): void {
 function tourStep(): void {
   if (!tour) return;
   const { L, i } = tour;
-  if (i >= L.length) { finishTour(); return; }
+  if (i >= L.length) { finishTour(tour.step === 0); return; } // chưa kể bước nào (▶ ở cuối chương): như bỏ qua
   const v = L[i], step = ++tour.step;
   const live = () => !!tour && tour.step === step && !tour.paused;
   animYear(v.y, () => {
@@ -226,7 +239,8 @@ export function resumeTour(why?: 'overlay'): void {
   if (was === 'card') tour.i++;
   tourBar();
   // ▶ sau ❚❚: cảnh đã giữ chạy tiếp từ chỗ dừng (lời kể đã cắt thì không đọc lại); bước hẹn lại theo đồng hồ của cảnh
-  if (was === 'user' && scenePaused() && tour.next && tour.nextStep === tour.step) {
+  // (cảnh đang giữ phải là của bước tour, không phải cảnh "Xem diễn biến" đang mở đè lên: khi đó kể lại bước này)
+  if (was === 'user' && scenePaused() && tour.next && tour.nextStep === tour.step && holdable(tour.cur) && !document.getElementById('replb')) {
     resumeScene();
     const v = tour.L[tour.i];
     // lời kể còn nợ (trận chưa khép): say() sẽ hẹn bước khi bắt đầu kể; giờ chỉ hẹn bảo hiểm dài
@@ -281,7 +295,8 @@ function skipTour(): void {
       return;
     }
   }
-  finishTour(true);
+  // Đọc sử: chỉ tính là bỏ qua chương (không đố) khi thật sự bỏ qua bước (còn hơn một bước sau bước đang xem)
+  finishTour(isPlay() || tour.L.length - tour.i - 1 > 1);
 }
 
 /** Nút ▶ ở dòng thời gian: chạy / tạm dừng / chạy tiếp chương. */

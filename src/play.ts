@@ -70,7 +70,9 @@ export function cardOf(v: HistEvent): Card | undefined {
   if (v.diary) return undefined;
   const c = CARD[v.id];
   if (!c || S.cardv[v.id] === 'base') return c; // quyết trước khi có lựa chọn theo vùng: giữ bộ gốc
-  const picked = Object.values(S.picks), va = VARIANT[v.id]?.find(x => x.regions.includes(home()[3]) && !x.notPicks?.some(p => picked.includes(p)));
+  const picked = Object.values(S.picks), g = home()[3];
+  const va = VARIANT[v.id]?.find(x => (!x.regions || x.regions.includes(g)) && !x.notPicks?.some(p => picked.includes(p)) &&
+    (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })));
   return va ? [c[0], c[1], va.choices] : c;
 }
 /** Bắt buộc quyết định: cả nước, hoặc sự kiện chạm tới quê nhà. */
@@ -142,11 +144,20 @@ export function specialFor(v: HistEvent): SpecialCard | undefined {
   if (decided(v.id) || v.y < S.xFrom) return undefined;
   return SPECIAL.find(c => c.ev === v.id && matches(c.when, chYear(v)));
 }
+/** Thẻ không bắt buộc đã đi qua (trước năm y) mà còn bỏ ngỏ: chốt "không có biến cố riêng" (S.xs = ''). Gọi khi đổi
+    họ (Khai họ Nguyễn, lý lịch theo họ mẹ: biến cố của họ mới không "mọc" trên sự kiện cũ rồi kéo dòng thời gian lùi
+    lại) và khi tải bản lưu (bản lưu có trước một biến cố mới, như x-nguyen25 trên tn25). */
+export function lockPassed(y: number): void {
+  if (!isPlay()) return;
+  let n = 0;
+  for (const v of EV) if (v.y < y && !(v.id in S.xs) && cardOf(v) && !decided(v.id) && !mustDecide(v)) { S.xs[v.id] = ''; n++; }
+  if (n) save();
+}
 export const specialDecided = (c: SpecialCard) => 'x:' + c.id in S.cards;
 export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: string): Fx {
   S.cards['x:' + c.id] = i;
   const ch = c.choices[i], got = applyFx(ch[2]);
-  if (ch[4]) renameFamily(asFamily(newName || ch[4]), y, c.title);
+  if (ch[4]) { renameFamily(asFamily(newName || ch[4]), y, c.title); lockPassed(y + 1); } // sự kiện tới năm đổi họ: không mọc biến cố của họ mới
   save();
   return got;
 }
@@ -233,13 +244,14 @@ export function alignment(fx: Fx, y: number): -1 | 0 | 1 {
 
 /* ---------- mùa màng mỗi thế hệ ---------- */
 /** `lines`: các khoản danh nghĩa; `total`: phần đổi thực sau khi chặn ở 0 và 100. */
-export interface Harvest { lines: [string, Fx][]; total: Fx }
+/** `ry`: năm giữa thế hệ, năm xét bên cai quản quê (dòng "Bên cai quản"; ⌂ trên bảng mùa màng theo cùng năm này). */
+export interface Harvest { lines: [string, Fx][]; total: Fx; ry: number }
 /** Mùa màng của thế hệ vừa sống qua (`lived`), tính vào năm `y` nó khép lại; một lần mỗi thế hệ.
     Phụ thuộc bên cai quản quê nhà và làng xóm nghĩ gì về dòng họ. */
 export function harvest(lived: Era, y: number): Harvest | null {
   if (!isPlay() || S.harvests.includes(lived.id)) return null;
   // bên cai quản quê trong thế hệ vừa sống (giữa thế hệ), không phải bên vừa tới lúc nó khép lại
-  const r = ruler(Math.round((lived.cy + y) / 2)), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
+  const ry = Math.round((lived.cy + y) / 2), r = ruler(ry), rv = r ? S.rel[r] : 45, lg = S.rel.lg;
   // phe dòng họ theo (nếu không phải bên cai quản): được che chở, có người, có tiếng — trung thành không thành gánh nặng
   // đường dòng họ theo, đo bằng chính cách đọc của nhãn Hợp/Trái (ALIGN): Cần Vương, Đông Du, Quốc dân đảng là chống Pháp
   // (không phải lòng tin của triều đình bảo hộ); đường chỉ đọc qua làng xóm đã có dòng "Làng xóm"; bên cai quản mà là
@@ -270,7 +282,7 @@ export function harvest(lived: Era, y: number): Harvest | null {
   const got = applyFx(total); // phần đổi thực (đã chặn ở 0 và 100)
   S.harvests.push(lived.id);
   save();
-  return { lines: shown, total: got };
+  return { lines: shown, total: got, ry };
 }
 
 /* ---------- kết cục ---------- */

@@ -1,7 +1,7 @@
 import { av } from '../ui/bits';
 import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT, spellingOf, bornLine } from '../data/surnames';
 import { themeCards, applyTheme } from '../theme';
-import { HOMES, home, RES } from '../play';
+import { HOMES, home, RES, lockPassed } from '../play';
 import { switchMode } from '../state';
 import { setTab } from '../tabs';
 import { invalidateTrack, renderMain } from '../view';
@@ -111,7 +111,8 @@ export function goMode(m: 'read' | 'play'): void {
   invalidateTrack();
   applyTheme();
   setTab('map');
-  if (S.step === 'play') { renderMain(); if (ERAS_PENDING()) setYear(S.year, true); }
+  if (m === 'play') lockPassed(S.year); // bản lưu cũ: thẻ tuỳ chọn đã đi qua không mọc biến cố mới
+  if (S.step === 'play') { renderMain(); if (m === 'play' && ERAS_PENDING()) setYear(S.year, true); } // Đọc sử: điểm rẽ không tự mở
   else if (m === 'play') gameIntro();
   else intro();
 }

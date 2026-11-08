@@ -2,7 +2,7 @@ import type { HistEvent } from './data';
 import { S, save, rt, allEv } from './state';
 import { isPlay } from './play';
 import { on } from './ui/actions';
-import { clearLayer, esc } from './ui/dom';
+import { clearLayer, esc, markTab } from './ui/dom';
 import { hush, speak } from './narration';
 import { evKey, evSpeech } from './speech';
 import { SND } from './audio';
@@ -96,6 +96,7 @@ export function closeReplay(resume = true): void {
   // trang đó đóng mới đi tiếp. Không mở từ trang sự kiện: tour trò chơi tạm dừng thì đi tiếp.
   if (resume && b) openEvent(b.id, b.tab, b.ret); // giữ cả đích quay về của trang (bảng Sử liệu…)
   else if (resume) resumeTour('overlay');
+  else if (b?.ret) markTab('map'); // bị cắt (kéo thanh năm, chạm bản đồ…): không về bảng nữa, thanh tab về Bản đồ
 }
 
 on('replay', el => replayEvent(el.dataset.id!));

@@ -5,7 +5,7 @@ import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost, calm, announce } from '../ui/dom';
-import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, type Harvest } from '../play';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
@@ -64,7 +64,7 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
   <div class="rule"></div>
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div class="mono muted" style="margin-top:12px">Quan hệ</div>
-  <div class="fxs" style="margin-top:6px">${powersAt(y).map(k => relChip(k, y)).join('')}</div>
+  <div class="fxs" style="margin-top:6px">${[...new Set([...(ruler(h.ry) ? [ruler(h.ry)!] : []), ...powersAt(y)])].map(k => relChip(k, h.ry)).join('')}</div>
   <div style="height:16px"></div><button class="btn" id="hv-go">${esc(go)} ›</button>`);
   renderMain();
   d.querySelector<HTMLButtonElement>('#hv-go')!.onclick = () => { ghost(d); next(); };
@@ -119,8 +119,9 @@ function choice(e: Era, quiet: boolean): void {
   // Nghe lời dẫn xong mới chọn: các hướng mờ và khoá cho tới khi giọng đọc kể hết (hoặc người chơi bỏ qua);
   // không có giọng đọc thì mở sau một quãng đủ đọc câu hỏi.
   let open = false, sync = true;
+  // bảng đã đóng ("chọn sau"): ghost() còn giữ nó ~320 ms ngoài #layer để mờ dần, nên xét layer.contains, không isConnected
   const release = () => {
-    if (open || !d.isConnected) return;
+    if (open || !layer.contains(d)) return;
     open = true;
     const had = !!d.querySelector('#lst')?.contains(document.activeElement); // "Chọn ngay ›" đang giữ tiêu điểm
     d.querySelector('#lst')?.remove();
@@ -130,7 +131,7 @@ function choice(e: Era, quiet: boolean): void {
     SND.tick();
   };
   const say = setTimeout(() => {
-    if (!d.isConnected) return; // đã đóng ("chọn sau") trước khi lời dẫn bắt đầu
+    if (!layer.contains(d)) return; // đã đóng ("chọn sau") trước khi lời dẫn bắt đầu
     const spoke = speak(gateSpeech(e), () => { if (!sync) release(); }, false, gateKey(e));
     sync = false;
     if (!spoke) setTimeout(release, Math.min(6000, 1800 + e.q.length * 35));
@@ -232,4 +233,4 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
 on('watch', el => { clearLayer(); renderMain(); checkBadges(); startTour(ERAS.find(x => x.id === el.dataset.e)); });
 
 /** Đọc sử: "Đọc chương trước, chọn sau ›" — đóng điểm rẽ, ở lại năm đó; chip "◆ Chọn hướng" ở đầu trang vẫn mời chọn. */
-on('gate-later', el => { hush(); const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); rt.gate = null; renderMain(); });
+on('gate-later', el => { hush(); mood('calm'); const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); rt.gate = null; renderMain(); });
