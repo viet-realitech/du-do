@@ -105,6 +105,8 @@ export const rt = {
   card: null as HistEvent | null,
   /** Chế độ Chơi: năm mà luồng đang tự chạy tới (qua các thẻ bắt buộc) trước khi mở điểm rẽ. */
   flowTo: null as number | null,
+  /** Đọc sử: chương vừa xem hết tour (câu đố của chương chỉ hỏi khi vừa xem xong). */
+  toured: null as string | null,
 };
 
 /** Còn điểm rẽ chưa chọn tính đến năm hiện tại. */

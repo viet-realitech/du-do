@@ -21,7 +21,10 @@ import { fxOn } from '../scene';
 export function openGate(e: Era): void {
   rt.flowTo = null;
   const prev = ERAS[ERAS.indexOf(e) - 1];
-  const next = () => { if (prev && !S.quiz[prev.id]) openQuiz(prev.id, () => openChoice(e)); else openChoice(e); };
+  // Đọc sử: câu đố của chương trước chỉ khi vừa xem hết tour chương đó (không đố chương người đọc chưa xem)
+  const quiz = prev && !S.quiz[prev.id] && (isPlay() || rt.toured === prev.id);
+  rt.toured = null;
+  const next = () => { if (quiz) openQuiz(prev!.id, () => openChoice(e)); else openChoice(e); };
   // Trò chơi: khép lại thế hệ vừa sống (mùa màng) trước khi đố và bước vào điểm rẽ mới.
   const h = prev ? harvest(prev, e.cy) : null;
   if (prev && h) openHarvest(prev, h, e.cy, S.quiz[prev.id] ? `Bước vào điểm rẽ ${e.n}` : `Đố nhanh chương ${prev.n}`, next); else next();

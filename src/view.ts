@@ -40,8 +40,10 @@ export function renderMain(): void {
   $('#eraNo')!.textContent = `Chương ${e.n}/6 · Thế hệ ${e.n}`;
   $('#eraT')!.textContent = e.title;
   const er = $('#eraR')!;
-  er.innerHTML = pk ? `${av(pk.guide)}${esc(pk.label)}` : 'Chưa chọn';
-  if (pk) { er.dataset.a = 'fig'; er.dataset.id = pk.guide; } else delete er.dataset.a;
+  er.innerHTML = pk ? `${av(pk.guide)}${esc(pk.label)}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng';
+  if (pk) { er.dataset.a = 'fig'; er.dataset.id = pk.guide; }
+  else if (!isPlay()) { er.dataset.a = 'pickera'; er.dataset.id = e.id; } // Đọc sử: điểm rẽ của chương, không bắt buộc
+  else delete er.dataset.a;
   $('#lbl')!.textContent = R.label;
   const pp = pop(y);
   $('#popl')!.textContent = pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu';
@@ -142,7 +144,9 @@ let lastTick = 0;
 /** Move to year `y`, stopping at the first unanswered turning point. `open` shows that turning point. */
 export function setYear(yIn: number, open = false): void {
   let y = Math.max(Y0, Math.min(Y1, Math.round(yIn)));
-  const pend = pendingGate(y);
+  // Đọc sử: thanh năm đi tự do (không kéo về điểm rẽ chưa chọn); điểm rẽ chỉ mở khi chủ ý tới đúng năm của nó
+  // (bắt đầu, xem hết chương). Trò chơi: dừng ở điểm rẽ chưa chọn như trước.
+  const pend = isPlay() ? pendingGate(y) : open ? ERAS.find(e => !S.picks[e.id] && e.cy === y) : undefined;
   rt.gate = null;
   rt.card = null;
   if (pend) { y = pend.cy; rt.gate = pend; }
@@ -169,7 +173,7 @@ export function stepEv(d: number): void {
   const list = visEv(), i = rt.focusEv ? list.indexOf(rt.focusEv) : -1, j = i + d;
   if (j < 0 || j >= list.length) return;
   const v = list[j];
-  if (pendingGate(v.y) || pendingCard(v.y)) { setYear(v.y, true); return; }
+  if ((isPlay() && pendingGate(v.y)) || pendingCard(v.y)) { setYear(v.y, true); return; }
   S.year = v.y;
   rt.focusEv = v;
   save();
@@ -221,5 +225,6 @@ export function initMainControls(): void {
   on('ev', el => openEvent(el.dataset.id!, (el.dataset.tab as 'x' | 'v' | 'm' | 's') || 'x')); // data-tab: mở thẳng một thẻ (Góc nhìn từ khép trận)
   on('fig', el => openFig(el.dataset.id!));
   on('end', () => (isPlay() ? endGame(ERAS[ERAS.length - 1]) : goEnd()));
+  on('pickera', el => { const g = ERAS.find(x => x.id === el.dataset.id); if (g) { stopTour(); openGate(g); } });
   initTimeline();
 }

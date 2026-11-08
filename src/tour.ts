@@ -68,7 +68,8 @@ export function startTour(eIn?: Era): void {
   hidePop();
   const e = eIn || eraOf(S.year);
   if (!S.picks[e.id]) {
-    const g = ERAS.find(x => !S.picks[x.id] && x.cy <= S.year);
+    // Trò chơi: điểm rẽ chưa chọn sớm nhất; Đọc sử: chỉ điểm rẽ của chính chương sắp xem
+    const g = isPlay() ? ERAS.find(x => !S.picks[x.id] && x.cy <= S.year) : e;
     if (g) { openGate(g); return; }
   }
   if (S.year >= Y1) return;
@@ -139,11 +140,12 @@ function animYear(to: number, cb: () => void): void {
 }
 
 function finishTour(): void {
-  const end = tour!.end;
+  const end = tour!.end, done = tour!.e.id;
   stopTour();
   zoomTo(null);
   // Trò chơi: thẻ bắt buộc còn sót (sau khi bỏ qua tour) mở lần lượt, rồi điểm rẽ kế hoặc kết cục (setYear).
   if (isPlay()) rt.flowTo = end;
+  else rt.toured = done; // Đọc sử: vừa xem hết chương này, câu đố của nó hỏi trước điểm rẽ kế
   setTimeout(() => setYear(end, true), 950);
 }
 

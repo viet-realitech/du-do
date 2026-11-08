@@ -57,6 +57,19 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   expect(errors).toEqual([]);
 });
 
+test('reading mode: the timeline moves freely past unchosen turning points; the chapter chip offers the choice', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1936, picks: { e1: 'chien', e2: 'duytan' }, quiz: {} });
+  const trk = (await page.locator('#trk').boundingBox())!;
+  await page.mouse.click(trk.x + ((1960 - 1858) / (2026 - 1858)) * trk.width, trk.y + trk.height / 2);
+  await expect(page.locator('#yr')).toHaveText(/196[01]/);
+  await expect(page.locator('#layer .scrim')).toHaveCount(0); // no quiz, no forced turning point
+  await expect(page.locator('#eraR')).toHaveText('◆ Chọn hướng');
+  await page.locator('#eraR').click();
+  await expect(page.locator('#layer .scrim .opt').first()).toBeVisible({ timeout: 8000 }); // the chapter's own choice, no quiz first
+  await expect(page.getByText('ĐỐ NHANH')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)
