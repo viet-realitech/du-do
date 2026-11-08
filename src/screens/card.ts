@@ -1,14 +1,14 @@
 import { type SpecialCard } from '../data/cards2';
 import { closeReplay } from '../replay';
 import { SURNAMES, surnameKey } from '../data/surnames';
-import type { HistEvent } from '../data';
+import { ERAS, type HistEvent } from '../data';
 import type { Fx } from '../data/cards';
 import { S, rt, familyName, allEv, chYear } from '../state';
 import { on } from '../ui/actions';
 import { esc, sheet, toast, ghost, calm } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { SND, buzz } from '../audio';
-import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial } from '../play';
+import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial, ruler } from '../play';
 import { pauseForCard } from '../tour';
 import { layer } from '../ui/dom';
 import { renderMain, continueFlow } from '../view';
@@ -123,7 +123,10 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
   if (noList.every(Boolean)) { const cheap = sp.choices.reduce((b, ch, i) => (cost(ch[2]) < cost(sp.choices[b][2]) ? i : b), 0); noList[cheap] = null; }
   const mine = S.surname || surnameKey(S.name);
   const moms = SURNAMES.filter(s => s.key !== mine).slice(0, 8);
-  sh.insertAdjacentHTML('beforeend', `<div class="rule"></div><div class="mono" style="color:var(--acc)">◆ Biến cố riêng của ${esc(familyName())}</div>
+  // vì họ: "của Họ X"; vì đường cha ông theo / phe / quê / gia sản: nói đúng lý do (không ngụ ý vì cái tên)
+  const w = sp.when, pk = w.picks ? ERAS.flatMap(e => e.opts).find(o => w.picks!.includes(o.id) && Object.values(S.picks).includes(o.id)) : undefined;
+  const why = w.surnames ? `riêng của ${familyName()}` : pk ? `của gia đình · vì đã theo ${pk.label}` : w.camps ? 'của gia đình · vì phe đang theo' : w.homes ? `của gia đình · ở ${home()[1]}` : 'của gia đình';
+  sh.insertAdjacentHTML('beforeend', `<div class="rule"></div><div class="mono" style="color:var(--acc)">◆ Biến cố ${esc(why)}</div>
   <h3 style="margin:6px 0 4px">${esc(sp.title)}</h3><p class="muted" style="margin-bottom:8px">${esc(sp.s)}</p>
   <div role="radiogroup" class="xopts">${sp.choices.map((ch, i) => `<button class="opt" data-x="${i}" role="radio" aria-checked="false"${noList[i] ? ' disabled' : ''}>
     <div class="tt"><h3>${esc(ch[0])}</h3>${noList[i] ? `<span class="mono" style="color:var(--red)">${noList[i]}</span>` : ch[4] ? '<span class="al mono">Đổi họ</span>' : alTag(alignment(ch[2], chYear(v)))}</div><p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div></button>`).join('')}</div>
@@ -164,9 +167,10 @@ on('card', el => {
 on('close-card', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); continueFlow(); });
 
 /** Chip quan hệ cho chú giải màn chính. */
-export const relChip = (k: keyof typeof POWERS) => {
-  const [name, fac] = POWERS[k], v = S.rel[k];
-  return `<span class="relc" title="${name}">${fac ? flag(fac) : '<i class="dot"></i>'}${name} · <b class="${v >= 55 ? 'ok' : v >= 40 ? '' : 'bad'}">${relLabel(v)}</b></span>`;
+/** `y`: năm để đánh dấu ⌂ bên đang cai quản quê (bên quyết định mùa màng). */
+export const relChip = (k: keyof typeof POWERS, y?: number) => {
+  const [name, fac] = POWERS[k], v = S.rel[k], rules = y !== undefined && ruler(y) === k;
+  return `<span class="relc" title="${rules ? `${name}: đang cai quản ${esc(home()[1])}` : name}">${rules ? '⌂ ' : ''}${fac ? flag(fac) : '<i class="dot"></i>'}${name} · <b class="${v >= 55 ? 'ok' : v >= 40 ? '' : 'bad'}">${relLabel(v)}</b></span>`;
 };
 
 export { toast };

@@ -82,6 +82,11 @@ export function mustDecide(v: HistEvent): boolean {
   return c[1].split(',').some(r => r === g || (g === 'QT' && (r === 'T1' || r === 'T2')));
 }
 export const decided = (id: string) => id in S.cards;
+/** Thẻ dành cho dòng họ này: thẻ bắt buộc (cả nước / chạm quê) hay thẻ tuỳ chọn chung (phạm vi ''); thẻ tuỳ chọn của
+    vùng khác (vd. giữ thành Hà Nội 1882 với nhà ở Nghệ An) không mời. */
+export const localCard = (v: HistEvent): boolean => { const c = cardOf(v); return !!c && (c[1] === '' || mustDecide(v)); };
+/** Thẻ hiện cho dòng họ này (nút ◆ / ✓): thẻ của mình, thẻ đã quyết từ trước, hay có biến cố riêng gắn vào. */
+export const ownCard = (v: HistEvent): boolean => isPlay() && !!cardOf(v) && (localCard(v) || decided(v.id) || !!specialFor(v));
 /** Trang nhật ký (người viết đi xa) và việc cả họ ở nhà vừa quyết gần nhất trong cùng chương: lựa chọn, và nó hợp (1) /
     trái (-1) / không liên quan (0) với hướng thế hệ này theo. Trò chơi; null nếu chưa quyết thẻ nào. */
 export function homeChoice(v: HistEvent): { v: HistEvent; ch: Choice; al: -1 | 0 | 1 } | null {

@@ -1,4 +1,4 @@
-import { isPlay, cardOf, decided, homeChoice } from '../play';
+import { isPlay, decided, homeChoice, ownCard } from '../play';
 import { mood } from '../music';
 import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
@@ -59,7 +59,7 @@ export function openEvent(id: string, tab: Tab = 'x'): void {
 
   const vs = [...v.v].sort((a, b) => Number(b[0] === mine) - Number(a[0] === mine));
   layer.innerHTML = `<div class="ov">
-  <div class="row sb">${closeBtn}<span class="mono muted" style="flex:1;text-align:center">Chương ${e.n}</span>${isPlay() && cardOf(v) ? `<button class="chip${decided(v.id) ? '' : ' on'}" data-a="card" data-id="${v.id}">${decided(v.id) ? '✓ Đã quyết' : '◆ Dòng họ làm gì?'}</button>` : ''}<button class="chip nbtn" data-a="listen" data-id="${v.id}">▶ Nghe</button></div>
+  <div class="row sb">${closeBtn}<span class="mono muted" style="flex:1;text-align:center">Chương ${e.n}</span>${ownCard(v) ? `<button class="chip${decided(v.id) ? '' : ' on'}" data-a="card" data-id="${v.id}">${decided(v.id) ? '✓ Đã quyết' : '◆ Dòng họ làm gì?'}</button>` : ''}<button class="chip nbtn" data-a="listen" data-id="${v.id}">▶ Nghe</button></div>
   <div class="hero"><image-slot id="ev-${v.id}" shape="rect" busy placeholder="Đang tìm ảnh tư liệu…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">⤢</button>${canReplay(v) ? `<button class="hplay" data-a="replay" data-id="${v.id}">▶ Xem diễn biến</button>` : ''}</div>
   <div style="margin-top:14px" class="mono"><span style="color:var(--red)">${KIND_ICON[v.k] || '●'} ${v.k}</span> · ${v.d}</div>
   <h1 style="margin:8px 0 6px;font-size:30px">${esc(v.t)}</h1>

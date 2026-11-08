@@ -31,6 +31,13 @@ export function kinIn(o: Option): { id: string; fam: string; birth: boolean } | 
 }
 const kinLabel = (k: { fam: string; birth: boolean }) => `Cùng họ ${k.fam}${k.birth ? ' (khai sinh)' : ''}`;
 
+/** Câu nối thế hệ 1 cho quê ngoài Nam Kỳ: far = Bắc Kỳ, Nghệ An; t2 = Huế, Quảng Nam (gần Đà Nẵng, Kinh đô). */
+const BRIDGE: Record<string, { far?: string; t2?: string }> = {
+  chien: { far: 'Người con trai cả rời quê, theo quân Nguyễn Tri Phương xuống Đà Nẵng rồi vào Gia Định.', t2: 'Người con trai cả theo quân Nguyễn Tri Phương từ luỹ Liên Trì vào Gia Định.' },
+  canhtan: { far: 'Người con thứ vào Kinh đô Huế học việc, chép lại những bản điều trần của Nguyễn Trường Tộ.' },
+  hoa: { far: 'Người con trai cả theo sứ bộ Phan Thanh Giản vào Nam làm thư lại.', t2: 'Người con trai cả theo sứ bộ Phan Thanh Giản vào Nam làm thư lại.' },
+};
+
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
   rt.flowTo = null;
@@ -57,7 +64,7 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
   <div class="rule"></div>
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div class="mono muted" style="margin-top:12px">Quan hệ</div>
-  <div class="fxs" style="margin-top:6px">${powersAt(y).map(relChip).join('')}</div>
+  <div class="fxs" style="margin-top:6px">${powersAt(y).map(k => relChip(k, y)).join('')}</div>
   <div style="height:16px"></div><button class="btn" id="hv-go">${esc(go)} ›</button>`);
   renderMain();
   d.querySelector<HTMLButtonElement>('#hv-go')!.onclick = () => { ghost(d); next(); };
@@ -178,10 +185,13 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   mood('calm');
   renderMain();
   const fs = Object.keys(FIG).filter(id => FIGERA[id] === e.id), kin = kinIn(o);
+  // Trò chơi, thế hệ 1: kết cục và nhật ký đặt ở Nam Kỳ (Chí Hoà, Gò Công, sứ bộ ở Sài Gòn); quê ngoài Nam Kỳ thì nói ai
+  // trong nhà đã đi vào đó, để quê đã chọn không bị lờ đi
+  const reg = home()[3], bridge = isPlay() && e.n === 1 && reg !== 'NE' && reg !== 'NW' ? (BRIDGE[o.id]?.[reg === 'T2' ? 't2' : 'far'] || '') : '';
   if (fxOn()) SND.vow();
   // ngọn cờ của hướng vừa chọn mở ra, người đồng hành bước vào: dòng họ đứng về một phía
   sheet(`<div class="unfurl">${o.fac ? flag(o.fac) : `<i class="flag nf"></i>`}<div class="uf-t"><span class="mono">Thế hệ ${e.n} chọn · ${e.cy}</span><b>${o.label}</b></div>${av(o.guide, 52)}</div>
-  <h2 style="margin:14px 0 8px">Con đường của bạn</h2><p>${o.out}</p>
+  <h2 style="margin:14px 0 8px">Con đường của bạn</h2>${bridge ? `<p>${bridge}</p>` : ''}<p>${o.out}</p>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${fxChips(o.fx)}</div>
   ${isPlay() && Object.keys(eraFx(o.id)).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(eraFx(o.id), got)}</div>` : ''}
   <div class="rule"></div>

@@ -1,4 +1,4 @@
-import { isPlay, mustDecide, pendingCard, needsDecision, specialFor, homeChoice } from './play';
+import { isPlay, mustDecide, pendingCard, needsDecision, specialFor, homeChoice, localCard, ownCard } from './play';
 import { openCard } from './screens/card';
 import { mood, eraMood } from './music';
 import { ERAS, type Era, type HistEvent } from './data';
@@ -47,12 +47,14 @@ const spread = (j: number, need: number, len: number) => (need <= 1 || len <= 1 
 function tourList(e: Era): { L: HistEvent[]; end: number } {
   const i = ERAS.indexOf(e), nx = ERAS[i + 1], end = nx ? nx.cy : Y1;
   // sự kiện của chương (evEra: trang nhật ký theo hướng đã mở nó, Điện Biên Phủ / Genève khép chương 4), từ năm đang đứng
-  let L = allEv().filter(v => evEra(v) === e && v.y >= Math.max(e.cy, S.year));
+  // cả chương (không chỉ từ năm đang đứng): chạy tiếp giữa chương thì đếm bước theo cùng một danh sách (4/8, không 1/5)
+  let L = allEv().filter(v => evEra(v) === e && v.y >= e.cy);
   if (isPlay()) {
     // Trò chơi: mọi thẻ bắt buộc còn bỏ ngỏ và nhật ký luôn có mặt, phần còn lại lấy đều, ưu tiên sự kiện có thẻ.
     const must = L.filter(v => !v.diary && (mustDecide(v) || !!specialFor(v)) && needsDecision(v)), d = L.filter(v => v.diary);
     const rest = L.filter(v => !must.includes(v) && !v.diary);
-    const pool = rest.filter(needsDecision).length >= 3 ? rest.filter(needsDecision) : rest;
+    const owed = rest.filter(v => needsDecision(v) && localCard(v)); // thẻ tuỳ chọn của vùng khác không mời
+    const pool = owed.length >= 3 ? owed : rest;
     const need = Math.max(0, 10 - must.length - d.length), pick: HistEvent[] = [];
     for (let j = 0; j < need && pool.length; j++) pick.push(pool[spread(j, need, pool.length)]);
     L = [...new Set([...must, ...d, ...pick])].sort((a, b) => a.y - b.y || (a.diary ? 1 : 0) - (b.diary ? 1 : 0));
@@ -82,7 +84,8 @@ export function startTour(eIn?: Era): void {
   }
   if (S.year >= Y1) return;
   const { L, end } = tourList(e);
-  tour = { e, L, i: 0, end, t: undefined, step: 0 };
+  const i0 = L.findIndex(v => v.y >= S.year); // bắt đầu từ năm đang đứng; đã qua hết các bước thì khép chương ngay
+  tour = { e, L, i: i0 < 0 ? L.length : i0, end, t: undefined, step: 0 };
   void preloadEra(ERAS[ERAS.indexOf(e) + 1]); // ảnh cho màn mở chương kế tiếp
   mood(eraMood(e.id));
   tourBar();
@@ -108,7 +111,7 @@ function tourStep(): void {
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
     // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
-    const card = isPlay() && needsDecision(v), rush = !!tour!.rush, voiced = !rush && S.narr && canSpeak(evKey(v));
+    const card = isPlay() && needsDecision(v) && ownCard(v), rush = !!tour!.rush, voiced = !rush && S.narr && canSpeak(evKey(v));
     // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s); "Điểm rẽ ›": bay tới, mở thẻ ngay
     const hold = fr ? sceneHold(v) : 0, cardAt = rush ? 1700 : fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
     // bước nhịp (›, chạm phụ đề): cảnh ngắn lại thì hẹn lại bước tour; đang có lời kể thì để lời kể xong tự đi tiếp
@@ -120,7 +123,7 @@ function tourStep(): void {
     if (!rush) playScene(v, card && !voiced ? cardAt : Infinity, undefined, stepped, onward, say); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
-    const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
+    const openIt = () => { if (!live()) return; if (!needsDecision(v) || !ownCard(v)) advance(); else pauseForCard(v); };
     const next = (d: number) => {
       if (!live()) return;
       clearTimeout(tour!.t);

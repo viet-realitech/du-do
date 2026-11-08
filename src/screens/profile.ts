@@ -50,7 +50,7 @@ export function paneMe(): void {
   }).join('')}
   ${isPlay() ? `<h3 style="margin:22px 0 10px">Gia sản dòng họ · ${esc(home()[1])}</h3>
   <div class="gs">${RES.map(([k, n, ic]) => `<div class="pv"><div class="mono muted">${ic} ${n}</div><b>${S.res[k]}</b></div>`).join('')}</div>
-  <div class="mono muted" style="margin:14px 0 6px">Quan hệ hiện nay</div><div class="fxs">${powersAt(S.year).map(relChip).join('')}</div>
+  <div class="mono muted" style="margin:14px 0 6px">Quan hệ hiện nay</div><div class="fxs">${powersAt(S.year).map(k => relChip(k, S.year)).join('')}</div>
   <div class="mono muted" style="margin:14px 0 6px">Đã quyết định ${decidedCount()} thẻ sự kiện · hiện là <b style="color:var(--acc)">${rank()[0]}</b></div>` : ''}
   <h3 style="margin:22px 0 6px">Luồng đang mở</h3>
   <div class="pv"><div class="row sb"><div><b style="font:700 18px var(--disp)">${isPlay() ? '◆ Trò chơi dòng họ' : '❧ Đọc sử'}</b><div class="muted" style="font-size:14px;margin-top:2px">${isPlay() ? 'Gia sản, thẻ sự kiện, mùa màng. Tiến độ lưu riêng.' : 'Sáu điểm rẽ, bản đồ, tư liệu. Không có tài nguyên.'}</div></div>

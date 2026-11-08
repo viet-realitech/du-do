@@ -26,6 +26,9 @@ async function load(e: Era, big: boolean): Promise<string | null> {
   const m = w?.media.find(x => x.type === 'image' && !x.bad);
   if (!m) return null;
   const src = big ? m.src : m.thumb || m.src;
+  // phim hành trình (toàn màn hình): ảnh thu nhỏ của Commons (…/500px-…) thì thử bản 1600 px trước
+  const wide = big ? src.replace(/\/(\d+)px-/, (x, n) => (+n < 1280 ? '/1600px-' : x)) : src;
+  if (wide !== src && (await probe(wide, 600))) return wide;
   return (await probe(src, 120)) ? src : null;
 }
 /** Tải sẵn ảnh tư liệu của chương (một lần; gọi trước khi cần: lúc tour chương trước chạy, lúc mở màn kết). */
@@ -40,7 +43,19 @@ export function eraImage(e: Era, ms: number, big = false): Promise<string | null
   return Promise.race([preloadEra(e, big), new Promise<null>(res => setTimeout(() => res(null), ms))]);
 }
 
-const imgHtml = (src: string | null, y: number) => (src ? `<div class="cine-img${y < 1976 ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -5 : 5}%;--ky:${Math.round((Math.random() - 0.5) * 6)}%"><img alt="" src="${esc(src)}"></div>` : '<div class="cine-img none"></div>');
+const imgHtml = (src: string | null, y: number) => (src ? `<div class="cine-img${y < 1976 ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -5 : 5}%;--ky:${Math.round((Math.random() - 0.5) * 6)}%"><img class="bgb" alt="" src="${esc(src)}"><img class="fg" alt="" src="${esc(src)}"></div>` : '<div class="cine-img none"></div>');
+/** Ảnh quá nhỏ cho màn hình (phóng hơn ~1,7 lần thì vỡ hạt) hay khác chiều (ảnh ngang trên màn dọc): hiện trọn ảnh, nền là
+    chính ảnh ấy làm mờ, không phóng kiểu Ken Burns. */
+function fitLowRes(root: ParentNode): void {
+  root.querySelectorAll<HTMLImageElement>('.cine-img img.fg').forEach(img => {
+    const check = () => {
+      if (!img.naturalWidth) return;
+      const low = img.naturalWidth < 0.6 * innerWidth * (devicePixelRatio || 1), turned = Math.sign(img.naturalWidth - img.naturalHeight) !== Math.sign(innerWidth - innerHeight);
+      if (low || turned) img.parentElement?.classList.add('fit');
+    };
+    if (img.complete) check(); else img.addEventListener('load', check, { once: true });
+  });
+}
 
 /** Huỷ màn mở chương đang chạy (không gọi `done` của nó) khi một màn mới thay chỗ. */
 let killOpener: (() => void) | null = null;
@@ -71,7 +86,7 @@ export function opener(e: Era, done: (played: boolean) => void): void {
   app.inert = true; // bàn phím / trình đọc màn hình không lọt xuống bản đồ phía sau
   box.querySelector<HTMLElement>('.skip')!.focus({ preventScroll: true });
   requestAnimationFrame(() => box.classList.add('on'));
-  void eraImage(e, 1400).then(src => { if (src && !over) { const old = box.querySelector('.cine-img')!; old.outerHTML = imgHtml(src, e.cy); } });
+  void eraImage(e, 1400).then(src => { if (src && !over) { const old = box.querySelector('.cine-img')!; old.outerHTML = imgHtml(src, e.cy); fitLowRes(box); } });
   // năm đếm từ điểm rẽ trước lên năm của điểm rẽ này
   const yr = box.querySelector<HTMLElement>('.yr')!, t0 = performance.now(), dur = 1500;
   const tick = (now: number) => {
@@ -234,6 +249,7 @@ export function montage(): void {
     sc.innerHTML = html;
     stage.querySelectorAll('.scene-s').forEach(o => { o.classList.add('gone'); setTimeout(() => o.remove(), 700); });
     stage.appendChild(sc);
+    fitLowRes(sc);
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {
       const key = S.surname || surnameKey(S.name), parts: [string, string][] = [];

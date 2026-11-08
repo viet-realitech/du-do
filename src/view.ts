@@ -4,7 +4,7 @@ import { on } from './ui/actions';
 import { $, esc } from './ui/dom';
 import { av, flag } from './ui/bits';
 import { paintMap, paintHome } from './map';
-import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice } from './play';
+import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice, ownCard } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
 import { stopTour, isTourPaused, resumeTour, canResumeChapter, tourEra } from './tour';
@@ -56,7 +56,7 @@ export function renderMain(): void {
   $('#popl')!.textContent = pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu';
   $('#legend')!.innerHTML = R.legend
     .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
-    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(relChip).join('') : '');
+    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(k => relChip(k, y)).join('') : '');
   legendEdge();
   paintMap();
   paintHome(isPlay() ? home()[2] : null);
@@ -114,7 +114,7 @@ function renderCard(): void {
     return;
   }
   const seen = S.seen.includes(v.id);
-  const card = isPlay() ? cardOf(v) : undefined, open = card && needsDecision(v), must = open && (mustDecide(v) || !!specialFor(v));
+  const card = ownCard(v) ? cardOf(v) : undefined, open = card && needsDecision(v), must = open && (mustDecide(v) || !!specialFor(v));
   const hc = homeChoice(v); // nhật ký: nói rõ cả họ ở nhà đã chọn gì, người viết (bạn) đi đường riêng
   if (must) c.className += ' must';
   // dựng lại thẻ (‹ / › bằng bàn phím): giữ tiêu điểm trên nút tương ứng thay vì để rơi về <body>
@@ -241,7 +241,7 @@ function toggleFilter(): void {
   m.id = 'fmenu';
   m.className = 'fmenu';
   m.innerHTML = KINDS.map(k => {
-    const n = k === 'Tất cả' ? all.length : all.filter(v => v.k === k).length;
+    const n = k === 'Tất cả' ? all.filter(v => !v.diary).length : all.filter(v => v.k === k).length; // như màn mở đầu: sự kiện, chưa kể trang nhật ký
     return `<button class="${S.filt === k ? 'on' : ''}" data-a="filt" data-k="${k}">${k}<span>${n}</span></button>`;
   }).join('');
   $('#mapwrap')!.appendChild(m);

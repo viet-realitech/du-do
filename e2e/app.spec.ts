@@ -161,6 +161,20 @@ test('keyboard: the side card keeps focus across ‹ ›, an event page focuses 
   expect(errors).toEqual([]);
 });
 
+test('play mode: another region\'s optional card is not offered (Hà Nội 1882 for a Nghệ An family)', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  const st = { step: 'play', mode: 'play', name: 'Họ Phan', surname: 'phan', home: 'na', year: 1883, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2, gt74: 1 }, cardv: {}, res: { g: 40, d: 30, b: 25, u: 30 } };
+  await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
+  await page.goto('/');
+  await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'hd82'; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+  await page.locator('#goto').click();
+  await expect(page.locator('.ov h1')).toBeVisible();
+  await expect(page.locator('.ov [data-a=card]')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('map renders the 1954 regime and legend', async ({ page }) => {
   const errors = await boot(page, midGame);
   // event markers survive a repaint at the same year (a finger resting on one must not lose its element mid-gesture)

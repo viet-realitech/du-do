@@ -75,6 +75,28 @@ export const SPECIAL: SpecialCard[] = [
     note: "Sau khi Bảo Đại thoái vị (30.8.1945), con cháu hoàng tộc mang họ Tôn Thất hoặc tên lót theo Đế hệ thi (Bửu, Vĩnh…) ở nhiều nơi bị nhìn như 'con cháu phong kiến'; có nhà khai con cháu là Nguyễn Phúc hay Nguyễn, nhiều người khác giữ tên dòng và theo chính quyền mới, như bác sĩ Tôn Thất Tùng.",
   },
   {
+    id: "x-phan08", ev: "ct08", when: {"surnames": ["phan"], "homes": ["hue", "qn"]},
+    title: "Cùng họ với cụ Phan",
+    s: "Phan Châu Trinh bị bắt ở Hà Nội sau những ngày dân Quảng Nam kéo xuống toà sứ đòi giảm thuế; lính dõng và người của quan tỉnh đi hỏi từng làng, và các nhà họ Phan được hỏi kỹ hơn cả.",
+    choices: [
+      ["Cất giữ sách Tân thư", "Giấu sách của các cụ Duy Tân trong vách nhà thờ họ.", {"u": 5, "b": -2, "ph": -8, "lg": 4}, "Sách nằm trong vách gần hai mươi năm. Con cháu học chữ quốc ngữ từ những trang ấy; khi tin cụ Phan về nước năm 1925 lan đến làng, sách được lấy ra đọc to ở từ đường."],
+      ["Khai rõ: cùng họ, khác nhà", "Đưa gia phả cho lý trưởng xem, xin ghi 'không liên can'.", {"u": -2, "ph": 3}, "Lý trưởng ghi 'không liên can'. Làng cười nhà mình sợ bóng sợ gió, nhưng không ai bị gọi lên tỉnh."],
+      ["Góp tiền nuôi gia đình người bị bắt", "Gửi gạo, gửi tiền qua tay bà con, không ghi sổ.", {"b": -6, "u": 6, "ph": -6, "lg": 6}, "Tiền đi qua ba tay, không ai ghi tên. Năm 1910 có tin cụ Phan được tha khỏi Côn Đảo; mấy nhà từng nhận gạo đến tận cổng cảm ơn."],
+    ],
+    note: "Tháng 3.1908, phong trào chống thuế lan từ Quảng Nam ra khắp Trung Kỳ; Phan Châu Trinh bị bắt ở Hà Nội, bị kết án tử hình rồi giảm xuống đày Côn Đảo, Trần Quý Cáp bị xử chém ở Khánh Hoà. Năm 1910 ông được tha nhờ Hội Nhân quyền Pháp can thiệp, sang Pháp năm 1911 và về nước năm 1925. Biến cố là hư cấu: chỉ nói cùng họ, không nhận họ hàng.",
+  },
+  {
+    id: "x-nguyen25", ev: "tn25", when: {"surnames": ["nguyen"]},
+    title: "Cái tên Nguyễn Ái Quốc",
+    s: "Từ năm 1919, tên Nguyễn Ái Quốc đứng dưới bản Yêu sách của nhân dân An Nam gửi Hội nghị Versailles; năm 1925 người mang tên ấy lập Hội Việt Nam Cách mạng Thanh niên ở Quảng Châu. Mật thám lùng tìm, còn ở làng, các nhà họ Nguyễn nghe cái tên ấy với đủ thứ cảm xúc.",
+    choices: [
+      ["Truyền tay bản Yêu sách", "Chép lại tám điều, đưa sang làng bên.", {"u": 5, "ph": -8, "vm": 5, "lg": 3}, "Bản chép tay đi qua ba làng. Khi lính đồn về khám, nhà bạn đã đốt bản của mình; bản ở làng bên còn đến năm 1945."],
+      ["Đốt mọi giấy tờ có cái tên ấy", "Cho yên nhà; họ Nguyễn đông như lá rừng, chuyện ai người nấy lo.", {"u": -2, "ph": 2}, "Nhà yên ổn. Người già tiếc mãi những trang đã đốt, và kể lại nội dung cho con cháu bằng trí nhớ."],
+      ["Kể cho con cháu nghe về người cùng họ", "Không biết ông là ai, chỉ biết ông ký tên họ Nguyễn và đòi quyền cho người An Nam.", {"u": 3, "lg": 2, "vm": 3}, "Trẻ con trong họ thuộc lòng một cái tên mà người lớn chỉ dám nói thầm. Hai mươi năm sau, chúng nhận ra tên ấy trên những tờ truyền đơn."],
+    ],
+    note: "Bản Yêu sách tám điểm ký tên Nguyễn Ái Quốc được gửi tới Hội nghị Versailles tháng 6.1919, do nhóm người Việt yêu nước ở Paris soạn; tên này về sau gắn với Nguyễn Tất Thành (khai sinh Nguyễn Sinh Cung), người lập Hội Việt Nam Cách mạng Thanh niên ở Quảng Châu tháng 6.1925. Biến cố là hư cấu: chỉ nói cùng họ, không nhận họ hàng.",
+  },
+  {
     id: "x-canvuong96", ev: "hk96", when: {"picks": ["canvuong"], "homes": ["hn", "nd", "na", "hue", "qn"]},
     title: "Sau khi Hương Khê tan rã",
     s: "Nghĩa quân tan, công sứ và quan tỉnh lập sổ 'nhà phiến loạn'; tên dòng họ bạn ở trang đầu, và lính đồn đã về làng hỏi.",
