@@ -14,11 +14,14 @@ function badgeState(): Record<string, boolean> {
   };
 }
 
-/* Thông báo huy hiệu xếp hàng: mỗi cái cách nhau 1,4 s, và chờ màn điện ảnh (mở chương / phim) chiếu xong. */
+/* Thông báo huy hiệu xếp hàng: mỗi cái cách nhau 1,4 s, chờ màn điện ảnh (mở chương / phim) chiếu xong và chờ
+   người chơi quyết xong điểm rẽ / thẻ đang mở (không che tiêu đề, không chen tiếng kèn vào lời dẫn). */
 const queue: (() => void)[] = [];
 let draining = false;
+const deciding = () => !!document.querySelector('#layer #go, #layer #cgo, #layer #xgo');
 function drain(): void {
   whenClear(() => {
+    if (deciding()) { setTimeout(drain, 600); return; }
     const fn = queue.shift();
     if (!fn) { draining = false; return; }
     fn();

@@ -79,6 +79,14 @@ export const surnameKey = (name: string): string => {
   return SURNAMES.find(s => s.names.some(x => x.toLowerCase() === n))?.key || '';
 };
 export const loreOf = (key: string): SurnameLore | undefined => SURNAMES.find(s => s.key === key);
+/** Tên khai sinh (hay dòng tộc) của những người được biết đến bằng tên khác: vì sao họ đứng trong danh sách "cùng họ". */
+export const BORN: Record<string, string> = {
+  nl: 'Nguyễn Tường Tam', hcm: 'Nguyễn Sinh Cung', dm: 'Nguyễn Duy Cống', nct2: 'Phạm Văn Cương', ttq: 'Phạm Văn Bồng',
+  ldt: 'Phan Đình Khải', vvk: 'Phan Văn Hòa', tc: 'Đặng Xuân Khu', tduc: 'Nguyễn Phúc Hồng Nhậm', hn: 'Nguyễn Phúc Ưng Lịch',
+  bd: 'Nguyễn Phúc Vĩnh Thụy', cd: 'hoàng tộc Nguyễn Phúc', tqd: 'Lâm Văn Tuất',
+};
+/** "khai sinh X" / "hoàng tộc X" cho dòng phụ dưới tên. */
+export const bornLine = (id: string): string => (BORN[id] ? (/^hoàng tộc/.test(BORN[id]) ? BORN[id] : 'khai sinh ' + BORN[id]) : '');
 /** Tên hiển thị chuẩn: "Họ X". */
 export const asFamily = (name: string): string => { const n = name.normalize('NFC').replace(/^họ\s+/i, '').trim(); return n ? 'Họ ' + n[0].toUpperCase() + n.slice(1) : ''; };
 /** Cách viết khớp với họ đã gõ (Huỳnh vẫn là Huỳnh dù chung khoá với Hoàng), hoặc cách viết đầu. */

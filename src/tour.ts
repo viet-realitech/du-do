@@ -26,6 +26,8 @@ interface Tour {
   next?: (d: number) => void;
   /** Lúc bước hiện tại bắt đầu (để giữ đủ thời lượng cảnh trận khi tắt giọng giữa chừng). */
   t0?: number;
+  /** Trò chơi, sau "Điểm rẽ ›": chỉ còn các sự kiện dòng họ phải quyết định; mỗi bước bay tới rồi mở thẻ ngay. */
+  rush?: boolean;
 }
 let tour: Tour | null = null;
 let mapIdle: number | undefined;
@@ -98,10 +100,10 @@ function tourStep(): void {
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
     // Chạm ◆ sớm hơn đi cùng một đường (pauseForCard).
-    const card = isPlay() && needsDecision(v), voiced = S.narr && canSpeak(evKey(v));
-    // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s)
-    const hold = fr ? sceneHold(v) : 0, cardAt = fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
-    playScene(v, card && !voiced ? cardAt : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
+    const card = isPlay() && needsDecision(v), rush = !!tour!.rush, voiced = !rush && S.narr && canSpeak(evKey(v));
+    // cảnh có nhịp kể: giữ đủ để đọc hết phụ đề (thẻ cũng mở sau đó, tối đa 14 s); "Điểm rẽ ›": bay tới, mở thẻ ngay
+    const hold = fr ? sceneHold(v) : 0, cardAt = rush ? 1700 : fr ? Math.max(4500, sceneLen(v) + 1000) : 4500;
+    if (!rush) playScene(v, card && !voiced ? cardAt : Infinity); // cảnh động: trận đánh, ấn triện, phim tư liệu
     tourBar();
     const advance = () => { if (!live()) return; tour!.t = window.setTimeout(() => { if (!live()) return; tour!.i++; tourStep(); }, 0); };
     const openIt = () => { if (!live()) return; if (!needsDecision(v)) advance(); else pauseForCard(v); };
@@ -205,10 +207,26 @@ export function stopTour(): void {
   if (p) p.textContent = '▶';
 }
 
+/** "Điểm rẽ ›": Đọc sử thì tới điểm rẽ ngay. Trò chơi còn sự kiện dòng họ phải quyết định thì không bật thẻ liền
+    nhau: tour chỉ giữ các bước đó, mỗi bước vẫn bay tới nơi xảy ra rồi mở thẻ (thanh tour báo còn mấy quyết định). */
 function skipTour(): void {
   if (!tour) return;
   clearTimeout(tour.t);
   hush();
+  if (isPlay()) {
+    const must = (v: HistEvent) => !v.diary && needsDecision(v) && (mustDecide(v) || !!specialFor(v));
+    const cur = tour.L[tour.i], rest = tour.L.slice(tour.i + 1).filter(must);
+    if ((cur && must(cur)) || rest.length) {
+      tour.L = [...tour.L.slice(0, tour.i + 1), ...rest];
+      tour.rush = true;
+      tour.paused = undefined;
+      if (cur && must(cur) && tour.cur === cur.id && tour.next) { endScene(); tourBar(); tour.next(0); return; } // thẻ của bước này mở ngay
+      endScene();
+      tour.i++;
+      tourStep();
+      return;
+    }
+  }
   finishTour();
 }
 
@@ -251,8 +269,9 @@ function tourBar(): void {
   // dựng lại thanh mỗi bước: giữ tiêu điểm bàn phím trên nút đang bấm (vd. "›" bấm liên tiếp)
   const fk = b.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.t : undefined;
   const state = paused === 'card' ? ' · chờ quyết định' : paused ? ' · tạm dừng' : '';
-  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${at}/${n} · Chương ${e.n}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
-    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Sự kiện kế tiếp" title="Sự kiện kế tiếp">›</button>'}<button class="chip" data-t="skip">Điểm rẽ ›</button><button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
+  const left = tour.rush ? L.slice(i).filter(v => needsDecision(v)).length : 0;
+  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định · Chương ${e.n}` : `${at}/${n} · Chương ${e.n}`}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
+    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Sự kiện kế tiếp" title="Sự kiện kế tiếp">›</button>'}${tour.rush ? '' : '<button class="chip" data-t="skip">Điểm rẽ ›</button>'}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
   if (fk) (b.querySelector<HTMLElement>(`[data-t="${fk}"]`) || b.querySelector<HTMLElement>(fk === 'next' ? '[data-t=resume]' : '[data-t=stop]'))?.focus({ preventScroll: true });
   $('#play')!.textContent = paused && paused !== 'card' ? '▶' : '❚❚';
 }

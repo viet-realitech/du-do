@@ -1,5 +1,5 @@
 import { av } from '../ui/bits';
-import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT, spellingOf } from '../data/surnames';
+import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT, spellingOf, bornLine } from '../data/surnames';
 import { themeCards, applyTheme } from '../theme';
 import { HOMES, home, RES } from '../play';
 import { switchMode } from '../state';
@@ -92,7 +92,7 @@ function loreBox(k: string): string {
   const kin = l.kin.filter(id => FIG[id]);
   return `<div class="pv mine" style="margin-top:8px"><div class="mono muted">Gia phả mở đầu · Họ ${esc(l.names.join(' / '))}</div>
   <p style="font-size:15.5px;margin-top:4px">${esc(l.lore)}${l.variant ? ' ' + esc(l.variant) : ''}</p>
-  ${kin.length ? `<div class="mono muted" style="margin-top:8px">Cùng họ khai sinh trong hồ sơ</div><div class="kin">${kin.slice(0, 8).map(id => `<span>${av(id, 26)}${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span>`).join('')}${kin.length > 8 ? `<span class="muted">và ${kin.length - 8} người khác</span>` : ''}</div>` : ''}
+  ${kin.length ? `<div class="mono muted" style="margin-top:8px">Cùng họ khai sinh trong hồ sơ</div><div class="kin">${kin.slice(0, 8).map(id => `<span>${av(id, 26)}${bornLine(id) ? `<span>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}<small class="muted" style="display:block;font-size:12px">${esc(bornLine(id))}</small></span>` : esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span>`).join('')}${kin.length > 8 ? `<span class="muted">và ${kin.length - 8} người khác</span>` : ''}</div>` : ''}
   ${l.hooks.filter(h => HOOK_TEXT[h]).map(h => `<p class="muted" style="font-size:13.5px;margin-top:6px">◆ ${esc(HOOK_TEXT[h])}</p>`).join('')}</div>`;
 }
 on('surname', el => {

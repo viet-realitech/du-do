@@ -16,7 +16,7 @@ import { layer } from '../ui/dom';
 import { renderMain, invalidateTrack } from '../view';
 import { opener } from './cinema';
 import { fxOn } from '../scene';
-import { loreOf, surnameKey } from '../data/surnames';
+import { loreOf, surnameKey, bornLine } from '../data/surnames';
 
 /** Nhân vật cùng họ với dòng họ người chơi trong một hướng (người đồng hành trước, rồi những người được nêu tên);
     chỉ nói cùng họ, không nhận họ hàng. `birth`: cùng họ khai sinh (Lê Đức Thọ vốn họ Phan…). */
@@ -26,8 +26,8 @@ export function kinIn(o: Option): { id: string; fam: string; birth: boolean } | 
   const nm = (id: string) => FIG[id][0].replace(/\s*\(.*\)\s*$/, '');
   const ids = [o.guide, ...l.kin.filter(id => id !== o.guide && FIG[id] && o.who.includes(nm(id)))].filter(id => l.kin.includes(id) && FIG[id]);
   if (!ids.length) return null;
-  const id = ids[0];
-  return { id, fam: l.names[0], birth: !l.names.some(n => nm(id).startsWith(n + ' ')) };
+  const id = ids[0], cur = l.names.find(n => nm(id).startsWith(n + ' ')), born = l.names.find(n => bornLine(id).includes(n));
+  return { id, fam: cur || born || l.names[0], birth: !cur };
 }
 const kinLabel = (k: { fam: string; birth: boolean }) => `Cùng họ ${k.fam}${k.birth ? ' (khai sinh)' : ''}`;
 
@@ -129,7 +129,7 @@ function choice(e: Era, quiet: boolean): void {
   // nhãn của mỗi hướng: tiếp nối / rẽ khỏi đường thế hệ trước, và người cùng họ dẫn đầu hướng đó
   const tag = (o: Option) => {
     const k = kinIn(o), t = (pp ? (continues(pp, o.id) ? '<span class="al mono ok">Tiếp nối đường cũ</span>' : '<span class="al mono">Rẽ hướng</span>') : '') +
-      (k ? `<span class="al mono akin" title="${esc(FIG[k.id][0])}">${esc(kinLabel(k))}</span>` : '');
+      (k ? `<span class="al mono akin" title="${esc(FIG[k.id][0] + (bornLine(k.id) ? ', ' + bornLine(k.id) : ''))}">${esc(kinLabel(k))}</span>` : '');
     return t ? `<div class="alrow">${t}</div>` : '';
   };
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
@@ -176,7 +176,7 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   ${isPlay() && Object.keys(eraFx(o.id)).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(eraFx(o.id), got)}</div>` : ''}
   <div class="rule"></div>
   <button class="row" style="width:100%;text-align:left" data-a="fig" data-id="${o.guide}">${av(o.guide, 46)}<span style="flex:1"><span class="mono muted">Người đồng hành</span><br><b style="font:700 18px var(--disp)">${FIG[o.guide][0]}</b> <span class="muted" style="font-size:14px">· ${FIG[o.guide][2]}</span></span><span class="muted">›</span></button>
-  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])} cũng đi con đường này.</p>` : ''}
+  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])}${bornLine(kin.id) ? ` (${esc(bornLine(kin.id))})` : ''} cũng đi con đường này.</p>` : ''}
   <div class="rule"></div><div class="mono" style="color:var(--acc)">Mở khoá ${fs.length} nhân vật</div>
   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center">${av(id, 48)}<span>${FIG[id][0].replace(/\s*\(.*\)\s*$/, '').split(' ').slice(-2).join(' ')}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết ›</span></button>` : ''}</div>
   ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">✎ Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${d.y}</span> · ${esc(d.t)}</div>`).join('')}` : ''}

@@ -320,6 +320,30 @@ test('play mode: a replay cut short by a tab switch keeps the paused tour paused
   expect(errors).toEqual([]);
 });
 
+test('play mode: "Điểm rẽ ›" still flies to each decision the family owes, one at a time', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: /Vào trò chơi/ }).click();
+  await page.getByRole('button', { name: 'Huế' }).click();
+  await page.getByRole('button', { name: 'Tôn Thất / Nguyễn Phúc' }).click();
+  await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
+  await page.goBack(); // skip the chapter opener
+  await page.locator('.opt').first().click();
+  await page.locator('#go').click();
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 15_000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  // the first stop (Đà Nẵng, Huế's region) is owed: its card opens now; the bar counts what is left
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('#tourb')).toContainText('Còn');
+  await expect(page.locator('#tourb [data-t=skip]')).toHaveCount(0);
+  await page.locator('.scrim .opt:not([disabled])').first().click();
+  await page.locator('#cgo').click();
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  // the next owed card comes after a flight to its place, not stacked on the last one
+  await expect(page.locator('.scrim')).toHaveCount(0, { timeout: 1500 });
+  await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 8000 });
+  expect(errors).toEqual([]);
+});
+
 test.describe('iPad layouts', () => {
   for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
     test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {
