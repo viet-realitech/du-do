@@ -466,32 +466,54 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   mv.paths.forEach(([from, via, to, side, note, mode], i) => {
     const pts = [P(from), ...via.map(P), P(to)], d = smooth(pts);
     const col = SIDE_COLOR[side] || '#f1e6c8', thin = mv.type === 'exodus' || mv.type === 'uprising' || mv.type === 'crowd';
-    const under = el('path', { d, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.5, 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, root);
-    const line = el('path', { d, fill: 'none', stroke: col, 'stroke-width': (thin ? 2.2 : 3) / k, 'stroke-linecap': 'round' }, root);
-    if (mv.type === 'withdrawal') line.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`);
-    const len = line.getTotalLength() || 1;
-    under.setAttribute('stroke-dasharray', `${len} ${len}`); under.setAttribute('stroke-dashoffset', String(len));
-    if (mv.type !== 'withdrawal') { line.setAttribute('stroke-dasharray', `${len} ${len}`); line.setAttribute('stroke-dashoffset', String(len)); }
+    // Đường dài (đi Pháp, vượt biển) phủ cả bản đồ: vẽ dần cả một path thì mỗi khung hình trình duyệt vẽ lại cả bản đồ.
+    // Lấy mẫu đường cong một lần (LUT), chia thành các đoạn ngắn; mỗi khung hình chỉ đoạn đang vẽ thay đổi.
+    const probe = el('path', { d, fill: 'none', stroke: 'none' }, root), len = probe.getTotalLength() || 1, lenPx = len * k;
+    const N = Math.max(24, Math.min(240, Math.round(lenPx / 3)));
+    const L: [number, number][] = [];
+    for (let j = 0; j <= N; j++) { const q = probe.getPointAtLength((len * j) / N); L.push([q.x, q.y]); }
+    probe.remove();
+    const S_ = Math.max(3, Math.min(24, Math.round(lenPx / 40))), per = N / S_;
+    const gU = el('g', {}, root), gL = el('g', {}, root);
+    const segs = Array.from({ length: S_ }, (_, j) => {
+      const a = Math.round(j * per), b = Math.round((j + 1) * per), sd = 'M' + L.slice(a, b + 1).map(p => `${p[0]},${p[1]}`).join(' L');
+      const u = el('path', { d: sd, fill: 'none', stroke: '#0b0b0b', 'stroke-opacity': 0.5, 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, gU);
+      const ln = el('path', { d: sd, fill: 'none', stroke: col, 'stroke-width': (thin ? 2.2 : 3) / k, 'stroke-linecap': 'round' }, gL);
+      const sl = u.getTotalLength() || 0.001;
+      u.setAttribute('stroke-dasharray', `${sl} ${sl}`); u.setAttribute('stroke-dashoffset', String(sl));
+      if (mv.type === 'withdrawal') { ln.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`); ln.setAttribute('opacity', '0'); } // rút quân: nét đứt hiện theo đoạn
+      else { ln.setAttribute('stroke-dasharray', `${sl} ${sl}`); ln.setAttribute('stroke-dashoffset', String(sl)); }
+      return { a, b, sl, u, ln, done: false };
+    });
     // quân cờ trên đường: tàu (đường biển), máy bay, đoàn người (di cư, khởi nghĩa), đoàn quân (hành quân, rút quân);
     // chuyến đi của một người: chấm sáng
     const pk: Kind | null = mode === 'air' ? 'plane' : mode === 'sea' ? 'boat' : thin ? 'crowd' : mv.type === 'march' || mv.type === 'withdrawal' ? kindOf(note, 'land') : null;
     let g: SVGGElement;
     if (pk) g = drawPiece(pk, col, root).g;
     else { g = el('g', { opacity: 0 }, root); el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
-    const lenPx = len * k, dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
+    const dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
     const start = T0 + B[i];
-    parts[i] = [under, line];
+    parts[i] = [gU, gL];
     if (mv.paths.length > 1) parts[i].push(badge(root, pts[0], k, i + 1, col));
     later(r, start, () => beat(r, parts, i, beatHtml(side, v.y, note, i, mv.paths.length, MODE[mode] ? ' · ' + MODE[mode] : ''), col));
     if (mode === 'air') WAR.plane(start / 1000); // tiếng máy bay cùng lúc máy bay cất cánh
+    let cur = 0;
     anim(r, dur, q => {
-      const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
-      under.setAttribute('stroke-dashoffset', String(len * (1 - e)));
-      if (mv.type !== 'withdrawal') line.setAttribute('stroke-dashoffset', String(len * (1 - e)));
-      else line.setAttribute('stroke-dashoffset', String((-e * 40) / k));
-      const a = line.getPointAtLength(len * e), b = line.getPointAtLength(Math.min(len, len * e + 1 / k));
+      const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2, h = e * N;
+      // đoạn đã qua: vẽ đủ (một lần); đoạn đang vẽ: lộ dần; đoạn sau: chưa động tới
+      while (cur < S_ && segs[cur].b <= h) {
+        const sg = segs[cur++];
+        if (!sg.done) { sg.done = true; sg.u.setAttribute('stroke-dashoffset', '0'); if (mv.type === 'withdrawal') sg.ln.setAttribute('opacity', '1'); else sg.ln.setAttribute('stroke-dashoffset', '0'); }
+      }
+      if (cur < S_) {
+        const sg = segs[cur], f = Math.max(0, Math.min(1, (h - sg.a) / (sg.b - sg.a || 1))), off = String(sg.sl * (1 - f));
+        sg.u.setAttribute('stroke-dashoffset', off);
+        if (mv.type === 'withdrawal') { if (f > 0.5) sg.ln.setAttribute('opacity', '1'); } else sg.ln.setAttribute('stroke-dashoffset', off);
+      }
+      const j = Math.min(N - 1, Math.floor(h)), t = Math.min(1, h - j), p0 = L[j], p1 = L[j + 1];
+      const x = p0[0] + (p1[0] - p0[0]) * t, y = p0[1] + (p1[1] - p0[1]) * t;
       g.setAttribute('opacity', q > 0.98 ? '0' : '1');
-      g.setAttribute('transform', `translate(${a.x},${a.y}) rotate(${(Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI}) scale(${1 / k})`);
+      g.setAttribute('transform', `translate(${x},${y}) rotate(${(Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) * 180) / Math.PI}) scale(${1 / k})`);
     }, start, () => {
       const end = pts[pts.length - 1];
       if (mv.type === 'uprising' || mv.type === 'crowd' || mv.type === 'march') ripple(r, end, k, 0, col);
@@ -568,9 +590,10 @@ function place(box: HTMLElement, r: Run): void {
   const bw = Math.min(R.width * 0.4, 230), bh = Math.min(bw * 0.75, R.height * 0.32), low = (bar ? R.bottom - bar.top : 0) + 10 + Math.max(capH(), r.lt?.offsetHeight || 0) + 8;
   const pts: [number, number][] = [];
   const add = (m: DOMMatrix | null, x: number, y: number) => { if (m) pts.push([m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]); };
-  r.root.querySelectorAll<SVGPathElement>('path').forEach(p => {
+  const ps = r.root.querySelectorAll<SVGPathElement>('path'), nS = ps.length > 40 ? 2 : 16; // nhiều đoạn ngắn (cảnh di chuyển): lấy hai đầu mỗi đoạn
+  ps.forEach(p => {
     const m = p.getScreenCTM(), L = p.getTotalLength();
-    for (let i = 0; i <= 16; i++) { const q = p.getPointAtLength((L * i) / 16); add(m, q.x, q.y); }
+    for (let i = 0; i <= nS; i++) { const q = p.getPointAtLength((L * i) / nS); add(m, q.x, q.y); }
   });
   r.root.querySelectorAll<SVGCircleElement>('circle').forEach(c => add(c.getScreenCTM(), c.cx.baseVal.value, c.cy.baseVal.value));
   const spots: { s: Partial<CSSStyleDeclaration>; x: number; y: number }[] = [
