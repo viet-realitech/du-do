@@ -71,7 +71,7 @@ export function cardOf(v: HistEvent): Card | undefined {
   const c = CARD[v.id];
   if (!c || S.cardv[v.id] === 'base') return c; // quyết trước khi có lựa chọn theo vùng: giữ bộ gốc
   const picked = Object.values(S.picks), g = home()[3];
-  const va = VARIANT[v.id]?.find(x => (!x.regions || x.regions.includes(g)) && !x.notPicks?.some(p => picked.includes(p)) &&
+  const va = VARIANT[v.id]?.find(x => (!x.regions || x.regions.includes(g)) && (!x.homes || x.homes.includes(S.home)) && !x.notPicks?.some(p => picked.includes(p)) &&
     (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })));
   return va ? [c[0], c[1], va.choices] : c;
 }

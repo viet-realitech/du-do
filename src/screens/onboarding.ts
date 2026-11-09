@@ -1,13 +1,13 @@
 import { av } from '../ui/bits';
 import { SURNAMES, loreOf, surnameKey, asFamily, HOOK_TEXT, spellingOf, bornLine } from '../data/surnames';
 import { themeCards, applyTheme } from '../theme';
-import { HOMES, home, RES, lockPassed } from '../play';
+import { HOMES, home, RES, lockPassed, pendingCard } from '../play';
 import { switchMode } from '../state';
 import { setTab } from '../tabs';
 import { invalidateTrack, renderMain } from '../view';
-import { stopTour } from '../tour';
-import { EV, FIG } from '../data';
-import { S, save, ERAS_PENDING } from '../state';
+import { stopTour, startTour } from '../tour';
+import { EV, FIG, ERAS } from '../data';
+import { S, save, setFocus, evEra } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer } from '../ui/dom';
 import { ac } from '../audio';
@@ -103,6 +103,23 @@ on('surname', el => {
   const box = layer.querySelector('#slore'); if (box) box.innerHTML = loreBox(S.surname);
 });
 
+/** Đứng lại đúng chỗ của bản lưu (tải trang, đổi luồng). Trò chơi còn nợ thẻ bắt buộc của một chương trước điểm rẽ
+    còn bỏ ngỏ (kể cả Điện Biên Phủ cùng năm 1954 với điểm rẽ 5) → dựng lại tour chương từ thẻ đó (bay tới, cảnh, lời kể,
+    rồi mới mở thẻ), không bật liền các thẻ trên bản đồ đứng yên; Trò chơi còn điểm rẽ chưa chọn → mở nó; không thì ▶
+    nhấp nháy mời chạy tiếp chương. Đọc sử: điểm rẽ để "chọn sau" không tự mở lại. */
+export function resumePlace(ready: Promise<unknown> = Promise.resolve()): void {
+  lockPassed(S.year); // bản lưu cũ: thẻ tuỳ chọn đã đi qua không mọc biến cố mới (x-nguyen25 trên tn25)
+  setFocus();
+  const pc = S.mode === 'play' ? pendingCard(S.year) : undefined, pend = ERAS.find(e => !S.picks[e.id] && e.cy <= S.year);
+  if (pc && (!pend || ERAS.indexOf(evEra(pc)) < ERAS.indexOf(pend))) {
+    S.year = pc.y;
+    setFocus();
+    save();
+    renderMain();
+    void ready.then(() => { if (!document.querySelector('#layer > *')) startTour(evEra(pc)); });
+  } else setYear(S.year, !!pend && S.mode === 'play');
+}
+
 /** Mở luồng `m` (Đọc sử / Trò chơi) với bản lưu riêng của nó; dùng ở màn chào và Hồ sơ. */
 export function goMode(m: 'read' | 'play'): void {
   ac();
@@ -111,8 +128,7 @@ export function goMode(m: 'read' | 'play'): void {
   invalidateTrack();
   applyTheme();
   setTab('map');
-  if (m === 'play') lockPassed(S.year); // bản lưu cũ: thẻ tuỳ chọn đã đi qua không mọc biến cố mới
-  if (S.step === 'play') { renderMain(); if (m === 'play' && ERAS_PENDING()) setYear(S.year, true); } // Đọc sử: điểm rẽ không tự mở
+  if (S.step === 'play') { renderMain(); resumePlace(); }
   else if (m === 'play') gameIntro();
   else intro();
 }

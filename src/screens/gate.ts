@@ -4,7 +4,7 @@ import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
 import { S, save, rt, familyName } from '../state';
 import { on } from '../ui/actions';
-import { $, esc, sheet, clearLayer, ghost, calm, announce } from '../ui/dom';
+import { $, esc, sheet, clearLayer, ghost, calm, announce, radios } from '../ui/dom';
 import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
@@ -82,7 +82,7 @@ export function openQuiz(eid: string, done?: () => void): void {
     const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">★ Đố nhanh · Chương ${e.n}</span><span class="mono muted">Câu ${i + 1}/${qs.length}</span></div>
      <h2 style="margin:12px 0 16px">${q}</h2><div>${opts.map((o, j) => `<button class="qa" data-j="${j}">${o}</button>`).join('')}</div>
      <p id="qex" class="muted" aria-live="polite" style="margin-top:12px;min-height:24px;font-size:16px"></p><div style="height:8px"></div>
-     <button class="btn" id="qn" disabled>${i < qs.length - 1 ? 'Câu tiếp' : eid === 'e6' ? 'Xem kết cục' : 'Tiếp tục hành trình'}</button><button class="lnk" id="qs">Bỏ qua</button>`);
+     <button class="btn" id="qn" disabled>${i < qs.length - 1 ? 'Câu tiếp' : eid === 'e6' ? (isPlay() ? 'Xem kết cục' : 'Xem kết luận') : 'Tiếp tục hành trình'}</button><button class="lnk" id="qs">Bỏ qua</button>`);
     d.querySelectorAll<HTMLButtonElement>('.qa').forEach(b => (b.onclick = () => {
       if (res.length > i) return;
       const j = +b.dataset.j!, ok = j === a;
@@ -155,6 +155,7 @@ function choice(e: Era, quiet: boolean): void {
   <div style="height:12px"></div><button class="btn" id="go" disabled>Đi theo hướng này</button>${isPlay() ? '' : '<button class="lnk" data-a="gate-later">Đọc chương trước, chọn sau ›</button>'}`);
   // Đọc sử: điểm rẽ không bắt buộc (Back / Escape = "chọn sau"); Trò chơi: phải chọn
   if (!isPlay()) delete d.dataset.lock;
+  radios(d.querySelector('[role=radiogroup]'), d.querySelector('h2'));
   d.querySelector<HTMLButtonElement>('#lskip')!.onclick = () => { clearTimeout(say); hush(); release(); };
   d.querySelectorAll<HTMLButtonElement>('.opt').forEach(b => (b.onclick = () => {
     selOpt = b.dataset.o!;

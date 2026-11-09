@@ -8,10 +8,10 @@ import { SND } from './audio';
 import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
-import { playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable, beforeClose } from './scene';
+import { fogTop, playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable, beforeClose } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
-import { openGate } from './screens/gate';
+import { openGate, openQuiz } from './screens/gate';
 
 /* Chapter "zoom tour": fly through key events of an era, narrating each, then return to the overview and
    open the next turning point. In the game flow the tour pauses (never stops) for cards, overlays and map
@@ -28,6 +28,8 @@ interface Tour {
   t0?: number;
   /** Trò chơi, sau "Điểm rẽ ›": chỉ còn các sự kiện dòng họ phải quyết định; mỗi bước bay tới rồi mở thẻ ngay. */
   rush?: boolean;
+  /** Đọc sử: xem một chương chọn muộn từ năm 2026: xem xong (và câu đố) thì về lại đó, nơi có kết luận. */
+  back?: number | null;
   /** Đọc sử: lúc chạm "Điểm rẽ ›" lần đầu (đang chờ chạm lần hai để xác nhận bỏ qua chương). */
   arm?: number;
   /** Bước mà `next` thuộc về (next của bước cũ không hẹn được gì: live() sai). */
@@ -41,9 +43,33 @@ let tour: Tour | null = null;
 let mapIdle: number | undefined;
 
 export const isTouring = () => !!tour;
+/** Lý do tour đang tạm dừng (không dừng: undefined). */
+export const tourPause = () => tour?.paused;
+/** Có gì đang che bản đồ: trang sự kiện, bảng Nhân vật / Sử liệu / Hồ sơ, bảng nhân vật / sử liệu / xác nhận, hay đang
+    xem lại diễn biến. */
+// #layer lấy thẳng từ DOM: ui/dom.ts nhập tour.ts (vòng nhập), lúc module này chạy `layer` của nó chưa có
+const layerEl = document.getElementById('layer')!;
+const covered = (): boolean => !!layerEl.querySelector(':scope > .ov, :scope > .pane, :scope > .scrim') || !!document.getElementById('replb');
+// Mọi thứ che bản đồ đều tạm dừng tour: không kể, không đi tiếp sau lưng người đọc, không bật thẻ hay câu đố cuối chương
+// đè lên bảng đang đọc. Bản đồ lộ lại thì tour chạy tiếp từ đúng bước đang đứng (kể lại, dựng lại cảnh). Thẻ do chính
+// tour mở ('card') và ❚❚ ('user') giữ nguyên lý do của chúng.
+new MutationObserver(() => {
+  if (!tour) return;
+  if (covered()) { if (!tour.paused || tour.paused === 'map') pauseTour('overlay'); }
+  else if (tour.paused === 'overlay') resumeTour('overlay');
+}).observe(layerEl, { childList: true });
 export const isTourPaused = () => !!tour?.paused;
-/** Chương tour đang kể (đầu đề màn chính theo chương này khi tour đi qua mốc khép chương cùng năm với điểm rẽ sau). */
-export const tourEra = (): Era | null => tour?.e || null;
+/** Đọc sử: tour dừng (■, tải lại) giữa chừng ở năm mở chương sau (1954: nhật ký, Điện Biên Phủ, Genève vẫn thuộc chương
+    4): chương còn dang dở ấy, theo mốc tour đã ghi (S.tourAt, xoá khi xem xong / bỏ qua chương), không theo sự kiện đang
+    chọn (bộ lọc đổi được nó). */
+export function resumeEra(): Era | undefined {
+  const at = !isPlay() ? S.tourAt : null, atEv = at ? allEv().find(v => v.id === at.id) : undefined;
+  const e = atEv && atEv.y === S.year ? ERAS.find(x => x.id === at!.e) : undefined;
+  return e && e !== eraOf(S.year) ? e : undefined;
+}
+/** Chương tour đang kể, hay chương còn dang dở (resumeEra): đầu đề màn chính, chip điểm rẽ, thanh năm theo chương này
+    khi đứng ở mốc khép chương cùng năm với điểm rẽ sau. */
+export const tourEra = (): Era | null => tour?.e || resumeEra() || null;
 
 /** Đọc sử: mốc khép / mở các chương, luôn có trong tour của chương chứa nó. */
 const MUST = ['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86'];
@@ -56,10 +82,11 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
   // cả chương (không chỉ từ năm đang đứng): chạy tiếp giữa chương thì đếm bước theo cùng một danh sách (4/8, không 1/5)
   let L = allEv().filter(v => evEra(v) === e && v.y >= e.cy);
   if (isPlay()) {
-    // Trò chơi: mọi thẻ bắt buộc còn bỏ ngỏ và nhật ký luôn có mặt, phần còn lại lấy đều, ưu tiên sự kiện có thẻ.
-    const must = L.filter(v => !v.diary && (mustDecide(v) || !!specialFor(v)) && needsDecision(v)), d = L.filter(v => v.diary);
+    // Trò chơi: mọi thẻ bắt buộc (cả thẻ đã quyết: danh sách không đổi theo các quyết định, tải lại giữa chương vẫn đếm
+    // 4/10 như trước) và nhật ký luôn có mặt, phần còn lại lấy đều, ưu tiên sự kiện có thẻ của dòng họ này.
+    const must = L.filter(v => !v.diary && (mustDecide(v) || !!specialFor(v))), d = L.filter(v => v.diary);
     const rest = L.filter(v => !must.includes(v) && !v.diary);
-    const owed = rest.filter(v => needsDecision(v) && localCard(v)); // thẻ tuỳ chọn của vùng khác không mời
+    const owed = rest.filter(v => localCard(v)); // thẻ tuỳ chọn của vùng khác không mời
     const pool = owed.length >= 3 ? owed : rest;
     const need = Math.max(0, 10 - must.length - d.length), pick: HistEvent[] = [];
     for (let j = 0; j < need && pool.length; j++) pick.push(pool[spread(j, need, pool.length)]);
@@ -83,22 +110,19 @@ export function startTour(eIn?: Era): void {
   live0();
   hidePop();
   const pc0 = !eIn && isPlay() ? pendingCard(S.year) : undefined;
-  // Đọc sử: tour dừng (■, tải lại) giữa chừng ở năm mở chương sau (1954: nhật ký, Điện Biên Phủ, Genève vẫn thuộc chương
-  // 4) → ▶ kể tiếp chính chương ấy từ bước đã dừng (rồi câu đố chương 4, điểm rẽ 5), không lặng lẽ sang chương 5. Theo
-  // mốc tour đã ghi (S.tourAt, xoá khi xem xong / bỏ qua chương), không theo sự kiện đang chọn (bộ lọc đổi được nó).
-  const at = !eIn && !isPlay() ? S.tourAt : null, atEv = at ? allEv().find(v => v.id === at.id) : undefined;
-  const atEra = atEv && atEv.y === S.year ? ERAS.find(x => x.id === at!.e) : undefined;
-  const cont = atEra && atEra !== eraOf(S.year) ? atEra : undefined;
+  // Đọc sử: ■ / tải lại ở Điện Biên Phủ rồi ▶: kể tiếp chương 4 từ bước đã dừng (rồi câu đố chương 4, điểm rẽ 5)
+  const cont = !eIn ? resumeEra() : undefined, atEv = cont ? allEv().find(v => v.id === S.tourAt!.id) : undefined;
   const e = eIn || (pc0 ? evEra(pc0) : cont || eraOf(S.year)); // thẻ còn nợ của chương trước (ĐBP 1954): kể tiếp chương ấy
   if (!S.picks[e.id] && isPlay()) {
     // Trò chơi: điểm rẽ chưa chọn sớm nhất phải chọn trước. Đọc sử: xem chương không cần chọn (chip "◆ Chọn hướng" mời chọn)
     const g = ERAS.find(x => !S.picks[x.id] && x.cy <= S.year);
     if (g) { openGate(g); return; }
   }
+  let back: number | null = null;
   if (eIn && !isPlay()) {
     // Đọc sử: "▶ Xem chương N diễn ra" sau khi chọn muộn một điểm rẽ (từ năm 2026, hay đã ở chương sau): về đầu chương ấy
     const nx = ERAS[ERAS.indexOf(e) + 1], end0 = nx ? nx.cy : Y1;
-    if (S.year >= Y1 || S.year > end0 || S.year < e.cy) { S.year = e.cy; setFocus(); save(); }
+    if (S.year >= Y1 || S.year > end0 || S.year < e.cy) { back = S.year >= Y1 ? Y1 : null; S.year = e.cy; setFocus(); save(); }
   }
   if (S.year >= Y1) return;
   const tl = tourList(e), end = tl.end;
@@ -112,7 +136,7 @@ export function startTour(eIn?: Era): void {
     if (add.length) { i0 = L.length; L = [...L, ...add]; }
   }
   // không còn bước nào: khép chương ngay (tourStep), không tính là đã xem (không đố chương chưa xem)
-  tour = { e, L, i: i0 < 0 ? L.length : i0, end, t: undefined, step: 0 };
+  tour = { e, L, i: i0 < 0 ? L.length : i0, end, t: undefined, step: 0, back };
   void preloadEra(ERAS[ERAS.indexOf(e) + 1]); // ảnh cho màn mở chương kế tiếp
   mood(eraMood(e.id));
   tourBar();
@@ -125,6 +149,7 @@ function tourStep(): void {
   if (i >= L.length) { finishTour(tour.step === 0); return; } // chưa kể bước nào (▶ ở cuối chương): như bỏ qua
   const v = L[i], step = ++tour.step;
   const live = () => !!tour && tour.step === step && !tour.paused;
+  hidePop(); // khung tỉnh mở ở bước trước (ghi năm cũ, đè thanh tour) không ở lại
   animYear(v.y, () => {
     if (!live()) return;
     rt.focusEv = v;
@@ -134,7 +159,7 @@ function tourStep(): void {
     const hc = homeChoice(v);
     announce(`Chương ${tour!.e.n}, ${tour!.i + 1} trên ${tour!.L.length}: ${v.t}, ${v.y}${hc ? `. Ở nhà, cả họ đã chọn: ${hc.ch[0]}` : ''}`);
     const fr = sceneFrame(v);
-    if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH()); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân, chừa phụ đề
+    if (fr) zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH(), fogTop(v)); else zoomTo(v.l, zoomK(v)); // trận đánh: khung vừa mọi mũi tiến quân, chừa phụ đề
     SND.fly();
     // Trò chơi: sự kiện có thẻ thì nghe kể xong mới tạm dừng tour và mở thẻ (không có giọng đọc: sau 4,5 s),
     // để người chơi không phải quyết định khi lời kể còn dang dở; "Tiếp tục" trên thẻ gọi resumeTour().
@@ -200,13 +225,19 @@ function animYear(to: number, cb: () => void): void {
 }
 
 function finishTour(skipped = false): void {
-  const end = tour!.end, done = tour!.e.id;
+  const end = tour!.end, done = tour!.e.id, back = tour!.back;
   stopTour();
   if (S.tourAt) { S.tourAt = null; save(); } // chương đã xong: ▶ ở năm 1954 sang chương 5, không kể lại chương 4
   zoomTo(null);
   // Trò chơi: thẻ bắt buộc còn sót (sau khi bỏ qua tour) mở lần lượt, rồi điểm rẽ kế hoặc kết cục (setYear).
   if (isPlay()) rt.flowTo = end;
   else rt.toured = skipped ? null : done; // Đọc sử: xem hết chương thì câu đố của nó hỏi trước điểm rẽ kế; bỏ qua thì không
+  if (back != null && !isPlay()) {
+    // chương chọn muộn từ năm 2026: đố chương vừa xem (nếu chưa), rồi về 2026 (thẻ kết luận, điểm rẽ còn bỏ ngỏ)
+    const home = () => { rt.toured = null; setYear(back, true); };
+    setTimeout(() => (!skipped && !S.quiz[done] ? openQuiz(done, home) : home()), 950);
+    return;
+  }
   setTimeout(() => setYear(end, true), 950);
 }
 
@@ -227,7 +258,12 @@ export function pauseForCard(v: HistEvent): boolean {
 export function pauseTour(why: 'overlay' | 'map' | 'user'): void {
   if (!tour) return;
   clearTimeout(mapIdle);
-  if (tour.paused) { if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000); return; }
+  if (tour.paused) {
+    if (why === 'map' && tour.paused === 'map') mapIdle = window.setTimeout(() => resumeTour(), 5000);
+    // vừa chạm bản đồ (tự chạy tiếp sau 5 s) rồi mở trang / bảng: thành dừng vì trang, đóng trang thì chạy tiếp
+    else if (why === 'overlay' && tour.paused === 'map') { tour.paused = 'overlay'; tourBar(); }
+    return;
+  }
   clearTimeout(tour.t);
   hush();
   // ❚❚: giữ nguyên trận đang kể (chỉ vào mũi tên được); cử chỉ bản đồ: làm phẳng ngay, không trượt dưới ngón tay
@@ -363,7 +399,7 @@ function tourBar(): void {
   const fk = b.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.t : undefined;
   const state = paused === 'card' ? ' · chờ quyết định' : paused ? ' · tạm dừng' : '';
   const left = tour.rush ? L.slice(i).filter(v => needsDecision(v)).length : 0;
-  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định · Chương ${e.n}` : `${at}/${n} · Chương ${e.n}`}${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
+  b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định` : `${at}/${n}`}<span class="tch"> · Chương ${e.n}</span>${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
     ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Tiếp: nhịp trận kế tiếp, hết nhịp thì sự kiện kế tiếp" title="Nhịp / sự kiện kế tiếp">›</button>'}${tour.rush ? '' : `<button class="chip${tour.arm ? ' on' : ''}" data-t="skip">${tour.arm ? `Bỏ ${L.length - i - 1} sự kiện? ›` : 'Điểm rẽ ›'}</button>`}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
   if (fk) (b.querySelector<HTMLElement>(`[data-t="${fk}"]`) || b.querySelector<HTMLElement>(fk === 'next' ? '[data-t=resume]' : '[data-t=stop]'))?.focus({ preventScroll: true });
   const pb = $('#play')!;

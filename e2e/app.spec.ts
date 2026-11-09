@@ -175,6 +175,58 @@ test('reading mode: a tour stopped at Genève resumes chapter 4 after a reload, 
   expect(errors).toEqual([]);
 });
 
+test('reading mode: a tour waits while a pane or a figure sheet covers the map, and goes on when the map is back', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1883, picks: { e1: 'canhtan' }, quiz: {} });
+  await page.locator('#play').click();
+  const bar = page.locator('#tourb .mono').first();
+  await expect(bar).toBeVisible({ timeout: 5000 });
+  await expect(bar).not.toContainText('tạm dừng');
+  await page.locator('.tab[data-t=fig]').click(); // Nhân vật covers the map
+  await expect(bar).toContainText('tạm dừng');
+  await page.waitForTimeout(1500);
+  await expect(page.locator('#layer > .pane')).toHaveCount(1); // no quiz or card replaced the pane
+  await page.locator('.tab[data-t=map]').click();
+  await expect(bar).not.toContainText('tạm dừng', { timeout: 3000 });
+  await page.locator('#eraR').click(); // the companion's figure sheet
+  await expect(page.locator('#layer > .scrim')).toHaveCount(1);
+  await expect(bar).toContainText('tạm dừng');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#layer > .scrim')).toHaveCount(0);
+  await expect(bar).not.toContainText('tạm dừng', { timeout: 3000 });
+  expect(errors).toEqual([]);
+});
+
+test('keyboard: choices move with arrow keys, the filter menu closes on Escape, sheets over a page keep focus to themselves', async ({ page }) => {
+  let errors = await boot(page);
+  await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
+  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
+  if (await page.locator('.cine').count()) await page.goBack();
+  await page.locator('#lskip').click({ timeout: 10000 });
+  const opts = page.locator('#layer .opt');
+  await opts.first().focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(opts.nth(1)).toBeFocused();
+  await expect(opts.nth(1)).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#layer [role=radiogroup]')).toHaveAttribute('aria-labelledby', /.+/);
+  expect(errors).toEqual([]);
+  errors = await boot(page, midGame);
+  await page.locator('#fbtn').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#fmenu')).toBeVisible();
+  await expect(page.locator('#fbtn')).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#fmenu')).toHaveCount(0);
+  await expect(page.locator('#fbtn')).toBeFocused();
+  await page.locator('.tab[data-t=fig]').click(); // Nhân vật pane, then a figure sheet over it
+  await page.locator('#layer .pane .fcard:not(.off)').first().click();
+  await expect(page.locator('#layer > .scrim')).toHaveCount(1);
+  await expect(page.locator('#layer > .pane')).toHaveJSProperty('inert', true); // Shift+Tab cannot reach the pane behind
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#layer > .scrim')).toHaveCount(0);
+  await expect(page.locator('#layer > .pane')).toHaveJSProperty('inert', false);
+  expect(errors).toEqual([]);
+});
+
 test('keyboard: the side card keeps focus across ‹ ›, an event page focuses its title and Escape returns to the card', async ({ page }) => {
   const errors = await boot(page, midGame);
   const next = page.locator('#card [data-a=step][data-d="1"]');
@@ -396,11 +448,11 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   expect(errors).toEqual([]);
 });
 
-test('reaching the present opens the last quiz, then the ending', async ({ page }) => {
+test('reaching the present opens the ending (reading mode does not quiz a chapter 6 it did not watch)', async ({ page }) => {
   const done = { ...midGame, year: 2026, picks: { ...midGame.picks, e6: 'doimoi' }, quiz: { ...midGame.quiz, e5: [true, true] } };
   const errors = await boot(page, done);
   await page.locator('#card [data-a=end]').first().click();
-  await page.getByRole('button', { name: 'Bỏ qua' }).click();
+  await expect(page.getByText(/Đố nhanh/i)).toHaveCount(0);
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   // the journey film: one scene per generation, closable
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();

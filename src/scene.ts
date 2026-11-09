@@ -130,17 +130,63 @@ function diagBox(): [number, number] {
   const w = document.getElementById('mapwrap');
   if (!w) return [150, 150];
   const bar = barEl(), low = (bar ? w.clientHeight - bar.offsetTop : 0) + capH() + 16;
-  return [Math.max(150, w.clientWidth - 80), Math.max(130, w.clientHeight - 40 - low)];
+  const fog = w.classList.contains('tilt') ? Math.max(0, w.clientHeight * 0.2 - 40) : 0; // dải sương của bản đồ nghiêng
+  return [Math.max(150, w.clientWidth - 80), Math.max(130, w.clientHeight - 40 - low - fog)];
 }
 /** Phóng sơ đồ (minh hoạ, không phải tỉ lệ thật) quanh tâm khung các điểm `lls` (khung mà bản đồ vừa bay tới, như
     sceneFrame) cho tới khi chiếm `share` khoảng trống theo chiều chật hơn; không bao giờ thu nhỏ. */
 function fitScale(h: NonNullable<ReturnType<typeof fxHost>>, lls: [number, number][], share: number): (l: [number, number]) => [number, number] {
+  // trận ở nhiều nơi cách xa nhau (Tết Mậu Thân: Huế và Sài Gòn, ~650 km): khung bay vừa cả hai nên mỗi nơi chỉ còn vài
+  // px; phóng riêng từng cụm quanh tâm của nó, đủ đọc mà không đè lên cụm kia
+  const cl = clusters(lls);
+  if (cl.length > 1) return fitClusters(h, cl, lls);
   const ps = lls.map(l => h.proj(l)), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
   const c = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
   const bw = (Math.max(...xs) - Math.min(...xs)) * h.ppu(), bh = (Math.max(...ys) - Math.min(...ys)) * h.ppu(), [aw, ah] = diagBox();
   const f = bw > 0 || bh > 0 ? Math.max(1, Math.min(30, (aw * share) / Math.max(bw, 1), (ah * share) / Math.max(bh, 1))) : 1;
   return l => { const p = h.proj(l); return [c[0] + (p[0] - c[0]) * f, c[1] + (p[1] - c[1]) * f]; };
 }
+
+/** Cách nhau hơn chừng này (độ kinh / vĩ) là hai nơi riêng của cùng một cảnh. */
+const SPLIT = 1.2;
+const geo = (a: [number, number], b: [number, number]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+/** Gom các điểm thành cụm (liên kết đơn: điểm cách một thành viên dưới SPLIT thì chung cụm). */
+function clusters(lls: [number, number][]): [number, number][][] {
+  const out: [number, number][][] = [];
+  for (const l of lls) {
+    const hit = out.filter(c => c.some(m => geo(m, l) < SPLIT));
+    const merged = hit.flat().concat([l]);
+    for (const c of hit) out.splice(out.indexOf(c), 1);
+    out.push(merged);
+  }
+  return out;
+}
+function fitClusters(h: NonNullable<ReturnType<typeof fxHost>>, cl: [number, number][][], lls: [number, number][]): (l: [number, number]) => [number, number] {
+  const [aw, ah] = diagBox(), u = h.ppu();
+  const geom = cl.map(c => {
+    const ps = c.map(l => h.proj(l)), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
+    return { c: [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2], ext: Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1e-6) * u };
+  });
+  const f = geom.map((g, i) => {
+    const near = Math.min(...geom.filter((_, j) => j !== i).map(o => Math.hypot(o.c[0] - g.c[0], o.c[1] - g.c[1]) * u));
+    return Math.max(1, Math.min(30, Math.min(aw * 0.22, ah * 0.22, near * 0.3) / Math.max(g.ext, 1)));
+  });
+  void lls;
+  return l => {
+    const p = h.proj(l);
+    let best = -1, bd = Infinity;
+    cl.forEach((c, i) => { for (const m of c) { const d = geo(m, l); if (d < bd) { bd = d; best = i; } } });
+    if (best < 0 || bd > SPLIT) return p;
+    const g = geom[best];
+    return [g.c[0] + (p[0] - g.c[0]) * f[best], g.c[1] + (p[1] - g.c[1]) * f[best]];
+  };
+}
+
+/** Bản đồ nghiêng (trận đánh) có sương mù che dải trên: khung bay chừa dải ấy (px), để nơi xa nhất không lọt vào sương. */
+export const fogTop = (v: HistEvent): number => {
+  const w = document.getElementById('mapwrap');
+  return v.k === 'Trận đánh' && fxOn() && !v.diary && !calm.matches && w ? Math.round(w.clientHeight * 0.2) : 0;
+};
 
 /** Phụ đề chân hình của cảnh: một khung, đổi nội dung theo nhịp (hiệu ứng lau chữ mỗi lần đổi). */
 function caption(r: Run, html: string, col: string, cls = ''): void {

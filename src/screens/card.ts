@@ -5,7 +5,7 @@ import { ERAS, type HistEvent } from '../data';
 import type { Fx } from '../data/cards';
 import { S, rt, familyName, allEv, chYear } from '../state';
 import { on } from '../ui/actions';
-import { esc, sheet, toast, ghost, calm } from '../ui/dom';
+import { esc, sheet, toast, ghost, calm, radios } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { SND, buzz } from '../audio';
 import { cardOf, canAfford, cost, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial, ruler } from '../play';
@@ -68,6 +68,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
   ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done && !spPending);
   d.dataset.card = v.id;
+  radios(d.querySelector('.sheet > [role=radiogroup]'), d.querySelector('h2'));
   if (done) { if (sp0 && spPending) { d.querySelector('.btn.ghost[data-a="close-card"]')?.remove(); mountSpecial(d, v, sp0, inTour); } return; }
   // chạm để chọn, bấm "Quyết định" mới chốt (như điểm rẽ và biến cố riêng): một lần chạm nhầm không tiêu mất gia sản
   const cgo = d.querySelector<HTMLButtonElement>('#cgo')!;
@@ -112,6 +113,9 @@ function finish(d: HTMLElement, v: HistEvent, inTour: boolean): void {
   d.querySelector<HTMLElement>('.btn[data-a="close-card"]')?.focus({ preventScroll: true });
   delete d.dataset.lock;
   if (rt.card?.id === v.id) rt.card = null;
+  // thẻ mở từ trang sự kiện: nút ◆ trên đầu trang thành "✓ Đã quyết"
+  const chip = layer.querySelector<HTMLElement>(`:scope > .ov [data-a="card"][data-id="${v.id}"]`);
+  if (chip) { chip.textContent = '✓ Đã quyết'; chip.classList.remove('on'); }
   renderMain();
   checkBadges();
 }
@@ -132,6 +136,8 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
     <div class="tt"><h3>${esc(ch[0])}</h3>${noList[i] ? `<span class="mono" style="color:var(--red)">${noList[i]}</span>` : ch[4] ? '<span class="al mono">Đổi họ</span>' : alTag(alignment(ch[2], chYear(v)))}</div><p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div></button>`).join('')}</div>
   <div id="xmom" hidden style="margin-top:10px"><div class="mono muted">Lấy họ mẹ</div><div class="homes" style="margin-top:6px">${moms.map((s, i) => `<button class="chip${i === 0 ? ' on' : ''}" data-m="${esc(s.names[0])}" aria-pressed="${i === 0}">${esc(s.names[0])}</button>`).join('')}</div></div>
   <div style="height:10px"></div><button class="btn" id="xgo" disabled>Quyết định</button>`);
+  const xo = sh.querySelector<HTMLElement>('.xopts');
+  radios(xo, xo?.previousElementSibling?.previousElementSibling); // tên nhóm: tiêu đề biến cố
   let sel = -1, mom = moms[0]?.names[0] || 'Nguyễn';
   const xmom = sh.querySelector<HTMLElement>('#xmom')!, xgo = sh.querySelector<HTMLButtonElement>('#xgo')!;
   sh.querySelectorAll<HTMLButtonElement>('.xopts .opt').forEach(b => (b.onclick = () => {

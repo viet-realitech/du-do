@@ -406,7 +406,8 @@ export const CARD = Object.fromEntries(CARDS.map(c => [c[0], c])) as Record<stri
 /** `notPicks`: không dùng bộ này nếu dòng họ đã chọn một trong các hướng đó (vd. nhà miền Bắc đã di cư vào Nam năm 1954).
     `regions` bỏ trống: mọi vùng. `after`: chỉ dùng khi dòng họ đã chọn một trong các lựa chọn đó trước ('khoá=chỉ số'
     như trong S.cards; biến cố riêng là 'x:id'), vd. đã có người vượt biên năm 1978 thì năm 1980 có đường bảo lãnh. */
-export const VARIANT: Record<string, { regions?: string[]; notPicks?: string[]; after?: string[]; choices: Choice[] }[]> = {
+/** `homes`: chỉ cho các quê này (khoá trong HOMES), khi khác biệt nằm ở từng tỉnh chứ không ở cả vùng (sáp nhập tỉnh 2025). */
+export const VARIANT: Record<string, { regions?: string[]; homes?: string[]; notPicks?: string[]; after?: string[]; choices: Choice[] }[]> = {
   // Hiệp ước Nhâm Tuất nhượng ba tỉnh miền Đông; ba tỉnh miền Tây còn thuộc Đại Nam tới 1867, Bắc và Trung còn xa chiến sự.
   // Hoà ước buộc Đại Nam bồi thường bốn triệu đồng trong mười năm.
   nt62: [
@@ -419,6 +420,41 @@ export const VARIANT: Record<string, { regions?: string[]; notPicks?: string[]; 
       ['Đóng thuế đền chiến phí', 'Triều đình tăng thuế để trả khoản bồi thường cho Pháp và Tây Ban Nha.', { b: -6, u: 2, tr: 6 }, 'Rương bạc vơi đi. Quan huyện khen nhà đóng đủ, đóng sớm.'],
       ['Đón bà con Nam Kỳ chạy ra', 'Cho một nhà từ Gia Định chạy loạn ra ở nhờ.', { g: -5, d: 1, u: 4, lg: 4 }, 'Người khách kể về những đồn luỹ đã mất. Cả nhà ngồi nghe đến khuya.'],
       ['Than khóc rồi sống tiếp', 'Làm lễ cáo tổ tiên, rồi sống tiếp.', { lg: 3 }, 'Ruộng vẫn cày. Chuyện mất đất phương Nam thành câu chuyện kể bên bếp.'],
+    ] },
+  ],
+  // Genève 1954 với một nhà ở phía nam vĩ tuyến 17 (Huế, Quảng Nam, Nam Bộ): không ai "di cư vào Nam" hay "ở lại miền
+  // Bắc"; Hiệp định hẹn tổng tuyển cử tháng 7.1956 (không bao giờ diễn ra), bộ đội Việt Minh ở Nam tập kết ra Bắc.
+  // Cùng thứ tự với thẻ gốc: theo chính quyền phía Nam / ở lại chờ / theo Việt Minh.
+  gnv: [
+    { regions: ['T2', 'NE', 'NW'], choices: [
+      ['Đứng về chính quyền ở Sài Gòn', 'Không chờ tổng tuyển cử; nhận việc ở xã dưới chính quyền Quốc gia Việt Nam.', { b: -3, u: 2, qg: 15, vm: -15, my: 3 }, 'Lá cờ trên trụ sở xã đổi màu. Người tập kết đi rồi, xã có thêm những nhà vắng chồng, vắng con.'],
+      ['Ở lại, chờ tổng tuyển cử 1956', 'Hiệp định hẹn hai năm sau thống nhất bằng một cuộc tổng tuyển cử.', { lg: 3 }, 'Tháng 7.1956 đến rồi qua; cuộc tổng tuyển cử không bao giờ diễn ra.'],
+      ['Có người tập kết ra Bắc', 'Một người con theo bộ đội Việt Minh xuống tàu ra Bắc.', { d: -1, u: 3, vm: 15, qg: -12 }, 'Hẹn hai năm, thành hai mươi mốt năm. Người đi để lại ở quê một tấm ảnh và một lời hứa.'],
+    ] },
+  ],
+  // Cuộc di cư 1954 nhìn từ miền Bắc: nhà đã di cư (Genève: "Di cư vào Nam") lập ấp mới ở miền Nam; nhà ở lại thì tiễn
+  // một nhánh họ đi, hay giữ nhà. Thẻ gốc (đón người di cư) dành cho nhà ở miền Nam.
+  dc54: [
+    { regions: ['B', 'T1'], after: ['gnv=0'], choices: [
+      ['Dựng nhà ở khu định cư', 'Cùng người cùng xứ đạo lập ấp mới ở miền Nam.', { g: -6, d: 1, u: 3, lg: 3, qg: 5 }, 'Ấp mới đặt theo tên làng cũ ngoài Bắc; giọng nói, nhà thờ, cả cách gói bánh đều mang theo.'],
+      ['Ở nhờ họ hàng đã vào trước', 'Chen chúc trong căn nhà của người quen ở Sài Gòn.', { g: -3, lg: 2 }, 'Hai năm ở nhờ rồi mới có chỗ riêng; hai nhà thành thân như ruột thịt.'],
+    ] },
+    { regions: ['B', 'T1'], choices: [
+      ['Tiễn một nhánh họ di cư', 'Một nhánh họ xuống Hải Phòng lên tàu vào Nam.', { d: -1, u: 2, qg: 5, vm: -5 }, 'Hai nhánh họ cách nhau con sông Bến Hải; tin tức bặt dần, hai mươi mốt năm sau mới gặp lại.'],
+      ['Ở lại, giữ nhà', 'Cả nhà không đi; đất tổ, mồ mả còn đây.', { lg: 3, vm: 3 }, 'Nhà vẫn ở chỗ cũ. Mấy nhà hàng xóm bỏ trống, rồi có người mới đến ở.'],
+    ] },
+  ],
+  // Sắp xếp tỉnh 2025 (từ 1.7.2025, Nghị quyết 202/2025/QH15): Hà Nội, Huế, Nghệ An nằm trong 11 tỉnh thành giữ nguyên;
+  // TP Hồ Chí Minh (nhận Bình Dương, Bà Rịa – Vũng Tàu) và Cần Thơ (nhận Sóc Trăng, Hậu Giang) giữ tên. Cấp huyện bỏ, xã
+  // nhập lại ở mọi nơi. Nam Định (vào Ninh Bình), Quảng Nam (vào Đà Nẵng), Tiền Giang (vào Đồng Tháp): thẻ gốc.
+  st25: [
+    { homes: ['hn', 'hue', 'na'], choices: [
+      ['Giữ nếp như cũ', 'Tỉnh không sáp nhập; chỉ cấp huyện bỏ đi, xã nhập lại.', { nn: 3, lg: 2 }, 'Tên tỉnh trên căn cước giữ nguyên; tên xã thì đổi, phải học thuộc lại.'],
+      ['Ghi tên xã cũ vào gia phả', 'Xã quê nhập vào xã khác; tên làng cũ chép lại cho con cháu.', { u: 2, lg: 3 }, 'Gia phả dòng họ có thêm một trang.'],
+    ] },
+    { homes: ['sg', 'ct'], choices: [
+      ['Đón thêm tỉnh bạn', 'Tỉnh khác nhập vào; tên quê vẫn giữ.', { nn: 3, lg: 2 }, 'Tên quê trên căn cước giữ nguyên; tỉnh rộng ra gấp mấy lần, tên phường thì đổi.'],
+      ['Ghi tên phường cũ vào gia phả', 'Phường cũ nhập vào phường khác; tên cũ chép lại.', { u: 2, lg: 3 }, 'Gia phả dòng họ có thêm một trang.'],
     ] },
   ],
   // Đã có người trong họ đi trước (lý lịch 1978: "Tìm đường ra đi"; họ Lý 1979: "bán chính thức"): người tới nơi gửi

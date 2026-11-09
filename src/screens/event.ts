@@ -235,8 +235,7 @@ on('close', el => {
     const at = r.fig ? q(`[data-a="fig"][data-id="${r.fig}"]`) : r.id ? q(`[data-a="ev"][data-id="${r.id}"]`) : null;
     (at || q('#sq') || document.querySelector<HTMLElement>('#tabs .tab.on'))?.focus();
     if (r.fig) openFig(r.fig);
-    if (isTouring()) resumeTour('overlay'); // bảng không dừng tour
-    return;
+    return; // bảng vẫn che bản đồ: tour (nếu có) chờ tới khi về Bản đồ
   }
   if (r) setTab('map'); else clearLayer(); // "Đến sự kiện" từ sử liệu: thanh tab trở về Bản đồ
   renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else resumeTour('overlay');

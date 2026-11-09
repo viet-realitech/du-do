@@ -73,6 +73,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .lbl { font-size: 14.5px; line-height: 20px; height: 28px; color: var(--ink2); padding: 8px 20px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: content-box }
 .vals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; padding: 12px 20px 0; height: 24px; box-sizing: content-box }
 .eraR { display: flex; align-items: center; gap: 6px; font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2) }
+#eraNo { white-space: nowrap } /* "Chương 5/6 · Thế hệ 5" không gãy giữa chừng */
 .eraR .av { width: 20px; height: 20px; font-size: 8px }
 .eraR[data-a=pickera] { color: var(--acc); border: 1px solid currentColor; border-radius: 12px; padding: 3px 8px } /* Đọc sử: điểm rẽ chưa chọn, mời chứ không chặn */
 .av { overflow: hidden; display: inline-grid; place-items: center; border-radius: 50%; background: var(--paper3); color: var(--ink); font: 700 12px var(--disp); flex: none; width: 28px; height: 28px; border: 1px solid var(--rule); letter-spacing: .02em }
@@ -80,7 +81,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .av.lock img { filter: blur(5px) grayscale(1); opacity: .55; transform: scale(1.15) }
 .av.lock { color: transparent }
 .mt { font-size: 11.5px; color: var(--ink3); display: flex; flex-direction: column; gap: 5px; white-space: nowrap }
-.mt > span { display: flex; justify-content: space-between }
+.mt > span { display: flex; justify-content: space-between; gap: 4px }
 .mt > span b { font-weight: 500; color: var(--ink2) }
 .mt i { height: 2px; background: var(--rule); overflow: hidden; display: block }
 .mt i b { display: block; height: 100%; background: var(--acc); transition: width .7s cubic-bezier(.2, .8, .2, 1) }
@@ -169,6 +170,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .tour .chip.ic[data-t=stop] { font-size: 13px }
 .tour .mono { white-space: nowrap; overflow: hidden; text-overflow: ellipsis } /* thanh hẹp: nhãn chương một dòng */
 @media (max-width: 400px) { .tour { gap: 6px } }
+/* điện thoại: đầu trang đã ghi chương; nhãn chỉ còn bước và trạng thái (tạm dừng / chờ quyết định), được xuống dòng */
+@media (max-width: 440px) { .tour .tch { display: none } .tour .mono { white-space: normal; line-height: 1.2 } }
 .tour .prog { height: 2px; background: var(--rule); margin-top: 7px }
 .tour .prog i { display: block; height: 100%; background: var(--acc); transition: width .4s }
 #pop { position: absolute; left: 12px; right: 56px; bottom: 8px; z-index: 3; background: var(--paper); border: 1px solid var(--ink); border-radius: 12px; padding: 9px 12px; animation: up .2s; box-shadow: 0 6px 20px rgba(0, 0, 0, .25) }
@@ -584,10 +587,12 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .yr { font-size: 92px }
   [data-theme=archive] .yr { font-size: 74px }
   [data-theme=poster] .yr { font-size: 80px }
-  .eraR { white-space: nowrap }
+  .eraR { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: block }
+  .eraR .av { display: inline-grid; vertical-align: middle; margin-right: 6px }
+  .hd .era { min-width: 0 }
   .lbl { grid-area: lbl; padding: 12px var(--gut) 0 8px; white-space: normal; height: auto; min-height: 28px }
   .vals { grid-area: vals; padding: 20px var(--gut) 0 8px; gap: 20px }
-  .res { grid-area: res; padding: 14px var(--gut) 0 8px; gap: 20px }
+  .res { grid-area: res; padding: 14px var(--gut) 0 8px; gap: 10px }
   .res[hidden] { display: none }
   .legend { grid-area: legend; padding: 20px var(--gut) 0 8px; height: auto; flex-wrap: wrap; gap: 8px 16px; white-space: normal }
   .card { grid-area: card; margin: 20px var(--gut) 0 8px; height: auto; min-height: 150px; padding: 16px 14px 16px 20px; align-items: flex-start }
@@ -603,7 +608,12 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .beats .bn { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--c); color: #111; font: 700 12px/22px var(--mono); text-align: center; margin-top: 1px }
   .beats li.on button { opacity: 1; background: var(--paper2); color: var(--ink); box-shadow: 0 0 0 1px var(--c) inset }
   .beats li.done button { opacity: .45 }
-  @media (min-height: 760px) { .beats:not([hidden]) { display: block } } /* cửa sổ thấp: cột bên không đủ chỗ cho danh sách */
+  @media (min-height: 760px) {
+    .beats:not([hidden]) { display: block } /* cửa sổ thấp: cột bên không đủ chỗ cho danh sách */
+    /* đang có danh sách nhịp (Trò chơi): chip quan hệ và chiều cao tối thiểu của thẻ nhường chỗ cho nó */
+    #main:has(.beats:not([hidden])) .legend .sep, #main:has(.beats:not([hidden])) .legend .relc { display: none }
+    #main:has(.beats:not([hidden])) .card { min-height: 0 }
+  }
   .mapwrap { grid-area: map; margin: calc(var(--sat) + 20px) 16px 0 var(--gut) }
   .scrub { grid-area: scrub; margin-top: 10px }
   .tabs { grid-area: tabs }

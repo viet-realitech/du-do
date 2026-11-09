@@ -1,14 +1,14 @@
 import type { HistEvent } from './data';
-import { S, save, rt, allEv } from './state';
+import { S, save, rt, allEv, curPick } from './state';
 import { isPlay } from './play';
 import { on } from './ui/actions';
 import { clearLayer, esc, markTab } from './ui/dom';
 import { hush, speak } from './narration';
 import { evKey, evSpeech } from './speech';
 import { SND } from './audio';
-import { zoomFit, zoomK, paintMap } from './map';
-import { playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, beforeClose } from './scene';
-import { renderMain } from './view';
+import { zoomFit, zoomK, paintMap, hidePop } from './map';
+import { fogTop, playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, beforeClose } from './scene';
+import { renderMain, renderLegend, renderCard } from './view';
 import { resumeTour } from './tour';
 import { openEvent } from './screens/event';
 
@@ -32,6 +32,7 @@ export function replayEvent(id: string): void {
     back = sel ? { id, tab: (sel.dataset.k as 'x' | 'v' | 'm' | 's') || 'x', ret: sel.closest<HTMLElement>('.ov')?.dataset.ret || '' } : null;
   }
   hush();
+  hidePop();
   clearLayer();
   if (!isPlay()) { S.year = v.y; rt.focusEv = v; save(); renderMain(); } // như "Đến sự kiện" của trang nguồn
   else {
@@ -39,6 +40,8 @@ export function replayEvent(id: string): void {
     if (!again) prevFocus = rt.focusEv;
     rt.focusEv = v;
     paintMap(true, v.y);
+    renderLegend(v.y, curPick(v.y)); // chú giải, thẻ theo năm của cảnh (bản đồ đang vẽ năm ấy), không theo năm đang chơi
+    renderCard();
   }
   let bar = document.getElementById('replb');
   if (!bar) {
@@ -61,7 +64,7 @@ export function replayEvent(id: string): void {
   wrap.classList.add('replaying');
   // bàn phím / trình đọc màn hình: trang sự kiện vừa đóng, đưa tiêu điểm tới thanh xem lại
   bar.querySelector<HTMLElement>('[data-t=again]')!.focus({ preventScroll: true });
-  zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH());
+  zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH(), fogTop(v));
   SND.fly();
   // cảnh bị cắt (chạm bản đồ nghiêng, đổi thẻ, ẩn app, kéo thanh năm): đóng phần xem lại nhưng không cho tour
   // trò chơi đang tạm dừng chạy tiếp sau lưng người chơi; chỉ Đóng / Back mới cho tour đi tiếp
@@ -90,7 +93,7 @@ export function closeReplay(resume = true): void {
   document.getElementById('replb')?.remove();
   document.getElementById('mapwrap')?.classList.remove('replaying');
   endScene();
-  if (isPlay()) { if (prevFocus) rt.focusEv = prevFocus; prevFocus = null; paintMap(true); } // biên giới, vùng sáng của năm đang chơi
+  if (isPlay()) { if (prevFocus) rt.focusEv = prevFocus; prevFocus = null; paintMap(true); renderLegend(); renderCard(); } // biên giới, vùng sáng, chú giải của năm đang chơi
   else renderMain();
   const b = back;
   back = null;

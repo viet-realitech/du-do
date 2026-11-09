@@ -241,6 +241,12 @@ const N=[
  ['pca16',2016,'12.7.2016','Hiệp ước','Phán quyết Toà Trọng tài về Biển Đông','Biển Đông',[113.5,12.0],'Toà Trọng tài theo UNCLOS bác yêu sách "đường chín đoạn" trong vụ Philippines kiện Trung Quốc.','Trung Quốc không công nhận phán quyết. Việt Nam ủng hộ giải quyết tranh chấp theo luật quốc tế.',[['vn','Hoan nghênh việc giải quyết bằng biện pháp hoà bình, theo UNCLOS.'],['cn','"Vô hiệu, không có tính ràng buộc".'],['intl','Mốc pháp lý quan trọng cho các bên ven Biển Đông.']],['lsvn']]
 ];
 N.forEach(a=>{const e={id:a[0],y:a[1],d:a[2],k:a[3],t:a[4],p:a[5],l:a[6],s:a[7],x:a[8],v:a[9],src:a[10]};if(a[11])e.qt=a[11];D.EV.push(e);});
-D.EV.sort((a,b)=>a.y-b.y);
+// Cùng năm: theo ngày bắt đầu ghi trong d ('9.6.1885', '21.1 – 9.7.1968', '4–5.1955', '8.1954 – 5.1955', '1953–1956'), để
+// 30.4.1975 đi sau Buôn Ma Thuột, Xuân Lộc; Thuận An (tt85) trước Cần Vương. Chỉ đổi thứ tự trong một năm.
+const dk=d=>{const s=String(d||''),ps=s.split(/\s*[–-]\s*/),p0=ps[0],pL=ps[ps.length-1],Y=/\d{4}/,yr=(p0.match(Y)||s.match(Y)||['0'])[0];
+const nn=p=>(p.match(/\d+/g)||[]).filter(x=>x.length<4).map(Number),n0=nn(p0),nL=nn(pL);let m=0,dd=0;
+if(n0.length>=2){dd=n0[0];m=n0[1];}else if(n0.length===1){if(Y.test(p0)||nL.length<2)m=n0[0];else{dd=n0[0];m=nL[1];}}
+return +yr*10000+m*100+dd;};
+D.EV.sort((a,b)=>a.y-b.y||dk(a.d)-dk(b.d));
 })();
 export default DD;

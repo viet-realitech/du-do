@@ -21,8 +21,9 @@ export function endGame(e: Era): void {
   if (h) openHarvest(e, h, Y1, S.quiz.e6 ? 'Xem kết cục dòng họ' : 'Đố nhanh chương 6', goEnd); else goEnd();
 }
 
+/** Kết luận. Đọc sử: câu đố chương 6 chỉ hỏi khi vừa xem hết chương 6 (như mọi chương: chương chưa xem không đố). */
 export function goEnd(): void {
-  if (!S.quiz.e6) openQuiz('e6', openEnd);
+  if (!S.quiz.e6 && (isPlay() || rt.toured === 'e6')) openQuiz('e6', openEnd);
   else openEnd();
 }
 

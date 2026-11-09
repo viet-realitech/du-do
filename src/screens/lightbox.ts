@@ -1,9 +1,10 @@
-import { app, esc } from '../ui/dom';
+import { app, esc, layer } from '../ui/dom';
 import { SND } from '../audio';
 import { cachedWiki, commonsPage, mediaCaption, videoUrl, type Media } from '../wiki';
 
 /* Fullscreen media viewer: swipe ←/→ to page, swipe ↓ to close, pinch / double-tap / wheel to zoom. */
 export async function openMedia(id: string, start: number): Promise<void> {
+  const who = document.activeElement as HTMLElement | null; // đóng thì tiêu điểm về ô ảnh đã mở
   const w = await cachedWiki(id);
   if (!w) return;
   const M = w.media.filter(m => !m.bad);
@@ -21,7 +22,11 @@ export async function openMedia(id: string, start: number): Promise<void> {
   <button class="lbnav l" aria-label="Trước">‹</button><button class="lbnav r" aria-label="Sau">›</button>
   <div class="lbcap" data-r="cap"></div><div class="lbdots" data-r="dots"></div><div class="lbhint">Vuốt để chuyển · chụm hoặc chạm đúp để phóng to</div>`;
   app.appendChild(d);
+  // hộp thoại thật: trang phía sau không nhận tiêu điểm / trình đọc màn hình, tiêu điểm vào nút đóng
+  const wasInert = layer.inert;
+  layer.inert = true;
   const q = <T extends HTMLElement = HTMLElement>(s: string) => d.querySelector<T>(s)!;
+  q('.back').focus({ preventScroll: true });
   const T = q('.lbtrack'), stage = q('.lbstage');
   const navL = q<HTMLButtonElement>('.lbnav.l'), navR = q<HTMLButtonElement>('.lbnav.r');
 
@@ -98,11 +103,17 @@ export async function openMedia(id: string, start: number): Promise<void> {
     SND.tick();
   }
 
-  const close = () => { d.remove(); document.removeEventListener('keydown', kd); };
+  const close = () => {
+    if (!d.isConnected) return;
+    d.remove();
+    document.removeEventListener('keydown', kd);
+    layer.inert = wasInert;
+    if (who?.isConnected) who.focus({ preventScroll: true });
+  };
   const kd = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') go(-1);
     else if (e.key === 'ArrowRight') go(1);
-    else if (e.key === 'Escape') close();
+    else if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); close(); } // chỉ đóng trình xem ảnh, không cả trang dưới
   };
   document.addEventListener('keydown', kd);
   q('.back').onclick = close;

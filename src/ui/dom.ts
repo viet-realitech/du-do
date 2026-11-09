@@ -19,6 +19,10 @@ export function remember(el: Element, who: Element | null = document.activeEleme
 if (mainEl) new MutationObserver(recs => {
   const back = recs.flatMap(r => [...r.removedNodes]).map(n => invoker.get(n as Element)).filter((x): x is HTMLElement => !!x).pop();
   mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov');
+  // bảng chồng lên trang / bảng khác (nhân vật trên trang sự kiện, xác nhận trên Hồ sơ…): mọi lớp dưới bảng trên cùng
+  // không nhận tiêu điểm (Shift+Tab không lọt xuống nút bị che), bảng trên cùng đóng thì lớp dưới dùng lại được
+  const kids = [...layer.children] as HTMLElement[], top = kids.map(k => k.matches('.scrim')).lastIndexOf(true);
+  kids.forEach((k, i) => { k.inert = top >= 0 && i < top; });
   // bảng Nhân vật / Sử liệu / Hồ sơ phủ bản đồ: chỉ thanh tab còn dùng được, phần dưới bảng (dòng thời gian, nút zoom…) không nhận tiêu điểm
   const pane = !!layer.querySelector(':scope > .pane');
   for (const c of mainEl.children) if (c.id !== 'tabs') (c as HTMLElement).inert = pane;
@@ -102,6 +106,31 @@ export function sheet(html: string, dismiss = false): HTMLElement {
   s.tabIndex = -1;
   s.focus({ preventScroll: true });
   return d;
+}
+
+/** Nhóm lựa chọn role=radiogroup dựng bằng nút: một điểm dừng Tab (nút đang chọn, hay nút đầu), mũi tên chuyển và chọn
+    (gọi đúng hành vi bấm của nút), tên nhóm theo tiêu đề `label`. Nút bị khoá (không đủ sức, chưa nghe xong lời dẫn) bỏ qua. */
+export function radios(g: HTMLElement | null, label?: Element | null): void {
+  if (!g) return;
+  if (label) { label.id ||= 'rg-' + Math.random().toString(36).slice(2, 8); g.setAttribute('aria-labelledby', label.id); }
+  const all = () => [...g.querySelectorAll<HTMLButtonElement>(':scope > [role=radio]')], opts = () => all().filter(b => !b.disabled);
+  const sync = () => {
+    const o = opts();
+    if (!o.length) return; // còn khoá hết (lời dẫn đang kể): để nguyên
+    const cur = o.find(b => b.getAttribute('aria-checked') === 'true') || o[0];
+    all().forEach(b => (b.tabIndex = b === cur ? 0 : -1));
+  };
+  sync();
+  g.addEventListener('focusin', sync);
+  g.addEventListener('click', () => requestAnimationFrame(sync));
+  g.addEventListener('keydown', ev => {
+    const d = ev.key === 'ArrowDown' || ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowUp' || ev.key === 'ArrowLeft' ? -1 : 0, o = opts();
+    if (!d || !o.length) return;
+    ev.preventDefault();
+    const i = o.indexOf(document.activeElement as HTMLButtonElement), n = o[(i + d + o.length) % o.length];
+    n.focus();
+    n.click();
+  });
 }
 
 /** Thông báo lịch sự cho trình đọc màn hình (vùng ẩn có sẵn trước khi điền, để được đọc). */

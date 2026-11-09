@@ -1,13 +1,13 @@
 import { ERAS, F, VAL, pop, regime2, type Era } from './data';
 import { S, save, rt, Y0, Y1, eraOf, evEra, curPick, optOf, chYear, values, allEv, visEv, setFocus, pct } from './state';
 import { on } from './ui/actions';
-import { $, esc } from './ui/dom';
+import { $, esc, announce } from './ui/dom';
 import { av, flag } from './ui/bits';
-import { paintMap, paintHome } from './map';
+import { paintMap, paintHome, hidePop } from './map';
 import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice, ownCard } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
-import { stopTour, isTourPaused, resumeTour, canResumeChapter, tourEra } from './tour';
+import { stopTour, isTourPaused, resumeTour, canResumeChapter, tourEra, tourPause } from './tour';
 import { endGame } from './screens/ending';
 import { openGate } from './screens/gate';
 import { openEvent, SIDE_PV } from './screens/event';
@@ -54,10 +54,7 @@ export function renderMain(): void {
   $('#lbl')!.textContent = R.label;
   const pp = pop(y);
   $('#popl')!.textContent = pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu';
-  $('#legend')!.innerHTML = R.legend
-    .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
-    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(k => relChip(k, y)).join('') : '');
-  legendEdge();
+  renderLegend(y, pk);
   paintMap();
   paintHome(isPlay() ? home()[2] : null);
   renderVals();
@@ -65,6 +62,15 @@ export function renderMain(): void {
   $('#fbtn')!.classList.toggle('act', S.filt !== 'Tất cả');
   renderCard();
   renderScrub();
+}
+
+/** Chú giải các phe của năm y (Trò chơi: kèm quan hệ với các thế lực). Xem lại diễn biến trong Trò chơi gọi với năm của
+    cảnh (bản đồ vẽ biên giới năm ấy, năm đang chơi giữ nguyên). */
+export function renderLegend(y = S.year, pk = optOf(tourEra() || eraOf(y))): void {
+  $('#legend')!.innerHTML = regime2(y).legend
+    .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
+    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(k => relChip(k, y)).join('') : '');
+  legendEdge();
 }
 
 function renderVals(): void {
@@ -75,7 +81,8 @@ function renderVals(): void {
 
 /** Trò chơi: sau một thẻ / mùa màng, đi tiếp luồng đang chạy (tour tạm dừng, hoặc năm đích còn thẻ bắt buộc). */
 export function continueFlow(): void {
-  if (isTourPaused()) { resumeTour(); return; }
+  // thẻ do tour mở: tour đi tiếp. Thẻ mở từ trang sự kiện / khi đã ❚❚: tour chờ trang đóng / ▶ (theo dõi lớp phủ trong tour.ts)
+  if (isTourPaused()) { if (tourPause() === 'card') resumeTour(); else renderMain(); return; }
   // setYear mở thẻ bắt buộc kế tiếp hoặc điểm rẽ / kết cục; openGate và endGame xoá flowTo, hoặc setYear khi hết việc.
   if (rt.flowTo != null) { setYear(rt.flowTo, true); return; }
   renderMain();
@@ -98,7 +105,7 @@ function renderRes(): void {
   if (!covered) shownRes = { ...S.res };
 }
 
-function renderCard(): void {
+export function renderCard(): void {
   const c = $('#card')!, y = S.year;
   // Đọc sử: điểm rẽ không bắt buộc, nên tới 2026 là xem được kết luận (chương chưa chọn để trống), kèm lối quay lại
   // điểm rẽ sớm nhất còn bỏ ngỏ. Trò chơi: luôn đủ sáu (điểm rẽ chặn dòng thời gian).
@@ -174,6 +181,7 @@ export function setYear(yIn: number, open = false): void {
   // thẻ còn nợ của một chương trước (kể cả Điện Biên Phủ, Genève: cùng năm 1954 nhưng thuộc chương 4) đi trước điểm rẽ
   if (pc && (!pend || pc.y < pend.cy || ERAS.indexOf(evEra(pc)) < ERAS.indexOf(pend))) { y = pc.y; rt.card = pc; rt.gate = null; }
   if (y !== S.year || open) {
+    if (y !== S.year) hidePop(); // khung tỉnh ghi năm nó được mở
     const a = Math.min(S.year, y), b = Math.max(S.year, y);
     if (y !== S.year && visEv().some(v => v.y > a && v.y <= b) && Date.now() - lastTick > 70) { SND.tick(); lastTick = Date.now(); }
     S.year = y;
@@ -203,7 +211,14 @@ export function stepEv(d: number): void {
 export function initTimeline(): void {
   const sc = $('#tl')!, t = $('#trk')!;
   let drag = false;
-  const at = (ev: PointerEvent) => { const r = t.getBoundingClientRect(); return Y0 + ((ev.clientX - r.left) / r.width) * (Y1 - Y0); };
+  // hai đầu: chạm vào nhãn "1858" / "NAY" hay sát mép là đúng năm đầu / năm cuối (năm 2026 có thẻ kết luận; trên điện
+  // thoại một năm chỉ ~1,8 px, nhãn NAY canh phải nên giữa nhãn rơi vào ~2021)
+  const at = (ev: PointerEvent) => {
+    const r = t.getBoundingClientRect(), d = ev.type === 'pointerdown' ? (ev.target as Element).closest?.('.dec') : null;
+    if (ev.clientX >= r.right - 6 || d?.classList.contains('r')) return Y1;
+    if (ev.clientX <= r.left + 6 || d?.classList.contains('l')) return Y0;
+    return Y0 + ((ev.clientX - r.left) / r.width) * (Y1 - Y0);
+  };
   let target = S.year;
   sc.addEventListener('pointerdown', ev => { ac(); drag = true; stopTour(); sc.setPointerCapture(ev.pointerId); target = at(ev); setYear(target); });
   sc.addEventListener('pointermove', ev => { if (drag) { target = at(ev); setYear(target); } });
@@ -238,9 +253,15 @@ export function initTimeline(): void {
 /* ---------- event-type filter ---------- */
 const KINDS = ['Tất cả', 'Trận đánh', 'Hiệp ước', 'Chính trị', 'Xã hội', 'Nhật ký'];
 
+/** Đóng menu lọc; `back`: tiêu điểm về nút ≡ (Escape, vừa chọn), không rơi về <body>. */
+function closeFilter(back = false): void {
+  $('#fmenu')?.remove();
+  $('#fbtn')!.setAttribute('aria-expanded', 'false');
+  if (back) $('#fbtn')!.focus({ preventScroll: true });
+}
 function toggleFilter(): void {
   let m = $('#fmenu');
-  if (m) { m.remove(); return; }
+  if (m) { closeFilter(); return; }
   const all = allEv();
   m = document.createElement('div');
   m.id = 'fmenu';
@@ -250,15 +271,21 @@ function toggleFilter(): void {
     return `<button class="${S.filt === k ? 'on' : ''}" data-a="filt" data-k="${k}">${k}<span>${n}</span></button>`;
   }).join('');
   $('#mapwrap')!.appendChild(m);
+  $('#fbtn')!.setAttribute('aria-expanded', 'true');
+  // tiêu điểm rời menu (Tab đi chỗ khác): đóng, không để menu treo trên bản đồ
+  m.addEventListener('focusout', ev => { const t = ev.relatedTarget as Element | null; if (t && !t.closest('#fmenu, #fbtn')) closeFilter(); });
 }
 
 export function initMainControls(): void {
+  $('#fbtn')!.setAttribute('aria-expanded', 'false');
+  // Escape (tiêu điểm ở menu hay còn ở nút ≡): chỉ đóng menu, không đóng trang / bảng nào khác
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('#fmenu')) { ev.stopPropagation(); closeFilter(true); } }, true);
   $('#fbtn')!.addEventListener('click', e => { e.stopPropagation(); toggleFilter(); });
   document.addEventListener('click', e => {
     const m = $('#fmenu'), t = e.target as Element;
-    if (m && !t.closest('#fmenu') && !t.closest('#fbtn')) m.remove();
+    if (m && !t.closest('#fmenu') && !t.closest('#fbtn')) closeFilter();
   });
-  on('filt', (el, ev) => { ev.stopPropagation(); S.filt = el.dataset.k!; save(); setFocus(); $('#fmenu')?.remove(); renderMain(); });
+  on('filt', (el, ev) => { ev.stopPropagation(); S.filt = el.dataset.k!; save(); setFocus(); closeFilter(true); renderMain(); announce(`Lọc: ${S.filt}`); });
   on('step', el => stepEv(+el.dataset.d!));
   on('ev', el => openEvent(el.dataset.id!, (el.dataset.tab as 'x' | 'v' | 'm' | 's') || 'x')); // data-tab: mở thẳng một thẻ (Góc nhìn từ khép trận)
   on('fig', el => openFig(el.dataset.id!));
