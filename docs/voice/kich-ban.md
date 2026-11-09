@@ -1,6 +1,6 @@
 # Dư Đồ · Kịch bản thu giọng thuyết minh
 
-202 đoạn, tổng khoảng 41 phút đọc. Người thật đã thu: 0/202; giọng máy VieNeu: 202.
+202 đoạn, tổng khoảng 42 phút đọc. Người thật đã thu: 0/202; giọng máy VieNeu: 202.
 
 ## Hướng dẫn thu
 
@@ -694,9 +694,9 @@
 
 ### `lb72` · giọng máy
 
-*Trận đánh · 18–29.12.1972 · ~12 giây*
+*Trận đánh · 18–29.12.1972 · ~18 giây*
 
-> Năm 1972. Chiến dịch Linebacker II. Mỹ dùng B-52 ném bom Hà Nội, Hải Phòng suốt 12 ngày đêm. Hàng chục B-52 bị bắn rơi. Một tháng sau, Hiệp định Paris được ký.
+> Năm 1972. Chiến dịch Linebacker II. Mỹ dùng B-52 ném bom Hà Nội, Hải Phòng suốt 12 ngày đêm. Phía Việt Nam công bố bắn rơi 81 máy bay, trong đó có 34 B-52; phía Mỹ ghi nhận 15 B-52 bị bắn rơi. Một tháng sau, Hiệp định Paris được ký.
 
 ### `pr73` · giọng máy
 
