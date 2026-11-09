@@ -217,10 +217,10 @@ on('src', el => openSrc(el.dataset.id!));
 on('goev', el => {
   const v = EV.find(x => x.id === el.dataset.id);
   if (!v) return;
-  S.year = v.y;
-  rt.focusEv = v;
-  save();
-  openEvent(v.id, 'x', JSON.stringify({ tab: 'map' } as Ret)); // chủ ý "đến sự kiện": đóng trang thì ở lại bản đồ năm đó
+  // Đọc sử: chủ ý "đến sự kiện": đóng trang thì ở lại bản đồ năm đó. Trò chơi: năm đang chơi giữ nguyên (không vượt điểm
+  // rẽ, thẻ còn nợ), chỉ mở trang
+  if (!isPlay()) { S.year = v.y; rt.focusEv = v; save(); }
+  openEvent(v.id, 'x', JSON.stringify({ tab: 'map' } as Ret));
 });
 // Closing an overlay returns to where it was opened from: a pane (and the figure sheet), else the refreshed map.
 // Chỉ nút đóng của chính trang sự kiện mới dùng đích quay về của nó (nút "close" khác: về bản đồ như cũ).
@@ -238,6 +238,6 @@ on('close', el => {
     return; // bảng vẫn che bản đồ: tour (nếu có) chờ tới khi về Bản đồ
   }
   if (r) setTab('map'); else clearLayer(); // "Đến sự kiện" từ sử liệu: thanh tab trở về Bản đồ
-  renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else resumeTour('overlay');
-  if (r?.fig) openFig(r.fig);
+  renderMain(); checkBadges(); if (!isTouring()) mood('calm'); else if (!r?.fig) resumeTour('overlay');
+  if (r?.fig) openFig(r.fig); // bảng nhân vật mở lại: tour vẫn chờ (không chạy một nhịp rồi dừng lại)
 });

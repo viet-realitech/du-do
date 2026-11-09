@@ -9,7 +9,7 @@ import { SND } from './audio';
 import { zoomFit, zoomK, paintMap, hidePop } from './map';
 import { fogTop, playScene, endScene, sceneFrame, hasScene, fxOn, capH, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, beforeClose } from './scene';
 import { renderMain, renderLegend, renderCard } from './view';
-import { resumeTour } from './tour';
+import { resumeTour, holdTour } from './tour';
 import { openEvent } from './screens/event';
 
 /* "Xem diễn biến": phát lại cảnh động của một sự kiện từ trang chi tiết (trận đánh, cảnh di chuyển), có lời kể,
@@ -72,7 +72,7 @@ export function replayEvent(id: string): void {
   let said = false;
   const say = () => { if (said || t !== tok || scenePaused() || beforeClose(v.id) || !document.getElementById('replb')) return; said = true; speak(evSpeech(v), undefined, false, evKey(v)); };
   sayNow = say;
-  playScene(v, Infinity, () => { if (t === tok) closeReplay(false); }, undefined, undefined, say);
+  playScene(v, Infinity, () => { if (t === tok) { closeReplay(false); queueMicrotask(holdTour); } }, undefined, undefined, say); // cắt ngang: tour chờ ▶
   pzState(bar); // sau khi cảnh mới chạy (cảnh cũ đang giữ thì nút không còn ở ▶)
   setTimeout(say, closeAt(v) ? voiceAt(v) + 4000 : voiceAt(v)); // trận có sơ đồ: cảnh tự gọi say khi khép; đây là bảo hiểm
 }

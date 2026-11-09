@@ -23,6 +23,8 @@ if (mainEl) new MutationObserver(recs => {
   // không nhận tiêu điểm (Shift+Tab không lọt xuống nút bị che), bảng trên cùng đóng thì lớp dưới dùng lại được
   const kids = [...layer.children] as HTMLElement[], top = kids.map(k => k.matches('.scrim')).lastIndexOf(true);
   kids.forEach((k, i) => { k.inert = top >= 0 && i < top; });
+  // menu lọc sự kiện không treo dưới trang / bảng vừa mở (Escape đầu tiên phải đóng trang, không đóng menu khuất)
+  if (kids.length) { document.getElementById('fmenu')?.remove(); document.getElementById('fbtn')?.setAttribute('aria-expanded', 'false'); }
   // bảng Nhân vật / Sử liệu / Hồ sơ phủ bản đồ: chỉ thanh tab còn dùng được, phần dưới bảng (dòng thời gian, nút zoom…) không nhận tiêu điểm
   const pane = !!layer.querySelector(':scope > .pane');
   for (const c of mainEl.children) if (c.id !== 'tabs') (c as HTMLElement).inert = pane;

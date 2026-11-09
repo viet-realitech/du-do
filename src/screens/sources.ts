@@ -8,7 +8,7 @@ export function openSrc(id: string): void {
   const s = SRC.find(x => x.id === id);
   if (!s) return;
   if (!S.srcSeen.includes(id)) { S.srcSeen.push(id); save(); }
-  const evs = EV.filter(v => v.src.includes(id));
+  const evs = EV.filter(v => v.src.includes(id) && (!isPlay() || v.y <= S.year)); // Trò chơi: không xem trước tương lai (như bảng Sử liệu)
   sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">${s.k}</span><span class="stamp" style="font-size:10px">Công khai</span></div>
   <h2 style="margin:10px 0 4px">${esc(s.t)}</h2><div class="muted" style="font-style:italic">${esc(s.by)} · ${esc(s.y)}</div>
   <p style="margin-top:12px">${esc(s.d)}</p>

@@ -128,7 +128,7 @@ export function goMode(m: 'read' | 'play'): void {
   invalidateTrack();
   applyTheme();
   setTab('map');
-  if (S.step === 'play') { renderMain(); resumePlace(); }
+  if (S.step === 'play') { resumePlace(); renderMain(); } // renderMain sau: thẻ bên của sự kiện đang chọn (setFocus) được vẽ
   else if (m === 'play') gameIntro();
   else intro();
 }

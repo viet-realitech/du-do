@@ -135,10 +135,11 @@ function diagBox(): [number, number] {
 }
 /** Phóng sơ đồ (minh hoạ, không phải tỉ lệ thật) quanh tâm khung các điểm `lls` (khung mà bản đồ vừa bay tới, như
     sceneFrame) cho tới khi chiếm `share` khoảng trống theo chiều chật hơn; không bao giờ thu nhỏ. */
-function fitScale(h: NonNullable<ReturnType<typeof fxHost>>, lls: [number, number][], share: number): (l: [number, number]) => [number, number] {
+function fitScale(h: NonNullable<ReturnType<typeof fxHost>>, lls: [number, number][], share: number, split = false): (l: [number, number]) => [number, number] {
   // trận ở nhiều nơi cách xa nhau (Tết Mậu Thân: Huế và Sài Gòn, ~650 km): khung bay vừa cả hai nên mỗi nơi chỉ còn vài
-  // px; phóng riêng từng cụm quanh tâm của nó, đủ đọc mà không đè lên cụm kia
-  const cl = clusters(lls);
+  // px; phóng riêng từng cụm quanh tâm của nó, đủ đọc mà không đè lên cụm kia. Chỉ trận đánh: đường đi (cảnh di chuyển)
+  // giữ đúng bến, đúng cảng
+  const cl = split ? clusters(lls) : [];
   if (cl.length > 1) return fitClusters(h, cl, lls);
   const ps = lls.map(l => h.proj(l)), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
   const c = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
@@ -527,7 +528,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   ensureDefs(h.defs);
   const k = h.k(), root = r.root, type = sc?.type || 'land';
   // Trận gọn trong vài km: phóng sơ đồ quanh tâm khung cho tới khi chiếm phần lớn chỗ trống (minh hoạ, không phải tỉ lệ thật)
-  const P = fitScale(h, [v.l, ...(sc?.arrows || []).flatMap(a => [a[0], a[1]]), ...(sc?.hold || []).map(x => [x[0], x[1]] as [number, number])], 0.8);
+  const P = fitScale(h, [v.l, ...(sc?.arrows || []).flatMap(a => [a[0], a[1]]), ...(sc?.hold || []).map(x => [x[0], x[1]] as [number, number])], 0.8, true);
   const arrows = sc?.arrows.length ? sc.arrows : [];
   const T0 = 120; // gọi sau khi bản đồ đã bay tới (playScene hẹn 1,25 s), để hệ số zoom k đã đúng
   // nhịp kể: mũi tên thứ i vẽ khi nhịp i bắt đầu, phụ đề đọc ghi chú của nó

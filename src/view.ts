@@ -279,7 +279,7 @@ function toggleFilter(): void {
 export function initMainControls(): void {
   $('#fbtn')!.setAttribute('aria-expanded', 'false');
   // Escape (tiêu điểm ở menu hay còn ở nút ≡): chỉ đóng menu, không đóng trang / bảng nào khác
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('#fmenu')) { ev.stopPropagation(); closeFilter(true); } }, true);
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('#fmenu') && !$('#layer')!.children.length) { ev.stopPropagation(); closeFilter(true); } }, true);
   $('#fbtn')!.addEventListener('click', e => { e.stopPropagation(); toggleFilter(); });
   document.addEventListener('click', e => {
     const m = $('#fmenu'), t = e.target as Element;

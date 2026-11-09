@@ -171,7 +171,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .tour .mono { white-space: nowrap; overflow: hidden; text-overflow: ellipsis } /* thanh hẹp: nhãn chương một dòng */
 @media (max-width: 400px) { .tour { gap: 6px } }
 /* điện thoại: đầu trang đã ghi chương; nhãn chỉ còn bước và trạng thái (tạm dừng / chờ quyết định), được xuống dòng */
-@media (max-width: 440px) { .tour .tch { display: none } .tour .mono { white-space: normal; line-height: 1.2 } }
+#tourb .tsh { display: none }
+@media (max-width: 440px) { #tourb .tch, #tourb .tlg { display: none } #tourb .tsh { display: inline } }
 .tour .prog { height: 2px; background: var(--rule); margin-top: 7px }
 .tour .prog i { display: block; height: 100%; background: var(--acc); transition: width .4s }
 #pop { position: absolute; left: 12px; right: 56px; bottom: 8px; z-index: 3; background: var(--paper); border: 1px solid var(--ink); border-radius: 12px; padding: 9px 12px; animation: up .2s; box-shadow: 0 6px 20px rgba(0, 0, 0, .25) }

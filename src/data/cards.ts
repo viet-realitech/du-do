@@ -432,10 +432,10 @@ export const VARIANT: Record<string, { regions?: string[]; homes?: string[]; not
       ['Có người tập kết ra Bắc', 'Một người con theo bộ đội Việt Minh xuống tàu ra Bắc.', { d: -1, u: 3, vm: 15, qg: -12 }, 'Hẹn hai năm, thành hai mươi mốt năm. Người đi để lại ở quê một tấm ảnh và một lời hứa.'],
     ] },
   ],
-  // Cuộc di cư 1954 nhìn từ miền Bắc: nhà đã di cư (Genève: "Di cư vào Nam") lập ấp mới ở miền Nam; nhà ở lại thì tiễn
-  // một nhánh họ đi, hay giữ nhà. Thẻ gốc (đón người di cư) dành cho nhà ở miền Nam.
+  // Cuộc di cư 1954 nhìn từ miền Bắc: nhà đã vào Nam (điểm rẽ 5 không phải "Miền Bắc", như mọi nội dung 1954–1975) lập
+  // ấp mới ở miền Nam; nhà ở lại thì tiễn một nhánh họ đi, hay giữ nhà. Thẻ gốc (đón người di cư) dành cho nhà ở miền Nam.
   dc54: [
-    { regions: ['B', 'T1'], after: ['gnv=0'], choices: [
+    { regions: ['B', 'T1'], notPicks: ['bac'], choices: [
       ['Dựng nhà ở khu định cư', 'Cùng người cùng xứ đạo lập ấp mới ở miền Nam.', { g: -6, d: 1, u: 3, lg: 3, qg: 5 }, 'Ấp mới đặt theo tên làng cũ ngoài Bắc; giọng nói, nhà thờ, cả cách gói bánh đều mang theo.'],
       ['Ở nhờ họ hàng đã vào trước', 'Chen chúc trong căn nhà của người quen ở Sài Gòn.', { g: -3, lg: 2 }, 'Hai năm ở nhờ rồi mới có chỗ riêng; hai nhà thành thân như ruột thịt.'],
     ] },

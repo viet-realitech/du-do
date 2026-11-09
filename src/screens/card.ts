@@ -136,8 +136,10 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
     <div class="tt"><h3>${esc(ch[0])}</h3>${noList[i] ? `<span class="mono" style="color:var(--red)">${noList[i]}</span>` : ch[4] ? '<span class="al mono">Đổi họ</span>' : alTag(alignment(ch[2], chYear(v)))}</div><p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}</div></button>`).join('')}</div>
   <div id="xmom" hidden style="margin-top:10px"><div class="mono muted">Lấy họ mẹ</div><div class="homes" style="margin-top:6px">${moms.map((s, i) => `<button class="chip${i === 0 ? ' on' : ''}" data-m="${esc(s.names[0])}" aria-pressed="${i === 0}">${esc(s.names[0])}</button>`).join('')}</div></div>
   <div style="height:10px"></div><button class="btn" id="xgo" disabled>Quyết định</button>`);
-  const xo = sh.querySelector<HTMLElement>('.xopts');
-  radios(xo, xo?.previousElementSibling?.previousElementSibling); // tên nhóm: tiêu đề biến cố
+  const xo = sh.querySelector<HTMLElement>('.xopts'), xh = xo?.previousElementSibling?.previousElementSibling as HTMLElement | null;
+  radios(xo, xh); // tên nhóm: tiêu đề biến cố
+  // nút "Quyết định" vừa được gỡ: tiêu điểm tới tiêu đề biến cố (trình đọc màn hình đọc nó), không rơi về <body>
+  if (xh) { xh.tabIndex = -1; xh.focus({ preventScroll: true }); }
   let sel = -1, mom = moms[0]?.names[0] || 'Nguyễn';
   const xmom = sh.querySelector<HTMLElement>('#xmom')!, xgo = sh.querySelector<HTMLButtonElement>('#xgo')!;
   sh.querySelectorAll<HTMLButtonElement>('.xopts .opt').forEach(b => (b.onclick = () => {
