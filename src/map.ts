@@ -11,6 +11,7 @@ import { checkBadges } from './badges';
 import { isTouring, pauseTour, tourEra } from './tour';
 import { openEvent } from './screens/event';
 import { endScene } from './scene';
+import { initCoast, type Coast } from './coast';
 
 /* Map of Vietnam in 1858–2026 frames. SVG user space is 390 × H; the projection
    is fixed so markers, labels and zoom targets share one coordinate system. */
@@ -52,6 +53,8 @@ G.px = 1;
 let proj: d3.GeoProjection;
 let path: d3.GeoPath;
 let ready = false;
+/** Lớp đồng mức WebGL2 (coast.ts); null: dùng lớp SVG `G.rip`. */
+let coast: Coast | null = null;
 
 /** Build the map once the (lazy-loaded) world atlas arrives; paintMap() is a no-op until then. */
 export async function initMap(): Promise<void> {
@@ -107,13 +110,20 @@ export async function initMap(): Promise<void> {
   G.grat = Z.append('path').attr('d', path(d3.geoGraticule().step([2, 2])())).attr('fill', 'none').style('stroke', 'var(--ink2)')
     .attr('stroke-opacity', 0.35).attr('stroke-width', 0.6).attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
 
-  // Radar-like ripples around the coastline.
+  // Radar-like ripples around the coastline: WebGL2 (coast.ts) when available, else 12 SVG strokes of the whole region.
   const land = topojson.merge(topo, topo.objects.countries.geometries.filter(g => g.type) as any);
   const rip = G.rip = Z.append('g').attr('class', 'rip').attr('fill', 'none').style('pointer-events', 'none');
-  [26, 20, 15, 10.5, 7, 4].forEach((w, i) => {
-    rip.append('path').attr('d', path(land)).style('stroke', 'var(--rip)').attr('stroke-opacity', 0.14 + i * 0.06).attr('stroke-width', w);
-    rip.append('path').attr('class', 'seaS').attr('d', path(land)).attr('stroke-width', w - 1.3);
-  });
+  const svgRip = () => {
+    if (!rip.selectAll('path').empty()) return;
+    const d = path(land);
+    [26, 20, 15, 10.5, 7, 4].forEach((w, i) => {
+      rip.append('path').attr('d', d).style('stroke', 'var(--rip)').attr('stroke-opacity', 0.14 + i * 0.06).attr('stroke-width', w);
+      rip.append('path').attr('class', 'seaS').attr('d', d).attr('stroke-width', w - 1.3);
+    });
+  };
+  const cv = document.getElementById('coast') as HTMLCanvasElement | null;
+  coast = cv ? initCoast(cv, ctx => d3.geoPath(proj, ctx)(land), () => { coast = null; svgRip(); if (ready) themeMap(); }) : null;
+  if (!coast) { cv?.remove(); svgRip(); }
 
   const R0 = G.r0 = Z.append('g');
   // nền đất đặc dưới mọi lớp tô: nửa trong của các vệt đồng mức (nét vẽ đè đường bờ) không lộ qua màu thuộc địa / tranh chấp trong mờ
@@ -188,6 +198,7 @@ export async function initMap(): Promise<void> {
     if (ev.sourceEvent && isTouring()) pauseTour('map'); // kéo / chụm: tạm dừng, yên 5 s thì chạy tiếp (cả Đọc sử)
     G.k = ev.transform.k;
     Z.attr('transform', ev.transform);
+    coast?.view(ev.transform);
     rescale();
     if (G.k > 1.3 && !S.zoomed) { S.zoomed = true; save(); checkBadges(); }
   });
@@ -195,7 +206,7 @@ export async function initMap(): Promise<void> {
   // bay / kéo / chụm (đo với CPU chậm 4 lần: 20 → 60 khung hình/giây khi ẩn nó). Tạm ẩn trong lúc chuyển động.
   // Chỉ khi bản đồ thật sự di chuyển (một cú chạm chọn tỉnh không làm gợn sóng nháy).
   // Bảo hiểm: d3 có thể không báo 'end' (phần tử dưới ngón tay bị gỡ giữa cử chỉ): hiện lại sau 300 ms yên.
-  if (lite) {
+  if (lite && !coast) {
     let hid = false, t = 0;
     const show = () => { clearTimeout(t); if (hid) { hid = false; G.rip.style('visibility', null); } };
     G.zoom.on('zoom.lite', () => { if (!hid) { hid = true; G.rip.style('visibility', 'hidden'); } clearTimeout(t); t = window.setTimeout(show, 300); })
@@ -239,9 +250,12 @@ export function themeMap(): void {
   if (!G.defs) return;
   buildPatterns();
   const th = S.theme, co = th === 'archive' && S.mstyle !== 'flat';
-  G.sea.attr('fill', th === 'poster' ? 'url(#p-sea)' : seaC());
+  const ripOn = co || th === 'night';
+  // lớp WebGL nằm dưới SVG: nền biển SVG trong suốt (vẫn nhận chạm để đóng bảng tỉnh), màu biển là nền của .mapwrap
+  G.sea.attr('fill', th === 'poster' ? 'url(#p-sea)' : coast && ripOn ? 'transparent' : seaC());
   G.rip.selectAll('.seaS').attr('stroke', seaC());
-  G.rip.classed('off', !(co || th === 'night')).attr('filter', co ? 'url(#rough)' : null); // ẩn / hiện bằng lớp CSS (cảnh trận làm mờ thêm)
+  G.rip.classed('off', !ripOn).attr('filter', co && !coast ? 'url(#rough)' : null); // ẩn / hiện bằng lớp CSS (cảnh trận làm mờ thêm)
+  coast?.look(ripOn, getComputedStyle(document.documentElement).getPropertyValue('--rip'), co);
   G.others.attr('fill', landC()).attr('stroke-width', th === 'poster' ? 1.2 : 0.6);
   G.base.attr('fill', landC());
   document.getElementById('mapwrap')?.style.setProperty('--seac', seaC()); // nền khung = màu biển: bản đồ nghiêng không để lộ dải đen phía trên
@@ -269,6 +283,7 @@ function fitViewBox(): void {
   G.zoom.extent(box).translateExtent([[box[0][0], box[0][1] - 44 / px], [box[1][0], box[1][1] + 90 / px]]);
   G.f = Math.min(1, 1.3 / px);
   G.px = px;
+  coast?.box(box[0][0], box[0][1], px);
   rescale();
 }
 
