@@ -108,7 +108,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .reel .mono { position: absolute; left: 8px; bottom: 6px; font-size: 10px; letter-spacing: .08em; color: #f3ecdc; text-shadow: 0 1px 3px #000 }
 @keyframes kb { from { transform: scale(1.05) translate(0, 0) } to { transform: scale(1.28) translate(var(--kx, 4%), var(--ky, 2%)) } }
 @keyframes flick { 0% { opacity: .85 } 100% { opacity: 1 } }
-@media (prefers-reduced-motion: reduce) { #map { transition: none } .reel img, .reel.old .flick { animation: none } }
+@media (prefers-reduced-motion: reduce) { #map, #coast { transition: none } .reel img, .reel.old .flick { animation: none } }
 /* phụ đề chân hình của cảnh động (scene.ts caption): mỗi nhịp một ghi chú, viền trái màu phe */
 .lt { position: absolute; left: 10px; right: 10px; max-width: 520px; z-index: 3; background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--acc)); border-radius: 10px; padding: 6px 10px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); transition: opacity .3s } /* nhận chạm suốt cảnh (scene.ts caption) */
 .lt.in .lt-i { animation: ltin .28s cubic-bezier(.2, .8, .2, 1) } /* lau chữ trên lớp trong: khung ngoài vẫn nhận chạm */
@@ -143,6 +143,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #map .dimr { fill: var(--paper); opacity: 0; transition: opacity .7s }
 .mapwrap.scn #map .dimr { opacity: .55 }
 #map .rip { transition: opacity .7s }
+/* đồng mức bờ biển bằng WebGL (coast.ts): cùng khung, cùng phép nghiêng với #map, nằm dưới nó */
+#coast { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: transform 1.1s cubic-bezier(.2, .8, .2, 1), opacity .7s; transform-origin: 50% 64% }
+#coast.ready { opacity: 1 }
+#coast.off { opacity: 0 }
+.mapwrap.tilt #coast { transform: perspective(var(--persp, 1100px)) rotateX(var(--rx, 36deg)) scale(var(--cs, 1.2)) }
+.mapwrap.scn #coast.ready:not(.off) { opacity: .3 }
 #map .rip.off { opacity: 0 }
 .mapwrap.scn #map .rip:not(.off) { opacity: .3 } /* đường đồng mức bờ biển lùi lại khi trận diễn ra */
 .fx-at { font-family: var(--mono); font-weight: 600; letter-spacing: .02em }
