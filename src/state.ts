@@ -162,7 +162,7 @@ export function setFocus(): void {
 
 export function archetype(): [string, string] | null {
   const c: Record<string, number> = { vutrang: 0, caicach: 0, thuongthuyet: 0 };
-  picked().forEach(o => c[o.tag]++);
+  picked().forEach(o => { if (o.tag in c) c[o.tag]++; }); // 'giunep' (giữ kế hoạch hoá) không nghiêng về kiểu nào
   const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
   if (!top[1]) return null;
   return ({

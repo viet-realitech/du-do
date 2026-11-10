@@ -6,7 +6,8 @@ import provinces from './vn-provinces.json';
 export type Faction = 'dainam' | 'dnph' | 'phap' | 'phap_bh' | 'jp' | 'vndcch' | 'tc' | 'vnch' | 'cmlt' | 'chxhcn';
 export type Region = 'B' | 'T1' | 'QT' | 'T2' | 'NE' | 'NW';
 export type ValueKey = 'doc' | 'song' | 'tudo' | 'dk';
-export type Tag = 'vutrang' | 'caicach' | 'thuongthuyet';
+/** Kiểu lựa chọn; 'giunep' (giữ kế hoạch hoá sau 1975) không thuộc ba kiểu đấu tranh / cải cách / hoà hoãn. */
+export type Tag = 'vutrang' | 'caicach' | 'thuongthuyet' | 'giunep';
 export type LngLat = [number, number];
 
 export interface Quote { t: string; by: string; src: string }

@@ -78,9 +78,10 @@ export function resumeEra(): Era | undefined {
 export const tourEra = (): Era | null =>
   (tour && (!tour.paused || (S.year >= tour.e.cy && S.year <= tour.end)) ? tour.e : null) || resumeEra() || null; // tour đang dừng mà xem năm khác (xem lại, "đến sự kiện"): đầu trang theo năm ấy
 
-/** Đọc sử: mốc khép / mở các chương, và mọi sự kiện có câu đố cuối chương (data2.js QUIZ), luôn có trong tour của
-    chương chứa nó: câu đố chỉ hỏi điều tour đã kể. Mỗi chương tối đa năm mốc, cùng hai trang nhật ký, vẫn vừa tám bước. */
-const MUST = new Set(['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86', ...Object.values(QUIZ).flat().map(q => q[4])]);
+/** Đọc sử: mốc khép / mở các chương, và sự kiện của hai câu đố đầu mỗi chương (data2.js QUIZ), luôn có trong tour của
+    chương chứa nó: lần xem đầu, câu đố hỏi đúng điều tour đã kể (gate.ts quizFor chỉ hỏi sự kiện đã hiện). Hai câu còn lại
+    hỏi khi sự kiện của chúng có trong tour (Trò chơi: thẻ cả nước, luôn có), để tour vẫn còn chỗ cho các trận đánh. */
+const MUST = new Set(['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86', ...Object.values(QUIZ).flatMap(qs => qs.slice(0, 2).map(q => q[4]))]);
 /** Chỉ số thứ j trong `need` mẫu rải đều trên `len` phần tử, gồm cả đầu và cuối (sự kiện khép chương: 30.4.1975, Patenôtre…). */
 const spread = (j: number, need: number, len: number) => (need <= 1 || len <= 1 ? 0 : Math.round((j * (len - 1)) / (need - 1)));
 

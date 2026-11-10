@@ -622,25 +622,34 @@ export const VARIANT: Record<string, Variant[]> = {
   // Huế, Quảng Nam: không phải Tây Nguyên. Ia Drang, Mỹ Lai đến với nhà ven biển qua người chạy loạn (thẻ tuỳ chọn);
   // mùa hè 1972 người Quảng Trị chạy vào Huế, Đà Nẵng; tháng 3.1975 Huế, Đà Nẵng mất trong hai tuần sau Buôn Ma Thuột.
   id65: [
-    { homes: ['hue', 'qn'], scope: '', choices: [
+    { homes: ['hue', 'qn'], regions: ['T2'], scope: '', choices: [
       ['Đón họ hàng từ Pleiku xuống', 'Người trong họ làm rẫy ở Tây Nguyên tản cư về đồng bằng ở nhờ.', { g: -6, u: 3, lg: 4 }, 'Nhà chật thêm mấy miệng ăn. Người trên rẫy kể về trực thăng và những trận pháo đêm.'],
       ['Nghe tin qua đài, giữ ruộng', 'Trận đánh ở xa; đồng bằng vẫn cấy hái.', {}, 'Tin Ia Drang đến qua đài Sài Gòn và đài Giải phóng, mỗi bên kể một kiểu.'],
     ] },
   ],
   ml68: [
-    { homes: ['hue', 'qn'], scope: '', choices: [
+    { homes: ['hue', 'qn'], regions: ['T2'], scope: '', choices: [
       ['Nghe người tị nạn kể chuyện Sơn Mỹ', 'Người từ Quảng Ngãi chạy ra kể những gì đã thấy.', { u: 3, my: -6, lg: 3 }, 'Câu chuyện chỉ được kể trong nhà. Hơn một năm rưỡi sau, báo chí Mỹ mới đưa tin.'],
       ['Im lặng', 'Chuyện quá sức tin, lại sợ liên luỵ.', { u: -2 }, 'Hai mươi năm sau mới dám kể cho con.'],
     ] },
   ],
+  // Ấp Bắc (Mỹ Tho) với một nhà ở Sài Gòn (người Sài Gòn, người Bắc di cư): tin qua báo, qua người chạy loạn (thẻ tuỳ
+  // chọn: chương 5 của Nam Bộ đã nhiều thẻ bắt buộc hơn hẳn miền Bắc). Cố vấn Mỹ gọi đó là thất bại, chính quyền Sài Gòn
+  // gọi là thắng lợi.
+  ab63: [
+    { homes: ['sg', 'hn', 'nd', 'na'], regions: ['NE'], scope: '', choices: [
+      ['Đón họ hàng từ Mỹ Tho lên', 'Người trong họ ở vùng trận đánh lên Sài Gòn ở nhờ.', { g: -4, u: 3, lg: 4 }, 'Nhà có thêm mấy miệng ăn. Tiếng trực thăng ở quê họ, họ kể mãi không hết.'],
+      ['Đọc tin trên báo', 'Báo Sài Gòn và báo chí Mỹ kể trận đánh mỗi bên một kiểu.', {}, 'Cố vấn Mỹ gọi đó là thất bại, báo trong nước gọi là thắng lợi; ở nhà, người lớn bàn tán rồi thôi.'],
+    ] },
+  ],
   qt72: [
-    { homes: ['hue', 'qn'], choices: [
+    { homes: ['hue', 'qn'], regions: ['T2'], choices: [
       ['Đón người chạy từ Quảng Trị vào', 'Mở nhà cho những gia đình chạy trên Quốc lộ 1.', { g: -6, u: 5, lg: 5 }, 'Nhà có thêm hai gia đình ở nhờ suốt mùa hè. Họ kể về đoạn đường mà báo chí gọi là "Đại lộ Kinh hoàng".'],
       ['Gửi người già, trẻ nhỏ đi lánh', 'Đưa người già, trẻ nhỏ vào Đà Nẵng, xa tiếng pháo.', { g: -6, b: -6, d: -1 }, 'Ba tháng ở nhờ người quen. Tháng Chín, Cổ thành được tái chiếm; cả nhà lại đoàn tụ.'],
     ] },
   ],
   bmt75: [
-    { homes: ['hue', 'qn'], choices: [
+    { homes: ['hue', 'qn'], regions: ['T2'], choices: [
       ['Chạy vào Đà Nẵng', 'Tin Buôn Ma Thuột thất thủ; cả nhà theo dòng người trên Quốc lộ 1.', { g: -10, b: -8, d: -2 }, 'Đèo Hải Vân kẹt cứng người và xe. Tới Đà Nẵng ít hôm thì thành phố cũng đổi chủ; cả nhà lần về làng.'],
       ['Ở lại giữ nhà', 'Không chạy; chờ xem.', { g: -3, vm: 3, qg: -3 }, 'Cuối tháng Ba, Quân đội Nhân dân Việt Nam vào thành phố. Nhà còn nguyên, chỉ thiếu tin những người đã chạy.'],
     ] },

@@ -147,9 +147,9 @@ D.FIG={
  tvk2:['Trần Văn Khê','1921–2015','Nhà nghiên cứu âm nhạc','Sang Pháp năm 1949, tiến sĩ âm nhạc học Đại học Sorbonne (1958), nghiên cứu tại CNRS. Về sống ở TP.HCM năm 2006, mất tại đây ngày 24.6.2015.'],
 };
 /* Câu đố cuối chương: bốn câu mỗi chương, mỗi câu gắn một sự kiện của chương (phần tử cuối). Chỉ hỏi câu mà sự kiện đã
-   hiện trong tour (tour.ts luôn đưa các sự kiện này vào tour Đọc sử của chương), hai câu mỗi lần, câu chưa hỏi trên máy
-   này trước (gate.ts quizFor): đọc rồi chơi không gặp lại đúng hai câu cũ. Sự kiện chọn trong các thẻ cả nước để Trò
-   chơi, kể cả khi bấm "Điểm rẽ ›", cũng đã đi qua chúng. */
+   hiện trong tour hay đã mở trang, hai câu mỗi lần, câu chưa hỏi trên máy này trước (gate.ts quizFor): đọc rồi chơi không
+   gặp lại đúng hai câu cũ. Sự kiện của hai câu đầu luôn có trong tour Đọc sử (tour.ts MUST); hai câu sau gắn thẻ cả nước,
+   nên Trò chơi, kể cả khi bấm "Điểm rẽ ›", đã đi qua chúng. */
 D.QUIZ={
  e1:[['Năm 1858, liên quân Pháp – Tây Ban Nha nổ súng đầu tiên ở đâu?',['Đà Nẵng','Gia Định','Thuận An'],0,'Bán đảo Sơn Trà, Đà Nẵng, ngày 1.9.1858.','dn58'],['Hiệp ước nào đặt cả Đại Nam dưới quyền bảo hộ Pháp?',['Nhâm Tuất 1862','Giáp Tuất 1874','Giáp Thân 1884'],2,'Hiệp ước Patenôtre, ngày 6.6.1884.','pt84'],
   ['Hiệp ước Nhâm Tuất 1862 nhượng cho Pháp vùng nào?',['Ba tỉnh miền Đông Nam Kỳ','Ba tỉnh miền Tây Nam Kỳ','Cả sáu tỉnh Nam Kỳ'],0,'Biên Hoà, Gia Định, Định Tường và đảo Côn Lôn; ba tỉnh miền Tây mất năm 1867.','nt62'],

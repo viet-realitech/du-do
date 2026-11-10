@@ -67,4 +67,4 @@ document.addEventListener('error', e => {
   if (box && box.classList.contains('av') && box.dataset.fig && FIG[box.dataset.fig]) box.textContent = initials(FIG[box.dataset.fig][0]);
 }, true);
 
-export const TAG_LABEL: Record<string, string> = { vutrang: 'Đấu tranh', caicach: 'Cải cách', thuongthuyet: 'Hoà hoãn' };
+export const TAG_LABEL: Record<string, string> = { vutrang: 'Đấu tranh', caicach: 'Cải cách', thuongthuyet: 'Hoà hoãn', giunep: 'Giữ nếp' };
