@@ -388,6 +388,42 @@ test('appearance: theme picked at onboarding, changed in settings, kept after re
   expect(errors).toEqual([]);
 });
 
+test('smooth map: static layers apart, ripples rest while moving, nothing rebuilt while scrubbing, effects level in settings', async ({ page }) => {
+  const errors = await boot(page, midGame);
+  // sea, graticule and coastal ripples live on their own background layer; the tour spotlight is off, not just transparent
+  await expect(page.locator('#mapbg .rip')).toHaveCount(1);
+  await expect(page.locator('#map .rip')).toHaveCount(0);
+  await expect(page.locator('#map rect[fill="url(#spotg)"]')).toHaveCSS('display', 'none');
+  await expect(page.locator('#map mask')).toHaveCount(0);
+  // the ripples step aside while the map flies and come back once it rests
+  await page.locator('#zin').click();
+  await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'hidden');
+  await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'visible', { timeout: 3000 });
+  // dragging the timeline inside one chapter keeps the guide's portrait (it used to blink out every frame)
+  const guide = await page.locator('#eraR .av').elementHandle();
+  const trk = (await page.locator('#trk').boundingBox())!, x = (y: number) => trk.x + ((y - 1858) / (2026 - 1858)) * trk.width;
+  await page.mouse.move(x(1954.5), trk.y + trk.height / 2);
+  await page.mouse.down();
+  for (const y of [1956, 1958, 1961, 1963]) await page.mouse.move(x(y + 0.5), trk.y + trk.height / 2);
+  await page.mouse.up();
+  await expect(page.locator('#yr')).toHaveText('1963');
+  expect(await guide!.evaluate(e => e.isConnected)).toBe(true);
+  // Hồ sơ → Cài đặt: effects level (auto by default); "Nhẹ" drops the ripples and is kept after a reload
+  await page.locator('.tab[data-t=me]').click();
+  await expect(page.getByRole('button', { name: 'Tự động', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Nhẹ', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '1');
+  await expect(page.locator('#mapbg .rip')).toHaveClass(/off/);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '1');
+  await page.locator('.tab[data-t=me]').click();
+  await expect(page.getByRole('button', { name: 'Nhẹ', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Tự động', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '2');
+  await expect(page.locator('#mapbg .rip')).not.toHaveClass(/off/);
+  expect(errors).toEqual([]);
+});
+
 test('game flow: one continuous loop — choice → tour auto-starts → card pauses it → continue resumes', async ({ page }) => {
   const errors = await boot(page);
   await page.getByRole('button', { name: /Vào trò chơi/ }).click();

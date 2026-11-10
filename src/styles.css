@@ -116,6 +116,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @keyframes kb { from { transform: scale(1.05) translate(0, 0) } to { transform: scale(1.28) translate(var(--kx, 4%), var(--ky, 2%)) } }
 @keyframes flick { 0% { opacity: .85 } 100% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .mapstage { transition: none } .reel img, .reel.old .flick { animation: none } }
+/* mức hiệu ứng thấp (ui/quality.ts, html[data-q]): bớt nhấp nháy phim cũ; tối giản thì ảnh tư liệu đứng yên, phụ đề hiện thẳng */
+[data-q="1"] .reel.old .flick, [data-q="0"] .reel.old .flick, [data-q="1"] .cine-img.old::before, [data-q="0"] .cine-img.old::before { animation: none }
+[data-q="0"] .reel img, [data-q="0"] .cine-img img { animation: none }
+[data-q="0"] .lt.in .lt-i { animation: none }
 /* phụ đề chân hình của cảnh động (scene.ts caption): mỗi nhịp một ghi chú, viền trái màu phe */
 .lt { position: absolute; left: 10px; right: 10px; max-width: 520px; z-index: 3; background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--acc)); border-radius: 10px; padding: 6px 10px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); transition: opacity .3s } /* nhận chạm suốt cảnh (scene.ts caption) */
 .lt.in .lt-i { animation: ltin .28s cubic-bezier(.2, .8, .2, 1) } /* lau chữ trên lớp trong: khung ngoài vẫn nhận chạm */
@@ -602,6 +606,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .res { grid-area: res; padding: 14px var(--gut) 0 8px; gap: 10px }
   .res[hidden] { display: none }
   .legend { grid-area: legend; padding: 20px var(--gut) 0 8px; height: auto; min-height: 44px; align-content: flex-start; flex-wrap: wrap; gap: 8px 16px; white-space: normal }
+  /* Trò chơi: chip quan hệ một tới ba hàng tuỳ năm; giữ đủ chỗ ba hàng để thẻ bên dưới không nhảy khi kéo năm / năm đếm lên */
+  #main:has(#res:not([hidden])) .legend { min-height: 123px }
   .card { grid-area: card; margin: 20px var(--gut) 0 8px; height: auto; min-height: 150px; padding: 16px 14px 16px 20px; align-items: flex-start }
   .card .c .t { white-space: normal; font-size: 24px; line-height: 1.15; margin: 6px 0 6px }
   .card .c .s { font-size: 16.5px; line-height: 1.38; -webkit-line-clamp: 6 }
@@ -620,6 +626,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
     /* đang có danh sách nhịp (Trò chơi): chip quan hệ và chiều cao tối thiểu của thẻ nhường chỗ cho nó */
     #main:has(.beats:not([hidden])) .legend .sep, #main:has(.beats:not([hidden])) .legend .relc { display: none }
     #main:has(.beats:not([hidden])) .card { min-height: 0 }
+    #main:has(#beats:not([hidden])) .legend { min-height: 44px }
   }
   .mapwrap { grid-area: map; margin: calc(var(--sat) + 20px) 16px 0 var(--gut) }
   .scrub { grid-area: scrub; margin-top: 10px }
@@ -637,7 +644,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .cine-img { position: absolute; inset: 0; overflow: hidden }
 .cine-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; animation: kb 9s ease-in-out forwards; transform-origin: 50% 40% }
 .cine-img img.bgb { display: none }
-.cine-img.fit img.bgb { display: block; filter: blur(26px) brightness(.45); transform: scale(1.15); animation: none; opacity: 1 }
+.cine-img.fit img.bgb { display: block; filter: blur(26px) brightness(.45); transform: scale(1.15); animation: none; opacity: 1; will-change: transform }
+.cine-img.fit img.bgb.tiny { filter: none; opacity: .45 } /* bản 60 px phóng to tự nhoè (cinema.ts): không bộ lọc */
 .cine-img.fit img.fg { object-fit: contain; animation: none; opacity: .8 } /* ảnh nhỏ / khác chiều: trọn ảnh, không phóng vỡ hạt */
 .cine-img.old img { filter: sepia(.6) contrast(1.1) brightness(.85) }
 .cine-img::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, .75)), linear-gradient(transparent 55%, rgba(0, 0, 0, .7)) }
@@ -648,7 +656,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .cine.on .cine-bar { transform: none }
 .cine-t { position: relative; z-index: 3; text-align: center; padding: 0 24px; max-width: 760px }
 .cine-t .mono { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #e8c46a; opacity: 0; animation: rise .7s .2s forwards }
-.cine-t .yr { font: 800 clamp(84px, 26vw, 200px)/1 var(--disp); letter-spacing: -.02em; color: #e8c46a; margin: 6px 0 2px; text-shadow: 0 6px 30px rgba(0, 0, 0, .6) }
+.cine-t .yr { font: 800 clamp(84px, 26vw, 200px)/1 var(--disp); letter-spacing: -.02em; color: #e8c46a; margin: 6px 0 2px; text-shadow: 0 6px 30px rgba(0, 0, 0, .6); will-change: transform } /* năm đếm lên trên lớp riêng: không vẽ lại ảnh nền mỗi khung */
 .cine-t .yr.hit { animation: hit .45s cubic-bezier(.2, 1.6, .4, 1) }
 .cine-t h1 { font: 700 clamp(30px, 8vw, 56px)/1.08 var(--disp); opacity: 0; animation: rise .8s .9s forwards }
 .cine-t h2 { font: 700 clamp(24px, 6.4vw, 40px)/1.1 var(--disp); margin: 8px 0 10px; opacity: 0; animation: rise .7s .25s forwards }

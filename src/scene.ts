@@ -586,7 +586,9 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     if (act === 'doubt') { line.setAttribute('stroke-opacity', '0.55'); line.setAttribute('stroke-dasharray', `${0.01 / k} ${4.5 / k}`); }
     else if (act === 'retreat') line.setAttribute('stroke-dasharray', `${6 / k} ${4 / k}`);
     else if (marching) line.setAttribute('stroke-dasharray', `${7 / k} ${5 / k}`);
-    const len = line.getTotalLength() || 1;
+    // chiều dài đường cong tự tính (32 khúc, cộng 1 % cho chắc nét đứt che hết khi ẩn), không hỏi getTotalLength: mỗi mũi tên vừa
+    // thêm nút vào cảnh, hỏi là ép dàn trang lại
+    const len = 1.01 * plLen(Array.from({ length: 33 }, (_, j) => c.at(j / 32))) || 1;
     for (const p of reveal ? [under, line] : [under]) { p.setAttribute('stroke-dasharray', `${len} ${len}`); p.setAttribute('stroke-dashoffset', String(len)); }
     const head = el('g', { transform: `translate(${b[0]},${b[1]}) rotate(${c.ang}) scale(${1 / k})`, opacity: 0 }, root);
     el('path', { d: 'M-2,-7 L9,0 L-2,7 L1,0Z', fill: ink, stroke: '#111', 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, head);
@@ -697,16 +699,35 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
 }
 
 /* ---------- cảnh di chuyển (chuyến đi, di cư, hành quân, rút quân, khởi nghĩa) ---------- */
-/** Đường mượt qua các điểm (Catmull-Rom → Bézier bậc ba). */
-function smooth(pts: [number, number][]): string {
-  if (pts.length < 3) return `M${pts[0]} L${pts[pts.length - 1]}`;
-  let d = `M${pts[0][0]},${pts[0][1]}`;
+/** Đường mượt qua các điểm (Catmull-Rom → Bézier bậc ba), trả về dạng gấp khúc dày (24 điểm mỗi khúc). Tự tính, không dựng
+    path rồi hỏi getPointAtLength: mỗi lần hỏi tốn ~0,5 ms trên CPU chậm, đường dài hỏi tới 240 lần. */
+function smooth(pts: [number, number][]): [number, number][] {
+  if (pts.length < 3) return [pts[0], pts[pts.length - 1]];
+  const out: [number, number][] = [pts[0]];
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
-    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    for (let j = 1; j <= 24; j++) {
+      const t = j / 24, u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, e = t * t * t;
+      out.push([a * p1[0] + b * c1[0] + c * c2[0] + e * p2[0], a * p1[1] + b * c1[1] + c * c2[1] + e * p2[1]]);
+    }
   }
-  return d;
+  return out;
 }
+/** N + 1 điểm cách đều theo chiều dài dọc đường gấp khúc `pl` (như getPointAtLength). */
+function evenly(pl: [number, number][], N: number): [number, number][] {
+  const cum = [0];
+  for (let i = 1; i < pl.length; i++) cum.push(cum[i - 1] + Math.hypot(pl[i][0] - pl[i - 1][0], pl[i][1] - pl[i - 1][1]));
+  const len = cum[cum.length - 1], L: [number, number][] = [];
+  for (let i = 0, j = 1; i <= N; i++) {
+    const d = (len * i) / N;
+    while (j < cum.length - 1 && cum[j] < d) j++;
+    const f = Math.min(1, (d - cum[j - 1]) / (cum[j] - cum[j - 1] || 1));
+    L.push([pl[j - 1][0] + (pl[j][0] - pl[j - 1][0]) * f, pl[j - 1][1] + (pl[j][1] - pl[j - 1][1]) * f]);
+  }
+  return L;
+}
+const plLen = (pl: [number, number][]) => pl.reduce((a, p, i) => (i ? a + Math.hypot(p[0] - pl[i - 1][0], p[1] - pl[i - 1][1]) : 0), 0);
 
 function movement(r: Run, v: HistEvent, mv: Move): void {
   const h = fxHost();
@@ -724,15 +745,13 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
   const bt = beats(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0), parts: Element[][] = [];
   const MODE: Record<string, string> = { land: 'Đường bộ', sea: 'Đường biển', air: 'Đường không' };
   mv.paths.forEach(([from, via, to, side, note, mode], i) => {
-    const pts = [P(from), ...via.map(P), P(to)], d = smooth(pts);
+    const pts = [P(from), ...via.map(P), P(to)], dense = smooth(pts);
     const col = SIDE_COLOR[side] || '#f1e6c8', thin = mv.type === 'exodus' || mv.type === 'uprising' || mv.type === 'crowd';
     // Đường dài (đi Pháp, vượt biển) phủ cả bản đồ: vẽ dần cả một path thì mỗi khung hình trình duyệt vẽ lại cả bản đồ.
     // Lấy mẫu đường cong một lần (LUT), chia thành các đoạn ngắn; mỗi khung hình chỉ đoạn đang vẽ thay đổi.
-    const probe = el('path', { d, fill: 'none', stroke: 'none' }, root), len = probe.getTotalLength() || 1, lenPx = len * k;
+    const len = plLen(dense) || 1, lenPx = len * k;
     const N = Math.max(24, Math.min(240, Math.round(lenPx / 3)));
-    const L: [number, number][] = [];
-    for (let j = 0; j <= N; j++) { const q = probe.getPointAtLength((len * j) / N); L.push([q.x, q.y]); }
-    probe.remove();
+    const L = evenly(dense, N);
     const S_ = Math.max(3, Math.min(24, Math.round(lenPx / 40))), per = N / S_;
     // viền tối: các đoạn tô đặc, độ trong 0,5 đặt ở cả nhóm (ghép một lần, chỗ nối không đậm lên)
     const gU = el('g', {}, root), gU2 = el('g', { opacity: 0.5 }, gU), gL = el('g', {}, root), P_ = 10 / k;
@@ -867,16 +886,7 @@ function place(box: HTMLElement, r: Run): void {
     // cảnh di chuyển: cùng các điểm như đo trên từng path (nS điểm đều theo chiều dài mỗi đoạn, hai nét mỗi đoạn, quân cờ),
     // nhưng tính từ toạ độ đã lấy mẫu sẵn: một getScreenCTM thay cho hàng trăm getPointAtLength (khựng 150–400 ms)
     const m0 = r.root.getScreenCTM(), nS = r.geo.length * 2 + (r.pcs?.length || 0) > 40 ? 2 : 16;
-    for (const pl of r.geo) {
-      const cum = [0];
-      for (let i = 1; i < pl.length; i++) cum.push(cum[i - 1] + Math.hypot(pl[i][0] - pl[i - 1][0], pl[i][1] - pl[i - 1][1]));
-      for (let i = 0, j = 1; i <= nS; i++) {
-        const d = (cum[cum.length - 1] * i) / nS;
-        while (j < cum.length - 1 && cum[j] < d) j++;
-        const f = Math.min(1, (d - cum[j - 1]) / (cum[j] - cum[j - 1] || 1)), x = pl[j - 1][0] + (pl[j][0] - pl[j - 1][0]) * f, y = pl[j - 1][1] + (pl[j][1] - pl[j - 1][1]) * f;
-        add(m0, x, y); add(m0, x, y); // viền tối + nét màu
-      }
-    }
+    for (const pl of r.geo) for (const [x, y] of evenly(pl, nS)) { add(m0, x, y); add(m0, x, y); } // viền tối + nét màu
     for (const g of r.pcs || []) { const m = (g as SVGGraphicsElement).getScreenCTM(); for (let i = 0; i <= nS; i++) add(m, 0, 0); }
   } else {
     const ps = r.root.querySelectorAll<SVGPathElement>('path'), nS = ps.length > 40 ? 2 : 16; // nhiều đoạn ngắn: lấy hai đầu mỗi đoạn

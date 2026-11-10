@@ -407,6 +407,8 @@ const regOf = (g: Region) => (g === 'QT' ? 'T2' : g);
 
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 const cyOf = new WeakMap<Prov, number>();
+/** Tỉnh đang chuyển dần độ mờ (đổi hướng của chương) tới mức nào. */
+const dimTo = new WeakMap<Element, string>();
 let lastShift = 0;
 
 /** Repaint for the current year; `quiet` skips the regime-change wave (used for look changes). */
@@ -425,10 +427,14 @@ export function paintMap(quiet = false, y = S.year): void {
   });
   G.pv.each(function (d) {
     const o = String(op(d));
-    if ((moved.has(this) && !still) || this.getAttribute('opacity') === o) return;
-    // đổi hướng của chương (tỉnh không thuộc phe bạn mờ đi): chuyển dần 0,3 s như trước, bằng d3 (không CSS transition)
-    if (still || this.getAttribute('opacity') === null) this.setAttribute('opacity', o);
-    else d3.select(this).transition().duration(300).attr('opacity', o);
+    if (moved.has(this) && !still) { d3.select(this).interrupt('dim'); dimTo.delete(this); return; } // sóng đổi chủ lo phần này
+    if (dimTo.get(this) === o || this.getAttribute('opacity') === o) return; // đang chuyển dần tới đúng mức ấy: không bắt đầu lại
+    // đổi hướng của chương (tỉnh không thuộc phe bạn mờ đi): chuyển dần 0,3 s như trước, bằng d3 (không CSS transition).
+    // Đang kéo thanh năm: đặt thẳng (mỗi khung hình vẽ lại, chuyển dần chỉ làm cả bản đồ vẽ lại suốt lúc kéo)
+    d3.select(this).interrupt('dim');
+    if (still || busy || this.getAttribute('opacity') === null) { dimTo.delete(this); this.setAttribute('opacity', o); return; }
+    dimTo.set(this, o);
+    d3.select(this).transition('dim').duration(300).attr('opacity', o).on('end', () => dimTo.delete(this));
   });
   if (moved.size && !still) {
     const cy = (d: Prov) => { if (!cyOf.has(d)) cyOf.set(d, path.centroid(d)[1]); return cyOf.get(d)!; };
