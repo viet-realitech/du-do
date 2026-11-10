@@ -702,8 +702,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 details.cf { border: 1px dashed var(--rule); border-radius: 10px; padding: 8px 12px }
 details.cf summary { text-decoration: none; font-style: italic }
 details.cf .cf-tag { margin-right: 6px; font-style: normal }
-.chron.dec { font-size: 14.5px; color: var(--ink2); padding-left: 0 }
-.chron.dec i { color: var(--ink) }
+.chron.gp-dec { font-size: 14.5px; color: var(--ink2) }
+.chron.gp-dec i { color: var(--ink) }
 .gens { list-style: none; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 10px 0 0; padding: 0 }
 .gens li { border: 1px solid var(--rule); border-radius: 10px; padding: 6px 4px; text-align: center; background: var(--paper2) }
 .gens li .mono { display: block; font-size: 9.5px }

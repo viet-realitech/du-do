@@ -635,6 +635,91 @@ test('play mode: reloading mid-chapter resumes the tour at the owed card instead
   expect(errors).toEqual([]);
 });
 
+/* Kết cục: mỗi con đường một kết cục riêng, có tỷ lệ hiếm từ mô phỏng và một giả định "Nếu…" cạnh lịch sử thật. */
+const reformPath = { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba', e6: 'doimoi' };
+
+test('ending (reading mode): the path picks its own ending, with the family name, rarity, why and a "Nếu…" what-if', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] } });
+  await page.locator('#card [data-a=end].c').click();
+  // four reform picks (Canh tân, Duy Tân, Lập hiến, Đổi Mới): the title counts them
+  await expect(page.locator('.end-title')).toHaveText('Bốn đời canh tân');
+  await expect(page.locator('.end-kick')).toContainText('Họ Trần');
+  await expect(page.locator('.end-epi')).toContainText('Bốn đời của Họ Trần chọn học hỏi và cải cách');
+  await expect(page.locator('.end-rar')).toContainText(/\d+(,\d)?% con đường đi tới kết cục này/);
+  await expect(page.locator('.end-rar')).toContainText('729 con đường');
+  await page.getByText('Vì sao là kết cục này?').click();
+  await expect(page.locator('.end-why p')).toContainText('Ít nhất ba đời chọn hướng cải cách');
+  // the first divergence (1858) gets the what-if card: labelled, estimated, with the real history next to it
+  const cf = page.locator('.cf-card');
+  await expect(cf).toContainText('Giả định · không phải lịch sử');
+  await expect(cf.locator('h2')).toHaveText('Nếu triều đình nghe Nguyễn Trường Tộ');
+  await expect(cf).toContainText('Ước lượng của trò chơi: khoảng 20% (1 trên 5)');
+  await expect(cf.locator('.cf-real')).toContainText('Hướng chiếm ưu thế: Chủ hoà');
+  // later divergences keep a folded what-if under their row; the dominant pick (Đổi Mới) has none
+  await expect(page.locator('details.cf')).toHaveCount(4);
+  // the gia phả now shows in reading mode too; the closing line stays
+  await expect(page.getByText('Gia phả Họ Trần')).toBeVisible();
+  await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
+  // the journey film ends on the ending title and the family name
+  await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.cine.film .fin h1')).toHaveText('Bốn đời canh tân');
+  await expect(page.locator('.cine.film .fin .mono').first()).toContainText('Họ Trần');
+  await page.locator('.cine.film .x').click();
+  await page.getByRole('button', { name: 'Tạo thẻ chia sẻ' }).click();
+  await expect(page.getByAltText('Thẻ kết quả')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('ending (play mode): home, card decisions and harvest snapshots shape the ending, tier and gia phả', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  // every card decided (the first choice), except those that would send a branch away or split the family in 1954
+  const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
+  const cards = { ...Object.fromEntries(ids.map(id => [id, 0])), gnv: 1, dc54: 1, sg75: 1, tn80: 1 };
+  const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u });
+  const st = { step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year: 2026, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true], e6: [true, true] }, cards, cardv: {}, xFrom: 2026,
+    harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'], snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(60, 50, 50, 50) }, res: r(60, 50, 50, 50) };
+  await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
+  await page.goto('/');
+  await page.locator('#card [data-a=end].c').click();
+  // 4/5 dominant picks, none on the Quốc gia / VNCH side
+  await expect(page.locator('.end-title')).toHaveText('Cùng nhịp với lịch sử');
+  await expect(page.locator('.end-kick')).toContainText('Họ Lê · Hà Nội');
+  await expect(page.locator('.end-epi')).toContainText('lên chiến khu Việt Bắc theo Việt Minh'); // a northern home's resistance
+  await expect(page.locator('.end-epi')).toContainText('Chỉ đời thứ nhất rẽ khác');
+  await expect(page.locator('.end-rar')).toContainText(/\d+(,\d)?% dòng họ trong mô phỏng đi tới kết cục này/);
+  await expect(page.locator('.cf-card h2')).toHaveText('Nếu triều đình dồn sức chủ chiến (1858–1862)');
+  await expect(page.locator('.cf-card')).toContainText('khoảng 5% (1 trên 20)');
+  // wealth is ranked against families from the same home (210 in Hà Nội: between P5 and P25)
+  await expect(page.locator('.ov.end .pv.mine').first()).toContainText('Nhà sa sút');
+  await expect(page.locator('.gens li')).toHaveCount(6);
+  await expect(page.locator('.gens li.best')).toContainText('Đời 5');
+  await expect(page.locator('.gens li.worst')).toContainText('Đời 4');
+  // the gia phả carries the family's biggest decisions, up to two per generation
+  await expect(page.locator('.end-gp .chron.gp-dec').first()).toBeAttached();
+  expect(await page.locator('.end-gp .chron.gp-dec').count()).toBeLessThanOrEqual(12);
+  await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.cine.film .fin h1')).toHaveText('Cùng nhịp với lịch sử');
+  await expect(page.locator('.cine.film .fin .mono').first()).toContainText('Họ Lê');
+  expect(errors).toEqual([]);
+});
+
+test('reading mode: skipping chapter 6 leads to the conclusion, not to a bare 2026 map', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 1976, picks: reformPath, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] } });
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 5000 });
+  const skip = page.locator('#tourb [data-t=skip]');
+  await skip.click();
+  await skip.click();
+  await expect(page.locator('.end-title')).toHaveText('Bốn đời canh tân', { timeout: 6000 });
+  await expect(page.getByText(/Đố nhanh/i)).toHaveCount(0); // a skipped chapter is not quizzed
+  expect(errors).toEqual([]);
+});
+
 test.describe('iPad layouts', () => {
   for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
     test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {

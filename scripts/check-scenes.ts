@@ -110,7 +110,7 @@ for (const [id, vs] of Object.entries(VARIANT)) {
   const paths: string[][] = [];
   const walk = (i: number, acc: string[]) => { if (i === ERAS.length) { paths.push(acc); return; } for (const o of ERAS[i].opts) walk(i + 1, [...acc, o.id]); };
   walk(0, []);
-  const n: Record<string, number> = {}, m = ERAS.map(() => 0).concat(0);
+  const n: Record<string, number> = {}, m = PREV.filter(Boolean).map(() => 0).concat(0); // m/5: 0…5
   for (const p of paths) { const id = endingOf({ mode: 'read', name: 'Họ Lê', picks: p, renames: [], flags: new Set() }).id; n[id] = (n[id] || 0) + 1; m[pathF(p).m]++; }
   for (const id of readIds) { const x = Math.round((1000 * (n[id] || 0)) / paths.length) / 10; if (Math.abs(x - (RAR.read?.[id] ?? -1)) > 0.05) { console.error(`LỖI endings-rarity.json: Đọc sử "${id}" ghi ${RAR.read?.[id]}%, đếm lại ${x}% (chạy npm run endings)`); err++; } }
   if (RAR.paths !== paths.length || m.some((c, i) => Math.abs(Math.round((1000 * c) / paths.length) / 10 - (RAR.match?.[i] ?? -1)) > 0.05)) { console.error('LỖI endings-rarity.json: "paths" / "match" không khớp 729 con đường (chạy npm run endings)'); err++; }

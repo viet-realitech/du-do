@@ -36,7 +36,7 @@ export const nameChain = (): string => (S.names.length ? [S.names[0].from, ...S.
 function chronLine(id: string, f: Facts): string {
   const reg = f.home?.region, north = reg === 'B' || reg === 'T1';
   if (reg && id === 'bac') return north
-    ? (f.flags.has('dicu') ? 'Thế hệ 5 đứng về miền Bắc; năm 1955, trước khi đội cải cách ruộng đất về làng, cả nhà vào Nam.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
+    ? (f.flags.has('dicu') ? 'Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
     : (f.flags.has('tapketN') ? 'Thế hệ 5 tập kết ra Bắc năm 1954; có người sau đó theo đường Trường Sơn trở lại miền Nam.' : 'Thế hệ 5 ở lại miền Nam, đứng về phía cách mạng; qua những năm Tố Cộng, rồi Mặt trận Dân tộc Giải phóng miền Nam ra đời cuối năm 1960.');
   if (reg && id === 'nam') return north
     ? 'Thế hệ 5 di cư vào Nam năm 1954, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.'
@@ -53,7 +53,7 @@ function giaPha(f: Facts): string {
     const o = optOf(e);
     if (!o) continue;
     rows.push([e.cy, `<div class="chron"><span class="mono muted">${e.cy}</span><span>${esc(chronLine(o.id, f))}</span></div>`]);
-    if (isPlay()) for (const c of bigChoices(e)) rows.push([c.y + 0.1, `<div class="chron dec"><span class="mono muted">${c.y}</span><span><i>${esc(c.label)}.</i> ${esc(c.out)}</span></div>`]);
+    if (isPlay()) for (const c of bigChoices(e)) rows.push([c.y + 0.1, `<div class="chron gp-dec"><span class="mono muted">${c.y}</span><span><i>${esc(c.label)}.</i> ${esc(c.out)}</span></div>`]);
   }
   for (const n of S.names) rows.push([n.y + 0.5, `<div class="chron"><span class="mono muted">${n.y}</span><span><b>${esc(n.from)}</b> đổi thành <b>${esc(n.to)}</b> · ${esc(n.why)}</span></div>`]);
   rows.sort((a, b) => a[0] - b[0]);

@@ -183,14 +183,14 @@ export const genName = (i: number) => 'đời ' + GEN[i];
 const bare = (n: string) => n.replace(/^Họ /, '');
 const list = (xs: string[]) => (xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' và ' + xs[xs.length - 1]);
 const north = (f: Facts) => f.home?.region === 'B' || f.home?.region === 'T1';
-/** Cụm động từ ngắn cho mỗi hướng ("đời thứ ba …", "những người …"). */
+/** Cụm động từ ngắn cho mỗi hướng ("đời thứ ba …", "những người …"); không có dấu phẩy, vì lời kết xâu chúng thành danh sách. */
 const DOI: Record<string, string> = {
   chien: 'theo phe chủ chiến giữ đồn luỹ', canhtan: 'dâng điều trần xin canh tân', hoa: 'theo sứ bộ chủ hoà',
-  canvuong: 'ứng nghĩa Cần Vương', dongdu: 'sang Nhật theo phong trào Đông Du', duytan: 'theo phong trào Duy Tân, mở trường, mở hội buôn',
+  canvuong: 'ứng nghĩa Cần Vương', dongdu: 'sang Nhật theo phong trào Đông Du', duytan: 'theo phong trào Duy Tân',
   cs: 'hoạt động bí mật theo Đảng Cộng sản', qdd: 'theo Việt Nam Quốc dân đảng', laphien: 'viết báo đòi cải cách lập hiến',
   vm: 'theo Việt Minh kháng chiến', qg: 'làm việc cho Quốc gia Việt Nam', tl: 'đứng ngoài để giữ làng',
   bac: 'sống ở miền Bắc', nam: 'sống ở miền Nam', thuba: 'xuống đường đòi hoà bình',
-  baocap: 'giữ sổ gạo, công điểm', doimoi: 'mở xưởng nhỏ sau Đổi Mới', radi: 'rời quê ra đi sau năm 1975',
+  baocap: 'giữ sổ gạo thời bao cấp', doimoi: 'mở xưởng nhỏ sau Đổi Mới', radi: 'rời quê ra đi sau năm 1975',
 };
 /** Cụm cho đời thứ i, có tính quê: nhà miền Bắc theo "Miền Nam" là di cư năm 1954; nhà phía nam vĩ tuyến 17 theo
     "Miền Bắc" là tập kết (nếu đã lên tàu) hay theo cách mạng ngay tại chỗ; Đông Kinh Nghĩa Thục ở Hà Nội, Việt Minh
@@ -200,7 +200,7 @@ export function doi(f: Facts, i: number): string {
   if (!reg) return DOI[id] || '';
   if (id === 'nam') return north(f) ? 'di cư vào Nam năm 1954' : DOI.nam;
   if (id === 'bac') {
-    if (north(f)) return f.flags.has('dicu') ? 'vào Nam năm 1955, trước khi đội cải cách về làng' : 'ở lại miền Bắc';
+    if (north(f)) return f.flags.has('dicu') ? 'vẫn vào Nam trong hạn 300 ngày sau Genève' : 'ở lại miền Bắc';
     return f.flags.has('tapketN') ? 'tập kết ra Bắc năm 1954' : 'theo cách mạng ở miền Nam';
   }
   if (id === 'duytan' && north(f)) return 'dạy chữ ở Đông Kinh Nghĩa Thục';
@@ -239,7 +239,11 @@ export function epilogue(id: string, f: Facts): string {
   const at = (i: number) => `${genName(i)} ${doi(f, i)}`, atHo = (i: number) => `${genName(i)} của ${ho} ${doi(f, i)}`;
   switch (id) {
     case 'lytan': {
-      const low = r && r.d < 25 ? `${ho} chỉ còn ${r.d} nhân đinh` : r ? `gia sản của ${ho} chỉ còn lúa gạo ${r.g}, bạc ${r.b}, uy tín ${r.u}` : `${ho} còn lại rất ít`;
+      // chỉ nêu những phần gia sản thật sự cạn (≤ 25), không thì hai phần thấp nhất
+      const RN: [keyof Res, string][] = [['g', 'lúa gạo'], ['d', 'nhân đinh'], ['b', 'bạc'], ['u', 'uy tín']];
+      const lows = r ? RN.filter(([k]) => r[k] <= 25).sort((a, b) => r[a[0]] - r[b[0]]) : [];
+      const shown = (lows.length ? lows : r ? [...RN].sort((a, b) => r[a[0]] - r[b[0]]).slice(0, 2) : []).slice(0, 3);
+      const low = r ? `gia sản của ${ho} chỉ còn ${list(shown.map(([k, n]) => `${n} ${r[k]}`))}` : `${ho} còn lại rất ít`;
       return `Sáu đời ${ho}${oQue} đi qua giặc giã, đói kém và những lần phải chọn phe.${gd ? ` ${cap(genName(gd.worst))}, những người ${doi(f, gd.worst)}, mất mát nhiều nhất.` : ''} Đến năm 2026, ${low}. Gia phả không đứt: người còn lại giữ cái tên và thắp hương cho cả những người không về.`;
     }
     case 'xanam':
