@@ -42,11 +42,11 @@ export function paneMe(): void {
   <h3 style="margin:22px 0 6px">La bàn giá trị</h3>${compass()}
   <p class="muted" style="font-size:13px;margin-top:4px">Cộng dồn từ điều mỗi lực lượng tự tuyên bố theo đuổi.</p>
   <h3 style="margin:22px 0 10px">Huy hiệu · ${S.badges.length}/${BADGES.length}</h3>
-  <div class="bgrid">${BADGES.map(([id, ic, n, d]) => `<div class="bdg${S.badges.includes(id) ? '' : ' off'}"><div class="bi">${ic}</div><b>${n}</b><div class="muted" style="font-size:11.5px;margin-top:2px">${d}</div></div>`).join('')}</div>
+  <div class="bgrid">${BADGES.map(([id, ic, n, d]) => `<div class="bdg${S.badges.includes(id) ? '' : ' off'}"><div class="bi" aria-hidden="true">${ic}</div><b>${n}</b><div class="muted d">${d}</div></div>`).join('')}</div>
   <h3 style="margin:22px 0 4px">Sáu thế hệ</h3>
   ${ERAS.map(e => {
     const o = optOf(e);
-    return `<div class="era-row"><div class="n">${e.n}</div><div><div class="row sb"><b style="font:700 17px var(--disp)">${e.title}</b><span class="mono muted">${e.cy}</span></div>
+    return `<div class="era-row"><div class="n">${e.n}</div><div><div class="row sb"><b class="h4">${e.title}</b><span class="mono muted">${e.cy}</span></div>
      <div style="font-size:16px;margin-top:2px;${o ? '' : 'color:var(--ink3)'}">${o ? 'Chọn <b>' + o.label + '</b> · đồng hành: <i>' + FIG[o.guide][0] + '</i>' : 'Chưa tới'}</div></div></div>`;
   }).join('')}
   ${isPlay() ? `<h3 style="margin:22px 0 10px">Gia sản dòng họ · ${esc(home()[1])}</h3>
@@ -54,7 +54,7 @@ export function paneMe(): void {
   <div class="mono muted" style="margin:14px 0 6px">Quan hệ hiện nay</div><div class="fxs">${powersAt(S.year).map(k => relChip(k, S.year)).join('')}</div>
   <div class="mono muted" style="margin:14px 0 6px">Đã quyết định ${decidedCount()} thẻ sự kiện · hiện là <b style="color:var(--acc)">${rank()[0]}</b></div>` : ''}
   <h3 style="margin:22px 0 6px">Luồng đang mở</h3>
-  <div class="pv"><div class="row sb"><div><b style="font:700 18px var(--disp)">${isPlay() ? '◆ Trò chơi dòng họ' : '❧ Đọc sử'}</b><div class="muted" style="font-size:14px;margin-top:2px">${isPlay() ? 'Gia sản, thẻ sự kiện, mùa màng. Tiến độ lưu riêng.' : 'Sáu điểm rẽ, bản đồ, tư liệu. Không có tài nguyên.'}</div></div>
+  <div class="pv"><div class="row sb"><div><b class="h4">${isPlay() ? 'Trò chơi dòng họ' : 'Đọc sử'}</b><div class="muted" style="font-size:14px;margin-top:2px">${isPlay() ? 'Gia sản, thẻ sự kiện, mùa màng. Tiến độ lưu riêng.' : 'Sáu điểm rẽ, bản đồ, tư liệu. Không có tài nguyên.'}</div></div>
    <button class="chip" data-a="${isPlay() ? 'go-read' : 'go-play'}">${isPlay() ? 'Sang Đọc sử ›' : 'Vào trò chơi ›'}</button></div></div>
   <h3 style="margin:22px 0 10px">Giao diện</h3>
   ${themeCards()}

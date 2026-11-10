@@ -6,9 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#16130f">
+<meta name="theme-color" content="#efe5cf">
 <!--seo-->
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="light">
 <meta name="format-detection" content="telephone=no">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192">
@@ -18,6 +18,26 @@
 </head>
 <body>
 <noscript><p style="padding:24px;color:#efe0bf;font:18px Georgia,serif">Dư Đồ cần JavaScript để chạy. Hãy bật JavaScript trong trình duyệt.</p></noscript>
+<!-- Bộ biểu tượng nét (ui/icons.ts): 20 × 20, nét 1,5, màu theo chữ; bốn tab 24 × 24: bản đồ gấp, tượng bán thân, văn bản, bìa hồ sơ -->
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+  <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 20 20"><path d="M4.5 10h11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 20 20"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 20 20"><path d="M3.5 5.5h13M6 10h8M8.5 14.5h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 20 20"><path d="M6.5 4.3v11.4L15.6 10z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 20 20"><path d="M5.8 4.5h2.8v11H5.8zM11.4 4.5h2.8v11h-2.8z" fill="currentColor"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 20 20"><path d="M5.5 5.5h9v9h-9z" fill="currentColor"/></symbol>
+  <symbol id="i-next" viewBox="0 0 20 20"><path d="M8 4.5l5.5 5.5L8 15.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 20 20"><path d="M12 4.5L6.5 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-seal" viewBox="0 0 20 20"><path d="M10 3.2l6.8 6.8-6.8 6.8L3.2 10z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 20 20"><path d="M4.5 10.5l3.6 3.6 7.4-8.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 20 20"><path d="M3.5 10h13M11.5 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-again" viewBox="0 0 20 20"><path d="M15.6 11.2A5.8 5.8 0 1 1 13.7 5.6M14.2 2.8v3.4h-3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="t-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></g></symbol>
+  <symbol id="t-fig" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.6-4 3.3-6 7-6s6.4 2 7 6M4 21h16"/></g></symbol>
+  <symbol id="t-src" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14.5h7M9 18h4"/></g></symbol>
+  <symbol id="t-me" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M3 7.5V19h18V9H11L9 6.5H3z"/><path d="M3 11h18"/></g></symbol>
+</defs></svg>
 <div id="app" class="grain">
   <div id="main">
     <div class="hd">
@@ -35,24 +55,25 @@
       </div>
       <div class="mtag" id="popl"></div>
       <div class="zoomc">
-        <button id="zin" aria-label="Phóng to">+</button>
-        <button id="zout" aria-label="Thu nhỏ">−</button>
-        <button id="zrs" aria-label="Về toàn cảnh" style="font-size:14px">⟲</button>
-        <button id="fbtn" aria-label="Lọc sự kiện" style="font-size:15px">≡</button>
+        <button id="zin" aria-label="Phóng to"><svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <button id="zout" aria-label="Thu nhỏ"><svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-minus"/></svg></button>
+        <button id="zrs" aria-label="Về toàn cảnh"><svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-fit"/></svg></button>
+        <button id="fbtn" aria-label="Lọc sự kiện"><svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-filter"/></svg></button>
       </div>
     </div>
     <div class="legend" id="legend"></div>
     <div class="card" id="card"></div>
     <div class="beats" id="beats" hidden></div>
+    <nav class="idx" id="idx" aria-label="Mục lục chương"></nav>
     <div class="scrub" id="scrub">
-      <button class="pbtn" id="play" aria-label="Chạy chương này">▶</button>
+      <button class="pbtn" id="play" aria-label="Chạy chương này"><svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-play"/></svg></button>
       <div class="tl" id="tl"><div class="trk" id="trk"></div></div>
     </div>
     <nav class="tabs" id="tabs">
-      <button class="tab on" data-t="map"><i><span class="ic1"></span></i>Bản đồ</button>
-      <button class="tab" data-t="fig"><i><span class="ic4"></span></i>Nhân vật</button>
-      <button class="tab" data-t="src"><i><span class="ic2"></span></i>Sử liệu</button>
-      <button class="tab" data-t="me"><i><span class="ic3"></span></i>Hồ sơ</button>
+      <button class="tab on" data-t="map"><svg class="i" width="22" height="22" aria-hidden="true"><use href="#t-map"/></svg>Bản đồ</button>
+      <button class="tab" data-t="fig"><svg class="i" width="22" height="22" aria-hidden="true"><use href="#t-fig"/></svg>Nhân vật</button>
+      <button class="tab" data-t="src"><svg class="i" width="22" height="22" aria-hidden="true"><use href="#t-src"/></svg>Sử liệu</button>
+      <button class="tab" data-t="me"><svg class="i" width="22" height="22" aria-hidden="true"><use href="#t-me"/></svg>Hồ sơ</button>
     </nav>
   </div>
   <div id="layer"></div>

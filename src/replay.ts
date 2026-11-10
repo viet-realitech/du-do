@@ -3,6 +3,7 @@ import { S, save, rt, allEv, curPick } from './state';
 import { isPlay } from './play';
 import { on } from './ui/actions';
 import { clearLayer, esc, markTab } from './ui/dom';
+import { icon } from './ui/icons';
 import { hush, speak } from './narration';
 import { evKey, evSpeech } from './speech';
 import { SND } from './audio';
@@ -48,7 +49,7 @@ export function replayEvent(id: string): void {
     bar = document.createElement('div');
     bar.id = 'replb';
     bar.className = 'tour replay';
-    bar.innerHTML = '<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rpause" aria-label="Giữ cảnh" aria-pressed="false" title="Giữ cảnh">❚❚</button><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">›</button><button class="chip" data-t="again">↻ Xem lại</button><button class="chip" data-t="rclose">Đóng</button>';
+    bar.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rpause" aria-label="Giữ cảnh" aria-pressed="false" title="Giữ cảnh">${icon('pause')}</button><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">${icon('next')}</button><button class="chip" data-t="again">${icon('again', 15)}Xem lại</button><button class="chip" data-t="rclose">Đóng</button>`;
     wrap.appendChild(bar);
     bar.addEventListener('click', ev => {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
@@ -83,7 +84,7 @@ export function replayEvent(id: string): void {
 function pzState(bar: HTMLElement): void {
   const b = bar.querySelector<HTMLElement>('[data-t=rpause]'), p = scenePaused();
   if (!b) return;
-  b.textContent = p ? '▶' : '❚❚';
+  b.innerHTML = icon(p ? 'play' : 'pause');
   b.setAttribute('aria-pressed', String(p));
   b.setAttribute('aria-label', p ? 'Chạy tiếp cảnh' : 'Giữ cảnh');
 }

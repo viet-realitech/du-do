@@ -152,11 +152,12 @@ D.QUIZ={
  e5:[['Hiệp định Genève hẹn tổng tuyển cử vào năm nào?',['1955','1956','1960'],1,'Tháng 7.1956. Cuộc tổng tuyển cử không diễn ra.'],['Hiệp định Paris 1973 quy định điều gì?',['Mỹ rút quân trong 60 ngày','Tổng tuyển cử ngay','Chia đôi tại vĩ tuyến 17'],0,'Quân Mỹ rút hết trong 60 ngày sau khi ký.']],
  e6:[['Đổi Mới được quyết định tại Đại hội nào?',['Đại hội IV','Đại hội V','Đại hội VI'],2,'Đại hội VI, tháng 12.1986.'],['Từ 1.7.2025, Việt Nam có bao nhiêu tỉnh, thành?',['34','45','63'],0,'Sắp xếp từ 63 xuống 34 đơn vị hành chính cấp tỉnh.']]
 };
+// huy hiệu: khoá, chữ khắc trên ấn triện (một chữ, như con dấu), tên, điều kiện
 D.BADGES=[
- ['start','◈','Mở hồ sơ','Bắt đầu hành trình'],['r10','❡','Mọt sử','Đọc 10 sự kiện'],['r40','✒','Sử gia','Đọc 40 sự kiện'],['s5','▤','Nhà lưu trữ','Mở 5 sử liệu'],
- ['pv10','◐','Đa góc nhìn','Xem quan điểm ở 10 sự kiện'],['q6','✓','Trí nhớ tốt','Trả lời đúng 6 câu đố'],['q12','★','Thủ khoa','Đúng cả 12 câu đố'],['tags','⟁','Ba ngả đường','Chọn đủ cả ba kiểu lựa chọn'],
- ['against','↯','Ngược dòng','3 lần chọn khác hướng chiếm ưu thế'],['match','≡','Thuận dòng','Trùng hướng chiếm ưu thế 5/5'],['map','⌖','Người vẽ bản đồ','Phóng to bản đồ và chạm vào một vùng'],['fig8','☉','Người kết giao','Gặp 8 nhân vật'],
- ['diary','✎','Người giữ nhật ký','Đọc 6 trang nhật ký dòng họ'],['done','◉','Khép hồ sơ','Đi tới kết luận'],['share','⇪','Lan toả','Tạo thẻ chia sẻ']
+ ['start','Mở','Mở hồ sơ','Bắt đầu hành trình'],['r10','Đọc','Mọt sử','Đọc 10 sự kiện'],['r40','Sử','Sử gia','Đọc 40 sự kiện'],['s5','Lưu','Nhà lưu trữ','Mở 5 sử liệu'],
+ ['pv10','Nhìn','Đa góc nhìn','Xem quan điểm ở 10 sự kiện'],['q6','Nhớ','Trí nhớ tốt','Trả lời đúng 6 câu đố'],['q12','Khoa','Thủ khoa','Đúng cả 12 câu đố'],['tags','Ngả','Ba ngả đường','Chọn đủ cả ba kiểu lựa chọn'],
+ ['against','Ngược','Ngược dòng','3 lần chọn khác hướng chiếm ưu thế'],['match','Thuận','Thuận dòng','Trùng hướng chiếm ưu thế 5/5'],['map','Đồ','Người vẽ bản đồ','Phóng to bản đồ và chạm vào một vùng'],['fig8','Giao','Người kết giao','Gặp 8 nhân vật'],
+ ['diary','Ký','Người giữ nhật ký','Đọc 6 trang nhật ký dòng họ'],['done','Khép','Khép hồ sơ','Đi tới kết luận'],['share','Lan','Lan toả','Tạo thẻ chia sẻ']
 ];
 const fv=(id,arr)=>{const e=D.EV.find(x=>x.id===id);if(e)e.v.push(...arr);};
 const fq=(id,t,by,src)=>{const e=D.EV.find(x=>x.id===id);if(e)e.qt={t,by,src};};

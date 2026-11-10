@@ -14,6 +14,8 @@ const TH: Record<Theme, { land: string; sea: string }> = {
   archive: { land: '#e3d3b0', sea: '#c9d2c4' }, night: { land: '#2b251d', sea: '#0f1619' }, poster: { land: '#f2e7cd', sea: '#dcc99c' },
 };
 export const land = () => TH[S.theme].land;
+/** Màu đất / biển của một giao diện bất kỳ (thẻ xem trước giao diện). */
+export const mapColors = (t: Theme) => TH[t];
 export const sea = () => TH[S.theme].sea;
 
 function flagCss(k: Faction): string {
