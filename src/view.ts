@@ -47,12 +47,12 @@ function setHtml(el: Element, h: string): boolean {
 }
 const setText = (el: Element, t: string): void => { if (el.textContent !== t) el.textContent = t; };
 
-/** Chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
+/** Hàng chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
+const edge = (r: HTMLElement): void => { r.classList.toggle('over', r.scrollWidth > r.clientWidth + 2); r.classList.toggle('end', r.scrollLeft + r.clientWidth >= r.scrollWidth - 2); };
+let edgeW = false;
 function legendEdge(): void {
-  const lg = $('#legend')!;
-  const upd = () => { lg.classList.toggle('over', lg.scrollWidth > lg.clientWidth + 2); lg.classList.toggle('end', lg.scrollLeft + lg.clientWidth >= lg.scrollWidth - 2); };
-  if (!lg.dataset.w) { lg.dataset.w = '1'; lg.addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); }
-  upd();
+  $('#legend')!.querySelectorAll<HTMLElement>('.lr').forEach(r => { r.addEventListener('scroll', () => edge(r), { passive: true }); edge(r); });
+  if (!edgeW) { edgeW = true; addEventListener('resize', () => $('#legend')!.querySelectorAll<HTMLElement>('.lr').forEach(edge)); }
 }
 export function renderMain(): void {
   const y = S.year, R = regime2(y), e = tourEra() || eraOf(y), pk = optOf(e);
@@ -83,9 +83,11 @@ export function renderMain(): void {
 /** Chú giải các phe của năm y (Trò chơi: kèm quan hệ với các thế lực). Xem lại diễn biến trong Trò chơi gọi với năm của
     cảnh (bản đồ vẽ biên giới năm ấy, năm đang chơi giữ nguyên). */
 export function renderLegend(y = S.year, pk = optOf(tourEra() || eraOf(y))): void {
-  const h = regime2(y).legend
+  // hai hàng: các phe trên bản đồ; Trò chơi thêm hàng quan hệ của dòng họ với các thế lực (trước đây chung một hàng,
+  // trên điện thoại hai phần ba bị khuất bên phải)
+  const h = `<div class="lr">${regime2(y).legend
     .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
-    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(k => relChip(k, y)).join('') : '');
+    .join('')}</div>` + (isPlay() ? `<div class="lr rel">${powersAt(y).map(k => relChip(k, y)).join('')}</div>` : '');
   if (setHtml($('#legend')!, h)) legendEdge(); // đo độ tràn (ép dàn trang) chỉ khi chú giải đổi
 }
 
@@ -134,7 +136,7 @@ export function renderCard(): void {
   const miss = ERAS.filter(e => !S.picks[e.id]);
   if (y >= Y1 && (!isPlay() || !miss.length)) {
     const m = miss[0];
-    cardOut(c, 'card cta', `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">${icon('seal', 16)}</button>` : `<button class="rb" data-a="end" aria-label="Xem kết luận">${icon('arrow')}</button>`}`);
+    cardOut(c, 'card cta', `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="cl"><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">${icon('seal', 16)}</button>` : `<button class="rb" data-a="end" aria-label="Xem kết luận">${icon('arrow')}</button>`}`);
     return;
   }
   const v = rt.focusEv, pk = v ? curPick(chYear(v)) : undefined;
@@ -142,7 +144,7 @@ export function renderCard(): void {
   const minePv = isPlay() && pk && SIDE_PV.includes(pk.persp) ? v?.v?.find(([p]) => p === pk.persp)?.[1] : undefined;
   let cls = 'card' + (v && v.diary ? ' diary' : '');
   if (!v) {
-    cardOut(c, cls, `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div>`);
+    cardOut(c, cls, `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="cl"><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div></div>`);
     return;
   }
   const seen = S.seen.includes(v.id);
@@ -151,7 +153,7 @@ export function renderCard(): void {
   if (must) cls += ' must';
   // dựng lại thẻ (‹ / › bằng bàn phím): giữ tiêu điểm trên nút tương ứng thay vì để rơi về <body>
   const f = c.contains(document.activeElement) ? document.activeElement as HTMLElement : null, fa = f?.dataset.a, fd = f?.dataset.d;
-  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? 'Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
+  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? 'Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="cl"><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</div></button>
     <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${icon(open ? 'seal' : 'check', 16)}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">${icon('prev')}</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">${icon('next')}</button></div>`)) return;
   if (f) (c.querySelector<HTMLElement>(`[data-a="${fa}"]${fd ? `[data-d="${fd}"]` : ''}`) || c.querySelector<HTMLElement>('.c'))?.focus({ preventScroll: true });
 }
