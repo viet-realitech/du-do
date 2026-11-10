@@ -92,7 +92,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .yr { color: var(--acc); font: 600 80px/.82 var(--disp); letter-spacing: -.02em; font-variant-numeric: lining-nums tabular-nums }
 .hd .era { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; padding-bottom: 4px; max-width: 180px }
 .hd .era b { font: italic 500 21px/1.1 var(--disp) }
-.lbl { font-size: var(--t-body); line-height: 20px; height: 28px; color: var(--ink2); padding: 8px var(--gut) 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: content-box }
+.lbl { font-size: var(--t-body); line-height: 20px; height: 20px; color: var(--ink2); padding: 8px var(--gut) 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: content-box }
 .vals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; padding: 12px var(--gut) 0; height: 24px; box-sizing: content-box }
 .eraR { display: flex; align-items: center; gap: 6px; font: 500 var(--t-cap)/1.3 var(--serif); letter-spacing: .1em; text-transform: uppercase; color: var(--ink2) }
 #eraNo { white-space: nowrap } /* "Chương 5/6 · Thế hệ 5" không gãy giữa chừng */
@@ -112,7 +112,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .beats, .idx { display: none }
 /* tấm bản đồ: đường viền đôi vuông (nét 1,25 và nét mảnh cách 3 px), vạch độ trên khung, nền là màu biển */
-.mapwrap { position: relative; flex: 1; min-height: 0; margin: 16px calc(var(--gut) + 4px) 0; border: 1.25px solid var(--neat); outline: .75px solid var(--neat); outline-offset: 3px; border-radius: var(--r); overflow: hidden; background: var(--seac, var(--paper)) }
+.mapwrap { position: relative; flex: 1; min-height: 0; margin: 14px calc(var(--gut) + 4px) 0; border: 1.25px solid var(--neat); outline: .75px solid var(--neat); outline-offset: 3px; border-radius: var(--r); overflow: hidden; background: var(--seac, var(--paper)) }
 /* vạch chia trên bốn cạnh khung (lớp tĩnh, không vẽ lại khi bản đồ chuyển động; không bộ lọc, không bóng) */
 .mapwrap::before {
   content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: .7;
@@ -228,7 +228,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #pop { position: absolute; left: 12px; right: 56px; bottom: 8px; z-index: 3; background: var(--paper); border: 1px solid var(--neat); border-radius: var(--r); padding: 9px 12px; animation: up .2s; box-shadow: 0 6px 20px rgba(0, 0, 0, .25) }
 #pop b { font: 700 17px/1.1 var(--disp) }
 
-.legend { display: flex; flex-direction: column; gap: 6px; padding: 10px var(--gut) 0 }
+.legend { display: flex; flex-direction: column; gap: 4px; padding: 10px var(--gut) 0 }
 .legend .lr { display: flex; gap: 16px; height: 20px; overflow-x: auto; white-space: nowrap; scrollbar-width: none }
 .legend .lr::-webkit-scrollbar { display: none }
 .legend .lr.over { -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent) } /* tràn: mờ mép phải, báo còn nữa (vuốt ngang) */
@@ -238,7 +238,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .flag b { position: absolute; inset: 0; display: grid; place-items: center; color: #f2c933; font-size: 9px; line-height: 1 }
 
 /* phiếu sự kiện dưới bản đồ: phiếu thư mục, góc vuông, dòng kẻ đầu phiếu; tít tối đa hai dòng thay vì cắt "Cách mạn…" */
-.card { margin: 10px var(--gut) 0; background: var(--paper2); border: 1px solid var(--neat); border-radius: var(--r); padding: 0 10px 0 14px; display: flex; gap: 12px; align-items: center; height: 96px; flex: none; position: relative }
+.card { margin: 10px var(--gut) 0; background: var(--paper2); border: 1px solid var(--neat); border-radius: var(--r); padding: 0 10px 0 14px; display: flex; gap: 12px; align-items: center; height: 94px; flex: none; position: relative }
 .card::before { content: ''; position: absolute; left: 10px; right: 10px; top: 5px; border-top: .75px solid var(--rule); pointer-events: none }
 .card .c { flex: 1; min-width: 0; cursor: pointer; text-align: left }
 /* dưới nhãn một dòng, ba dòng chung cho tít và tóm tắt (đếm qua hai khối con): tít hai dòng + tóm tắt một dòng, hay tít
@@ -259,7 +259,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .rb:active { background: var(--paper3) }
 
 /* thanh năm vẽ như thước tỉ lệ bản đồ: sáu đoạn chương xen kẽ đặc / rỗng, chương đang xem tô màu nhấn */
-.scrub { position: relative; height: 64px; margin: 6px 0 0; padding: 0 var(--gut); display: flex; align-items: center; gap: 12px; user-select: none; flex: none }
+.scrub { position: relative; height: 60px; margin: 6px 0 0; padding: 0 var(--gut); display: flex; align-items: center; gap: 12px; user-select: none; flex: none }
 .pbtn { width: 40px; height: 40px; border-radius: var(--r); background: var(--ink); color: var(--paper); display: grid; place-items: center; flex: none }
 .tl { position: relative; flex: 1; height: 52px; touch-action: none; cursor: grab }
 .trk { position: absolute; inset: 0 }
@@ -599,7 +599,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .hd .era { max-width: 320px; gap: 10px }
   .hd .era b { font-size: 28px }
   .eraR .av { width: 26px; height: 26px; font-size: 10px }
-  .lbl { line-height: 24px; padding: 10px var(--gut) 0 }
+  .lbl { line-height: 24px; height: 24px; padding: 10px var(--gut) 0 }
   .vals { gap: 28px; padding: 16px var(--gut) 0 }
   .res { gap: 28px; padding: 12px var(--gut) 0 }
   .mt { font-size: 13.5px }
