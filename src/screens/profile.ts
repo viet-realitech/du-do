@@ -70,8 +70,8 @@ export function paneMe(): void {
   <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
   ${sw('haptic', 'Rung <span class="muted" style="font-size:13px">· máy và khung bản đồ khi pháo nổ</span>', S.haptic)}
   ${sw('fx', 'Cảnh động <span class="muted" style="font-size:13px">· trận đánh 3D, phim tư liệu</span>', S.fx)}
-  <div class="row sb" style="padding:6px 0"><span class="muted">Hiệu ứng</span>${seg('qmode', qmode(), [['auto', 'Tự động'], ['full', 'Đầy đủ'], ['lite', 'Nhẹ']])}</div>
-  <p class="muted" style="font-size:13px;margin:0 0 4px">Tự động: máy chạy chậm thì bớt gợn sóng, khói, rung cho bản đồ mượt hơn.</p>
+  <div class="row sb" style="padding:6px 0"><span class="muted">Hiệu ứng</span><div class="seg" style="width:240px;flex:none">${([['auto', 'Tự động'], ['full', 'Đầy đủ'], ['lite', 'Nhẹ']] as [QMode, string][]).map(([v, l]) => `<button class="${qmode() === v ? 'on' : ''}" style="height:30px;font-size:14px" data-a="qmode" data-v="${v}" aria-pressed="${qmode() === v}">${l}</button>`).join('')}</div></div>
+  <p class="muted" style="font-size:13px;margin:0 0 4px">Tự động: máy chạy chậm thì tự bớt gợn sóng, khói và rung để bản đồ mượt hơn.</p>
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
   ${done === 6 || (!isPlay() && S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}

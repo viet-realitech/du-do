@@ -4,6 +4,7 @@ import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, lineage, rank } from '../play';
 import { wikiFor, probe } from '../wiki';
 import { esc, app } from '../ui/dom';
+import { watch } from '../ui/quality';
 import { SND, buzz } from '../audio';
 import { mood } from '../music';
 import { fxOn } from '../scene';
@@ -108,7 +109,7 @@ export function opener(e: Era, done: (played: boolean) => void): void {
     yr.textContent = String(Math.round(y0 + (e.cy - y0) * q));
     if (k < 1) requestAnimationFrame(tick); else { yr.classList.add('hit'); SND.stamp(); }
   };
-  setTimeout(() => requestAnimationFrame(tick), 350);
+  setTimeout(() => { requestAnimationFrame(tick); watch(dur); }, 350); // đo khung hình lúc năm đếm lên (ui/quality.ts)
   setTimeout(end, 3600);
 }
 
@@ -262,6 +263,7 @@ export function montage(): void {
     sc.innerHTML = html;
     stage.querySelectorAll('.scene-s').forEach(o => { o.classList.add('gone'); setTimeout(() => o.remove(), 700); });
     stage.appendChild(sc);
+    watch(900); // lúc hai cảnh chồng mờ vào nhau
     fitLowRes(sc);
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {

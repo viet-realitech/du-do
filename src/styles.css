@@ -382,7 +382,9 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .sw.on { background: var(--acc) }
 .sw.on::after { left: 21px }
 .set { width: 100%; justify-content: space-between; padding: 8px 0 }
-.pulse { transform-box: fill-box; transform-origin: center; animation: pl 1.6s ease-out infinite }
+/* vòng sáng quanh dấu sự kiện đang xem: bốn nhịp rồi thôi (hiệu ứng CSS trên phần tử SVG không được tăng tốc: chạy mãi thì
+   Safari vẽ lại vùng bản đồ ấy 60 lần mỗi giây cả khi đứng yên) */
+.pulse { transform-box: fill-box; transform-origin: center; animation: pl 1.6s ease-out 4 both }
 @keyframes pl { from { transform: scale(.6); opacity: .9 } to { transform: scale(2.6); opacity: 0 } }
 
 /* media */

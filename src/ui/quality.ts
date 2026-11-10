@@ -1,7 +1,8 @@
 /* Mức hiệu ứng tự chỉnh theo khung hình đo được trên chính máy này (thay cho đoán theo số nhân CPU: iPad Pro báo 8
    nhân nên trước đây không bao giờ được bớt hiệu ứng, còn máy tính 4 nhân lại bị bớt oan).
-   2 đủ · 1 bớt (không gợn sóng bờ biển, không bộ lọc nét cổ, khói một đợt, không rung khung) · 0 tối giản (bản đồ
-   không nghiêng, không chớp lửa, ảnh tư liệu đứng yên). Người dùng chọn cố định ở Hồ sơ → Cài đặt thì không tự chỉnh. */
+   2 đủ · 1 bớt (không gợn sóng bờ biển, không bộ lọc nét cổ, không quầng sáng, khói một cụm, vòng giữ vị trí không
+   nhấp nháy, không cánh quạt / bụi xích, không rung khung) · 0 tối giản (thêm: không khói, ảnh tư liệu đứng yên, phụ đề
+   hiện thẳng). Bản đồ nghiêng khi vào trận ở mọi mức. Người dùng chọn cố định ở Hồ sơ → Cài đặt thì không tự chỉnh. */
 
 export type QMode = 'auto' | 'full' | 'lite';
 type Lvl = 0 | 1 | 2;

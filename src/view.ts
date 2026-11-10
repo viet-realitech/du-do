@@ -60,9 +60,10 @@ export function renderMain(): void {
   setText($('#eraT')!, e.title);
   const er = $('#eraR')!;
   setHtml(er, pk ? `${av(pk.guide)}${esc(pk.label)}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng');
-  if (pk) { er.dataset.a = 'fig'; er.dataset.id = pk.guide; }
-  else if (!isPlay()) { er.dataset.a = 'pickera'; er.dataset.id = e.id; } // Đọc sử: điểm rẽ của chương, không bắt buộc
-  else delete er.dataset.a;
+  const ds = (k: 'a' | 'id', v: string) => { if (er.dataset[k] !== v) er.dataset[k] = v; };
+  if (pk) { ds('a', 'fig'); ds('id', pk.guide); }
+  else if (!isPlay()) { ds('a', 'pickera'); ds('id', e.id); } // Đọc sử: điểm rẽ của chương, không bắt buộc
+  else if (er.dataset.a) delete er.dataset.a;
   setText($('#lbl')!, R.label);
   const pp = pop(y);
   setText($('#popl')!, pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu');
