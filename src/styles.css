@@ -111,16 +111,24 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .mt > i > b { display: block; height: 100%; background: var(--acc); transition: width .7s cubic-bezier(.2, .8, .2, 1) }
 
 .beats, .idx { display: none }
-/* tấm bản đồ: đường viền đôi vuông (nét 1,25 và nét mảnh cách 3 px), vạch độ trên khung, nền là màu biển */
-.mapwrap { position: relative; flex: 1; min-height: 0; margin: 14px calc(var(--gut) + 4px) 0; border: 1.25px solid var(--neat); outline: .75px solid var(--neat); outline-offset: 3px; border-radius: var(--r); overflow: hidden; background: var(--seac, var(--paper)) }
-/* vạch chia trên bốn cạnh khung (lớp tĩnh, không vẽ lại khi bản đồ chuyển động; không bộ lọc, không bóng) */
-.mapwrap::before {
-  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: .7;
+/* Tấm bản đồ, viền như tờ bản đồ in: nét ngoài mảnh (outline), dải giấy có vạch chia, nét trong đậm sát mặt bản đồ.
+   Dải và vạch vẽ bằng nền nhiều lớp trong chính đường viền 6 px của khung (bản đồ nằm trong, không phủ lên): không thêm
+   phần tử hay lớp ghép hình nào chồng lên bản đồ, bản đồ vẽ lại không kéo theo phần viền. */
+.mapwrap {
+  --nl: 1.25px; /* nét trong */
+  --band: calc(6px - var(--nl)); /* dải vạch chia */
+  position: relative; flex: 1; min-height: 0; margin: 14px calc(var(--gut) + 3px) 0;
+  border: 6px solid transparent; outline: .75px solid var(--neat); outline-offset: 2px; overflow: hidden;
   background:
-    repeating-linear-gradient(90deg, var(--neat) 0 1px, transparent 1px 36px) top left / 100% 5px no-repeat,
-    repeating-linear-gradient(90deg, var(--neat) 0 1px, transparent 1px 36px) bottom left / 100% 5px no-repeat,
-    repeating-linear-gradient(0deg, var(--neat) 0 1px, transparent 1px 36px) top left / 5px 100% no-repeat,
-    repeating-linear-gradient(0deg, var(--neat) 0 1px, transparent 1px 36px) top right / 5px 100% no-repeat
+    linear-gradient(var(--neat), var(--neat)) left 0 top var(--band) / 100% var(--nl) no-repeat border-box,
+    linear-gradient(var(--neat), var(--neat)) left 0 bottom var(--band) / 100% var(--nl) no-repeat border-box,
+    linear-gradient(var(--neat), var(--neat)) left var(--band) top 0 / var(--nl) 100% no-repeat border-box,
+    linear-gradient(var(--neat), var(--neat)) right var(--band) top 0 / var(--nl) 100% no-repeat border-box,
+    repeating-linear-gradient(90deg, var(--neat) 0 1px, transparent 1px 36px) left 0 top 0 / 100% var(--band) no-repeat border-box,
+    repeating-linear-gradient(90deg, var(--neat) 0 1px, transparent 1px 36px) left 0 bottom 0 / 100% var(--band) no-repeat border-box,
+    repeating-linear-gradient(180deg, var(--neat) 0 1px, transparent 1px 36px) left 0 top 0 / var(--band) 100% no-repeat border-box,
+    repeating-linear-gradient(180deg, var(--neat) 0 1px, transparent 1px 36px) right 0 top 0 / var(--band) 100% no-repeat border-box,
+    linear-gradient(var(--seac, var(--paper)), var(--seac, var(--paper))) padding-box /* nền = màu biển: bản đồ nghiêng không lộ dải đen */
 }
 /* Ba lớp <svg> chồng nhau, mỗi lớp một lớp vẽ riêng (map.ts): nền tĩnh (biển, lưới, gợn sóng bờ biển), bản đồ, cảnh
    động. Đổi năm / cảnh chạy chỉ vẽ lại lớp của nó. Cả ba nằm trong .mapstage: nghiêng, rung cùng nhau. */
@@ -569,7 +577,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 [data-theme=poster] .card.cta { background: var(--red); color: #fff; border-color: var(--ink) }
 [data-theme=poster] .card.cta .s { color: rgba(255, 255, 255, .85) }
 [data-theme=poster] .tabs { border-top: 2px solid var(--ink) }
-[data-theme=poster] .mapwrap { border-width: 2px }
+[data-theme=poster] .mapwrap { --nl: 2px }
 [data-theme=poster] .stamp { border-width: 3px }
 
 /* theme previews (onboarding, settings) */
@@ -579,9 +587,9 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .thc.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) }
 /* mỗi thẻ là một tấm bản đồ nhỏ theo đúng màu của giao diện ấy: năm, khung đôi, hình Việt Nam (theme.ts) */
 .thc .pvw { display: block; position: relative; height: 92px; border-radius: var(--r); overflow: hidden; background: var(--paper); color: var(--ink); padding: 8px 9px; border: 1px solid var(--rule) }
-.thc .pvw b { display: block; font: 800 28px/.9 var(--disp); color: var(--acc); letter-spacing: -.01em }
-.thc .pvw[data-theme=night] b { font-weight: 600 }
-.thc .pvw svg { position: absolute; right: 8px; top: 8px; bottom: 8px; height: calc(100% - 16px); width: auto; border: 1px solid var(--neat); outline: .5px solid var(--neat); outline-offset: 2px }
+.thc .pvw b { display: block; font: 800 22px/.9 var(--disp); color: var(--acc); letter-spacing: -.01em }
+.thc .pvw[data-theme=night] b { font-weight: 600; font-size: 24px }
+.thc .pvw svg { position: absolute; right: 10px; bottom: 9px; height: 52px; width: auto; border: 1px solid var(--neat); outline: .5px solid var(--neat); outline-offset: 2px }
 .thc .pvw[data-theme=poster] { box-shadow: inset 0 0 0 2px var(--ink) }
 .thc .nm { display: block; font: 700 15px/1.1 var(--disp); margin: 8px 3px 2px }
 .thc .ds { display: block; font-size: 12.5px; line-height: 1.2; color: var(--ink2); margin: 0 3px 3px }
@@ -603,7 +611,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .vals { gap: 28px; padding: 16px var(--gut) 0 }
   .res { gap: 28px; padding: 12px var(--gut) 0 }
   .mt { font-size: 13.5px }
-  .mapwrap { margin: 18px calc(var(--gut) + 4px) 0 }
+  .mapwrap { margin: 18px calc(var(--gut) + 3px) 0 }
   .mtag { left: 16px; top: 16px; padding: 5px 10px }
   .mtag b { font-size: 16px }
   .zoomc { right: 16px; top: 16px }
@@ -713,7 +721,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
     #main:has(.beats:not([hidden])) .card { min-height: 0 }
     #main:has(#beats:not([hidden])) .legend { min-height: 44px }
   }
-  .mapwrap { grid-area: map; margin: calc(var(--sat) + 22px) 20px 0 calc(var(--gut) + 4px) }
+  .mapwrap { grid-area: map; margin: calc(var(--sat) + 22px) 20px 0 calc(var(--gut) + 3px) }
   .scrub { grid-area: scrub; margin-top: 10px }
   /* thanh tab màn rộng: thấp, biểu tượng cạnh chữ (không phải thanh tab điện thoại kéo dãn) */
   .tabs { grid-area: tabs; height: var(--tabh); padding-top: 0; gap: 8px; align-items: stretch }

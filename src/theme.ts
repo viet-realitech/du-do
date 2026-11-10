@@ -8,7 +8,7 @@ import { mapColors } from './ui/bits';
    read at night: dark paper, brass ink) and Áp phích (propaganda poster), plus faction palette, map style and overlays. */
 export const THEMES: [Theme, string, string][] = [
   ['archive', 'Lưu trữ', 'Giấy ngả vàng, mực nâu, bản đồ khắc tay'],
-  ['night', 'Đèn dầu', 'Tấm bản đồ ấy đọc ban đêm: nền tối, chữ ánh đồng'],
+  ['night', 'Đèn dầu', 'Cùng tấm bản đồ, đọc dưới đèn: nền tối, chữ ánh đồng'],
   ['poster', 'Áp phích', 'Chữ đậm, khung đen, màu cổ động'],
 ];
 const BAR: Record<Theme, string> = { archive: '#efe5cf', night: '#16130f', poster: '#f2e7cd' };
