@@ -1,11 +1,11 @@
 import { gateKey, gateSpeech, outKey, outSpeech } from '../speech';
 import type { Fx } from '../data/cards';
 import { mood } from '../music';
-import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option } from '../data';
-import { S, save, rt, familyName } from '../state';
+import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option, type QuizItem } from '../data';
+import { S, save, rt, familyName, quizAsked, markAsked } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost, calm, announce, radios } from '../ui/dom';
-import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, type Harvest } from '../play';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, type Harvest } from '../play';
 import { fxChipsPlay, relChip } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
@@ -38,17 +38,69 @@ const BRIDGE: Record<string, { far?: string; t2?: string }> = {
   hoa: { far: 'Người con trai cả theo sứ bộ Phan Thanh Giản vào Nam làm thư lại.', t2: 'Người con trai cả theo sứ bộ Phan Thanh Giản vào Nam làm thư lại.' },
 };
 
+/** "Gia đình bạn" ở điểm rẽ e, khi đời trước đã chọn hướng pp: câu chung (data2.js CTX); Trò chơi chỉnh theo quê, các
+    thẻ và biến cố riêng đã quyết, các lần đổi họ, để không kể một nhánh họ chưa từng đi, một cái sổ "phiến loạn" mà dòng
+    họ đã thoát, hay bỏ qua việc cả họ vừa đổi tên. */
+export function ctxFor(e: Era, pp: string): string | null {
+  let t = e.ctx?.[pp] || null;
+  if (!isPlay()) return t;
+  const reg = home()[3], north = reg === 'B' || reg === 'T1', q = home()[1], prevE = ERAS[ERAS.indexOf(e) - 1];
+  if (e.id === 'e3' && pp === 'canvuong') {
+    const x = S.cards['x:x-canvuong96']; // biến cố sau Hương Khê: dời đi / lấy họ mẹ / ra thú
+    t = 'Cha bạn theo nghĩa quân Hương Khê; khi chủ tướng mất, ông về làng chôn giấu súng dưới chân ruộng. ' +
+      (x === 0 ? 'Cả họ đã dời sang phủ khác, làm lại từ mấy sào ruộng thuê.' : x === 1 ? 'Sổ đinh giờ ghi một họ khác; lính đồn hỏi "nhà phiến loạn" thì không ai chỉ tới nhà bạn.' : x === 2 ? 'Từ ngày ra thú, làng gọi nhà bạn là "nhà ra thú".' : 'Sổ của Pháp ghi gia đình là "phiến loạn".');
+  }
+  if (e.id === 'e6' && pp === 'bac') {
+    t = !north ? (hasFlag(['nguoiDi54']) ? `Cha bạn về ${q} sau hai mươi mốt năm tập kết; mẹ bạn vẫn chờ ở quê, tóc đã bạc.` : `Cha bạn đưa cả nhà về lại ${q} sau hai mươi mốt năm tập kết; ruộng cũ đã qua tay người khác.`)
+      : regionAt(1975) !== reg ? 'Cả nhà đã vào Nam từ năm 1955, trước khi đội cải cách về làng; hai mươi năm sau, chuyện cũ vẫn chỉ kể trong nhà.'
+      : hasFlag(['tienNhanh']) ? 'Cha bạn vào Sài Gòn sau hai mươi mốt năm, gặp lại nhánh họ đã di cư năm 1954.'
+      : 'Hoà bình rồi; cha bạn vào Nam tìm tin những người trong họ đã đi chiến trường, có người không về.';
+  }
+  if (e.id === 'e6' && pp === 'nam') {
+    if (hasFlag(['ditan'])) t = 'Tháng Tư năm ấy, cha bạn đưa cả nhà lên tàu ra biển; bạn lớn lên ở trại tị nạn, rồi ở một thành phố xa lạ.';
+    else if (!hasFlag(['caitao']) && S.cards.sg75 === 2 && regionAt(1975) !== 'B') t = 'Ngày 30 tháng Tư, cha bạn treo cờ mở cửa; nhưng nhà từng sống dưới chính quyền Sài Gòn, lý lịch vẫn phải khai ba đời.';
+  }
+  // đổi họ trong đời trước (biến cố riêng): ghi ngay ở "Gia đình bạn", cùng hệ quả với câu chuyện họ Nguyễn năm 1925
+  const ren = prevE ? S.names.filter(n => n.y >= prevE.cy && n.y < e.cy) : [];
+  const lines = ren.map(n => `Năm ${n.y}, ${n.from} đổi thành ${n.to}.`);
+  const ng = ren.find(n => surnameKey(n.from) === 'nguyen' && n.y < 1925);
+  if (ng && e.cy > 1925 && !('x:x-nguyen25' in S.cards)) lines.push(`Mang ${ng.to.replace(/^Họ /, 'họ ')}, dòng họ đi qua những năm 1919–1925 mà không ai hỏi tới những tờ giấy ký tên Nguyễn Ái Quốc.`);
+  return [t, ...lines].filter(Boolean).join(' ') || null;
+}
+
+/** Kết cục của hướng vừa chọn, theo quê (Trò chơi): sau Genève nói đúng nhà ở lại hay ra đi (data.js nói chung chung
+    "tập kết ra Bắc hoặc ở lại Hà Nội" cho mọi quê). */
+function outFor(o: Option): string {
+  if (!isPlay()) return o.out;
+  const reg = home()[3], north = reg === 'B' || reg === 'T1', q = home()[1];
+  if (o.id === 'bac') return north ? `Bạn ở lại ${q}, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.`
+    : `Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở ${q} một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.`;
+  if (o.id === 'nam') return north ? `Bạn rời ${q} trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.`
+    : `Bạn ở lại ${q}, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.`;
+  if (o.id === 'thuba') return north ? 'Bạn theo dòng người di cư vào Nam năm 1954; ở Sài Gòn, bạn đứng cùng những người đòi hoà bình. Cả hai phía đều nghi ngờ bạn.'
+    : reg === 'T2' ? 'Bạn xuống đường đòi hoà bình ở Huế, rồi ở Sài Gòn. Cả hai phía đều nghi ngờ bạn.' : o.out;
+  return o.out;
+}
+
+/** Câu đố của chương (tối đa hai): chỉ những câu về sự kiện người chơi đã thấy trong tour hay đã mở trang, câu chưa hỏi
+    trên máy này (ở cả hai luồng) trước. Không câu nào như thế thì chương không có câu đố. */
+export function quizFor(eid: string): QuizItem[] {
+  const shown = new Set([...S.shown, ...S.seen]), asked = quizAsked();
+  const ok = (QUIZ[eid] || []).filter(q => shown.has(q[4]));
+  return [...ok.filter(q => !asked.includes(q[0])), ...ok.filter(q => asked.includes(q[0]))].slice(0, 2);
+}
+
 /* Turning points: optional quiz for the previous chapter → choice → outcome. */
 export function openGate(e: Era): void {
   rt.flowTo = null;
   const prev = ERAS[ERAS.indexOf(e) - 1];
   // Đọc sử: câu đố của chương trước chỉ khi vừa xem hết tour chương đó (không đố chương người đọc chưa xem)
-  const quiz = prev && !S.quiz[prev.id] && (isPlay() || rt.toured === prev.id);
+  const quiz = !!prev && !S.quiz[prev.id] && (isPlay() || rt.toured === prev.id) && quizFor(prev.id).length > 0;
   rt.toured = null;
   const next = () => { if (quiz) openQuiz(prev!.id, () => openChoice(e)); else openChoice(e); };
   // Trò chơi: khép lại thế hệ vừa sống (mùa màng) trước khi đố và bước vào điểm rẽ mới.
   const h = prev ? harvest(prev, e.cy) : null;
-  if (prev && h) openHarvest(prev, h, e.cy, S.quiz[prev.id] ? `Bước vào điểm rẽ ${e.n}` : `Đố nhanh chương ${prev.n}`, next); else next();
+  if (prev && h) openHarvest(prev, h, e.cy, quiz ? `Đố nhanh chương ${prev.n}` : `Bước vào điểm rẽ ${e.n}`, next); else next();
 }
 
 /** Chế độ Chơi: mùa màng khép lại thế hệ `e`, rồi `next` (điểm rẽ kế hoặc kết cục). */
@@ -59,6 +111,7 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
   const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">◆ Mùa màng · Thế hệ ${e.n} khép lại</span><span class="mono muted">${esc(familyName())} · ${esc(home()[1])}</span></div>
   <h2 style="margin:10px 0 6px">Gia sản sau một đời người</h2>
   <p class="muted" style="margin-bottom:12px">${e.title}, ${e.cy}–${ERAS[e.n]?.cy ?? 2026}. Ruộng đất, người trong họ và các mối quan hệ quyết định mùa màng.</p>
+  ${h.top ? `<div class="hv-top"><span class="mono muted">Việc lớn của đời này</span> ${esc(h.top)}</div>` : ''}
   ${h.lines.map(([n, fx]) => `<div class="row sb hl"><span>${esc(n)}</span><span class="fxs">${fxChipsPlay(fx) || '<span class="muted">—</span>'}</span></div>`).join('')}
   <div class="row sb hl" style="margin-top:6px;font-weight:700"><span>Gia sản đổi thực</span><span class="fxs">${fxChipsPlay(h.total) || '<span class="muted">Không đổi</span>'}</span></div>
   <div class="rule"></div>
@@ -72,12 +125,14 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
 
 export function openQuiz(eid: string, done?: () => void): void {
   stopTour();
-  const qs = QUIZ[eid], e = ERAS.find(x => x.id === eid)!;
+  const qs = quizFor(eid), e = ERAS.find(x => x.id === eid)!;
   let i = 0;
   const res: boolean[] = [];
   const fin = () => { S.quiz[eid] = res.slice(); save(); clearLayer(); checkBadges(); done?.(); };
+  if (!qs.length) { fin(); return; } // chương không hiện sự kiện nào có câu đố
   const show = () => {
     const [q, opts, a, ex] = qs[i];
+    markAsked(q);
     clearLayer();
     const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">★ Đố nhanh · Chương ${e.n}</span><span class="mono muted">Câu ${i + 1}/${qs.length}</span></div>
      <h2 style="margin:12px 0 16px">${q}</h2><div>${opts.map((o, j) => `<button class="qa" data-j="${j}">${o}</button>`).join('')}</div>
@@ -136,7 +191,7 @@ function choice(e: Era, quiet: boolean): void {
     sync = false;
     if (!spoke) setTimeout(release, Math.min(6000, 1800 + e.q.length * 35));
   }, 1200);
-  const prevE = ERAS[ERAS.indexOf(e) - 1], pp = prevE && S.picks[prevE.id], ctx = e.ctx && pp ? e.ctx[pp] : null;
+  const prevE = ERAS[ERAS.indexOf(e) - 1], pp = prevE && S.picks[prevE.id], ctx = pp ? ctxFor(e, pp) : null;
   // những việc thế hệ trước đã làm ở các thẻ bắt buộc (tối đa ba, theo thời gian): lựa chọn nhỏ cũng thành gia sử
   const did = prevE ? choicesIn(0, 0, prevE).filter(x => mustDecide(x.v)).slice(0, 3).reverse() : [];
   // nhãn của mỗi hướng: tiếp nối / rẽ khỏi đường thế hệ trước, và người cùng họ dẫn đầu hướng đó
@@ -190,10 +245,11 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   // Trò chơi, thế hệ 1: kết cục và nhật ký đặt ở Nam Kỳ (Chí Hoà, Gò Công, sứ bộ ở Sài Gòn); quê ngoài Nam Kỳ thì nói ai
   // trong nhà đã đi vào đó, để quê đã chọn không bị lờ đi
   const reg = home()[3], bridge = isPlay() && e.n === 1 && reg !== 'NE' && reg !== 'NW' ? (BRIDGE[o.id]?.[reg === 'T2' ? 't2' : 'far'] || '') : '';
+  const out = outFor(o); // theo quê: nhà ở lại, di cư hay tập kết năm 1954
   if (fxOn()) SND.vow();
   // ngọn cờ của hướng vừa chọn mở ra, người đồng hành bước vào: dòng họ đứng về một phía
   sheet(`<div class="unfurl">${o.fac ? flag(o.fac) : `<i class="flag nf"></i>`}<div class="uf-t"><span class="mono">Thế hệ ${e.n} chọn · ${e.cy}</span><b>${o.label}</b></div>${av(o.guide, 52)}</div>
-  <h2 style="margin:14px 0 8px">Con đường của bạn</h2>${bridge ? `<p>${bridge}</p>` : ''}<p>${o.out}</p>
+  <h2 style="margin:14px 0 8px">Con đường của bạn</h2>${bridge ? `<p>${bridge}</p>` : ''}<p>${esc(out)}</p>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${fxChips(o.fx)}</div>
   ${isPlay() && Object.keys(eraFx(o.id)).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(eraFx(o.id), got)}</div>` : ''}
   <div class="rule"></div>
@@ -212,9 +268,10 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   const go = () => { if (!armed || !layer.contains(d)) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
   // speak() gọi callback ngay (đồng bộ) khi không có giọng: khi đó dùng bộ đếm thay vì kết thúc lời đọc.
   let sync = true;
-  const spoke = speak(outSpeech(o.out), () => { if (!sync && armed) setTimeout(go, 700); }, false, outKey(o.id)); // giọng thu sẵn (như lời dẫn điểm rẽ)
+  // giọng thu sẵn (như lời dẫn điểm rẽ) đọc câu chung; câu đã chỉnh theo quê thì giọng máy đọc đúng câu đang hiện
+  const spoke = speak(outSpeech(out), () => { if (!sync && armed) setTimeout(go, 700); }, false, out === o.out ? outKey(o.id) : undefined);
   sync = false;
-  const ms = spoke ? Math.max(6000, o.out.length * 95) : Math.max(7000, 4500 + o.out.length * 80); // tự đọc: đủ chậm
+  const ms = spoke ? Math.max(6000, out.length * 95) : Math.max(7000, 4500 + out.length * 80); // tự đọc: đủ chậm
   bar.style.setProperty('animation-duration', ms + 'ms', 'important'); // giảm chuyển động vẫn thấy thanh đếm (không phải hiệu ứng bay)
   setTimeout(go, ms + (spoke ? 4000 : 0)); // bảo hiểm khi lời đọc bị cắt giữa chừng
   // Người chơi đang đọc hay chạm vào bảng (nhân vật, cuộn): dừng đếm, để họ tự bấm. Chạm nút ▶ thì đếm cũng vô hiệu.

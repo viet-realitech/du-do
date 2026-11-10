@@ -15,6 +15,24 @@ export const HOMES: [string, string, [number, number], Region][] = [
   ['mt', 'Mỹ Tho', [106.36, 10.36], 'NE'], ['ct', 'Cần Thơ', [105.78, 10.03], 'NW'],
 ];
 export const home = () => HOMES.find(h => h[0] === S.home) || HOMES[0];
+const NORTH: Region[] = ['B', 'T1'];
+/** Vùng dòng họ thật sự sống vào năm y: điểm rẽ 5 (Genève, 1954) dời nhà. Nhà miền Bắc (Hà Nội, Nam Định, Nghệ An)
+    chọn Miền Nam hay Thành phần thứ ba thì di cư vào Nam, sống quanh Sài Gòn – Biên Hoà như phần đông người di cư, và
+    ở lại đó cả sau 1975; nhà chọn ở lại mà rồi vẫn vào Nam trước khi đội cải cách về (x-diachu53) cũng vậy. Nhà phía
+    nam vĩ tuyến 17 chọn Miền Bắc thì tập kết ra Bắc, sau 1975 về lại quê. Thẻ theo vùng, bên cai quản (mùa màng), nhãn
+    "chạm tới quê" đều theo vùng này. */
+export function regionAt(y: number): Region {
+  const g = home()[3], p = S.picks.e5;
+  if (y < 1954 || !p) return g;
+  if (NORTH.includes(g)) return p === 'nam' || p === 'thuba' || S.cards['x:x-diachu53'] === 2 ? 'NE' : g;
+  return p === 'bac' && y < 1976 ? 'B' : g;
+}
+/** Nơi dòng họ sống vào năm y: quê nhà, hay nơi ở mới sau 1954 (tên, toạ độ cho dấu nhà trên bản đồ). */
+export function placeAt(y: number): { name: string; l: [number, number]; moved: boolean } {
+  const h = home(), r = regionAt(y);
+  if (r === h[3]) return { name: h[1], l: h[2], moved: false };
+  return r === 'B' ? { name: 'miền Bắc', l: [105.85, 21.03], moved: true } : { name: 'miền Nam', l: [106.82, 10.95], moved: true };
+}
 
 const ic = (d: string) => `<svg class="ri" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 /** Tài nguyên: khoá, tên, biểu tượng (bông lúa, người, đồng bạc, đèn lồng). */
@@ -43,7 +61,7 @@ export function powersAt(y: number): (keyof Rel)[] {
 
 /** Thế lực cai quản quê nhà vào năm y. */
 export function ruler(y: number): keyof Rel | null {
-  const g = home()[3], key = (g === 'QT' ? (y >= 1954 && y < 1976 ? 'T2' : 'T1') : g) as Exclude<Region, 'QT'>;
+  const g = regionAt(y), key = (g === 'QT' ? (y >= 1954 && y < 1976 ? 'T2' : 'T1') : g) as Exclude<Region, 'QT'>;
   const f = regime2(y).reg[key];
   return ({ dainam: 'tr', dnph: 'ph', phap: 'ph', phap_bh: 'ph', jp: 'nh', vndcch: 'vm', cmlt: 'vm', vnch: 'qg', chxhcn: 'nn', tc: null } as Record<string, keyof Rel | null>)[f || ''] ?? null;
 }
@@ -68,20 +86,42 @@ export function applyFx(fx: Fx): Fx {
 /* ---------- thẻ sự kiện ---------- */
 /** Thẻ của sự kiện; thẻ cả nước có lựa chọn riêng cho vùng quê của dòng họ (VARIANT) thì dùng lựa chọn đó. */
 export function cardOf(v: HistEvent): Card | undefined {
-  if (v.diary) return undefined;
-  const c = CARD[v.id];
-  if (!c || S.cardv[v.id] === 'base') return c; // quyết trước khi có lựa chọn theo vùng: giữ bộ gốc
-  const picked = Object.values(S.picks), g = home()[3];
-  const va = VARIANT[v.id]?.find(x => (!x.regions || x.regions.includes(g)) && (!x.homes || x.homes.includes(S.home)) && !x.notPicks?.some(p => picked.includes(p)) &&
-    (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })));
-  return va ? [c[0], c[1], va.choices] : c;
+  const k = variantIx(v);
+  if (k === undefined) return undefined;
+  const c = CARD[v.id], va = k >= 0 ? VARIANT[v.id][k] : undefined;
+  return va ? [c[0], va.scope ?? c[1], va.choices] : c;
 }
-/** Bắt buộc quyết định: cả nước, hoặc sự kiện chạm tới quê nhà. */
+/** Bộ lựa chọn thẻ của sự kiện dùng: chỉ số trong VARIANT, -1 = bộ gốc, undefined = không có thẻ. Vùng (`regions`) là
+    vùng dòng họ đang sống vào năm của chương (regionAt), `from` là vùng quê gốc: nhà Huế tập kết ra Bắc là regions B,
+    from T2. `picks`: đã chọn một trong các hướng đó; `flags`: một lựa chọn đã quyết trước năm của sự kiện mang cờ đó. */
+function variantIx(v: HistEvent): number | undefined {
+  if (v.diary || !CARD[v.id]) return undefined;
+  if (S.cardv[v.id] === 'base' || !VARIANT[v.id]) return -1; // quyết trước khi có lựa chọn theo vùng: giữ bộ gốc
+  const picked = Object.values(S.picks), g = regionAt(chYear(v)), g0 = home()[3];
+  return VARIANT[v.id].findIndex(x => (!x.regions || x.regions.includes(g)) && (!x.from || x.from.includes(g0)) && (!x.homes || x.homes.includes(S.home)) &&
+    (!x.picks || x.picks.some(p => picked.includes(p))) && !x.notPicks?.some(p => picked.includes(p)) &&
+    (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })) && (!x.flags || hasFlag(x.flags, v.y)));
+}
+/** Dòng họ đã chốt một lựa chọn mang một trong các cờ này ở sự kiện trước năm y (thẻ thường, biến cố riêng). */
+export function hasFlag(fs: readonly Flag[], y = 9999): boolean {
+  for (const v of EV) if (!v.diary && v.y < y && decided(v.id)) { const f = cardOf(v)?.[2][S.cards[v.id]]?.[4]; if (f && fs.includes(f)) return true; }
+  for (const c of SPECIAL) {
+    const i = S.cards['x:' + c.id], ev = EV.find(x => x.id === c.ev), f = i != null && ev && ev.y < y ? c.choices[i]?.[5] : undefined;
+    if (f && fs.includes(f)) return true;
+  }
+  return false;
+}
+/** Khoá tra bảng ALIGN_OVR cho lựa chọn i trên thẻ đang dùng của v: 'ng45:2' (bộ gốc), 'dc54@1:0' (bộ thay thế thứ 1). */
+export function alKey(v: HistEvent, i: number): string {
+  const k = variantIx(v);
+  return k !== undefined && k >= 0 ? `${v.id}@${k}:${i}` : `${v.id}:${i}`;
+}
+/** Bắt buộc quyết định: cả nước, hoặc sự kiện chạm tới nơi dòng họ đang sống (quê, hay nơi ở mới sau 1954). */
 export function mustDecide(v: HistEvent): boolean {
   const c = cardOf(v);
   if (!c) return false;
   if (c[1] === 'all') return true;
-  const g = home()[3];
+  const g = regionAt(chYear(v));
   return c[1].split(',').some(r => r === g || (g === 'QT' && (r === 'T1' || r === 'T2')));
 }
 export const decided = (id: string) => id in S.cards;
@@ -94,8 +134,15 @@ export const ownCard = (v: HistEvent): boolean => isPlay() && !!cardOf(v) && (lo
     trái (-1) / không liên quan (0) với hướng thế hệ này theo. Trò chơi; null nếu chưa quyết thẻ nào. */
 export function homeChoice(v: HistEvent): { v: HistEvent; ch: Choice; al: -1 | 0 | 1 } | null {
   if (!isPlay() || !v.diary) return null;
-  const x = choicesIn(evEra(v).cy, v.y)[0];
-  return x ? { ...x, al: alignment(x.ch[2], chYear(v)) } : null;
+  // việc cùng năm chỉ tính khi đã xảy ra trước tháng của trang nhật ký (kéo pháo Điện Biên tháng 3 – 5.1954 không nhắc
+  // việc dòng họ chọn sau Genève tháng 7)
+  const xs = choicesIn(evEra(v).cy, v.y), x = xs.find(c => c.v.y < v.y || !v.m || evMonth(c.v) <= v.m);
+  return x ? { ...x, al: alignment(x.ch[2], chYear(v), alKey(x.v, S.cards[x.v.id])) } : null;
+}
+/** Tháng bắt đầu của sự kiện theo ngày ghi ('13.3 – 7.5.1954' → 3, '8.1954 – 5.1955' → 8); 0 nếu chỉ ghi năm. */
+export function evMonth(v: HistEvent): number {
+  const ns = (String(v.d).split(/\s*[–-]\s*/)[0].match(/\d+/g) || []).map(Number).filter(n => n < 1000);
+  return ns.length >= 2 ? ns[1] : ns[0] || 0;
 }
 /** Các lựa chọn dòng họ đã chốt trên thẻ sự kiện trong các năm [y0, y1], mới nhất trước (Trò chơi). */
 export function choicesIn(y0: number, y1: number, era?: Era): { v: HistEvent; ch: Choice }[] {
@@ -108,20 +155,43 @@ export function choicesIn(y0: number, y1: number, era?: Era): { v: HistEvent; ch
 export const pendingCard = (y: number): HistEvent | undefined =>
   isPlay() ? EV.find(v => v.y <= y && needsDecision(v) && (mustDecide(v) || !!specialFor(v))) : undefined;
 
-/** Điều kiện có thể chọn: không để tài nguyên âm quá sức. */
+/** Điều kiện có thể chọn: không để tài nguyên âm quá sức. Lúa gạo và bạc bù cho nhau (payFx): chỉ khi cả hai cộng lại
+    vẫn không đủ mới khoá. */
 export function canAfford(fx: Fx): string | null {
   for (const [k, name] of RES) {
+    if (k === 'g' || k === 'b') continue;
     const n = fx[k] || 0;
     if (n < 0 && S.res[k] + n < 0) return `Không đủ ${name.toLowerCase()}`;
   }
+  const g1 = S.res.g + (fx.g || 0), b1 = S.res.b + (fx.b || 0);
+  if (g1 + b1 < 0) return g1 < 0 && b1 < 0 ? 'Không đủ lúa gạo, bạc' : g1 < 0 ? 'Không đủ lúa gạo' : 'Không đủ bạc';
   return null;
+}
+/** Lúa gạo và bạc đổi một ăn một, như nhà có của vẫn làm (bỏ bạc đong gạo năm đói; bán thóc, bán ruộng lấy bạc): phần
+    thiếu của thứ này lấy từ thứ kia. Trả hiệu ứng sẽ áp thật và phần đã đổi: ['g', n] đong n lúa gạo bằng bạc, ['b', n]
+    bán n lúa gạo lấy bạc; null khi không cần đổi (hay cả hai cộng lại vẫn thiếu). */
+export function payFx(fx: Fx): { fx: Fx; swap: ['g' | 'b', number] | null } {
+  const g1 = S.res.g + (fx.g || 0), b1 = S.res.b + (fx.b || 0);
+  if (g1 < 0 && b1 + g1 >= 0) return { fx: { ...fx, g: -S.res.g, b: (fx.b || 0) + g1 }, swap: ['g', -g1] };
+  if (b1 < 0 && g1 + b1 >= 0) return { fx: { ...fx, b: -S.res.b, g: (fx.g || 0) + b1 }, swap: ['b', -b1] };
+  return { fx, swap: null };
+}
+/** Lựa chọn nào bấm được (null) hay bị khoá (lý do) trên một thẻ chưa quyết; `al`: hợp (1) / trái (-1) đường. Không đủ
+    sức thì khoá, trừ khi thế thì thẻ bắt buộc thành ngõ cụt hay chỉ còn câu trả lời trái đường dòng họ theo: khi ấy lựa
+    chọn không trái đường rẻ nhất mở (tài nguyên dừng ở 0), như nhà Nghệ An ở vùng tự do không bị ép trả lời "ở vùng
+    Pháp" năm 1954; không có lựa chọn nào như thế mà cũng không gì đủ sức thì lựa chọn rẻ nhất mở. */
+export function locks(fxs: Fx[], al: number[]): (string | null)[] {
+  const no = fxs.map(canAfford), all = fxs.map((_, i) => i);
+  const open = (ix: number[]) => { if (ix.length) no[ix.reduce((b, i) => (cost(fxs[i]) < cost(fxs[b]) ? i : b))] = null; };
+  if (!all.some(i => !no[i] && al[i] >= 0)) { const on = all.filter(i => al[i] >= 0); if (on.length) open(on); else if (no.every(Boolean)) open(all); }
+  return no;
 }
 
 export function decide(v: HistEvent, i: number): Fx {
   const c = cardOf(v)!, ch = c[2][i];
   S.xs[v.id] = specialFor(v)?.id || ''; // chốt biến cố riêng theo hoàn cảnh lúc quyết định (trước khi trừ gia sản)
   S.cards[v.id] = i;
-  const got = applyFx(ch[2]);
+  const got = applyFx(payFx(ch[2]).fx);
   save();
   return got;
 }
@@ -157,7 +227,7 @@ export function lockPassed(y: number): void {
 export const specialDecided = (c: SpecialCard) => 'x:' + c.id in S.cards;
 export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: string): Fx {
   S.cards['x:' + c.id] = i;
-  const ch = c.choices[i], got = applyFx(ch[2]);
+  const ch = c.choices[i], got = applyFx(payFx(ch[2]).fx);
   if (ch[4]) { renameFamily(asFamily(newName || ch[4]), y, c.title); lockPassed(y + 1); } // sự kiện tới năm đổi họ: không mọc biến cố của họ mới
   save();
   return got;
@@ -200,8 +270,9 @@ export const continues = (prev: string | undefined, next: string) => !!prev && (
 /** Đường mỗi hướng theo, đọc qua quan hệ: [thế lực, +1 thân / −1 chống]. Phong trào (Đông Du, Quốc dân đảng) không có
     thế lực riêng nên đọc qua việc chống Pháp; Cần Vương chống Pháp (sau 1888 triều đình về tay bảo hộ, nên không đọc
     qua Triều đình: ra thú cũng làm Triều đình hài lòng); Duy Tân, trung lập, thứ ba đọc qua làng xóm. */
+// Chủ hoà đọc qua cả triều đình lẫn Pháp: hướng này giữ hoà với cả hai (ERA_FX hoa tăng cả tr lẫn ph).
 const ALIGN: Record<string, [keyof Rel, 1 | -1][]> = {
-  chien: [['tr', 1], ['ph', -1]], canhtan: [['tr', 1]], hoa: [['tr', 1]],
+  chien: [['tr', 1], ['ph', -1]], canhtan: [['tr', 1]], hoa: [['tr', 1], ['ph', 1]],
   canvuong: [['ph', -1]], dongdu: [['ph', -1]], duytan: [['lg', 1]],
   cs: [['vm', 1]], qdd: [['ph', -1]], laphien: [['ph', 1]],
   vm: [['vm', 1]], qg: [['qg', 1]], tl: [['lg', 1]],
@@ -213,10 +284,28 @@ export function standing(id: string): number {
   const refs = ALIGN[id] || [];
   return refs.length ? Math.round(refs.reduce((a, [k, sg]) => a + (sg > 0 ? S.rel[k] : 100 - S.rel[k]), 0) / refs.length) : 0;
 }
-/** Lựa chọn trên thẻ hợp (1) hay trái (-1) với đường dòng họ đang theo; 0 khi không liên quan hay khi hai chiều triệt nhau. */
-export function alignment(fx: Fx, y: number): -1 | 0 | 1 {
+/** Vài lựa chọn mà đọc qua quan hệ thì sai nghĩa của hướng (khoá alKey: 'thẻ:chỉ số', bộ thay thế 'thẻ@k:chỉ số'):
+    ra làm lý trưởng dưới bảo hộ là đúng lối chủ hoà, từ quan thì không; "Đứng ngoài" buôn bán với cả hai, ở lại vùng xôi
+    đậu mới là đường của mình; giữ kế hoạch hoá thì mở hiệu buôn tư nhân năm 1986 là rẽ khỏi đường ấy. */
+const ALIGN_OVR: Record<string, Partial<Record<string, -1 | 0 | 1>>> = {
+  'pt84:0': { hoa: 1 }, 'pt84:1': { hoa: -1 },
+  'ng45:2': { tl: -1 }, 'el49:2': { tl: 1 }, 'tk46:1': { tl: 1 },
+  'dm86:0': { baocap: -1, doimoi: 1 },
+  // 30.4.1975 với nhà theo miền Nam: di tản theo chính quyền cũ, hay ở lại trình diện như những người đã làm việc cho
+  // chính quyền ấy, đều là đi tiếp đường của mình (đón quân giải phóng thì không)
+  'sg75:1': { nam: 1 },
+};
+/** Đứng ngoài, thành phần thứ ba: không theo phe nào, nên lựa chọn ngả hẳn về một phe (tổng thay đổi quan hệ với các
+    phe từ 15 trở lên) là trái đường, dù làng xóm có vui. */
+const PARTISAN: (keyof Rel)[] = ['vm', 'qg', 'ph', 'nh', 'my'];
+/** Lựa chọn trên thẻ hợp (1) hay trái (-1) với đường dòng họ đang theo; 0 khi không liên quan hay khi hai chiều triệt nhau.
+    `key` (alKey): lựa chọn có nghĩa riêng ghi trong ALIGN_OVR. */
+export function alignment(fx: Fx, y: number, key?: string): -1 | 0 | 1 {
   const pk = curPick(y), refs = pk ? ALIGN[pk.id] : undefined;
-  if (!refs) return 0;
+  if (!pk || !refs) return 0;
+  const o = key ? ALIGN_OVR[key]?.[pk.id] : undefined;
+  if (o !== undefined) return o;
+  if ((pk.id === 'tl' || pk.id === 'thuba') && PARTISAN.reduce((a, k) => a + Math.abs(fx[k] || 0), 0) >= 15) return -1;
   const n = refs.reduce((a, [k, sg]) => a + sg * Math.sign(fx[k] || 0), 0);
   return n > 0 ? 1 : n < 0 ? -1 : 0;
 }
@@ -224,7 +313,8 @@ export function alignment(fx: Fx, y: number): -1 | 0 | 1 {
 /* ---------- mùa màng mỗi thế hệ ---------- */
 /** `lines`: các khoản danh nghĩa; `total`: phần đổi thực sau khi chặn ở 0 và 100. */
 /** `ry`: năm giữa thế hệ, năm xét bên cai quản quê (dòng "Bên cai quản"; ⌂ trên bảng mùa màng theo cùng năm này). */
-export interface Harvest { lines: [string, Fx][]; total: Fx; ry: number }
+/** `top`: việc lớn nhất thế hệ ấy đã quyết (năm · lựa chọn), mở đầu bảng mùa màng: mỗi đời một khác. */
+export interface Harvest { lines: [string, Fx][]; total: Fx; ry: number; top?: string }
 /** Mùa màng của thế hệ vừa sống qua (`lived`), tính vào năm `y` nó khép lại; một lần mỗi thế hệ.
     Phụ thuộc bên cai quản quê nhà và làng xóm nghĩ gì về dòng họ. */
 export function harvest(lived: Era, y: number): Harvest | null {
@@ -247,14 +337,17 @@ export function harvest(lived: Era, y: number): Harvest | null {
     ['Thuế và sưu dịch', { b: -Math.round((b * b) / 350) }],
     ['Danh tiếng phai theo thời gian', { u: -Math.max(4, Math.round((u * u) / 700)) }],
   ];
-  if (r) lines.push([`Bên cai quản ${home()[1]}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 8), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
+  const pl = placeAt(ry); // sau 1954: nơi dòng họ thật sự sống (di cư, tập kết)
+  if (r) lines.push([`Bên cai quản ${pl.moved ? `nơi ở mới (${pl.name})` : pl.name}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 8), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
   else lines.push(['Vùng tranh chấp', { g: -6, d: -2 }]);
   if (pk && st >= 55) lines.push([`Đường bạn theo: ${pk.label} · ${st >= 75 ? 'son sắt' : 'vững vàng'}`, { g: Math.round((st - 40) / 6), d: 2, b: st >= 75 ? 3 : 2, u: st >= 75 ? 4 : 2 }]); // người cùng đường góp gạo, góp tiền
   else if (pk && onlyLg && refs.length && CAMP[pk.id] === 'pt' && lg >= 55) lines.push(['Anh em trong phong trào', { d: 2, u: 3 }]);
   lines.push([`Làng xóm · ${relLabel(lg).toLowerCase()}`, { g: Math.round((lg - 50) / 8), u: Math.round((lg - 50) / 10) }]);
   if (d >= 60) lines.push(['Họ đông người', { g: 4, b: 4 }]);
   if (d < 20) lines.push(['Thiếu người làm', { g: -6 }]);
-  if (g < 10) lines.push(['Đói kém', { d: -4, u: -3 }]);
+  // nhà còn bạc thì không để đói: bỏ bạc đong gạo (một ăn một, như trên thẻ)
+  if (g < 12 && b >= 22) lines.push(['Bỏ bạc đong gạo', { g: 10, b: -10 }]);
+  else if (g < 10) lines.push(['Đói kém', { d: -4, u: -3 }]);
   const total: Fx = {};
   const shown = lines.filter(([, fx]) => Object.values(fx).some(Boolean)); // bỏ dòng không đổi gì (vd. thuế khi không có bạc)
   for (const [, fx] of shown) for (const [k, n] of Object.entries(fx) as [keyof Fx, number][]) total[k] = (total[k] || 0) + n;
@@ -262,7 +355,8 @@ export function harvest(lived: Era, y: number): Harvest | null {
   S.harvests.push(lived.id);
   S.snap[lived.id] = { ...S.res }; // gia sản sau mỗi đời: kết cục nói đời nào gây dựng, đời nào mất mát
   save();
-  return { lines: shown, total: got, ry };
+  const top = bigChoices(lived, 1)[0];
+  return { lines: shown, total: got, ry, top: top ? `${top.y} · ${top.label}` : undefined };
 }
 
 /* ---------- kết cục ---------- */

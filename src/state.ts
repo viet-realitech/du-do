@@ -42,6 +42,8 @@ export interface State {
   year: number;
   picks: Record<string, string>;
   seen: string[];
+  /** Sự kiện tour đã đưa tới (bước tour đã bắt đầu): câu đố cuối chương chỉ hỏi về chúng (hay sự kiện đã mở trang). */
+  shown: string[];
   srcSeen: string[];
   pvSeen: string[];
   figSeen: string[];
@@ -74,7 +76,7 @@ export interface State {
 }
 
 const def: State = {
-  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
+  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
   filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
@@ -85,7 +87,7 @@ function load(mode = activeMode()): State {
   s = Object.assign({}, def, raw);
   // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
   if (!('xFrom' in raw)) s.xFrom = typeof raw.year === 'number' ? raw.year : Y0;
-  s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])]; s.snap = { ...(s.snap || {}) };
+  s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])]; s.snap = { ...(s.snap || {}) }; s.shown = [...(s.shown || [])];
   // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa)
   s.cardv = { ...(s.cardv || {}) };
   const known = Array.isArray(raw.cvk) ? raw.cvk as string[] : 'cardv' in raw ? ['nt62', 'sg75'] : []; // cvk có từ khi thêm bộ tn80
@@ -104,7 +106,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;
@@ -183,6 +185,14 @@ export function matchStats() {
 }
 
 export const quizCorrect = () => Object.values(S.quiz).flat().filter(Boolean).length;
+/* Câu đố đã hỏi trên máy này, chung cho cả hai luồng (Đọc sử, Trò chơi có bản lưu riêng): lần sau hỏi câu khác. */
+const ASKED_KEY = 'dudo-quiz-asked';
+export function quizAsked(): string[] {
+  try { const a = JSON.parse(localStorage.getItem(ASKED_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch { return []; }
+}
+export function markAsked(q: string): void {
+  try { const a = quizAsked(); if (!a.includes(q)) { a.push(q); localStorage.setItem(ASKED_KEY, JSON.stringify(a)); } } catch { /* private mode */ }
+}
 export const familyName = () => S.name || 'Họ Lê';
 /** Tên họ qua các lần đổi: "Họ Nguyễn → Họ Lê" (gia phả, kết cục, phim hành trình). */
 export const nameChain = (): string => (S.names.length ? [S.names[0].from, ...S.names.map(n => n.to)].join(' → ') : familyName());

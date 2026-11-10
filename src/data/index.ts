@@ -27,6 +27,8 @@ export interface HistEvent {
   n?: [string, string][];
   diary?: boolean;
   era?: string;
+  /** Trang nhật ký: tháng (khi cùng năm với một sự kiện có thẻ, để dòng "Ở nhà" không nhắc việc xảy ra sau). */
+  m?: number;
 }
 
 export interface Option {
@@ -72,8 +74,8 @@ export interface Regime {
 
 /** [name, years, role, bio] */
 export type Figure = [string, string, string, string];
-/** [question, options, answerIndex, explanation] */
-export type QuizItem = [string, string[], number, string];
+/** [question, options, answerIndex, explanation, event id]: câu đố chỉ hỏi khi sự kiện ấy đã hiện trong tour. */
+export type QuizItem = [string, string[], number, string, string];
 /** [id, icon, name, description] */
 export type Badge = [string, string, string, string];
 

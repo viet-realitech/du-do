@@ -130,17 +130,9 @@ export const SPECIAL: SpecialCard[] = [
     ],
     note: "Sau 1975, lý lịch ba đời và hộ khẩu quyết định việc học, việc làm; con em các gia đình bị xếp diện 'nguỵ quân, nguỵ quyền' thường bị hạn chế xét tuyển đại học cho đến cuối thập niên 1980. Làn sóng vượt biên lên cao nhất 1978–1979, trùng với đợt cải tạo công thương nghiệp ở miền Nam.",
   },
-  {
-    id: "x-tapket54", ev: "dc54", when: {"camps": ["vm"], "homes": ["sg", "mt", "ct"]},
-    title: "Chuyến tàu tập kết",
-    s: "Người của dòng họ thuộc diện tập kết ra Bắc theo Hiệp định Genève; hẹn hai năm tổng tuyển cử, nhưng ruộng, mồ mả và cả nhà đều ở đây.",
-    choices: [
-      ["Cả nhà cùng xuống tàu ra Bắc", "Về khu tập kết gần nhất, lên tàu ra Sầm Sơn.", {"g": -12, "b": -8, "d": -3, "vm": 12, "qg": -15}, "Tàu Ba Lan chở cả nhà ra Sầm Sơn. Hẹn hai năm thành hai mươi mốt năm; ngày về, ruộng cũ đã qua hai đời chủ, mộ ông bà phải hỏi người làng mới tìm ra.", undefined, "tapketN"],
-      ["Người đi, vợ con ở lại giữ đất", "Chỉ người trong diện ra Bắc; gia đình bám quê.", {"d": -3, "b": -4, "vm": 8, "qg": -10, "lg": 5}, "Chồng và con trai ra Bắc. Người ở lại thành 'gia đình tập kết': chiến dịch Tố Cộng đến gõ cửa trước, thư miền Bắc đến sau, rồi đứt hẳn mười năm.", undefined, "nguoiDi54"],
-      ["Ở lại cả nhà, giấu quá khứ", "Chôn súng, khai lại giấy tờ, làm dân thường.", {"u": -6, "vm": -12, "qg": 5, "lg": -5}, "Súng chôn dưới gốc dừa, giấy tờ khai mới. Năm 1960 phong trào nổi dậy lan tới xã, những người quen cũ lại tìm đến nhà lúc nửa đêm."],
-    ],
-    note: "Theo Hiệp định Genève, trên dưới 140.000 cán bộ, bộ đội và một số gia đình ở miền Nam tập kết ra Bắc (các nguồn chênh nhau từ khoảng 100.000 đến hơn 180.000) qua các khu Xuyên Mộc (80 ngày), Cao Lãnh (100 ngày), Chắc Băng – Cà Mau (200 ngày) và Quy Nhơn (300 ngày), phần lớn trên tàu Liên Xô và Ba Lan cập bến Sầm Sơn; nhiều người để vợ con ở lại với lời hẹn hai năm. Các gia đình có người tập kết là đối tượng của chiến dịch Tố Cộng của chính quyền Ngô Đình Diệm từ 1955.",
-  },
+  // (Biến cố "Chuyến tàu tập kết" cho nhà Nam Bộ theo Miền Bắc đã thành bộ lựa chọn của thẻ di cư 1954 cho mọi nhà phía
+  // nam vĩ tuyến 17 chọn Miền Bắc (cards.ts VARIANT dc54): điểm rẽ 5 nay thật sự đưa dòng họ ra Bắc, nên không còn lựa
+  // chọn "ở lại cả nhà".)
   {
     id: "x-kieuhoi89", ev: "kh89", when: {"picks": ["radi"]},
     title: "Thùng đồ và chuyến bay về",

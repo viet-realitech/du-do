@@ -75,10 +75,24 @@ export function whenClear(fn: () => void): void {
   if (cineOpen()) setTimeout(() => whenClear(fn), 500); else fn();
 }
 
+/** Chỗ đặt thông báo khi có bảng / trang đang mở, để không che tiêu đề của bảng hay nút ‹ của trang: màn rộng còn chỗ
+    trống bên phải thì đặt cạnh phải; trang (.ov, như kết luận) thì đặt dưới hàng đầu trang; bảng cao chạm đỉnh màn hình
+    thì đặt ở đáy (thông báo không nhận chạm). */
+function toastSpot(): string {
+  const top = layer.lastElementChild as HTMLElement | null;
+  if (!top || !top.matches('.scrim, .ov')) return '';
+  const box = (top.matches('.scrim') ? top.querySelector('.sheet') : top)?.getBoundingClientRect();
+  if (!box) return '';
+  const free = top.matches('.ov') ? (innerWidth - Math.min(innerWidth, 720)) / 2 : innerWidth - box.right; // .ov: cột đọc giữa màn
+  if (free >= 260) return ' side';
+  if (top.matches('.ov')) return ' under';
+  return box.top < 84 ? ' low' : '';
+}
+
 export function toast(html: string): void {
   if (cineOpen()) { whenClear(() => toast(html)); return; }
   const n = document.createElement('div');
-  n.className = 'toast';
+  n.className = 'toast' + toastSpot();
   n.setAttribute('role', 'status');
   n.innerHTML = html;
   app.appendChild(n);

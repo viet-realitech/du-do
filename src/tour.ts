@@ -1,7 +1,7 @@
 import { isPlay, mustDecide, pendingCard, needsDecision, specialFor, homeChoice, localCard, ownCard } from './play';
 import { openCard } from './screens/card';
 import { mood, eraMood } from './music';
-import { ERAS, type Era, type HistEvent } from './data';
+import { ERAS, QUIZ, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, evEra, allEv, setFocus } from './state';
 import { $, announce } from './ui/dom';
 import { SND } from './audio';
@@ -11,7 +11,7 @@ import { hidePop, zoomTo, zoomK, zoomFit } from './map';
 import { fogTop, playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable, beforeClose } from './scene';
 import { preloadEra } from './screens/cinema';
 import { renderMain, setYear } from './view';
-import { openGate, openQuiz } from './screens/gate';
+import { openGate, openQuiz, quizFor } from './screens/gate';
 import { goEnd } from './screens/ending';
 
 /* Chapter "zoom tour": fly through key events of an era, narrating each, then return to the overview and
@@ -78,8 +78,9 @@ export function resumeEra(): Era | undefined {
 export const tourEra = (): Era | null =>
   (tour && (!tour.paused || (S.year >= tour.e.cy && S.year <= tour.end)) ? tour.e : null) || resumeEra() || null; // tour đang dừng mà xem năm khác (xem lại, "đến sự kiện"): đầu trang theo năm ấy
 
-/** Đọc sử: mốc khép / mở các chương, luôn có trong tour của chương chứa nó. */
-const MUST = ['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86'];
+/** Đọc sử: mốc khép / mở các chương, và mọi sự kiện có câu đố cuối chương (data2.js QUIZ), luôn có trong tour của
+    chương chứa nó: câu đố chỉ hỏi điều tour đã kể. Mỗi chương tối đa năm mốc, cùng hai trang nhật ký, vẫn vừa tám bước. */
+const MUST = new Set(['pt84', 'cv85', 'yb30', 'ng45', 'dbp', 'gnv', 'mt68', 'sg75', 'dm86', ...Object.values(QUIZ).flat().map(q => q[4])]);
 /** Chỉ số thứ j trong `need` mẫu rải đều trên `len` phần tử, gồm cả đầu và cuối (sự kiện khép chương: 30.4.1975, Patenôtre…). */
 const spread = (j: number, need: number, len: number) => (need <= 1 || len <= 1 ? 0 : Math.round((j * (len - 1)) / (need - 1)));
 
@@ -96,7 +97,8 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
     const rest = L.filter(v => !must.includes(v) && !v.diary);
     const owed = rest.filter(v => localCard(v)); // thẻ tuỳ chọn của vùng khác không mời
     const pool = owed.length >= 3 ? owed : rest;
-    const need = Math.max(0, 10 - must.length - d.length), pick: HistEvent[] = [];
+    // tám bước: chương đầu tới thẻ quyết định đầu tiên nhanh hơn, mỗi chương bớt khoảng hai bước chỉ để xem
+    const need = Math.max(0, 8 - must.length - d.length), pick: HistEvent[] = [];
     for (let j = 0; j < need && pool.length; j++) pick.push(pool[spread(j, need, pool.length)]);
     L = [...new Set([...must, ...d, ...pick])].sort((a, b) => a.y - b.y || (a.diary ? 1 : 0) - (b.diary ? 1 : 0) || at(a) - at(b));
     return { L, end };
@@ -104,7 +106,7 @@ function tourList(e: Era): { L: HistEvent[]; end: number } {
   if (L.length > 8) {
     // Keep every family-diary page, then sample battles/treaties/quoted events evenly.
     // mốc then chốt của chương luôn có mặt (câu đố cuối chương cũng hỏi về chúng)
-    const d = L.filter(v => v.diary), must = L.filter(v => MUST.includes(v.id)), rest = L.filter(v => !v.diary && !must.includes(v));
+    const d = L.filter(v => v.diary), must = L.filter(v => MUST.has(v.id)), rest = L.filter(v => !v.diary && !must.includes(v));
     const key = rest.filter(v => v.k === 'Trận đánh' || v.k === 'Hiệp ước' || v.qt || hasScene(v)); // cả cảnh di chuyển (Nhà Rồng, di cư…)
     const pool = key.length >= 4 ? key : rest, need = Math.max(0, 8 - d.length - must.length), pick: HistEvent[] = [];
     for (let j = 0; j < need && pool.length; j++) pick.push(pool[spread(j, need, pool.length)]);
@@ -162,7 +164,9 @@ function tourStep(): void {
     if (!live()) return;
     rt.focusEv = v;
     tour!.cur = v.id;
-    if (!isPlay()) { S.tourAt = { e: tour!.e.id, id: v.id }; save(); } // ■ / tải lại rồi ▶: kể tiếp đúng chương, đúng bước
+    if (!S.shown.includes(v.id)) S.shown.push(v.id); // câu đố cuối chương chỉ hỏi về sự kiện đã hiện (gate.ts quizFor)
+    if (!isPlay()) S.tourAt = { e: tour!.e.id, id: v.id }; // ■ / tải lại rồi ▶: kể tiếp đúng chương, đúng bước
+    save();
     renderMain();
     const hc = homeChoice(v);
     announce(`Chương ${tour!.e.n}, ${tour!.i + 1} trên ${tour!.L.length}: ${v.t}, ${v.y}${hc ? `. Ở nhà, cả họ đã chọn: ${hc.ch[0]}` : ''}`);
@@ -255,6 +259,9 @@ function finishTour(skipped = false): void {
   // Đọc sử, chương 6 xem hết hay bỏ qua: như mọi chương dẫn tới điểm rẽ kế, chương cuối dẫn tới kết luận (goEnd đố
   // chương 6 nếu vừa xem hết), không thả người đọc ở bản đồ năm 2026
   if (!isPlay() && done === ERAS[ERAS.length - 1].id) { then(() => { setYear(end, true); goEnd(); }); return; }
+  // Đọc sử, vừa xem hết chương: câu đố của chương mở ngay trên bản đồ của chương ấy, rồi mới sang năm của điểm rẽ kế
+  // (không để đầu trang đã ghi "Chương sau" khi còn đang đố chương này)
+  if (!isPlay() && !skipped && !S.quiz[done] && quizFor(done).length) { then(() => openQuiz(done, () => { rt.toured = null; setYear(end, true); })); return; }
   then(() => setYear(end, true));
 }
 

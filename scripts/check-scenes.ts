@@ -82,7 +82,9 @@ for (const [id, vs] of Object.entries(VARIANT)) {
   if (!CARD[id]) { console.error(`LỖI VARIANT.${id}: không có thẻ gốc`); err++; continue; }
   for (const va of vs) {
     if (va.choices.length !== CARD[id][2].length) { console.error(`LỖI VARIANT.${id} ${va.regions}: ${va.choices.length} lựa chọn, thẻ gốc ${CARD[id][2].length}`); err++; }
-    for (const r of va.regions || []) if (!['B', 'T1', 'T2', 'NE', 'NW'].includes(r)) { console.error(`LỖI VARIANT.${id}: vùng ${r}`); err++; }
+    for (const r of [...va.regions || [], ...va.from || []]) if (!['B', 'T1', 'T2', 'NE', 'NW'].includes(r)) { console.error(`LỖI VARIANT.${id}: vùng ${r}`); err++; }
+    for (const p of [...va.picks || [], ...va.notPicks || []]) if (!ERAS.some(e => e.opts.some(o => o.id === p))) { console.error(`LỖI VARIANT.${id}: hướng ${p}`); err++; }
+    for (const f of va.flags || []) if (!(FLAGS as readonly string[]).includes(f)) { console.error(`LỖI VARIANT.${id}: cờ ${f}`); err++; }
     for (const h of va.homes || []) if (!HOMES.some(x => x[0] === h)) { console.error(`LỖI VARIANT.${id}: quê ${h}`); err++; }
     for (const a of va.after || []) {
       const [k, i] = a.split('='), sp = k.startsWith('x:') ? SPECIAL.find(c => c.id === k.slice(2)) : undefined, n = sp ? sp.choices.length : CARD[k]?.[2].length;

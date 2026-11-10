@@ -198,14 +198,31 @@ const DOI: Record<string, string> = {
 export function doi(f: Facts, i: number): string {
   const id = f.picks[i], reg = f.home?.region;
   if (!reg) return DOI[id] || '';
+  // điểm rẽ 5 dời nhà (play.ts regionAt): nhà miền Bắc theo Miền Nam / Thành phần thứ ba thì di cư, nhà miền Nam theo
+  // Miền Bắc thì tập kết
   if (id === 'nam') return north(f) ? 'di cư vào Nam năm 1954' : DOI.nam;
+  if (id === 'thuba' && north(f)) return 'di cư vào Nam rồi xuống đường đòi hoà bình';
   if (id === 'bac') {
     if (north(f)) return f.flags.has('dicu') ? 'vẫn vào Nam trong hạn 300 ngày sau Genève' : 'ở lại miền Bắc';
-    return f.flags.has('tapketN') ? 'tập kết ra Bắc năm 1954' : 'theo cách mạng ở miền Nam';
+    return 'tập kết ra Bắc năm 1954';
   }
   if (id === 'duytan' && north(f)) return 'dạy chữ ở Đông Kinh Nghĩa Thục';
   if (id === 'vm') return reg === 'B' || reg === 'T1' ? 'lên chiến khu Việt Bắc theo Việt Minh' : reg === 'NE' ? 'theo Việt Minh vào chiến khu Đ' : reg === 'NW' ? 'theo Việt Minh vào rừng U Minh' : DOI.vm;
   return DOI[id] || '';
+}
+/** Dòng gia phả của hướng `id` (gia phả ở kết cục, phim hành trình). Trò chơi biết quê nên nói đúng người miền nào làm gì
+    sau Genève: điểm rẽ 5 dời nhà (play.ts regionAt), nhà miền Bắc theo Miền Nam / Thành phần thứ ba thì di cư, nhà miền
+    Nam theo Miền Bắc thì tập kết ra Bắc và về lại quê sau 1975. Không có câu riêng: dòng biên niên chung (CHRONICLE). */
+export function chronLine(id: string, f: Facts, chron: Record<string, string>): string {
+  const reg = f.home?.region, nth = north(f), q = f.home?.name || '';
+  if (reg && id === 'bac') return nth
+    ? (f.flags.has('dicu') ? 'Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
+    : `Thế hệ 5 tập kết ra Bắc năm 1954${f.flags.has('nguoiDi54') ? ', để vợ con ở lại quê chờ lời hẹn hai năm' : ''}; năm 1975 mới về lại ${q}.`;
+  if (reg && id === 'nam') return nth
+    ? 'Thế hệ 5 di cư vào Nam năm 1954, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.'
+    : 'Thế hệ 5 sống ở miền Nam, qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.';
+  if (reg && id === 'thuba' && nth) return 'Thế hệ 5 di cư vào Nam năm 1954, rồi xuống đường đòi hoà bình cùng thành phần thứ ba ở Sài Gòn; cả hai phía đều nghi ngờ.';
+  return chron[id] || OPT[id]?.out || '';
 }
 /** Đời được nhiều / mất nhiều nhất (tổng gia sản đổi giữa hai mùa màng); null khi chưa đủ sáu mùa. */
 export function genDelta(f: Facts): { best: number; worst: number; dl: number[] } | null {

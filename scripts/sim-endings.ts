@@ -37,9 +37,9 @@ let seed = 1;
 const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 type Opt = { i: number; al: number; no: string | null; cost: number; fx: Fx };
 /** Chọn một lựa chọn theo cách quyết `pol`, chỉ trong các lựa chọn đủ sức (như card.ts: không lựa chọn nào đủ thì lựa chọn rẻ nhất). */
-function choose(pol: string, chs: { fx: Fx; rename?: boolean }[], y: number): number {
-  const opts: Opt[] = chs.map((ch, i) => ({ i, al: ch.rename ? 0 : P.alignment(ch.fx, y), no: P.canAfford(ch.fx), cost: P.cost(ch.fx), fx: ch.fx }));
-  if (opts.every(o => o.no)) opts.reduce((b, o) => (o.cost < b.cost ? o : b)).no = null;
+function choose(pol: string, chs: { fx: Fx; rename?: boolean; key?: string }[], y: number): number {
+  const als = chs.map(ch => (ch.rename ? 0 : P.alignment(ch.fx, y, ch.key))), no = P.locks(chs.map(ch => ch.fx), als); // như card.ts
+  const opts: Opt[] = chs.map((ch, i) => ({ i, al: als[i], no: no[i], cost: P.cost(ch.fx), fx: ch.fx }));
   const f = (o: Opt, k: keyof Fx) => o.fx[k] || 0;
   const score: Record<string, (o: Opt) => number> = {
     trung: o => o.al * 1000 - o.cost,
@@ -70,7 +70,7 @@ for (const [pi, pol] of POL.entries()) {
         const c = P.cardOf(v);
         if (!c || !(P.mustDecide(v) || P.specialFor(v))) continue; // như pendingCard: bắt buộc, hay có biến cố riêng
         const y = st.chYear(v);
-        P.decide(v, choose(pol, c[2].map(ch => ({ fx: ch[2] })), y));
+        P.decide(v, choose(pol, c[2].map((ch, i) => ({ fx: ch[2], key: P.alKey(v, i) })), y));
         const sp = P.specialFor(v);
         if (sp && !P.specialDecided(sp)) {
           const j = choose(pol, sp.choices.map(ch => ({ fx: ch[2], rename: !!ch[4] })), y);
