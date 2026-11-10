@@ -40,7 +40,7 @@ export function paneMe(): void {
    <div><span class="mono">Đố đúng</span><b>${quizCorrect()}/12</b></div></div>
   <div class="bar" style="margin:14px 0 4px"><i style="width:${pct(S.year)}%"></i></div><div class="mono muted">Đã đi tới năm ${S.year}</div>
   <h3 style="margin:22px 0 6px">La bàn giá trị</h3>${compass()}
-  <p class="muted" style="font-size:13px;margin-top:4px">Cộng dồn từ điều mỗi lực lượng tự tuyên bố theo đuổi.</p>
+  <p class="muted small" style="margin-top:4px">Cộng dồn từ điều mỗi lực lượng tự tuyên bố theo đuổi.</p>
   <h3 style="margin:22px 0 10px">Huy hiệu · ${S.badges.length}/${BADGES.length}</h3>
   <div class="bgrid">${BADGES.map(([id, ic, n, d]) => `<div class="bdg${S.badges.includes(id) ? '' : ' off'}"><div class="bi" aria-hidden="true">${ic}</div><b>${n}</b><div class="muted d">${d}</div></div>`).join('')}</div>
   <h3 style="margin:22px 0 4px">Sáu thế hệ</h3>
@@ -59,19 +59,19 @@ export function paneMe(): void {
   <h3 style="margin:22px 0 10px">Giao diện</h3>
   ${themeCards()}
   <div class="row sb" style="padding:12px 0 6px"><span class="row" style="white-space:nowrap"><span class="muted">Màu các phe</span><span class="swl" aria-hidden="true">${sample}</span></span>${seg('pal', S.pal, [['flag', 'Theo cờ'], ['sepia', 'Mực nâu']])}</div>
-  <div class="row sb" style="padding:6px 0"><span class="muted">Nét bản đồ${S.theme === 'archive' ? '' : ' <span style="font-size:13px">· với Lưu trữ</span>'}</span>${seg('mstyle', S.mstyle, [['co', 'Cổ điển'], ['flat', 'Phẳng']])}</div>
+  <div class="row sb" style="padding:6px 0"><span class="muted">Nét bản đồ${S.theme === 'archive' ? '' : ' <span class="small">· với Lưu trữ</span>'}</span>${seg('mstyle', S.mstyle, [['co', 'Cổ điển'], ['flat', 'Phẳng']])}</div>
   ${sw('grain', 'Vân giấy', S.grain)}
   ${sw('modern', 'Đường biên hiện nay', S.modern)}
   ${sw('grat', 'Lưới kinh – vĩ độ', S.grat)}
   <h3 style="margin:22px 0 6px">Cài đặt</h3>
   ${sw('sound', 'Âm thanh', S.sound)}
   ${sw('music', 'Nhạc nền', S.music)}
-  ${sw('narr', `Giọng đọc${hasTTS && !hasVoice() ? ' <span class="muted" style="font-size:13px">· chưa có giọng tiếng Việt</span>' : ''}`, S.narr)}
+  ${sw('narr', `Giọng đọc${hasTTS && !hasVoice() ? ' <span class="muted small">· chưa có giọng tiếng Việt</span>' : ''}`, S.narr)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
-  ${sw('haptic', 'Rung <span class="muted" style="font-size:13px">· máy và khung bản đồ khi pháo nổ</span>', S.haptic)}
-  ${sw('fx', 'Cảnh động <span class="muted" style="font-size:13px">· trận đánh 3D, phim tư liệu</span>', S.fx)}
+  ${sw('haptic', 'Rung <span class="muted small">· máy và khung bản đồ khi pháo nổ</span>', S.haptic)}
+  ${sw('fx', 'Cảnh động <span class="muted small">· trận đánh 3D, phim tư liệu</span>', S.fx)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Hiệu ứng</span><div class="seg" style="width:240px;flex:none">${([['auto', 'Tự động'], ['full', 'Đầy đủ'], ['lite', 'Nhẹ']] as [QMode, string][]).map(([v, l]) => `<button class="${qmode() === v ? 'on' : ''}" style="height:30px;font-size:14px" data-a="qmode" data-v="${v}" aria-pressed="${qmode() === v}">${l}</button>`).join('')}</div></div>
-  <p class="muted" style="font-size:13px;margin:0 0 4px">Tự động: máy chạy chậm thì tự bớt gợn sóng, khói và rung để bản đồ mượt hơn.</p>
+  <p class="muted small" style="margin:0 0 4px">Tự động: máy chạy chậm thì tự bớt gợn sóng, khói và rung để bản đồ mượt hơn.</p>
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
   ${done === 6 || (!isPlay() && S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}

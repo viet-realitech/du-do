@@ -32,7 +32,7 @@ export function openFig(id: string): void {
 export function paneFig(): void {
   const met = figsMet(), ids = Object.keys(FIG);
   layer.innerHTML = `<div class="pane"><div class="mono muted">${met.size}/${ids.length} đã mở</div><h1 style="margin:6px 0 4px">Nhân vật</h1>
-  <p class="muted" style="font-size:16px;margin-bottom:6px">Mỗi điểm rẽ dòng họ bạn đi qua sẽ mở khoá những nhân vật của thời đó.</p>
+  <p class="muted" style="font-size:var(--t-body);margin-bottom:6px">Mỗi điểm rẽ dòng họ bạn đi qua sẽ mở khoá những nhân vật của thời đó.</p>
   ${ERAS.map(e => {
     const fs = ids.filter(id => FIGERA[id] === e.id), open = !!S.picks[e.id];
     const card = (id: string) => {
