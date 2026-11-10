@@ -55,6 +55,7 @@ import { ac } from './audio';
 import { applyTheme } from './theme';
 import { initMusic, mood } from './music';
 import { splash, intro, gameIntro, resumePlace } from './screens/onboarding';
+import { learnVsync } from './ui/quality';
 import './screens/event';
 import './screens/card';
 import './screens/profile';
@@ -69,6 +70,7 @@ document.getElementById('play')!.addEventListener('click', () => { ac(); toggleP
 setFocus();
 applyTheme(); // also renders the main screen
 const mapReady = initMap().then(renderMain);
+void mapReady.then(() => setTimeout(learnVsync, 1500)); // nhịp khung hình chuẩn của màn này (60 / 120 Hz), đo lúc đã yên
 
 // iOS leaves the page scrolled after the keyboard closes; the app never scrolls as a document.
 addEventListener('focusout', () => setTimeout(() => { if (scrollX || scrollY) scrollTo(0, 0); }, 60));

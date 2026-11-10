@@ -4,8 +4,6 @@ import { SND } from '../audio';
 
 export const $ = <T extends Element = HTMLElement>(s: string, root: ParentNode = document) => root.querySelector<T>(s);
 export const app = document.getElementById('app')!;
-/** Máy yếu (≤ 4 nhân hoặc ≤ 2 GB RAM): bớt hiệu ứng tốn công vẽ. */
-export const lite = (navigator.hardwareConcurrency || 8) <= 4 || ((navigator as { deviceMemory?: number }).deviceMemory || 8) <= 2;
 export const layer = document.getElementById('layer')!;
 /* Bảng chọn / trang chi tiết / màn mở đầu đang phủ: phần chính phía sau không nhận tiêu điểm bàn phím, trình đọc
    màn hình không đọc lẫn (trước đây Tab đi vào bản đồ, các nút ẩn sau bảng). Bảng Nhân vật / Sử liệu / Hồ sơ

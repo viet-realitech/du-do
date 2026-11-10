@@ -222,10 +222,9 @@ function animYear(to: number, cb: () => void): void {
   const dur = Math.min(900, Math.abs(to - from) * 70), t0 = performance.now();
   const f = (now: number) => {
     if (!tour) return;
-    const k = Math.min(1, (now - t0) / dur);
-    S.year = Math.round(from + (to - from) * k);
-    setFocus();
-    renderMain();
+    const k = Math.min(1, (now - t0) / dur), y = Math.round(from + (to - from) * k);
+    // chỉ vẽ lại khi năm đổi (~70 ms một năm: ba, bốn khung hình liền vẽ lại y hệt nhau)
+    if (y !== S.year) { S.year = y; setFocus(); renderMain(); }
     if (k < 1) requestAnimationFrame(f);
     else { save(); cb(); }
   };

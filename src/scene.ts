@@ -5,7 +5,8 @@ import { fxHost } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
-import { esc, lite, focusFallback } from './ui/dom';
+import { esc, focusFallback } from './ui/dom';
+import { quality, watch } from './ui/quality';
 import { speaking } from './narration';
 
 /* Cảnh động trong tour chương: trận đánh có bản đồ nghiêng 3D, mũi tiến quân vẽ dần, chớp lửa, khói, rung khung và
@@ -34,6 +35,10 @@ interface Run {
   list?: HTMLElement | null;
   /** Đang tạm dừng (❚❚): lúc bắt đầu dừng (performance.now), 0 khi đang chạy. Đồng hồ ảo đứng yên trong lúc dừng. */
   paused?: number;
+  /** Cảnh di chuyển: các đoạn đường đã lấy mẫu (đơn vị bản đồ) và quân cờ, để đặt khung tư liệu không phải đo lại path. */
+  geo?: [number, number][][]; pcs?: Element[];
+  /** Khoảng cách (px) từ đáy bản đồ tới phụ đề, đo một lần mỗi cảnh. */
+  capB?: number;
 }
 /** Bố cục hai cột (bản đồ trái, cột truyện phải): như @media trong styles.css. */
 const wide = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 760px)'); // thấp hơn: cột bên không còn chỗ cho danh sách
@@ -78,7 +83,8 @@ export function closeAt(v: HistEvent): number {
 /** Kiểu rung theo loại trận (Android; iOS không rung). */
 /** Cỡ quân cờ trên sa bàn (so với nét vẽ gốc ~18 px). */
 const PIECE = 1.35;
-/** Máy tính bảng / màn rộng: quân cờ to hơn một phần ba (đọc được từ cuối lớp). */
+/** Máy tính bảng / màn rộng: quân cờ to hơn một phần ba (đọc được từ cuối lớp). Đọc một lần mỗi trận, không mỗi khung
+    hình (đọc innerWidth ngay sau khi đổi thuộc tính SVG ép trình duyệt dàn trang lại cả trang). */
 const piece = () => PIECE * (innerWidth >= 700 ? 1.3 : 1);
 const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 40, 30, 90], naval: [25, 70, 25], landing: [30, 50, 60], uprising: [10, 110, 10, 110, 10], air: [18] };
 
@@ -204,11 +210,11 @@ function caption(r: Run, html: string, col: string, cls = ''): void {
   later(r, 0, () => b!.classList.toggle('step', sceneSteppable())); // sau khi nhịp này đã được đánh dấu
   b.setAttribute('aria-live', speaking() ? 'off' : 'polite'); // đang có lời kể: không đọc chồng
   b.style.setProperty('--c', col);
-  const bar = barEl();
-  b.style.bottom = `${(bar ? wrap.clientHeight - bar.offsetTop : 0) + 8}px`;
-  b.innerHTML = `<div class="lt-i">${html}</div>`; // hiệu ứng lau chữ chạy trên lớp trong: khung ngoài luôn nhận chạm
-  b.classList.remove('in');
-  void b.offsetWidth;
+  // đáy phụ đề: đo một lần mỗi cảnh (mỗi lần đo ngay sau khi vẽ sơ đồ / dòng kết là một lần ép dàn trang 15–40 ms)
+  if (r.capB === undefined) { const bar = barEl(); r.capB = (bar ? wrap.clientHeight - bar.offsetTop : 0) + 8; }
+  b.style.bottom = `${r.capB}px`;
+  // hiệu ứng lau chữ chạy trên lớp trong (lớp mới mỗi nhịp: tự chạy lại, không cần ép dàn trang); khung ngoài luôn nhận chạm
+  b.innerHTML = `<div class="lt-i">${html}</div>`;
   b.classList.add('in');
 }
 /** Nội dung một nhịp: phe (màu), thứ tự, ngày (nếu ghi chú kết thúc bằng ngày trong ngoặc), ghi chú. */
@@ -412,7 +418,7 @@ function curve(a: [number, number], b: [number, number], bend: number): { d: str
   return { d: `M${a[0]},${a[1]} Q${cx},${cy} ${b[0]},${b[1]}`, at, ang: (Math.atan2(b[1] - cy, b[0] - cx) * 180) / Math.PI };
 }
 
-function explode(r: Run, root: SVGGElement, p: [number, number], k: number, delay: number, big = 1): void {
+function explode(r: Run, root: SVGGElement, p: [number, number], k: number, delay: number, big = 1, puffs = 3): void {
   if (calm.matches) return; // giảm chuyển động: không chớp lửa, không khói
   const g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
   later(r, delay + 3800, () => g.remove()); // dọn nút sau khi khói tan
@@ -420,18 +426,21 @@ function explode(r: Run, root: SVGGElement, p: [number, number], k: number, dela
   const flash = el('circle', { r: 5 * big, fill: '#fffbe8', opacity: 0 }, g);
   anim(r, 160, q => flash.setAttribute('opacity', String(0.95 * (1 - q))), delay);
   anim(r, 760, q => { ball.setAttribute('r', String(4 + 15 * big * ease(q))); ball.setAttribute('opacity', String(q < 0.2 ? q * 5 : 1 - (q - 0.2) / 0.8)); }, delay);
-  for (let i = 0; i < 3; i++) {
-    const dx = (Math.random() - 0.5) * 10, sm = el('circle', { cx: dx, cy: 0, r: 5, fill: S.theme === 'night' ? 'url(#fx-puff-n)' : 'url(#fx-puff-d)', opacity: 0 }, g);
-    anim(r, 2600 + i * 300, q => { sm.setAttribute('r', String(5 + 12 * big * q)); sm.setAttribute('cy', String(-22 * q - i * 3)); sm.setAttribute('cx', String(dx + 6 * q)); sm.setAttribute('opacity', String(0.75 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, delay + 120 + i * 140);
+  // khói: mức hiệu ứng đủ ba cụm, bớt một cụm, tối giản không có. Mỗi khung chỉ đổi transform và độ mờ (bán kính 5 → 5 + 12·big
+  // bằng phép phóng), thay cho bốn thuộc tính r / cx / cy / opacity
+  const n = Math.min(puffs, [0, 1, 3][quality()]);
+  for (let i = 0; i < n; i++) {
+    const dx = (Math.random() - 0.5) * 10, sm = el('circle', { r: 5, fill: S.theme === 'night' ? 'url(#fx-puff-n)' : 'url(#fx-puff-d)', opacity: 0 }, g);
+    anim(r, 2600 + i * 300, q => { sm.setAttribute('transform', `translate(${dx + 6 * q},${-22 * q - i * 3}) scale(${1 + 2.4 * big * q})`); sm.setAttribute('opacity', String(0.75 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, delay + 120 + i * 140);
   }
 }
 
+/** Rung khung khi phát pháo đầu tiên của trận: nhẹ (≤ 1,5 px, styles.css), chỉ ở mức hiệu ứng đủ và khi bật Rung
+    (Hồ sơ → Cài đặt); giảm chuyển động thì không rung. Một lần mỗi trận nên không cần ép dàn trang để chạy lại. */
 function shake(r: Run): void {
-  if (calm.matches) return;
-  const m = document.getElementById('map');
+  if (calm.matches || !S.haptic || quality() < 2) return;
+  const m = document.getElementById('mapstage');
   if (!m) return;
-  m.classList.remove('shake');
-  void m.getBoundingClientRect();
   m.classList.add('shake');
   later(r, 450, () => m.classList.remove('shake'));
 }
@@ -470,9 +479,10 @@ function outcome(r: Run, v: HistEvent, sc: Scene, hs: HoldEl[], parts: Element[]
   undim(parts);
   listAt(r, Infinity);
   later(r, 0, () => r.onClose?.()); // sau khi dòng kết đã dựng xong
-  const wrap = document.getElementById('mapwrap'), m = document.getElementById('map'), end = sc.end || {};
+  const wrap = document.getElementById('mapwrap'), end = sc.end || {};
   const fought = sc.arrows.some(a => actOf(a) === 'fight'); // giao thành không kháng cự (Vĩnh Long 1867): không khói
-  if (!calm.matches && wrap?.classList.contains('tilt') && m) { m.style.transitionDuration = '2.4s'; wrap.style.setProperty('--rx', '31deg'); wrap.style.setProperty('--cs', '1.15'); } // máy quay nâng nhẹ
+  // máy quay nâng nhẹ: sương phía xa lùi lên (chỉ dịch lớp sương; đổi góc nghiêng / phóng của mặt bản đồ bắt vẽ lại cả mặt ấy)
+  if (!calm.matches && wrap?.classList.contains('tilt')) wrap.classList.add('lift');
   hs.forEach((hd, j) => {
     hd.stop = true;
     hd.ring.setAttribute('opacity', '0');
@@ -482,8 +492,9 @@ function outcome(r: Run, v: HistEvent, sc: Scene, hs: HoldEl[], parts: Element[]
       hd.rect.setAttribute('stroke-width', '1.6');
       anim(r, 600, q => hd.rect.setAttribute('fill-opacity', String(1 - q)));
       if (!calm.matches && r.root && fought) for (let i = 0; i < 3; i++) {
-        const sm = el('circle', { cx: hd.p[0], cy: hd.p[1], r: 3 / k, fill: S.theme === 'night' ? 'url(#fx-puff-n)' : 'url(#fx-puff-d)', opacity: 0 }, r.root);
-        anim(r, 2600, q => { sm.setAttribute('r', String((3 + 7 * q) / k)); sm.setAttribute('cy', String(hd.p[1] - (14 * q) / k)); sm.setAttribute('opacity', String(0.6 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, i * 400, () => sm.remove());
+        const sm = el('circle', { r: 3, fill: S.theme === 'night' ? 'url(#fx-puff-n)' : 'url(#fx-puff-d)', opacity: 0 }, r.root);
+        // bán kính (3 → 10) / k và độ cao bằng một transform: hai thuộc tính mỗi khung thay vì ba
+        anim(r, 2600, q => { sm.setAttribute('transform', `translate(${hd.p[0]},${hd.p[1] - (14 * q) / k}) scale(${(1 + (7 / 3) * q) / k})`); sm.setAttribute('opacity', String(0.6 * (q < 0.15 ? q / 0.15 : 1 - (q - 0.15) / 0.85))); }, i * 400, () => sm.remove());
       }
     } else if (end.left?.includes(j)) {
       el('circle', { class: 'fx-left', r: 11, fill: 'none', stroke: SIDE_COLOR[hd.side] || '#fff', 'stroke-width': 1.2, 'stroke-dasharray': '2 2' }, hd.g);
@@ -509,8 +520,8 @@ type Box = [number, number, number, number];
 const box = (x: number, y: number, rx: number, ry: number): Box => [x - rx, y - ry, x + rx, y + ry];
 /** Chỗ đặt nhãn địa danh cạnh điểm p (đơn vị bản đồ): thử trên, dưới, phải, trái, rồi xa hơn; chọn chỗ đầu tiên không đè
     lên nhãn / đầu mũi tên / vị trí giữ đã có (so bằng px màn hình), ghi chỗ đó vào `placed`. dx, dy tính bằng px. */
-function labelSpot(placed: Box[], p: [number, number], k: number, sy: number, t: string): { dx: number; dy: number; anchor: string } {
-  const fs = innerWidth >= 700 ? 1.2 : 1; // màn rộng: nhãn 12 px (styles.css .fx-at)
+function labelSpot(placed: Box[], p: [number, number], k: number, sy: number, t: string, fs: number): { dx: number; dy: number; anchor: string } {
+  // fs: màn rộng nhãn 12 px (styles.css .fx-at), 1,2 lần; battle() đọc một lần
   const w = t.length * 6.1 * fs + 4, h = 12 * fs, x = p[0] * k, y = (p[1] * k) / sy; // bản đồ nghiêng: chiều dọc trên màn hình co lại sy lần
   const tries: [number, number, string][] = [[0, -13, 'middle'], [0, 19, 'middle'], [11, 4, 'start'], [-11, 4, 'end'], [0, -27, 'middle'], [0, 33, 'middle'], [24, -10, 'start'], [-24, -10, 'end']];
   const rect = ([dx, dy, a]: [number, number, string]): Box => {
@@ -527,6 +538,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (!h || !r.root) return;
   ensureDefs(h.defs);
   const k = h.k(), root = r.root, type = sc?.type || 'land';
+  const PZ = piece(), FS = innerWidth >= 700 ? 1.2 : 1, q2 = quality() >= 2; // đọc một lần mỗi trận (xem piece)
   // Trận gọn trong vài km: phóng sơ đồ quanh tâm khung cho tới khi chiếm phần lớn chỗ trống (minh hoạ, không phải tỉ lệ thật)
   const P = fitScale(h, [v.l, ...(sc?.arrows || []).flatMap(a => [a[0], a[1]]), ...(sc?.hold || []).map(x => [x[0], x[1]] as [number, number])], 0.8, true);
   const arrows = sc?.arrows.length ? sc.arrows : [];
@@ -534,15 +546,18 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   // nhịp kể: mũi tên thứ i vẽ khi nhịp i bắt đầu, phụ đề đọc ghi chú của nó
   const bt = beats(v), B = offsets(bt), total = bt.reduce((a, x) => a + x, 0), L0 = T0 + lead(v);
   const parts: Element[][] = [];
-  // vị trí được giữ: vòng sáng nhấp nháy suốt các nhịp (tắt khi khép trận)
-  const ringDur = Math.max(2600, lead(v) + total + OUTRO_AT + 300), hs: HoldEl[] = [];
+  // vị trí được giữ: vòng sáng nhấp nháy hai nhịp khi hiện rồi đứng yên (sáng mờ) tới khi khép trận. Nhấp nháy suốt
+  // ~15 s bắt trình duyệt vẽ lại mỗi khung hình cả khi giữa hai mũi tên không có gì chuyển động
+  const PULSE = 2600, hs: HoldEl[] = [];
   for (const [lo, la, side] of sc?.hold || []) {
     const p = P([lo, la]), g = el('g', { transform: `translate(${p[0]},${p[1]}) scale(${1 / k})` }, root);
     const ring = el('circle', { r: 9, fill: 'none', stroke: SIDE_COLOR[side] || '#fff', 'stroke-width': 2, opacity: 0 }, g);
     const rect = el('rect', { x: -4, y: -4, width: 8, height: 8, transform: 'rotate(45)', fill: SIDE_COLOR[side] || '#fff', stroke: '#111', 'stroke-width': 1.2 }, g);
     const hd: HoldEl = { g, ring, rect, side, p, stop: false };
     hs.push(hd);
-    anim(r, ringDur, q => { if (hd.stop) { ring.setAttribute('opacity', '0'); return; } const w = ((q * ringDur) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300);
+    const rest = () => { if (!hd.stop) { ring.setAttribute('r', '11'); ring.setAttribute('opacity', '0.45'); } };
+    if (q2) anim(r, PULSE, q => { if (hd.stop) { ring.setAttribute('opacity', '0'); return; } const w = ((q * PULSE) / 1300) % 1; ring.setAttribute('r', String(7 + 9 * w)); ring.setAttribute('opacity', String(0.8 * (1 - w))); }, T0 - 300, rest);
+    else later(r, T0 - 300, rest);
   }
   const bed = Math.max(5, Math.min(14, (L0 + total) / 1000)); // tiếng nền kéo suốt các nhịp
   // tiếng nền: vẽ muộn vì vừa nhảy nhịp thì chỉ phát phần còn lại
@@ -550,7 +565,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   if (kindBed) { if (bedLeft > 1) WAR[kindBed](bedLeft, lateBy ? 0 : T0 / 1000); r.bed = { kind: kindBed, end: vat(r) + T0 + bed * 1000 }; }
   if (type === 'uprising') WAR.crowd(T0 / 1000);
   let bursts = 0, sounds = 0; // chớp lửa dọc đường bay (máy bay) và tiếng nổ khi tới mục tiêu: hai ngân sách riêng
-  // máy yếu: bỏ cánh quạt quay, bụi xích (mọi thứ khác giữ nguyên)
+  // mức hiệu ứng thấp (ui/quality.ts): bỏ cánh quạt quay, bụi xích (mọi thứ khác giữ nguyên)
   const old = v.y < 1900, sy = document.getElementById('mapwrap')?.classList.contains('tilt') ? 1.24 : 1;
   const holds = (sc?.hold || []).map(([lo, la, side]) => ({ side, ll: [lo, la] as [number, number], ringed: false }));
   const arrived = new Set<number>(), meets = sc?.meet || [];
@@ -587,7 +602,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     // quân cờ đi sau đầu mũi tên và dừng ở khoảng 3/4 đường (không đè đầu mũi tên, vị trí giữ, khói)
     const put = (e: number, s = 1) => {
       if (!pc) return;
-      const t = airborne ? e : e * 0.74, p = c.at(t), p2 = c.at(Math.min(1, t + 0.02)), z = s * piece();
+      const t = airborne ? e : e * 0.74, p = c.at(t), p2 = c.at(Math.min(1, t + 0.02)), z = s * PZ;
       pc.g.setAttribute('transform', `translate(${p[0]},${p[1]}) scale(${z / k},${(z * sy) / k})`);
       pc.body.setAttribute('transform', `rotate(${(Math.atan2(p2[1] - p[1], p2[0] - p[0]) * 180) / Math.PI})`);
     };
@@ -610,18 +625,19 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
       if (pc) {
         pc.g.setAttribute('opacity', airborne && q > 0.97 ? '0' : '1');
         put(e);
-        if (pc.rotor && !lite) pc.rotor.setAttribute('transform', `rotate(${q * dur * 1.5})`);
-        if (kind === 'armour' && !lite && puff < 3 && q > (puff + 1) * 0.25) { puff++; dust(r, root, c.at(e * 0.74), k); }
+        if (pc.rotor && q2) pc.rotor.setAttribute('transform', `rotate(${q * dur * 1.5})`);
+        if (kind === 'armour' && q2 && puff < 3 && q > (puff + 1) * 0.25) { puff++; dust(r, root, c.at(e * 0.74), k); }
       }
       const bk = Math.floor(q * 10);
-      if (type === 'air' && act === 'fight' && q > 0.55 && bk !== lastB && bursts < 14) { lastB = bk; bursts++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55); }
+      // chớp lửa dọc đường bay: một cụm khói mỗi chớp (nhiều chớp liền nhau, khói dồn lại đã đủ dày)
+      if (type === 'air' && act === 'fight' && q > 0.55 && bk !== lastB && bursts < 14) { lastB = bk; bursts++; explode(r, root, c.at(Math.min(1, e + 0.02)), k, 0, 0.55, 1); }
     }, start, () => {
       head.setAttribute('opacity', '1');
       arrived.add(i);
       // tên nơi mũi tên tới (Him Lam, Quang Hòa…): chữ sáng viền tối, đứng thẳng, phía trên đầu mũi tên
       const at = arw[4]?.at;
       if (at) {
-        const o = labelSpot(placed, b, k, sy, at);
+        const o = labelSpot(placed, b, k, sy, at, FS);
         const tg = el('g', { transform: `translate(${b[0] + o.dx / k},${b[1] + (o.dy * sy) / k}) scale(${1 / k},${sy / k})`, opacity: 0 }, root);
         const tx = el('text', { class: 'fx-at', 'text-anchor': o.anchor, 'font-size': 10, fill: '#f6efdd', stroke: '#111', 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'paint-order': 'stroke' }, tg);
         tx.textContent = at;
@@ -644,7 +660,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
         }
         const ground = drawPiece('inf', col, root, sy);
         parts[i].push(ground.g);
-        const gp = c.at(0.74), z = 0.85 * piece();
+        const gp = c.at(0.74), z = 0.85 * PZ;
         ground.g.setAttribute('transform', `translate(${gp[0]},${gp[1]}) scale(${z / k},${(z * sy) / k})`);
         later(r, calm.matches ? 0 : 1200, () => { const lineOp = parts[i][1].getAttribute('opacity'); if (lineOp === '0.45') { ground.g.setAttribute('data-op', '1'); ground.g.setAttribute('opacity', '0.45'); } else ground.g.setAttribute('opacity', '1'); });
       }
@@ -725,7 +741,10 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
       const a = Math.round(j * per), b = Math.round((j + 1) * per), sd = 'M' + L.slice(a, b + 1).map(p => `${p[0]},${p[1]}`).join(' L');
       const u = el('path', { d: sd, fill: 'none', stroke: '#0b0b0b', 'stroke-width': (thin ? 5 : 6.5) / k, 'stroke-linecap': 'round' }, gU2);
       const ln = el('path', { d: sd, fill: 'none', stroke: col, 'stroke-width': (thin ? 2.2 : 3) / k, 'stroke-linecap': 'round' }, gL);
-      const sl = u.getTotalLength() || 0.001;
+      // độ dài đoạn tính từ các điểm đã lấy mẫu (không gọi getTotalLength cho từng đoạn: mỗi lần một lần ép dàn trang)
+      let sl = 0;
+      for (let q = a; q < b; q++) sl += Math.hypot(L[q + 1][0] - L[q][0], L[q + 1][1] - L[q][1]);
+      sl ||= 0.001;
       // ẩn bằng khoảng trống dài hơn đoạn: không còn vạch dài 0 ở cuối đoạn (Chrome vẽ thành chấm tròn)
       const hide = `${sl} ${sl * 2 + 1}`;
       u.setAttribute('stroke-dasharray', hide); u.setAttribute('stroke-dashoffset', String(sl));
@@ -738,8 +757,9 @@ function movement(r: Run, v: HistEvent, mv: Move): void {
     // quân cờ trên đường: tàu (đường biển), máy bay, đoàn người (di cư, khởi nghĩa), đoàn quân (hành quân, rút quân);
     // chuyến đi của một người: chấm sáng
     const pk: Kind | null = mode === 'air' ? 'plane' : mode === 'sea' ? 'boat' : thin ? 'crowd' : mv.type === 'march' || mv.type === 'withdrawal' ? kindOf(note, 'land') : null;
+    (r.geo ||= []).push(...segs.map(sg => L.slice(sg.a, sg.b + 1))); // cho place(): đặt khung tư liệu không phải đo lại path
     let g: SVGGElement;
-    if (pk) g = drawPiece(pk, col, root).g;
+    if (pk) { g = drawPiece(pk, col, root).g; (r.pcs ||= []).push(g); }
     else { g = el('g', { opacity: 0 }, root); el('circle', { r: 4.2, fill: col, stroke: '#111', 'stroke-width': 1 }, g); el('circle', { r: 8, fill: 'none', stroke: col, 'stroke-width': 1, opacity: 0.5 }, g); }
     const dur = calm.matches ? 1 : Math.max(1600, Math.min(4800, lenPx * 9));
     const start = T0 + B[i];
@@ -843,11 +863,28 @@ function place(box: HTMLElement, r: Run): void {
   const bw = Math.min(R.width * 0.4, 230), bh = Math.min(bw * 0.75, R.height * 0.32), low = (bar ? R.bottom - bar.top : 0) + 10 + Math.max(capH(), r.lt?.offsetHeight || 0) + 8;
   const pts: [number, number][] = [];
   const add = (m: DOMMatrix | null, x: number, y: number) => { if (m) pts.push([m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]); };
-  const ps = r.root.querySelectorAll<SVGPathElement>('path'), nS = ps.length > 40 ? 2 : 16; // nhiều đoạn ngắn (cảnh di chuyển): lấy hai đầu mỗi đoạn
-  ps.forEach(p => {
-    const m = p.getScreenCTM(), L = p.getTotalLength();
-    for (let i = 0; i <= nS; i++) { const q = p.getPointAtLength((L * i) / nS); add(m, q.x, q.y); }
-  });
+  if (r.geo) {
+    // cảnh di chuyển: cùng các điểm như đo trên từng path (nS điểm đều theo chiều dài mỗi đoạn, hai nét mỗi đoạn, quân cờ),
+    // nhưng tính từ toạ độ đã lấy mẫu sẵn: một getScreenCTM thay cho hàng trăm getPointAtLength (khựng 150–400 ms)
+    const m0 = r.root.getScreenCTM(), nS = r.geo.length * 2 + (r.pcs?.length || 0) > 40 ? 2 : 16;
+    for (const pl of r.geo) {
+      const cum = [0];
+      for (let i = 1; i < pl.length; i++) cum.push(cum[i - 1] + Math.hypot(pl[i][0] - pl[i - 1][0], pl[i][1] - pl[i - 1][1]));
+      for (let i = 0, j = 1; i <= nS; i++) {
+        const d = (cum[cum.length - 1] * i) / nS;
+        while (j < cum.length - 1 && cum[j] < d) j++;
+        const f = Math.min(1, (d - cum[j - 1]) / (cum[j] - cum[j - 1] || 1)), x = pl[j - 1][0] + (pl[j][0] - pl[j - 1][0]) * f, y = pl[j - 1][1] + (pl[j][1] - pl[j - 1][1]) * f;
+        add(m0, x, y); add(m0, x, y); // viền tối + nét màu
+      }
+    }
+    for (const g of r.pcs || []) { const m = (g as SVGGraphicsElement).getScreenCTM(); for (let i = 0; i <= nS; i++) add(m, 0, 0); }
+  } else {
+    const ps = r.root.querySelectorAll<SVGPathElement>('path'), nS = ps.length > 40 ? 2 : 16; // nhiều đoạn ngắn: lấy hai đầu mỗi đoạn
+    ps.forEach(p => {
+      const m = p.getScreenCTM(), L = p.getTotalLength();
+      for (let i = 0; i <= nS; i++) { const q = p.getPointAtLength((L * i) / nS); add(m, q.x, q.y); }
+    });
+  }
   r.root.querySelectorAll<SVGCircleElement>('circle').forEach(c => add(c.getScreenCTM(), c.cx.baseVal.value, c.cy.baseVal.value));
   const spots: { s: Partial<CSSStyleDeclaration>; x: number; y: number }[] = [
     { s: {}, x: R.left + 10, y: R.top + 46 },
@@ -922,6 +959,7 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
   const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep, onNext, onClose };
   cur = r;
   WAR.open();
+  watch(DRAW_AT + 1300); // đo khung hình lúc bay tới và dựng cảnh (ui/quality.ts): máy chậm thì tự bớt hiệu ứng
   if (h) r.root = el('g', { class: 'scene' }, h.g);
   // các mốc nhịp biết trước từ dữ liệu (cảnh vẽ lúc DRAW_AT): "›" khi bản đồ còn đang bay / thẻ tên trận còn hiện thì
   // sang nhịp đầu, không bỏ qua cả trận
@@ -959,9 +997,9 @@ export function endScene(instant = false): void {
   const r = cur;
   cur = null;
   WAR.close();
-  const m = document.getElementById('map'), wrap = document.getElementById('mapwrap');
+  const m = document.getElementById('mapstage'), wrap = document.getElementById('mapwrap');
   if (instant && m && wrap?.classList.contains('tilt')) { m.style.transition = 'none'; wrap.classList.remove('tilt'); void m.getBoundingClientRect(); m.style.transition = ''; }
-  wrap?.classList.remove('tilt');
+  wrap?.classList.remove('tilt', 'lift');
   m?.classList.remove('shake');
   if (!r) return;
   r.alive = false;
@@ -984,9 +1022,6 @@ export function endScene(instant = false): void {
   r.slug?.remove();
   r.stamp?.remove();
   wrap?.classList.remove('scn');
-  wrap?.style.removeProperty('--rx');
-  wrap?.style.removeProperty('--cs');
-  if (m) m.style.transitionDuration = '';
   if (r.reel) { const b = r.reel; b.classList.remove('on'); b.querySelector('video')?.pause(); setTimeout(() => { const vd = b.querySelector('video'); if (vd) { vd.removeAttribute('src'); vd.load(); } b.remove(); }, 520); }
   const f = r.onEnd;
   r.onEnd = undefined;

@@ -28,7 +28,11 @@
     <div class="vals" id="vals"></div>
     <div class="res" id="res" hidden></div>
     <div class="mapwrap" id="mapwrap">
-      <svg id="map" viewBox="0 0 390 400" preserveAspectRatio="xMidYMid slice"></svg>
+      <div class="mapstage" id="mapstage">
+        <svg id="mapbg" viewBox="0 0 390 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+        <svg id="map" viewBox="0 0 390 400" preserveAspectRatio="xMidYMid slice"></svg>
+        <svg id="mapfx" viewBox="0 0 390 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+      </div>
       <div class="mtag" id="popl"></div>
       <div class="zoomc">
         <button id="zin" aria-label="Phóng to">+</button>

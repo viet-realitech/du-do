@@ -3,7 +3,7 @@ import { S, save, rt, Y0, Y1, eraOf, evEra, curPick, optOf, chYear, values, allE
 import { on } from './ui/actions';
 import { $, esc, announce } from './ui/dom';
 import { av, flag } from './ui/bits';
-import { paintMap, paintHome, hidePop } from './map';
+import { paintMap, paintHome, hidePop, mapBusy } from './map';
 import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice, ownCard } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
@@ -34,6 +34,18 @@ function showYear(y: number): void {
   if (!raf) raf = requestAnimationFrame(step);
 }
 
+/* Kéo thanh năm / năm đếm lên vẽ lại màn chính mỗi khung hình. Chỉ ghi phần đã đổi: viết lại cùng nội dung vẫn dựng
+   lại nút và ảnh (ảnh người dẫn chương nháy mất vì hiệu ứng hiện dần chạy lại), bắt trình duyệt dàn trang lại. */
+const shownHtml = new WeakMap<Element, string>();
+/** Thay nội dung HTML nếu khác lần trước; trả true nếu đã thay. */
+function setHtml(el: Element, h: string): boolean {
+  if (shownHtml.get(el) === h) return false;
+  shownHtml.set(el, h);
+  el.innerHTML = h;
+  return true;
+}
+const setText = (el: Element, t: string): void => { if (el.textContent !== t) el.textContent = t; };
+
 /** Chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
 function legendEdge(): void {
   const lg = $('#legend')!;
@@ -44,16 +56,16 @@ function legendEdge(): void {
 export function renderMain(): void {
   const y = S.year, R = regime2(y), e = tourEra() || eraOf(y), pk = optOf(e);
   showYear(y);
-  $('#eraNo')!.textContent = `Chương ${e.n}/6 · Thế hệ ${e.n}`;
-  $('#eraT')!.textContent = e.title;
+  setText($('#eraNo')!, `Chương ${e.n}/6 · Thế hệ ${e.n}`);
+  setText($('#eraT')!, e.title);
   const er = $('#eraR')!;
-  er.innerHTML = pk ? `${av(pk.guide)}${esc(pk.label)}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng';
+  setHtml(er, pk ? `${av(pk.guide)}${esc(pk.label)}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng');
   if (pk) { er.dataset.a = 'fig'; er.dataset.id = pk.guide; }
   else if (!isPlay()) { er.dataset.a = 'pickera'; er.dataset.id = e.id; } // Đọc sử: điểm rẽ của chương, không bắt buộc
   else delete er.dataset.a;
-  $('#lbl')!.textContent = R.label;
+  setText($('#lbl')!, R.label);
   const pp = pop(y);
-  $('#popl')!.textContent = pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu';
+  setText($('#popl')!, pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu');
   renderLegend(y, pk);
   paintMap();
   paintHome(isPlay() ? home()[2] : null);
@@ -67,16 +79,16 @@ export function renderMain(): void {
 /** Chú giải các phe của năm y (Trò chơi: kèm quan hệ với các thế lực). Xem lại diễn biến trong Trò chơi gọi với năm của
     cảnh (bản đồ vẽ biên giới năm ấy, năm đang chơi giữ nguyên). */
 export function renderLegend(y = S.year, pk = optOf(tourEra() || eraOf(y))): void {
-  $('#legend')!.innerHTML = regime2(y).legend
+  const h = regime2(y).legend
     .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
     .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(k => relChip(k, y)).join('') : '');
-  legendEdge();
+  if (setHtml($('#legend')!, h)) legendEdge(); // đo độ tràn (ép dàn trang) chỉ khi chú giải đổi
 }
 
 function renderVals(): void {
   const v = values();
-  $('#vals')!.innerHTML = VAL.map(([k, n]) =>
-    `<div class="mt"><span>${n}<b>${v[k]}</b></span><i><b style="width:${Math.min(100, (v[k] / 18) * 100)}%"></b></i></div>`).join('');
+  setHtml($('#vals')!, VAL.map(([k, n]) =>
+    `<div class="mt"><span>${n}<b>${v[k]}</b></span><i><b style="width:${Math.min(100, (v[k] / 18) * 100)}%"></b></i></div>`).join(''));
 }
 
 /** Trò chơi: sau một thẻ / mùa màng, đi tiếp luồng đang chạy (tour tạm dừng, hoặc năm đích còn thẻ bắt buộc). */
@@ -105,33 +117,38 @@ function renderRes(): void {
   if (!covered) shownRes = { ...S.res };
 }
 
+/** Thẻ dưới bản đồ: chỉ dựng lại khi nội dung đổi (kéo thanh năm qua những năm cùng sự kiện: thẻ đứng yên, giữ tiêu điểm). */
+function cardOut(c: HTMLElement, cls: string, h: string): boolean {
+  if (c.className !== cls) c.className = cls;
+  return setHtml(c, h);
+}
+
 export function renderCard(): void {
   const c = $('#card')!, y = S.year;
   // Đọc sử: điểm rẽ không bắt buộc, nên tới 2026 là xem được kết luận (chương chưa chọn để trống), kèm lối quay lại
   // điểm rẽ sớm nhất còn bỏ ngỏ. Trò chơi: luôn đủ sáu (điểm rẽ chặn dòng thời gian).
   const miss = ERAS.filter(e => !S.picks[e.id]);
   if (y >= Y1 && (!isPlay() || !miss.length)) {
-    c.className = 'card cta';
     const m = miss[0];
-    c.innerHTML = `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">◆</button>` : '<button class="rb" data-a="end" aria-label="Xem kết luận">→</button>'}`;
+    cardOut(c, 'card cta', `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">◆</button>` : '<button class="rb" data-a="end" aria-label="Xem kết luận">→</button>'}`);
     return;
   }
   const v = rt.focusEv, pk = v ? curPick(chYear(v)) : undefined;
   // Trò chơi: thẻ trên bản đồ đọc sự kiện bằng giọng của phe dòng họ đang theo (tóm tắt vẫn có trong lời kể và màn chi tiết)
   const minePv = isPlay() && pk && SIDE_PV.includes(pk.persp) ? v?.v?.find(([p]) => p === pk.persp)?.[1] : undefined;
-  c.className = 'card' + (v && v.diary ? ' diary' : '');
+  let cls = 'card' + (v && v.diary ? ' diary' : '');
   if (!v) {
-    c.innerHTML = `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div>`;
+    cardOut(c, cls, `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div>`);
     return;
   }
   const seen = S.seen.includes(v.id);
   const card = ownCard(v) ? cardOf(v) : undefined, open = card && needsDecision(v), must = open && (mustDecide(v) || !!specialFor(v));
   const hc = homeChoice(v); // nhật ký: nói rõ cả họ ở nhà đã chọn gì, người viết (bạn) đi đường riêng
-  if (must) c.className += ' must';
+  if (must) cls += ' must';
   // dựng lại thẻ (‹ / › bằng bàn phím): giữ tiêu điểm trên nút tương ứng thay vì để rơi về <body>
   const f = c.contains(document.activeElement) ? document.activeElement as HTMLElement : null, fa = f?.dataset.a, fd = f?.dataset.d;
-  c.innerHTML = `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
-    <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`;
+  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
+    <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`)) return;
   if (f) (c.querySelector<HTMLElement>(`[data-a="${fa}"]${fd ? `[data-d="${fd}"]` : ''}`) || c.querySelector<HTMLElement>('.c'))?.focus({ preventScroll: true });
 }
 
@@ -155,13 +172,13 @@ function renderScrub(): void {
         .map(([y, c]) => `<span class="dec ${c}" style="left:${pct(y)}%">${y === 2026 ? 'NAY' : y}</span>`).join('') +
       '<i class="thumb" id="thumb"></i>';
   }
-  const ce = (tourEra() || eraOf(S.year)).id;
-  t.querySelectorAll<HTMLElement>('.sg').forEach(n => { const id = n.dataset.e!; n.className = 'sg' + (id === ce ? ' cur' : S.picks[id] ? ' done' : ''); });
-  t.querySelectorAll<HTMLElement>('.cp').forEach(n => { const id = n.dataset.e!; n.className = 'cp' + (S.picks[id] ? ' done' : rt.gate?.id === id ? ' pend' : ''); });
+  const ce = (tourEra() || eraOf(S.year)).id, cn = (n: Element, c: string) => { if (n.className !== c) n.className = c; };
+  t.querySelectorAll<HTMLElement>('.sg').forEach(n => { const id = n.dataset.e!; cn(n, 'sg' + (id === ce ? ' cur' : S.picks[id] ? ' done' : '')); });
+  t.querySelectorAll<HTMLElement>('.cp').forEach(n => { const id = n.dataset.e!; cn(n, 'cp' + (S.picks[id] ? ' done' : rt.gate?.id === id ? ' pend' : '')); });
   $('#thumb')!.style.left = pct(S.year) + '%';
-  const tl = $('#tl')!;
-  tl.setAttribute('aria-valuenow', String(S.year));
-  tl.setAttribute('aria-valuetext', `Năm ${S.year}, chương ${(tourEra() || eraOf(S.year)).n}`);
+  const tl = $('#tl')!, at = (k: string, v: string) => { if (tl.getAttribute(k) !== v) tl.setAttribute(k, v); };
+  at('aria-valuenow', String(S.year));
+  at('aria-valuetext', `Năm ${S.year}, chương ${(tourEra() || eraOf(S.year)).n}`);
 }
 
 const pendingGate = (y: number): Era | undefined => ERAS.find(e => !S.picks[e.id] && e.cy <= y);
@@ -213,18 +230,25 @@ export function initTimeline(): void {
   let drag = false;
   // hai đầu: chạm vào nhãn "1858" / "NAY" hay sát mép là đúng năm đầu / năm cuối (năm 2026 có thẻ kết luận; trên điện
   // thoại một năm chỉ ~1,8 px, nhãn NAY canh phải nên giữa nhãn rơi vào ~2021)
+  // khung thanh năm đo một lần lúc chạm (không đứng yên thì cũng không đổi trong lúc kéo): mỗi lần đọc
+  // getBoundingClientRect ngay sau khi vẽ lại màn chính là một lần ép dàn trang
+  let r = t.getBoundingClientRect();
   const at = (ev: PointerEvent) => {
-    const r = t.getBoundingClientRect(), d = ev.type === 'pointerdown' ? (ev.target as Element).closest?.('.dec') : null;
+    const d = ev.type === 'pointerdown' ? (ev.target as Element).closest?.('.dec') : null;
     if (ev.clientX >= r.right - 6 || d?.classList.contains('r')) return Y1;
     if (ev.clientX <= r.left + 6 || d?.classList.contains('l')) return Y0;
     return Y0 + ((ev.clientX - r.left) / r.width) * (Y1 - Y0);
   };
   let target = S.year;
-  sc.addEventListener('pointerdown', ev => { ac(); drag = true; stopTour(); sc.setPointerCapture(ev.pointerId); target = at(ev); setYear(target); });
-  sc.addEventListener('pointermove', ev => { if (drag) { target = at(ev); setYear(target); } });
+  sc.addEventListener('pointerdown', ev => { ac(); drag = true; stopTour(); sc.setPointerCapture(ev.pointerId); r = t.getBoundingClientRect(); mapBusy(true); target = at(ev); setYear(target); });
+  // một lần vẽ lại mỗi khung hình: màn cảm ứng có thể báo hai lần chạm di chuyển trong một khung
+  let pend = 0;
+  sc.addEventListener('pointermove', ev => { if (drag) { target = at(ev); pend ||= requestAnimationFrame(() => { pend = 0; if (drag) setYear(target); }); } });
   const up = () => {
     if (!drag) return;
     drag = false;
+    if (pend) { cancelAnimationFrame(pend); pend = 0; setYear(target); }
+    mapBusy(false);
     if (rt.card) { if (isPlay()) rt.flowTo = Math.min(Y1, Math.round(target)); openCard(rt.card); }
     else if (rt.gate) openGate(rt.gate);
   };

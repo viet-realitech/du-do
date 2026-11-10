@@ -62,8 +62,10 @@ export function replayEvent(id: string): void {
   bar.querySelector('.mono')!.textContent = `Xem lại · ${v.y}`;
   bar.querySelector('.rt')!.innerHTML = esc(v.t);
   wrap.classList.add('replaying');
-  // bàn phím / trình đọc màn hình: trang sự kiện vừa đóng, đưa tiêu điểm tới thanh xem lại
-  bar.querySelector<HTMLElement>('[data-t=again]')!.focus({ preventScroll: true });
+  // bàn phím / trình đọc màn hình: trang sự kiện vừa đóng, đưa tiêu điểm tới thanh xem lại (khung hình sau: chuyển tiêu
+  // điểm ngay trong cú bấm ép tính lại kiểu và dàn trang cả trang, đúng lúc bản đồ bắt đầu bay)
+  const ag = bar.querySelector<HTMLElement>('[data-t=again]')!;
+  requestAnimationFrame(() => { if (ag.isConnected) ag.focus({ preventScroll: true }); });
   zoomFit(fr, Math.min(8, zoomK(v) * 1.5), undefined, capH(), fogTop(v));
   SND.fly();
   // cảnh bị cắt (chạm bản đồ nghiêng, đổi thẻ, ẩn app, kéo thanh năm): đóng phần xem lại nhưng không cho tour
