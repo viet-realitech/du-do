@@ -184,6 +184,8 @@ export function matchStats() {
 
 export const quizCorrect = () => Object.values(S.quiz).flat().filter(Boolean).length;
 export const familyName = () => S.name || 'Họ Lê';
+/** Tên họ qua các lần đổi: "Họ Nguyễn → Họ Lê" (gia phả, kết cục, phim hành trình). */
+export const nameChain = (): string => (S.names.length ? [S.names[0].from, ...S.names.map(n => n.to)].join(' → ') : familyName());
 /** Dòng họ đổi họ (biến cố riêng): ghi vào gia phả rồi đổi tên hiển thị. */
 export function renameFamily(to: string, y: number, why: string): void {
   if (!to || to === S.name) return;

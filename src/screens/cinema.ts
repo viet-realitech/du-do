@@ -1,5 +1,5 @@
 import { ERAS, EV, type Era } from '../data';
-import { S, optOf, familyName, archetype } from '../state';
+import { S, optOf, familyName, archetype, nameChain } from '../state';
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, rank, endingNow, bigChoices } from '../play';
 import { rarityLine } from '../data/endings';
@@ -138,8 +138,6 @@ export function montage(): void {
   if (!list.length) return;
   const { f, e: end, title } = endingNow(), ar = archetype(), skey = S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
   const rar = end ? rarityLine(end.id, f.mode) : null;
-  // tên họ qua các lần đổi ("Họ Nguyễn → Họ Lê"), cả hai luồng
-  const fam = S.names.length ? [S.names[0].from, ...S.names.map(n => n.to)].join(' → ') : familyName();
   const box = document.createElement('div');
   box.className = 'cine film';
   box.setAttribute('role', 'dialog');
@@ -249,7 +247,7 @@ export function montage(): void {
       // cảnh cuối: tên kết cục và tên họ (cả hai luồng), câu tóm, độ hiếm, hạng gia sản (Trò chơi), lời khép theo họ
       const t = end ? title : ar ? ar[0] : 'Hành trình đã khép';
       const d = end ? end.line : ar ? ar[1] : '';
-      html = `<div class="cine-img none"></div><div class="cine-t fin"><div class="mono">${esc(fam)} · 1858 – 2026</div>${end ? `<div class="mono seal">Kết cục · ${esc(end.seal)}</div>` : ''}<h1>${esc(t)}</h1>${d ? `<p>${esc(d)}</p>` : ''}
+      html = `<div class="cine-img none"></div><div class="cine-t fin"><div class="mono">${esc(nameChain())} · 1858 – 2026</div>${end ? `<div class="mono seal">Kết cục · ${esc(end.seal)}</div>` : ''}<h1>${esc(t)}</h1>${d ? `<p>${esc(d)}</p>` : ''}
       ${rar ? `<p class="mono" style="animation-delay:1s">${esc(rar.lead)}</p>` : ''}${isPlay() ? `<p class="mono" style="animation-delay:1.2s">${esc(rank()[0])}</p>` : ''}${epi ? `<p style="animation-delay:1.4s">${esc(epi)}</p>` : ''}</div>`;
       SND.fanfare();
     }

@@ -218,7 +218,7 @@ export function genDelta(f: Facts): { best: number; worst: number; dl: number[] 
 function exitClause(f: Facts): string {
   if (f.flags.has('ditan')) return 'tháng 4.1975, cả nhà di tản';
   if (f.flags.has('lylichDi')) return 'năm 1978, một nhánh xuống ghe ở Rạch Giá';
-  if (f.flags.has('ly79Di')) return 'năm 1979, cả nhà đi "bán chính thức" sang Hồng Kông';
+  if (f.flags.has('ly79Di')) return 'năm 1979, cả nhà đi “bán chính thức” sang Hồng Kông';
   if (f.flags.has('vuotbien')) return 'năm 1980, cả nhà vượt biển';
   if (f.flags.has('odp')) return 'đầu thập niên 1980, cả nhà đi theo Chương trình Ra đi có trật tự';
   return 'sau năm 1975, đời thứ sáu ra đi';

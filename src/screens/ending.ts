@@ -2,7 +2,7 @@ import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
-import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, Y1 } from '../state';
+import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
 import { epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts } from '../data/endings';
 import { on } from '../ui/actions';
 import { app, esc, layer, sheet, toast, clearLayer } from '../ui/dom';
@@ -27,9 +27,6 @@ export function goEnd(): void {
   if (!S.quiz.e6 && (isPlay() || rt.toured === 'e6')) openQuiz('e6', openEnd);
   else openEnd();
 }
-
-/** Tên họ qua các lần đổi: "Họ Nguyễn → Họ Lê". */
-export const nameChain = (): string => (S.names.length ? [S.names[0].from, ...S.names.map(n => n.to)].join(' → ') : familyName());
 
 /** Dòng gia phả của một hướng. Trò chơi biết quê nên nói đúng người miền nào làm gì sau Genève (dòng chung của "Miền
     Bắc", "Miền Nam" phải gộp cả người ở lại lẫn người tập kết, di cư); các hướng khác dùng dòng biên niên chung. */
