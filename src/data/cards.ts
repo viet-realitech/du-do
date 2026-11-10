@@ -1,11 +1,13 @@
 /* Chế độ Chơi: thẻ ứng xử của dòng họ cho từng sự kiện lịch sử.
    Mỗi thẻ: [id sự kiện, phạm vi, các lựa chọn]. Phạm vi 'all' = cả nước phải quyết định;
    danh sách vùng (B, T1, T2, QT, NE, NW) = bắt buộc nếu quê ở đó, còn lại là tuỳ chọn; '' = luôn tuỳ chọn.
-   Lựa chọn: [nhãn, mô tả, hiệu ứng, kết cục]. Hiệu ứng: g lúa gạo · d nhân đinh · b bạc · u uy tín;
+   Lựa chọn: [nhãn, mô tả, hiệu ứng, kết cục, cờ?]; cờ (endings.ts) đánh dấu việc lớn mà kết cục dòng họ cần biết. Hiệu ứng: g lúa gạo · d nhân đinh · b bạc · u uy tín;
    quan hệ: tr triều đình · ph Pháp · nh Nhật · vm Việt Minh/VNDCCH · qg Quốc gia/VNCH · my Mỹ · nn Nhà nước sau 1976 · lg làng xóm.
    Số liệu là ước lệ của trò chơi, không phải sử liệu. */
+import type { Flag } from './endings';
+
 export type Fx = Partial<Record<'g' | 'd' | 'b' | 'u' | 'tr' | 'ph' | 'nh' | 'vm' | 'qg' | 'my' | 'nn' | 'lg', number>>;
-export type Choice = [string, string, Fx, string];
+export type Choice = [string, string, Fx, string, Flag?];
 export type Card = [string, string, Choice[]];
 
 export const CARDS: Card[] = [
@@ -179,7 +181,7 @@ export const CARDS: Card[] = [
   ['tk46', 'all', [
     ['Tản cư theo kháng chiến', 'Bỏ nhà ra vùng tự do.', { g: -12, d: -1, u: 7, vm: 20, ph: -20 }, 'Nhà bị đốt. Dòng họ sống bằng ruộng rẫy chín năm.'],
     ['Ở lại vùng tạm chiếm', 'Giữ nhà, giữ ruộng.', { g: 2, b: 4, vm: -12, ph: 8, qg: 5 }, 'Nhà còn, nhưng mỗi đêm nghe tiếng súng mà không biết nên mong ai thắng.'],
-    ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -2, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.'],
+    ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -2, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.', 'chiadoi46'],
   ]],
   ['tu46', '', [
     ['Tin vào Tạm ước', 'Mở lại buôn bán với người Pháp.', { b: 6, ph: 5, vm: -3 }, 'Ba tháng sau súng nổ, hàng hoá cháy sạch.'],
@@ -208,9 +210,9 @@ export const CARDS: Card[] = [
     ['Ở vùng Pháp, không liên quan', 'Nghe tin qua đài.', { qg: 3, vm: -5 }, 'Ngày 7 tháng 5, cả phố im lặng.'],
   ]],
   ['gnv', 'all', [
-    ['Di cư vào Nam', 'Lên tàu há mồm ở Hải Phòng.', { g: -15, b: -8, d: -1, qg: 15, vm: -20, my: 5 }, 'Khởi đầu lại từ trại định cư. Mười năm sau có ruộng mới ở Cái Sắn.'],
+    ['Di cư vào Nam', 'Lên tàu há mồm ở Hải Phòng.', { g: -15, b: -8, d: -1, qg: 15, vm: -20, my: 5 }, 'Khởi đầu lại từ trại định cư. Mười năm sau có ruộng mới ở Cái Sắn.', 'dicu'],
     ['Ở lại miền Bắc', 'Giữ đất tổ.', { vm: 10, qg: -10 }, 'Ruộng sắp vào hợp tác xã.'],
-    ['Tập kết ra Bắc', 'Người của họ ở Nam ra Bắc theo diện tập kết.', { d: -1, u: 3, vm: 15, qg: -12 }, 'Hẹn hai năm, thành hai mươi mốt năm.'],
+    ['Tập kết ra Bắc', 'Người của họ ở Nam ra Bắc theo diện tập kết.', { d: -1, u: 3, vm: 15, qg: -12 }, 'Hẹn hai năm, thành hai mươi mốt năm.', 'tapketN'],
   ]],
   ['dc54', 'all', [
     ['Đón người di cư', 'Cho một gia đình Bắc di cư ở nhờ.', { g: -5, u: 4, lg: 5, qg: 5 }, 'Nhà ấy sau thành thông gia.'],
@@ -316,8 +318,8 @@ export const CARDS: Card[] = [
     ['Tiếp tế cho Sư đoàn 18', 'Nước, cơm, băng gạc.', { g: -6, u: 4, qg: 10, vm: -8 }, 'Sau này bị hỏi về chuyện này trong trại cải tạo.'],
   ]],
   ['sg75', 'all', [
-    ['Di tản', 'Lên tàu, lên trực thăng, ra biển.', { g: -25, b: -15, d: -3, u: -5, my: 15, nn: -20 }, 'Guam, rồi California. Dòng họ bắt đầu lại từ số không, bằng tiếng Anh.'],
-    ['Ở lại, trình diện', 'Người làm việc cho chế độ cũ đi học tập cải tạo.', { b: -15, d: -1, u: -8, nn: -5, qg: 0 }, 'Ba năm, năm năm, có người mười năm. Nhà thuộc diện "nguỵ quân nguỵ quyền".'],
+    ['Di tản', 'Lên tàu, lên trực thăng, ra biển.', { g: -25, b: -15, d: -3, u: -5, my: 15, nn: -20 }, 'Guam, rồi California. Dòng họ bắt đầu lại từ số không, bằng tiếng Anh.', 'ditan'],
+    ['Ở lại, trình diện', 'Người làm việc cho chế độ cũ đi học tập cải tạo.', { b: -15, d: -1, u: -8, nn: -5, qg: 0 }, 'Ba năm, năm năm, có người mười năm. Nhà thuộc diện "nguỵ quân nguỵ quyền".', 'caitao'],
     ['Đón quân giải phóng', 'Treo cờ, mở cửa.', { u: 4, vm: 12, nn: 15, qg: -15 }, 'Dòng họ có người vào uỷ ban quân quản phường.'],
   ]],
   ['cm75', '', [
@@ -343,16 +345,16 @@ export const CARDS: Card[] = [
     ['Sơ tán về xuôi', 'Rời tỉnh biên giới.', { g: -8, b: -4 }, 'Thị xã Lạng Sơn bị san phẳng. Nhà không còn.'],
   ]],
   ['tn80', 'all', [
-    ['Vượt biên', 'Bán hết, mua chỗ trên ghe.', { b: -25, g: -15, d: -4, u: -5, nn: -25, my: 15 }, 'Hai tuần trên biển. Có người không tới. Người tới gửi tiền về mỗi tháng.'],
+    ['Vượt biên', 'Bán hết, mua chỗ trên ghe.', { b: -25, g: -15, d: -4, u: -5, nn: -25, my: 15 }, 'Hai tuần trên biển. Có người không tới. Người tới gửi tiền về mỗi tháng.', 'vuotbien'],
     ['Ở lại', 'Chịu đói qua thời bao cấp.', { g: -8, nn: 5 }, 'Sổ gạo, tem phiếu, xếp hàng. Nhưng còn nhau.'],
-    ['Gửi một người đi, giữ phần còn lại', 'Dồn tiền cho một người con.', { b: -15, d: -1, nn: -8, my: 8 }, 'Người ấy tới Pulau Bidong, rồi Úc. Thùng đồ đầu tiên về năm 1983.'],
+    ['Gửi một người đi, giữ phần còn lại', 'Dồn tiền cho một người con.', { b: -15, d: -1, nn: -8, my: 8 }, 'Người ấy tới Pulau Bidong, rồi Úc. Thùng đồ đầu tiên về năm 1983.', 'guiDi'],
   ]],
   ['vx84', 'B', [
     ['Đi lính Vị Xuyên', 'Người con nhập ngũ lên Hà Giang.', { d: -2, u: 6, nn: 10 }, 'Những ngày tháng 7 năm 1984 không có trong sách giáo khoa, chỉ có trong trí nhớ dòng họ.'],
     ['Không', 'Nhà đã có người đi.', {}, 'Tin từ biên giới đến bằng thư tay.'],
   ]],
   ['dm86', 'all', [
-    ['Mở hiệu buôn, khoán sản', 'Làm ăn tư nhân ngay khi được phép.', { b: 20, g: 8, u: 4, nn: 8 }, 'Năm 1990 có xe máy đầu tiên trong làng.'],
+    ['Mở hiệu buôn, khoán sản', 'Làm ăn tư nhân ngay khi được phép.', { b: 20, g: 8, u: 4, nn: 8 }, 'Năm 1990 có xe máy đầu tiên trong làng.', 'dmBiz'],
     ['Ở lại biên chế nhà nước', 'Lương ổn định.', { b: 3, nn: 6 }, 'Lương đủ sống, không giàu.'],
     ['Hoài nghi', 'Sợ "cởi trói rồi lại trói".', { b: -2, u: -2 }, 'Chậm chân mười năm.'],
   ]],
@@ -369,7 +371,7 @@ export const CARDS: Card[] = [
     ['Mất việc ở Liên Xô', 'Người đi lao động xuất khẩu về nước.', { b: -5, d: 2 }, 'Về với vali hàng và tiếng Nga.'],
   ]],
   ['hn95', 'all', [
-    ['Nhận tiền từ thân nhân ở Mỹ', 'Việt kiều về thăm quê lần đầu.', { b: 15, u: 2, my: 10, lg: 3 }, 'Nhà sửa, mộ tổ xây lại. Hai nhánh họ gặp nhau sau 20 năm.'],
+    ['Nhận tiền từ thân nhân ở Mỹ', 'Việt kiều về thăm quê lần đầu.', { b: 15, u: 2, my: 10, lg: 3 }, 'Nhà sửa, mộ tổ xây lại. Hai nhánh họ gặp nhau sau 20 năm.', 'kieuhoi'],
     ['Mở công ty xuất khẩu', 'Thị trường mở.', { b: 12, g: -2, nn: 5, my: 5 }, 'Container đầu tiên đi Mỹ năm 2001.'],
   ]],
   ['bg99', '', [
@@ -429,18 +431,18 @@ export const VARIANT: Record<string, { regions?: string[]; homes?: string[]; not
     { regions: ['T2', 'NE', 'NW'], choices: [
       ['Đứng về chính quyền ở Sài Gòn', 'Không chờ tổng tuyển cử; nhận việc ở xã dưới chính quyền Quốc gia Việt Nam.', { b: -3, u: 2, qg: 15, vm: -15, my: 3 }, 'Lá cờ trên trụ sở xã đổi màu. Người tập kết đi rồi, xã có thêm những nhà vắng chồng, vắng con.'],
       ['Ở lại, chờ tổng tuyển cử 1956', 'Hiệp định hẹn hai năm sau thống nhất bằng một cuộc tổng tuyển cử.', { lg: 3 }, 'Tháng 7.1956 đến rồi qua; cuộc tổng tuyển cử không bao giờ diễn ra.'],
-      ['Có người tập kết ra Bắc', 'Một người con theo bộ đội Việt Minh xuống tàu ra Bắc.', { d: -1, u: 3, vm: 15, qg: -12 }, 'Hẹn hai năm, thành hai mươi mốt năm. Người đi để lại ở quê một tấm ảnh và một lời hứa.'],
+      ['Có người tập kết ra Bắc', 'Một người con theo bộ đội Việt Minh xuống tàu ra Bắc.', { d: -1, u: 3, vm: 15, qg: -12 }, 'Hẹn hai năm, thành hai mươi mốt năm. Người đi để lại ở quê một tấm ảnh và một lời hứa.', 'tapketS'],
     ] },
   ],
   // Cuộc di cư 1954 nhìn từ miền Bắc: nhà đã vào Nam (điểm rẽ 5 không phải "Miền Bắc", như mọi nội dung 1954–1975) lập
   // ấp mới ở miền Nam; nhà ở lại thì tiễn một nhánh họ đi, hay giữ nhà. Thẻ gốc (đón người di cư) dành cho nhà ở miền Nam.
   dc54: [
     { regions: ['B', 'T1'], notPicks: ['bac'], choices: [
-      ['Dựng nhà ở khu định cư', 'Cùng người cùng xứ đạo lập ấp mới ở miền Nam.', { g: -6, d: 1, u: 3, lg: 3, qg: 5 }, 'Ấp mới đặt theo tên làng cũ ngoài Bắc; giọng nói, nhà thờ, cả cách gói bánh đều mang theo.'],
-      ['Ở nhờ họ hàng đã vào trước', 'Chen chúc trong căn nhà của người quen ở Sài Gòn.', { g: -3, lg: 2 }, 'Hai năm ở nhờ rồi mới có chỗ riêng; hai nhà thành thân như ruột thịt.'],
+      ['Dựng nhà ở khu định cư', 'Cùng người cùng xứ đạo lập ấp mới ở miền Nam.', { g: -6, d: 1, u: 3, lg: 3, qg: 5 }, 'Ấp mới đặt theo tên làng cũ ngoài Bắc; giọng nói, nhà thờ, cả cách gói bánh đều mang theo.', 'dicu'],
+      ['Ở nhờ họ hàng đã vào trước', 'Chen chúc trong căn nhà của người quen ở Sài Gòn.', { g: -3, lg: 2 }, 'Hai năm ở nhờ rồi mới có chỗ riêng; hai nhà thành thân như ruột thịt.', 'dicu'],
     ] },
     { regions: ['B', 'T1'], choices: [
-      ['Tiễn một nhánh họ di cư', 'Một nhánh họ xuống Hải Phòng lên tàu vào Nam.', { d: -1, u: 2, qg: 5, vm: -5 }, 'Hai nhánh họ cách nhau con sông Bến Hải; tin tức bặt dần, hai mươi mốt năm sau mới gặp lại.'],
+      ['Tiễn một nhánh họ di cư', 'Một nhánh họ xuống Hải Phòng lên tàu vào Nam.', { d: -1, u: 2, qg: 5, vm: -5 }, 'Hai nhánh họ cách nhau con sông Bến Hải; tin tức bặt dần, hai mươi mốt năm sau mới gặp lại.', 'tienNhanh'],
       ['Ở lại, giữ nhà', 'Cả nhà không đi; đất tổ, mồ mả còn đây.', { lg: 3, vm: 3 }, 'Nhà vẫn ở chỗ cũ. Mấy nhà hàng xóm bỏ trống, rồi có người mới đến ở.'],
     ] },
   ],
@@ -462,16 +464,16 @@ export const VARIANT: Record<string, { regions?: string[]; homes?: string[]; not
   // tháng 5.1979). Cùng thứ tự với thẻ gốc: đi cả nhà / ở lại / một đường hẹp hơn.
   tn80: [
     { after: ['x:x-lylich78=2', 'x:x-ly79=1'], choices: [
-      ['Cả nhà theo đường người đi trước', 'Người đi trước gửi về tên chủ ghe, nơi đón; bán nhà mua chỗ.', { b: -10, g: -8, d: -3, u: -3, nn: -20, my: 15 }, 'Lần này cả nhà đi, theo đường dây người đi trước đã dò. Ghe tới Pulau Bidong sau sáu ngày; ở trại đã có thư của người đi trước, ghi sẵn địa chỉ bảo lãnh.'],
+      ['Cả nhà theo đường người đi trước', 'Người đi trước gửi về tên chủ ghe, nơi đón; bán nhà mua chỗ.', { b: -10, g: -8, d: -3, u: -3, nn: -20, my: 15 }, 'Lần này cả nhà đi, theo đường dây người đi trước đã dò. Ghe tới Pulau Bidong sau sáu ngày; ở trại đã có thư của người đi trước, ghi sẵn địa chỉ bảo lãnh.', 'vuotbien'],
       ['Ở lại, chờ thư', 'Sống bằng sổ gạo và những lá thư từ trại tị nạn.', { g: -6, nn: 5 }, 'Thư về đều đặn. Ở nhà vẫn xếp hàng mua gạo, nhưng biết người đi đã tới nơi.'],
-      ['Làm đơn xin đi diện đoàn tụ', 'Người đã tới nơi bảo lãnh; nộp đơn theo Chương trình Ra đi có trật tự (ODP).', { d: -1, u: -2, nn: -5, my: 8 }, 'Hồ sơ đi qua nhiều văn phòng và nhiều năm chờ; rồi một chuyến bay rời Tân Sơn Nhất, không phải một chiếc ghe.'],
+      ['Làm đơn xin đi diện đoàn tụ', 'Người đã tới nơi bảo lãnh; nộp đơn theo Chương trình Ra đi có trật tự (ODP).', { d: -1, u: -2, nn: -5, my: 8 }, 'Hồ sơ đi qua nhiều văn phòng và nhiều năm chờ; rồi một chuyến bay rời Tân Sơn Nhất, không phải một chiếc ghe.', 'odp'],
     ] },
   ],
   // 30.4.1975 với một nhà còn ở miền Bắc: không di tản, không đón quân vào thành phố mình. Nhà đã di cư vào Nam năm 1954
   // (hướng 'nam') đang ở Sài Gòn: dùng bộ gốc (di tản, trình diện, đón quân).
   sg75: [
     { regions: ['B', 'T1'], notPicks: ['nam'], choices: [
-      ['Vào Nam tìm người thân', 'Lên xe vào Nam tìm nhánh họ di cư từ năm 1954.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Hai nhánh họ gặp lại sau hai mươi mốt năm. Có người mừng, có người ngượng ngùng.'],
+      ['Vào Nam tìm người thân', 'Lên xe vào Nam tìm nhánh họ di cư từ năm 1954.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Hai nhánh họ gặp lại sau hai mươi mốt năm. Có người mừng, có người ngượng ngùng.', 'seek75'],
       ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },

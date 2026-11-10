@@ -1,5 +1,5 @@
 /* Chế độ Chơi: họ của dòng họ có ý nghĩa. Gia phả mở đầu cho các họ phổ biến, dòng biên niên cho từng hướng ở
-   điểm rẽ, các "dấu ấn dòng họ" ở kết cục và lời khép theo họ. Nội dung do đội soạn và kiểm chứng với Wikipedia
+   điểm rẽ (gia phả và phim hành trình ở kết cục) và lời khép theo họ. Nội dung do đội soạn và kiểm chứng với Wikipedia
    tiếng Việt (10.2026); xem docs/figures-review.md cho phần nhân vật cùng họ. */
 
 export interface SurnameLore {
@@ -113,18 +113,6 @@ export const CHRONICLE: Record<string, string> = {
   doimoi: "Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, rồi ASEAN, rồi WTO.",
   radi: "Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.",
 };
-
-/** Dấu ấn dòng họ ở kết cục; luật chọn nằm ở play.ts (lineage). */
-export interface Archetype { id: string; title: string; text: string }
-export const ARCHETYPES: Archetype[] = [
-  { id: "doiho", title: "Dòng họ đổi tên giữ gốc", text: "Dòng họ bạn từng đổi tên để qua một cơn biến, rồi giữ cả tên cũ lẫn tên mới trong gia phả. Nhiều dòng họ Việt Nam cũng mang một cái tên khác với tên tổ tiên vì những lý do tương tự." },
-  { id: "haique", title: "Dòng họ hai quê", text: "Một nhánh của dòng họ bạn rời đất nước sau 1975 và dựng lại đời sống ở nơi khác. Từ 1995 hai nhánh gặp lại nhau; mộ tổ ở quê và bàn thờ ở xứ người cùng ghi một tên họ." },
-  { id: "thuandong", title: "Dòng họ thuận dòng", text: "Qua năm điểm rẽ, dòng họ bạn đều đứng về hướng sau này chiếm ưu thế. Gia phả vì thế đi cùng nhịp với sử chính thống, nhưng ít ghi lại những ngả đường mà nhiều người Việt khác đã đi." },
-  { id: "trungkien", title: "Dòng họ trung kiên", text: "Dòng họ bạn giữ một hướng đi qua ít nhất bốn thế hệ, dù hướng ấy có lúc thắng, có lúc thua. Cái giá và phần được của sự nhất quán đều hiện rõ trong gia sản để lại." },
-  { id: "dunggiua", title: "Dòng họ đứng giữa", text: "Dòng họ bạn thường chọn thương thuyết, cải cách hay đứng ngoài hơn là cầm súng. Sử sách ít ghi tên những người như thế, dù họ chiếm phần đông trong mỗi làng." },
-  { id: "nhieunga", title: "Dòng họ rẽ nhiều ngả", text: "Nhiều thế hệ của dòng họ bạn chọn một ngả khác cha ông. Gia phả vì thế ghi những người đi những con đường rất khác nhau, có khi ở hai bên một chiến tuyến, điều không hiếm trong các gia đình Việt Nam thế kỷ XX." },
-  { id: "thuong", title: "Một dòng họ Việt Nam", text: "Dòng họ bạn đi qua sáu thế hệ không theo một khuôn nào rõ rệt, như phần lớn các gia đình Việt Nam. Gia phả ghi đủ người cầm súng, người đi học và người ở lại giữ ruộng." },
-];
 
 /** Lời khép theo họ ở kết cục: khoá họ → một câu. */
 export const EPILOGUES: Record<string, string> = {

@@ -252,6 +252,9 @@ function finishTour(skipped = false): void {
     then(() => (!skipped && !S.quiz[done] ? openQuiz(done, home) : home()));
     return;
   }
+  // Đọc sử, chương 6 xem hết hay bỏ qua: như mọi chương dẫn tới điểm rẽ kế, chương cuối dẫn tới kết luận (goEnd đố
+  // chương 6 nếu vừa xem hết), không thả người đọc ở bản đồ năm 2026
+  if (!isPlay() && done === ERAS[ERAS.length - 1].id) { then(() => { setYear(end, true); goEnd(); }); return; }
   then(() => setYear(end, true));
 }
 

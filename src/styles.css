@@ -695,3 +695,40 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .reel.film video { width: 100%; height: 100%; object-fit: cover; display: block }
 .reel.film.old video { filter: sepia(.45) contrast(1.08) }
 @media (prefers-reduced-motion: reduce) { .unfurl .flag, .unfurl .uf-t, .unfurl .av { animation: none; opacity: 1 } }
+/* Kết cục dòng họ (ending.ts): dấu triện, tên kết cục, lời kết, độ hiếm, "Vì sao"; thẻ giả định "Nếu…" viền đứt,
+   luôn ghi rõ là giả định và có lịch sử thật ngay dưới; gia sản theo từng đời. Lớp sau sẽ trau chuốt giao diện. */
+.end-head { text-align: center; margin: 24px 0 6px }
+.end-seal { margin-bottom: 14px }
+.end-kick { margin-bottom: 6px }
+.end-title { font-size: clamp(32px, 9vw, 44px); margin: 4px 0 12px }
+.end-epi { font-size: 17.5px; line-height: 1.45; text-align: left; text-wrap: pretty }
+.end-rar { margin-top: 12px; font-size: 15px; line-height: 1.35; text-align: left }
+.end-rar b { color: var(--acc) }
+.end-why, .cf-how, details.cf { margin-top: 10px; text-align: left; font-size: 15px; line-height: 1.4 }
+.end-why summary, .cf-how summary, details.cf summary { cursor: pointer; color: var(--ink2); text-decoration: underline; text-underline-offset: 3px }
+.end-why p, .cf-how p, details.cf p { margin-top: 6px }
+.cf-card { margin-top: 22px; border: 1.5px dashed var(--ink2); border-radius: 14px; padding: 14px 16px; background: color-mix(in srgb, var(--paper2) 55%, transparent) }
+.cf-card h2 { margin: 8px 0 8px; font-size: 24px }
+.cf-card > p { font-size: 16px; line-height: 1.42 }
+.cf-tag { display: inline-block; border: 1px solid var(--red); color: var(--red); border-radius: 4px; padding: 1px 6px; font-size: 10.5px }
+.cf-intro { margin-top: 8px; font-size: 14.5px; line-height: 1.35 }
+.cf-est { margin-top: 10px; font-size: 15px !important }
+.cf-real { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule) }
+.cf-real p { margin-top: 4px; font-size: 15px; line-height: 1.35 }
+details.cf { border: 1px dashed var(--rule); border-radius: 10px; padding: 8px 12px }
+details.cf summary { text-decoration: none; font-style: italic }
+details.cf .cf-tag { margin-right: 6px; font-style: normal }
+.chron.gp-dec { font-size: 14.5px; color: var(--ink2) }
+.chron.gp-dec i { color: var(--ink) }
+.gens { list-style: none; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 10px 0 0; padding: 0 }
+.gens li { border: 1px solid var(--rule); border-radius: 10px; padding: 6px 4px; text-align: center; background: var(--paper2) }
+.gens li .mono { display: block; font-size: 9.5px }
+.gens li b { font: 700 18px var(--disp) }
+.gens li.best { border-color: var(--acc) }
+.gens li.best b { color: var(--acc) }
+.gens li.worst { border-color: var(--red) }
+.gens li.worst b { color: var(--red) }
+.end-close { margin-top: 26px; text-align: center }
+.end-close h2 { margin-bottom: 8px }
+.end-close .pv { text-align: left }
+.cine-t.fin .seal { margin-top: 10px; animation-delay: .6s }

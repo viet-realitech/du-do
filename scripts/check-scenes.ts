@@ -6,6 +6,7 @@ import { EV, ERAS } from '../src/data';
 import { NEXT, HOMES } from '../src/play';
 import { CARD, VARIANT } from '../src/data/cards';
 import { SPECIAL } from '../src/data/cards2';
+import { ENDINGS, RAR, FLAGS, CFS, LEVEL, PREV, endingOf, pathF } from '../src/data/endings';
 
 let err = 0;
 const kinds: Record<string, number> = {}, acts: Record<string, number> = {};
@@ -88,6 +89,43 @@ for (const [id, vs] of Object.entries(VARIANT)) {
       if (!n || !(+i >= 0 && +i < n)) { console.error(`LỖI VARIANT.${id}: after ${a} không có lựa chọn đó`); err++; }
     }
   }
+}
+// kết cục (data/endings.ts) và bảng hiếm (endings-rarity.json, do `npm run endings` sinh): bảng khớp danh sách kết cục,
+// mỗi quê đủ ngưỡng sáu đời tăng dần, tỷ lệ Đọc sử khớp khi đếm lại 729 con đường (bảng cũ sau khi đổi luật thì báo);
+// mỗi hướng khác lịch sử có giả định "Nếu…"; mọi cờ kết cục được gắn trên ít nhất một lựa chọn.
+{
+  const ids = ENDINGS.map(e => e.id), readIds = ENDINGS.filter(e => !e.play).map(e => e.id);
+  if (new Set(ids).size !== ids.length) { console.error('LỖI kết cục: trùng id'); err++; }
+  const same = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x));
+  if (!same(Object.keys(RAR.play || {}), ids)) { console.error(`LỖI endings-rarity.json: "play" phải có đúng các kết cục ${ids.join(', ')} (chạy npm run endings)`); err++; }
+  if (!same(Object.keys(RAR.read || {}), readIds)) { console.error(`LỖI endings-rarity.json: "read" phải có đúng các kết cục ${readIds.join(', ')} (chạy npm run endings)`); err++; }
+  for (const k of ['play', 'read'] as const) {
+    const tot = Object.values(RAR[k] || {}).reduce((a, b) => a + b, 0);
+    if (Math.abs(tot - 100) > 1) { console.error(`LỖI endings-rarity.json: tổng "${k}" = ${tot.toFixed(1)}%`); err++; }
+  }
+  for (const [hid] of HOMES) {
+    const t = RAR.tiers?.[hid];
+    if (!t || t.length !== ERAS.length || t.some(q => q.length !== 4 || q.some((x, i) => typeof x !== 'number' || (i && x < q[i - 1])))) { console.error(`LỖI endings-rarity.json: ngưỡng quê ${hid} phải là ${ERAS.length} bộ [P5, P25, P60, P92] tăng dần`); err++; }
+  }
+  const paths: string[][] = [];
+  const walk = (i: number, acc: string[]) => { if (i === ERAS.length) { paths.push(acc); return; } for (const o of ERAS[i].opts) walk(i + 1, [...acc, o.id]); };
+  walk(0, []);
+  const n: Record<string, number> = {}, m = PREV.filter(Boolean).map(() => 0).concat(0); // m/5: 0…5
+  for (const p of paths) { const id = endingOf({ mode: 'read', name: 'Họ Lê', picks: p, renames: [], flags: new Set() }).id; n[id] = (n[id] || 0) + 1; m[pathF(p).m]++; }
+  for (const id of readIds) { const x = Math.round((1000 * (n[id] || 0)) / paths.length) / 10; if (Math.abs(x - (RAR.read?.[id] ?? -1)) > 0.05) { console.error(`LỖI endings-rarity.json: Đọc sử "${id}" ghi ${RAR.read?.[id]}%, đếm lại ${x}% (chạy npm run endings)`); err++; } }
+  if (RAR.paths !== paths.length || m.some((c, i) => Math.abs(Math.round((1000 * c) / paths.length) / 10 - (RAR.match?.[i] ?? -1)) > 0.05)) { console.error('LỖI endings-rarity.json: "paths" / "match" không khớp 729 con đường (chạy npm run endings)'); err++; }
+  ERAS.forEach((e, i) => { for (const o of e.opts) {
+    const cf = CFS[o.id], need = !PREV[i] || o.id !== PREV[i];
+    if (need && (!cf || !(cf.level in LEVEL) || !cf.title.startsWith('Nếu') || !cf.body || !cf.basis)) { console.error(`LỖI giả định: hướng ${o.id} (điểm rẽ ${e.n}) thiếu "Nếu…" đủ tiêu đề, nội dung, mức, căn cứ`); err++; }
+    if (!need && cf) { console.error(`LỖI giả định: ${o.id} là hướng chiếm ưu thế, không cần "Nếu…"`); err++; }
+  } });
+  const used = new Set<string>();
+  for (const c of Object.values(CARD)) for (const ch of c[2]) if (ch[4]) used.add(ch[4]);
+  for (const vs of Object.values(VARIANT)) for (const va of vs) for (const ch of va.choices) if (ch[4]) used.add(ch[4]);
+  for (const c of SPECIAL) for (const ch of c.choices) if (ch[5]) used.add(ch[5]);
+  for (const f of used) if (!(FLAGS as readonly string[]).includes(f)) { console.error(`LỖI cờ "${f}": không có trong FLAGS (endings.ts)`); err++; }
+  for (const f of FLAGS) if (!used.has(f)) { console.error(`LỖI cờ "${f}": không lựa chọn nào gắn cờ này`); err++; }
+  console.log(`\nkết cục: ${ids.length} (Đọc sử ${readIds.length}); bảng hiếm ${RAR.runs} lượt mô phỏng; ${Object.keys(CFS).length} giả định; ${used.size} cờ`);
 }
 console.log('\n' + rows.join('\n'));
 console.log('\nKhép trận\n' + ends.join('\n'));

@@ -1,6 +1,6 @@
 # Dư Đồ · Kịch bản thu giọng thuyết minh
 
-202 đoạn, tổng khoảng 42 phút đọc. Người thật đã thu: 0/202; giọng máy VieNeu: 202.
+195 đoạn, tổng khoảng 40 phút đọc. Người thật đã thu: 0/195; giọng máy VieNeu: 195.
 
 ## Hướng dẫn thu
 
@@ -1045,48 +1045,6 @@ Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, r�
 *Phim hành trình · dòng gia phả của hướng "radi" · ~8 giây*
 
 Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.
-
-### `lin-doiho` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Dòng họ đổi tên giữ gốc" · ~16 giây*
-
-Dòng họ đổi tên giữ gốc. Dòng họ bạn từng đổi tên để qua một cơn biến, rồi giữ cả tên cũ lẫn tên mới trong gia phả. Nhiều dòng họ Việt Nam cũng mang một cái tên khác với tên tổ tiên vì những lý do tương tự.
-
-### `lin-haique` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Dòng họ hai quê" · ~14 giây*
-
-Dòng họ hai quê. Một nhánh của dòng họ bạn rời đất nước sau 1975 và dựng lại đời sống ở nơi khác. Từ 1995 hai nhánh gặp lại nhau; mộ tổ ở quê và bàn thờ ở xứ người cùng ghi một tên họ.
-
-### `lin-thuandong` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Dòng họ thuận dòng" · ~15 giây*
-
-Dòng họ thuận dòng. Qua năm điểm rẽ, dòng họ bạn đều đứng về hướng sau này chiếm ưu thế. Gia phả vì thế đi cùng nhịp với sử chính thống, nhưng ít ghi lại những ngả đường mà nhiều người Việt khác đã đi.
-
-### `lin-trungkien` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Dòng họ trung kiên" · ~14 giây*
-
-Dòng họ trung kiên. Dòng họ bạn giữ một hướng đi qua ít nhất bốn thế hệ, dù hướng ấy có lúc thắng, có lúc thua. Cái giá và phần được của sự nhất quán đều hiện rõ trong gia sản để lại.
-
-### `lin-dunggiua` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Dòng họ đứng giữa" · ~14 giây*
-
-Dòng họ đứng giữa. Dòng họ bạn thường chọn thương thuyết, cải cách hay đứng ngoài hơn là cầm súng. Sử sách ít ghi tên những người như thế, dù họ chiếm phần đông trong mỗi làng.
-
-### `lin-nhieunga` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Dòng họ rẽ nhiều ngả" · ~18 giây*
-
-Dòng họ rẽ nhiều ngả. Nhiều thế hệ của dòng họ bạn chọn một ngả khác cha ông. Gia phả vì thế ghi những người đi những con đường rất khác nhau, có khi ở hai bên một chiến tuyến, điều không hiếm trong các gia đình Việt Nam thế kỷ XX.
-
-### `lin-thuong` · giọng máy
-
-*Phim hành trình · dấu ấn dòng họ "Một dòng họ Việt Nam" · ~15 giây*
-
-Một dòng họ Việt Nam. Dòng họ bạn đi qua sáu thế hệ không theo một khuôn nào rõ rệt, như phần lớn các gia đình Việt Nam. Gia phả ghi đủ người cầm súng, người đi học và người ở lại giữ ruộng.
 
 ### `epi-nguyen` · giọng máy
 
