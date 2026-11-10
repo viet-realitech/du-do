@@ -13,7 +13,6 @@ export const gateSpeech = (e: Era) => `Điểm rẽ thứ ${e.n}, năm ${e.cy}. 
 /** Kết cục của một hướng ở điểm rẽ (màn "Con đường của bạn"). */
 export const outKey = (opt: string) => 'out-' + opt;
 export const outSpeech = (out: string) => `Con đường của bạn. ${out}`;
-/** Phim hành trình (kết cục): dòng gia phả của một hướng, dấu ấn dòng họ, lời khép theo họ. */
+/** Phim hành trình (kết cục): dòng gia phả của một hướng, lời khép theo họ (kết cục dòng họ cá nhân hoá nên không thu sẵn). */
 export const chrKey = (opt: string) => 'chr-' + opt;
-export const linKey = (id: string) => 'lin-' + id;
 export const epiKey = (k: string) => 'epi-' + k;

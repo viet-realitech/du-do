@@ -29,6 +29,8 @@ export interface State {
   /** Thẻ sự kiện đã quyết định: id sự kiện → chỉ số lựa chọn. */
   cards: Record<string, number>;
   harvests: string[];
+  /** Gia sản ngay sau mùa màng của từng thế hệ (id điểm rẽ → gia sản): kết cục nói đời nào gây dựng, đời nào mất mát. */
+  snap: Record<string, Res>;
   /** Khoá họ (surnames.ts) khi chọn từ danh sách; '' khi gõ họ khác. */
   surname: string;
   /** Lịch sử đổi họ: năm, từ, sang, vì sao. */
@@ -72,7 +74,7 @@ export interface State {
 }
 
 const def: State = {
-  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
+  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
   filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
@@ -83,7 +85,7 @@ function load(mode = activeMode()): State {
   s = Object.assign({}, def, raw);
   // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
   if (!('xFrom' in raw)) s.xFrom = typeof raw.year === 'number' ? raw.year : Y0;
-  s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])];
+  s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])]; s.snap = { ...(s.snap || {}) };
   // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa)
   s.cardv = { ...(s.cardv || {}) };
   const known = Array.isArray(raw.cvk) ? raw.cvk as string[] : 'cardv' in raw ? ['nt62', 'sg75'] : []; // cvk có từ khi thêm bộ tn80
@@ -102,7 +104,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;
@@ -194,7 +196,7 @@ export function renameFamily(to: string, y: number, why: string): void {
 /** Bắt đầu lại gia sản (khi đổi sang chế độ Chơi giữa chừng). */
 export function resetPlay(): void {
   if (S.names.length) { S.name = S.names[0].from; S.surname = surnameKey(S.name); } // chơi lại: họ ban đầu
-  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.names = []; S.xs = {}; S.xFrom = 0;
+  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.snap = {}; S.names = []; S.xs = {}; S.xFrom = 0;
   save();
 }
 

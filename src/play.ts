@@ -1,8 +1,9 @@
-import { surnameKey, asFamily, ARCHETYPES, type Archetype } from './data/surnames';
+import { surnameKey, asFamily } from './data/surnames';
 import { SPECIAL, type SpecialCard } from './data/cards2';
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Region } from './data';
 import { CARD, VARIANT, type Card, type Choice, type Fx } from './data/cards';
-import { S, save, curPick, chYear, evEra, type Res, type Rel, renameFamily, matchStats } from './state';
+import { S, save, curPick, chYear, evEra, type Res, type Rel, renameFamily, familyName } from './state';
+import { tiersOf, thOf, complete, endingOf, titleOf, type Ending, type Facts, type Flag } from './data/endings';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
    và "mùa màng" ở mỗi thế hệ. Lịch sử vẫn diễn ra như đã diễn ra; chỉ vận mệnh dòng họ đổi. */
@@ -168,28 +169,6 @@ export function needsDecision(v: HistEvent): boolean {
   return !!sp && !specialDecided(sp);
 }
 
-/** Dấu ấn dòng họ ở kết cục, theo đường đã đi qua sáu điểm rẽ và việc đổi họ (nội dung: surnames.ts).
-    Thứ tự xét: đổi họ → thuận dòng → trung kiên → hai quê → đứng giữa → rẽ nhiều ngả → mặc định. */
-export function lineage(): Archetype | null {
-  if (!ARCHETYPES.length) return null;
-  const by = (id: string) => ARCHETYPES.find(a => a.id === id) || ARCHETYPES.find(a => a.id === 'thuong') || null;
-  const os = ERAS.map(e => e.opts.find(o => o.id === S.picks[e.id]));
-  if (os.some(o => !o)) return by('thuong');
-  // phía của mỗi thế hệ theo góc nhìn sử học của hướng đã chọn: vn, vnch, hay "giữa" (cải cách, thương thuyết, đứng ngoài)
-  const side = os.map(o => (o!.persp === 'vn' || o!.persp === 'vnch' ? o!.persp : 'giua'));
-  const n = (k: string) => side.filter(x => x === k).length;
-  let turns = 0;
-  for (let i = 1; i < side.length; i++) if (side[i] !== side[i - 1]) turns++;
-  const ms = matchStats();
-  if (S.names.length) return by('doiho');
-  if (ms.t && ms.m === ms.t) return by('thuandong');
-  if (n('vn') >= 4 || n('vnch') >= 4) return by('trungkien');
-  if (S.picks.e6 === 'radi') return by('haique');
-  if (n('giua') >= 4) return by('dunggiua');
-  if (turns >= 3) return by('nhieunga');
-  return by('thuong');
-}
-
 /* ---------- lựa chọn điểm rẽ đổi quan hệ ---------- */
 const ERA_FX: Record<string, Fx> = {
   chien: { tr: 15, ph: -20 }, canhtan: { tr: 5, ph: 5 }, hoa: { tr: 10, ph: 10 },
@@ -281,18 +260,58 @@ export function harvest(lived: Era, y: number): Harvest | null {
   for (const [, fx] of shown) for (const [k, n] of Object.entries(fx) as [keyof Fx, number][]) total[k] = (total[k] || 0) + n;
   const got = applyFx(total); // phần đổi thực (đã chặn ở 0 và 100)
   S.harvests.push(lived.id);
+  S.snap[lived.id] = { ...S.res }; // gia sản sau mỗi đời: kết cục nói đời nào gây dựng, đời nào mất mát
   save();
   return { lines: shown, total: got, ry };
 }
 
 /* ---------- kết cục ---------- */
+/** Hạng gia sản so với các dòng họ CÙNG QUÊ trong mô phỏng (scripts/sim-endings.ts), sau đời vừa gặt gần nhất: thu
+    nhập mùa màng khác hẳn giữa các vùng, nên một ngưỡng chung cho cả nước chỉ thưởng cho quê miền Bắc. Bậc: P92 Vọng tộc,
+    P60 khá giả, P25 thường dân, P5 sa sút, thấp hơn nữa "Còn lại tên họ"; "ly tán" khi còn chưa tới 15 người. */
 export function rank(): [string, string] {
-  const { g, d, b, u } = S.res, s = g + d + b + u;
+  const { g, d, b, u } = S.res, s = g + d + b + u, n = S.harvests.length, t = tiersOf(S.home, n);
   if (d < 15) return ['Dòng họ ly tán', 'Người còn lại quá ít; gia phả dừng ở thế hệ này.'];
-  if (s >= 225) return ['Vọng tộc', 'Giàu có, đông đúc và được kính trọng qua sáu thế hệ.'];
-  if (s >= 185) return ['Gia đình khá giả', 'Giữ được ruộng, giữ được người, có tiếng trong vùng.'];
-  if (s >= 140) return ['Thường dân', 'Qua được mọi cơn bão, không giàu, không mất gốc.'];
-  return ['Nhà sa sút', 'Chiến tranh và lựa chọn lấy đi gần hết, chỉ còn tên họ.'];
+  if (!n || !t) return ['Thường dân', 'Chưa qua mùa màng nào; gia sản như mọi dòng họ lúc khởi đầu.'];
+  const k = n >= 6 ? 'qua sáu thế hệ' : `sau ${n} thế hệ`;
+  if (s >= t[3]) return ['Vọng tộc', `Giàu có, đông đúc và được kính trọng ${k}: nhóm 8% khá nhất cùng quê trong mô phỏng.`];
+  if (s >= t[2]) return ['Gia đình khá giả', 'Giữ được ruộng, giữ được người, có tiếng trong vùng.'];
+  if (s >= t[1]) return ['Thường dân', 'Qua được mọi cơn bão, không giàu, không mất gốc.'];
+  if (s > t[0]) return ['Nhà sa sút', 'Chiến tranh và lựa chọn lấy đi nhiều; nhà còn người, còn ruộng, nhưng kém xưa.'];
+  return ['Còn lại tên họ', 'Chiến tranh và lựa chọn lấy đi gần hết, chỉ còn tên họ: nhóm 5% sa sút nhất cùng quê trong mô phỏng.'];
+}
+
+/** Dữ kiện cho kết cục (data/endings.ts): sáu hướng, quê, gia sản, gia sản sau từng mùa màng, các lần đổi họ và cờ
+    trên các lựa chọn đã quyết (thẻ sự kiện, biến cố riêng). */
+export function factsFromState(): Facts {
+  const flags = new Set<Flag>();
+  for (const v of EV) if (!v.diary && decided(v.id)) { const f = cardOf(v)?.[2][S.cards[v.id]]?.[4]; if (f) flags.add(f); }
+  for (const c of SPECIAL) { const i = S.cards['x:' + c.id]; const f = i != null ? c.choices[i]?.[5] : undefined; if (f) flags.add(f); }
+  const play = isPlay(), h = home();
+  return {
+    mode: play ? 'play' : 'read', name: familyName(), picks: ERAS.map(e => S.picks[e.id] || ''),
+    home: play ? { id: h[0], name: h[1], region: h[3] } : undefined,
+    res: play ? { ...S.res } : undefined, snap: play ? ERAS.map(e => S.snap[e.id]).filter((r): r is Res => !!r) : undefined,
+    renames: play ? S.names.map(n => ({ ...n })) : [], flags, th: play ? thOf(S.home) : undefined,
+  };
+}
+/** Kết cục của dòng họ lúc này: null khi còn điểm rẽ bỏ ngỏ (Đọc sử cho xem kết luận khi chưa chọn đủ). */
+export function endingNow(): { f: Facts; e: Ending | null; title: string } {
+  const f = factsFromState(), e = complete(f) ? endingOf(f) : null;
+  return { f, e, title: e ? titleOf(e, f) : '' };
+}
+
+/** Việc dòng họ đã quyết trong chương `e` (thẻ sự kiện và biến cố riêng), việc lớn trước: biến cố riêng, lựa chọn có cờ
+    (di cư, tập kết, vượt biên…), rồi lựa chọn đổi gia sản nhiều nhất. Cho gia phả và phim hành trình ở kết cục. */
+export function bigChoices(e: Era, n = 2): { y: number; label: string; out: string }[] {
+  const xs: { y: number; label: string; out: string; w: number }[] = [];
+  const mag = (fx: Fx) => RES.reduce((a, [k]) => a + Math.abs(fx[k] || 0), 0);
+  for (const { v, ch } of choicesIn(0, 0, e)) xs.push({ y: v.y, label: ch[0], out: ch[3], w: (ch[4] ? 1000 : 0) + mag(ch[2]) });
+  for (const c of SPECIAL) {
+    const i = S.cards['x:' + c.id], v = EV.find(x => x.id === c.ev), ch = i != null ? c.choices[i] : undefined;
+    if (ch && v && evEra(v) === e) xs.push({ y: v.y, label: ch[0], out: ch[3], w: 2000 + mag(ch[2]) });
+  }
+  return xs.sort((a, b) => b.w - a.w).slice(0, n).sort((a, b) => a.y - b.y).map(({ y, label, out }) => ({ y, label, out }));
 }
 
 export const decidedCount = () => Object.keys(S.cards).length;

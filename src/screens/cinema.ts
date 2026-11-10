@@ -1,7 +1,8 @@
 import { ERAS, EV, type Era } from '../data';
 import { S, optOf, familyName, archetype } from '../state';
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
-import { isPlay, lineage, rank } from '../play';
+import { isPlay, rank, endingNow, bigChoices } from '../play';
+import { rarityLine } from '../data/endings';
 import { wikiFor, probe } from '../wiki';
 import { esc, app } from '../ui/dom';
 import { SND, buzz } from '../audio';
@@ -9,7 +10,7 @@ import { mood } from '../music';
 import { fxOn } from '../scene';
 import { speak, hush } from '../narration';
 import { recording } from '../voice';
-import { chrKey, linKey, epiKey } from '../speech';
+import { chrKey, epiKey } from '../speech';
 
 /* Điện ảnh: màn mở chương ở mỗi điểm rẽ (ảnh tư liệu chạy chậm, năm đếm lên, tên chương) và "phim hành trình" ở
    kết cục (mỗi thế hệ một cảnh: ảnh, năm, dòng gia phả). Chạm để bỏ qua / sang cảnh. */
@@ -120,19 +121,25 @@ function slides(): Slide[] {
     const o = optOf(e);
     if (!o) continue;
     const nx = ERAS[ERAS.indexOf(e) + 1], end = nx ? nx.cy : 2026;
-    const lines = [isPlay() ? CHRONICLE[o.id] || o.out : o.out];
+    // dòng gia phả (cả hai luồng, có bản thu), việc lớn nhất dòng họ quyết trong đời ấy (Trò chơi), các lần đổi họ
+    const lines = [CHRONICLE[o.id] || o.out];
+    const big = isPlay() ? bigChoices(e, 1)[0] : undefined;
+    if (big) lines.push(`${big.y} · ${big.out}`);
     for (const n of S.names) if (n.y >= e.cy && n.y < end) lines.push(`${n.y} · ${n.from} đổi thành ${n.to}`);
-    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: `${e.title} · ${o.label}`, lines, img: eraImage(e, 6000, true), say: isPlay() && CHRONICLE[o.id] ? [CHRONICLE[o.id], chrKey(o.id)] : undefined });
+    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: `${e.title} · ${o.label}`, lines, img: eraImage(e, 6000, true), say: CHRONICLE[o.id] ? [CHRONICLE[o.id], chrKey(o.id)] : undefined });
   }
   return out;
 }
 
-/** Phim hành trình: mỗi thế hệ một cảnh (~5 s), cảnh cuối là dấu ấn dòng họ. Chạm phải / trái để sang / lùi. */
+/** Phim hành trình: mỗi thế hệ một cảnh (~5 s), cảnh cuối là kết cục của dòng họ. Chạm phải / trái để sang / lùi. */
 export function montage(): void {
   if (document.querySelector('.cine.film:not(.out)')) return; // đang chiếu: không chồng phim thứ hai
   const list = slides();
   if (!list.length) return;
-  const lin = isPlay() ? lineage() : null, ar = archetype(), epi = EPILOGUES[S.surname || surnameKey(S.name)];
+  const { f, e: end, title } = endingNow(), ar = archetype(), skey = S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
+  const rar = end ? rarityLine(end.id, f.mode) : null;
+  // tên họ qua các lần đổi ("Họ Nguyễn → Họ Lê"), cả hai luồng
+  const fam = S.names.length ? [S.names[0].from, ...S.names.map(n => n.to)].join(' → ') : familyName();
   const box = document.createElement('div');
   box.className = 'cine film';
   box.setAttribute('role', 'dialog');
@@ -239,10 +246,11 @@ export function montage(): void {
       if (closed || me !== seq) return;
       html = `${imgHtml(src, s.y)}<div class="cine-t low"><div class="mono">${esc(s.head)}</div><h2>${esc(s.title)}</h2>${s.lines.map((l, k) => `<p style="animation-delay:${0.5 + k * 0.6}s">${esc(l)}</p>`).join('')}</div>`;
     } else {
-      const t = lin ? lin.title : ar ? ar[0] : 'Hành trình đã khép';
-      const d = lin ? lin.text : ar ? ar[1] : '';
-      html = `<div class="cine-img none"></div><div class="cine-t"><div class="mono">${isPlay() ? esc(familyName()) + ' · ' : ''}1858 – 2026</div><h1>${esc(t)}</h1>${d ? `<p>${esc(d)}</p>` : ''}
-      ${isPlay() ? `<p class="mono" style="animation-delay:1s">${esc(rank()[0])}</p>` : ''}${epi && isPlay() ? `<p style="animation-delay:1.4s">${esc(epi)}</p>` : ''}</div>`;
+      // cảnh cuối: tên kết cục và tên họ (cả hai luồng), câu tóm, độ hiếm, hạng gia sản (Trò chơi), lời khép theo họ
+      const t = end ? title : ar ? ar[0] : 'Hành trình đã khép';
+      const d = end ? end.line : ar ? ar[1] : '';
+      html = `<div class="cine-img none"></div><div class="cine-t fin"><div class="mono">${esc(fam)} · 1858 – 2026</div>${end ? `<div class="mono seal">Kết cục · ${esc(end.seal)}</div>` : ''}<h1>${esc(t)}</h1>${d ? `<p>${esc(d)}</p>` : ''}
+      ${rar ? `<p class="mono" style="animation-delay:1s">${esc(rar.lead)}</p>` : ''}${isPlay() ? `<p class="mono" style="animation-delay:1.2s">${esc(rank()[0])}</p>` : ''}${epi ? `<p style="animation-delay:1.4s">${esc(epi)}</p>` : ''}</div>`;
       SND.fanfare();
     }
     const sc = document.createElement('div');
@@ -253,9 +261,8 @@ export function montage(): void {
     fitLowRes(sc);
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {
-      const key = S.surname || surnameKey(S.name), parts: [string, string][] = [];
-      if (lin) parts.push([`${lin.title}. ${lin.text}`, linKey(lin.id)]);
-      if (isPlay() && EPILOGUES[key]) parts.push([EPILOGUES[key], epiKey(key)]);
+      const parts: [string, string][] = [];
+      if (epi) parts.push([epi, epiKey(skey)]);
       narrate(j, parts, per + 3000);
     }
   };

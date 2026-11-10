@@ -168,36 +168,29 @@
 167,chr-baocap,7,"Phim hành trình · dòng gia phả của hướng ""baocap""","Thế hệ 6 ở lại trong hợp tác xã và biên chế, xếp hàng mua gạo bằng tem phiếu qua những năm lạm phát ba con số.",8,máy
 168,chr-doimoi,7,"Phim hành trình · dòng gia phả của hướng ""doimoi""","Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, rồi ASEAN, rồi WTO.",6,máy
 169,chr-radi,7,"Phim hành trình · dòng gia phả của hướng ""radi""","Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.",8,máy
-170,lin-doiho,7,"Phim hành trình · dấu ấn dòng họ ""Dòng họ đổi tên giữ gốc""","Dòng họ đổi tên giữ gốc. Dòng họ bạn từng đổi tên để qua một cơn biến, rồi giữ cả tên cũ lẫn tên mới trong gia phả. Nhiều dòng họ Việt Nam cũng mang một cái tên khác với tên tổ tiên vì những lý do tương tự.",16,máy
-171,lin-haique,7,"Phim hành trình · dấu ấn dòng họ ""Dòng họ hai quê""","Dòng họ hai quê. Một nhánh của dòng họ bạn rời đất nước sau 1975 và dựng lại đời sống ở nơi khác. Từ 1995 hai nhánh gặp lại nhau; mộ tổ ở quê và bàn thờ ở xứ người cùng ghi một tên họ.",14,máy
-172,lin-thuandong,7,"Phim hành trình · dấu ấn dòng họ ""Dòng họ thuận dòng""","Dòng họ thuận dòng. Qua năm điểm rẽ, dòng họ bạn đều đứng về hướng sau này chiếm ưu thế. Gia phả vì thế đi cùng nhịp với sử chính thống, nhưng ít ghi lại những ngả đường mà nhiều người Việt khác đã đi.",15,máy
-173,lin-trungkien,7,"Phim hành trình · dấu ấn dòng họ ""Dòng họ trung kiên""","Dòng họ trung kiên. Dòng họ bạn giữ một hướng đi qua ít nhất bốn thế hệ, dù hướng ấy có lúc thắng, có lúc thua. Cái giá và phần được của sự nhất quán đều hiện rõ trong gia sản để lại.",14,máy
-174,lin-dunggiua,7,"Phim hành trình · dấu ấn dòng họ ""Dòng họ đứng giữa""","Dòng họ đứng giữa. Dòng họ bạn thường chọn thương thuyết, cải cách hay đứng ngoài hơn là cầm súng. Sử sách ít ghi tên những người như thế, dù họ chiếm phần đông trong mỗi làng.",14,máy
-175,lin-nhieunga,7,"Phim hành trình · dấu ấn dòng họ ""Dòng họ rẽ nhiều ngả""","Dòng họ rẽ nhiều ngả. Nhiều thế hệ của dòng họ bạn chọn một ngả khác cha ông. Gia phả vì thế ghi những người đi những con đường rất khác nhau, có khi ở hai bên một chiến tuyến, điều không hiếm trong các gia đình Việt Nam thế kỷ XX.",18,máy
-176,lin-thuong,7,"Phim hành trình · dấu ấn dòng họ ""Một dòng họ Việt Nam""","Một dòng họ Việt Nam. Dòng họ bạn đi qua sáu thế hệ không theo một khuôn nào rõ rệt, như phần lớn các gia đình Việt Nam. Gia phả ghi đủ người cầm súng, người đi học và người ở lại giữ ruộng.",15,máy
-177,epi-nguyen,7,"Phim hành trình · lời khép, họ Nguyễn","Nguyễn vẫn là họ đông nhất nước, ước khoảng 38% dân số: cứ ba người Việt thì có hơn một người mang họ này.",8,máy
-178,epi-tran,7,"Phim hành trình · lời khép, họ Trần","Trần là họ đông thứ hai (khoảng 11%); hai Chủ tịch nước sau Đổi Mới, Trần Đức Lương và Trần Đại Quang, cùng mang họ này.",9,máy
-179,epi-le,7,"Phim hành trình · lời khép, họ Lê","Lê là họ đông thứ ba (khoảng 9–10%); sau Đổi Mới có Chủ tịch nước Lê Đức Anh và Tổng Bí thư Lê Khả Phiêu.",8,máy
-180,epi-pham,7,"Phim hành trình · lời khép, họ Phạm","Phạm là họ đông thứ tư (khoảng 7%); ba người đứng đầu chính phủ mang họ này: Phạm Văn Đồng, Phạm Hùng và Phạm Minh Chính.",9,máy
-181,epi-hoang,7,"Phim hành trình · lời khép, họ Hoàng / Huỳnh","Hoàng và Huỳnh vốn một họ: Đàng Trong kiêng tên chúa Nguyễn Hoàng nên đọc thành Huỳnh; gộp lại chiếm khoảng 5% dân số.",9,máy
-182,epi-phan,7,"Phim hành trình · lời khép, họ Phan","Phan chiếm khoảng 4–5% dân số; Phan Văn Khải, Thủ tướng 1997–2006, là Thủ tướng Việt Nam đầu tiên thăm chính thức Mỹ (2005).",10,máy
-183,epi-vu,7,"Phim hành trình · lời khép, họ Vũ / Võ","Vũ ở miền Bắc và Võ ở miền Nam là cùng một họ, viết cùng chữ Hán 武; gộp lại chiếm khoảng 4% dân số.",8,máy
-184,epi-dang,7,"Phim hành trình · lời khép, họ Đặng","Đặng chiếm khoảng 2% dân số; Đặng Thái Sơn, người châu Á đầu tiên thắng cuộc thi Chopin (1980), vẫn biểu diễn và giảng dạy khắp thế giới.",11,máy
-185,epi-bui,7,"Phim hành trình · lời khép, họ Bùi","Bùi chiếm khoảng 2% dân số; tranh phố cổ Hà Nội của Bùi Xuân Phái (1920–1988) nay thuộc hàng được sưu tập nhiều nhất của hội hoạ Việt Nam.",11,máy
-186,epi-do,7,"Phim hành trình · lời khép, họ Đỗ","Đỗ chiếm khoảng 1–2% dân số; Đỗ Mười, Tổng Bí thư 1991–1997, cầm lái giai đoạn bình thường hoá với Trung Quốc (1991) và Mỹ (1995).",10,máy
-187,epi-ho,7,"Phim hành trình · lời khép, họ Hồ","Hồ chiếm khoảng 1% dân số. Người mang họ này nổi tiếng nhất, Hồ Chí Minh, sinh ra là Nguyễn Sinh Cung và đổi tên nhiều lần trong đời.",10,máy
-188,epi-ngo,7,"Phim hành trình · lời khép, họ Ngô","Ngô chiếm khoảng 1% dân số; Ngô Bảo Châu, Huy chương Fields 2010, là nhà toán học Việt Nam đầu tiên nhận giải này.",9,máy
-189,epi-duong,7,"Phim hành trình · lời khép, họ Dương","Dương chiếm khoảng 1% dân số; sử gia Dương Trung Quốc, Tổng Thư ký Hội Khoa học Lịch sử Việt Nam, là đại biểu Quốc hội bốn khoá (2002–2021).",11,máy
-190,epi-ly,7,"Phim hành trình · lời khép, họ Lý","Lý nay chỉ còn khoảng 0,5% dân số: năm 1232 nhà Trần bắt người họ Lý đổi sang họ Nguyễn, một lần đổi họ hàng loạt còn ghi trong sử.",10,máy
-191,epi-dinh,7,"Phim hành trình · lời khép, họ Đinh","Đinh là họ của vị vua đặt quốc hiệu Đại Cồ Việt; cố đô Hoa Lư của Đinh Tiên Hoàng nay nằm trong quần thể Tràng An, di sản thế giới từ 2014.",11,máy
-192,epi-truong,7,"Phim hành trình · lời khép, họ Trương","Trương có Trương Tấn Sang làm Chủ tịch nước 2011–2016 và Trương Mỹ Hoa làm Phó Chủ tịch nước 2002–2007.",8,máy
-193,epi-mac,7,"Phim hành trình · lời khép, họ Mạc","Sau khi nhà Mạc đổ, con cháu đổi sang hàng chục họ khác để tránh truy sát; ngày nay Hội đồng Mạc tộc Việt Nam quy tụ lại các nhánh ấy.",10,máy
-194,epi-tonthat,7,"Phim hành trình · lời khép, họ Tôn Thất / Nguyễn Phúc","Tôn Thất dành cho con cháu các chúa Nguyễn ngoài dòng vua, nữ là Tôn Nữ; nay vẫn nhiều người giữ, như nhà ngoại giao Tôn Nữ Thị Ninh.",10,máy
-195,epi-lam,7,"Phim hành trình · lời khép, họ Lâm","Lâm là họ của nhiều người gốc Hoa (chữ 林) và nhiều người Khmer Nam Bộ, cùng các họ Thạch, Sơn, Danh, Kim mà sử liệu chưa rõ gốc tích.",10,máy
-196,epi-trinh,7,"Phim hành trình · lời khép, họ Trịnh","Trịnh là họ của Trịnh Công Sơn (1939–2001); nhạc ông vẫn được hát khắp nước, tên ông được đặt cho đường phố ở Huế (2011) và Hà Nội (2015).",11,máy
-197,epi-cao,7,"Phim hành trình · lời khép, họ Cao","Cao là họ của nhà ngôn ngữ học Cao Xuân Hạo (1930–2007), người đặt nền cho ngữ pháp chức năng tiếng Việt; chữ Hán 高, cùng chữ với họ Gao.",11,máy
-198,epi-doan,7,"Phim hành trình · lời khép, họ Đoàn","Đoàn là họ của Đoàn Giỏi (1925–1989); 'Đất rừng phương Nam' của ông được dựng thành phim truyền hình năm 1997 và phim điện ảnh năm 2023.",10,máy
-199,epi-luong,7,"Phim hành trình · lời khép, họ Lương","Lương là họ của nhà nông học Lương Định Của (1920–1975); từ 2006, Trung ương Đoàn trao giải thưởng mang tên ông cho nông dân trẻ mỗi năm.",11,máy
-200,epi-ha,7,"Phim hành trình · lời khép, họ Hà","Hà viết chữ Hán 何, cùng chữ với họ He, một trong 20 họ đông nhất Trung Quốc; ở Việt Nam, Hà là một họ nhỏ, dưới 1% dân số.",9,máy
-201,epi-ta,7,"Phim hành trình · lời khép, họ Tạ","Tạ là họ của Tạ Quang Bửu (1910–1986); Giải thưởng Tạ Quang Bửu của Bộ Khoa học và Công nghệ trao cho nghiên cứu cơ bản từ năm 2014.",10,máy
-202,epi-thai,7,"Phim hành trình · lời khép, họ Thái / Thới","Thái là một họ nhỏ; nghệ sĩ dương cầm Thái Thị Liên (1918–2023), người đồng sáng lập Trường Âm nhạc Việt Nam, là mẹ của Đặng Thái Sơn.",10,máy
+170,epi-nguyen,7,"Phim hành trình · lời khép, họ Nguyễn","Nguyễn vẫn là họ đông nhất nước, ước khoảng 38% dân số: cứ ba người Việt thì có hơn một người mang họ này.",8,máy
+171,epi-tran,7,"Phim hành trình · lời khép, họ Trần","Trần là họ đông thứ hai (khoảng 11%); hai Chủ tịch nước sau Đổi Mới, Trần Đức Lương và Trần Đại Quang, cùng mang họ này.",9,máy
+172,epi-le,7,"Phim hành trình · lời khép, họ Lê","Lê là họ đông thứ ba (khoảng 9–10%); sau Đổi Mới có Chủ tịch nước Lê Đức Anh và Tổng Bí thư Lê Khả Phiêu.",8,máy
+173,epi-pham,7,"Phim hành trình · lời khép, họ Phạm","Phạm là họ đông thứ tư (khoảng 7%); ba người đứng đầu chính phủ mang họ này: Phạm Văn Đồng, Phạm Hùng và Phạm Minh Chính.",9,máy
+174,epi-hoang,7,"Phim hành trình · lời khép, họ Hoàng / Huỳnh","Hoàng và Huỳnh vốn một họ: Đàng Trong kiêng tên chúa Nguyễn Hoàng nên đọc thành Huỳnh; gộp lại chiếm khoảng 5% dân số.",9,máy
+175,epi-phan,7,"Phim hành trình · lời khép, họ Phan","Phan chiếm khoảng 4–5% dân số; Phan Văn Khải, Thủ tướng 1997–2006, là Thủ tướng Việt Nam đầu tiên thăm chính thức Mỹ (2005).",10,máy
+176,epi-vu,7,"Phim hành trình · lời khép, họ Vũ / Võ","Vũ ở miền Bắc và Võ ở miền Nam là cùng một họ, viết cùng chữ Hán 武; gộp lại chiếm khoảng 4% dân số.",8,máy
+177,epi-dang,7,"Phim hành trình · lời khép, họ Đặng","Đặng chiếm khoảng 2% dân số; Đặng Thái Sơn, người châu Á đầu tiên thắng cuộc thi Chopin (1980), vẫn biểu diễn và giảng dạy khắp thế giới.",11,máy
+178,epi-bui,7,"Phim hành trình · lời khép, họ Bùi","Bùi chiếm khoảng 2% dân số; tranh phố cổ Hà Nội của Bùi Xuân Phái (1920–1988) nay thuộc hàng được sưu tập nhiều nhất của hội hoạ Việt Nam.",11,máy
+179,epi-do,7,"Phim hành trình · lời khép, họ Đỗ","Đỗ chiếm khoảng 1–2% dân số; Đỗ Mười, Tổng Bí thư 1991–1997, cầm lái giai đoạn bình thường hoá với Trung Quốc (1991) và Mỹ (1995).",10,máy
+180,epi-ho,7,"Phim hành trình · lời khép, họ Hồ","Hồ chiếm khoảng 1% dân số. Người mang họ này nổi tiếng nhất, Hồ Chí Minh, sinh ra là Nguyễn Sinh Cung và đổi tên nhiều lần trong đời.",10,máy
+181,epi-ngo,7,"Phim hành trình · lời khép, họ Ngô","Ngô chiếm khoảng 1% dân số; Ngô Bảo Châu, Huy chương Fields 2010, là nhà toán học Việt Nam đầu tiên nhận giải này.",9,máy
+182,epi-duong,7,"Phim hành trình · lời khép, họ Dương","Dương chiếm khoảng 1% dân số; sử gia Dương Trung Quốc, Tổng Thư ký Hội Khoa học Lịch sử Việt Nam, là đại biểu Quốc hội bốn khoá (2002–2021).",11,máy
+183,epi-ly,7,"Phim hành trình · lời khép, họ Lý","Lý nay chỉ còn khoảng 0,5% dân số: năm 1232 nhà Trần bắt người họ Lý đổi sang họ Nguyễn, một lần đổi họ hàng loạt còn ghi trong sử.",10,máy
+184,epi-dinh,7,"Phim hành trình · lời khép, họ Đinh","Đinh là họ của vị vua đặt quốc hiệu Đại Cồ Việt; cố đô Hoa Lư của Đinh Tiên Hoàng nay nằm trong quần thể Tràng An, di sản thế giới từ 2014.",11,máy
+185,epi-truong,7,"Phim hành trình · lời khép, họ Trương","Trương có Trương Tấn Sang làm Chủ tịch nước 2011–2016 và Trương Mỹ Hoa làm Phó Chủ tịch nước 2002–2007.",8,máy
+186,epi-mac,7,"Phim hành trình · lời khép, họ Mạc","Sau khi nhà Mạc đổ, con cháu đổi sang hàng chục họ khác để tránh truy sát; ngày nay Hội đồng Mạc tộc Việt Nam quy tụ lại các nhánh ấy.",10,máy
+187,epi-tonthat,7,"Phim hành trình · lời khép, họ Tôn Thất / Nguyễn Phúc","Tôn Thất dành cho con cháu các chúa Nguyễn ngoài dòng vua, nữ là Tôn Nữ; nay vẫn nhiều người giữ, như nhà ngoại giao Tôn Nữ Thị Ninh.",10,máy
+188,epi-lam,7,"Phim hành trình · lời khép, họ Lâm","Lâm là họ của nhiều người gốc Hoa (chữ 林) và nhiều người Khmer Nam Bộ, cùng các họ Thạch, Sơn, Danh, Kim mà sử liệu chưa rõ gốc tích.",10,máy
+189,epi-trinh,7,"Phim hành trình · lời khép, họ Trịnh","Trịnh là họ của Trịnh Công Sơn (1939–2001); nhạc ông vẫn được hát khắp nước, tên ông được đặt cho đường phố ở Huế (2011) và Hà Nội (2015).",11,máy
+190,epi-cao,7,"Phim hành trình · lời khép, họ Cao","Cao là họ của nhà ngôn ngữ học Cao Xuân Hạo (1930–2007), người đặt nền cho ngữ pháp chức năng tiếng Việt; chữ Hán 高, cùng chữ với họ Gao.",11,máy
+191,epi-doan,7,"Phim hành trình · lời khép, họ Đoàn","Đoàn là họ của Đoàn Giỏi (1925–1989); 'Đất rừng phương Nam' của ông được dựng thành phim truyền hình năm 1997 và phim điện ảnh năm 2023.",10,máy
+192,epi-luong,7,"Phim hành trình · lời khép, họ Lương","Lương là họ của nhà nông học Lương Định Của (1920–1975); từ 2006, Trung ương Đoàn trao giải thưởng mang tên ông cho nông dân trẻ mỗi năm.",11,máy
+193,epi-ha,7,"Phim hành trình · lời khép, họ Hà","Hà viết chữ Hán 何, cùng chữ với họ He, một trong 20 họ đông nhất Trung Quốc; ở Việt Nam, Hà là một họ nhỏ, dưới 1% dân số.",9,máy
+194,epi-ta,7,"Phim hành trình · lời khép, họ Tạ","Tạ là họ của Tạ Quang Bửu (1910–1986); Giải thưởng Tạ Quang Bửu của Bộ Khoa học và Công nghệ trao cho nghiên cứu cơ bản từ năm 2014.",10,máy
+195,epi-thai,7,"Phim hành trình · lời khép, họ Thái / Thới","Thái là một họ nhỏ; nghệ sĩ dương cầm Thái Thị Liên (1918–2023), người đồng sáng lập Trường Âm nhạc Việt Nam, là mẹ của Đặng Thái Sơn.",10,máy
