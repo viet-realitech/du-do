@@ -4,7 +4,8 @@ import type { Topology, GeometryCollection } from 'topojson-specification';
 import type { Feature, MultiPolygon, Geometry } from 'geojson';
 import { F, PROVINCES, provGroup, provName, regionName, regime2, type HistEvent, type Region } from './data';
 import { S, save, rt, curPick, optOf, visEv } from './state';
-import { esc, lite } from './ui/dom';
+import { esc } from './ui/dom';
+import { quality, onQuality, watch } from './ui/quality';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
@@ -32,14 +33,16 @@ const G = {} as {
   /** px màn hình cho một đơn vị viewBox (khi k = 1). */
   px: number;
   svg: Sel<SVGSVGElement>;
-  Z: Sel<SVGGElement>;
+  /** Nền tĩnh (biển, lưới, gợn sóng bờ biển) và lớp cảnh động: hai <svg> riêng = hai lớp vẽ riêng, cùng phép zoom. */
+  bg: Sel<SVGSVGElement>; fxs: Sel<SVGSVGElement>;
+  Z: Sel<SVGGElement>; Zb: Sel<SVGGElement>; Zf: Sel<SVGGElement>;
   defs: Sel<SVGDefsElement>;
   provs: Prov[];
   laF: Feature<Geometry>;
   khF: Feature<Geometry>;
   pv: Sel<SVGPathElement, Prov>;
   la: Sel; kh: Sel; qtn: Sel; edge: Sel; sel: Sel; hl: Sel; indo: Sel; base: Sel;
-  jpr: Sel<SVGRectElement>; spot: Sel<SVGRectElement>; spotC: Sel<SVGCircleElement>;
+  jpr: Sel<SVGRectElement>; spot: Sel<SVGRectElement>; spotC: Sel<SVGRadialGradientElement>; rough: Sel<SVGFilterElement>; fxdefs: Sel<SVGDefsElement>;
   l17: Sel<SVGLineElement>;
   sea: Sel<SVGRectElement>; vig: Sel<SVGRectElement>; grat: Sel; rip: Sel<SVGGElement>; r0: Sel<SVGGElement>; modern: Sel;
   others: d3.Selection<SVGPathElement | d3.BaseType, Feature<Geometry>, SVGGElement, unknown>;
@@ -57,6 +60,8 @@ let ready = false;
 export async function initMap(): Promise<void> {
   const svg = d3.select<SVGSVGElement, unknown>('#map');
   G.svg = svg;
+  G.bg = d3.select<SVGSVGElement, unknown>('#mapbg');
+  G.fxs = d3.select<SVGSVGElement, unknown>('#mapfx');
   let world: unknown;
   try {
     world = (await import('./data/region-50m.json')).default;
@@ -96,20 +101,27 @@ export async function initMap(): Promise<void> {
   const vg = defs.append('radialGradient').attr('id', 'vig');
   vg.append('stop').attr('offset', '55%').attr('stop-color', '#5f4c36').attr('stop-opacity', 0);
   vg.append('stop').attr('offset', '100%').attr('stop-color', '#5f4c36').attr('stop-opacity', 0.28);
-  const rf = defs.append('filter').attr('id', 'rough').attr('x', '-5%').attr('y', '-5%').attr('width', '110%').attr('height', '110%');
+  // vùng lọc tính theo đơn vị bản đồ quanh phần nhìn thấy được (fitViewBox), không theo khung bao của cả nhóm đất
+  // (đất vẽ tràn ±PAD: ~2600 đơn vị vuông, Safari lọc cả vùng ấy bằng CPU mỗi lần vẽ lại)
+  const rf = G.rough = defs.append('filter').attr('id', 'rough').attr('filterUnits', 'userSpaceOnUse');
   rf.append('feTurbulence').attr('type', 'fractalNoise').attr('baseFrequency', 0.045).attr('numOctaves', 2).attr('seed', 7).attr('result', 't');
   rf.append('feDisplacementMap').attr('in', 'SourceGraphic').attr('in2', 't').attr('scale', 3.5).attr('xChannelSelector', 'R').attr('yChannelSelector', 'G');
 
-  G.sea = svg.append('rect').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).on('click', hidePop);
+  // Biển, lưới kinh – vĩ, gợn sóng bờ biển nằm trên <svg id="mapbg"> phía sau (lớp vẽ riêng): đổi năm, sóng đổi chủ,
+  // cảnh động, đóng trang… chỉ vẽ lại lớp đất phía trên, không vẽ lại 12 nét gợn sóng dày quanh cả khu vực.
+  G.sea = G.bg.append('rect').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD);
+  const Zb = G.Zb = G.bg.append('g');
+  // chạm vào biển: đóng khung tỉnh (lớp nền không nhận chạm)
+  svg.append('rect').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('fill', 'none').style('pointer-events', 'all').on('click', hidePop);
   const Z = svg.append('g');
   G.Z = Z;
   G.vig = svg.append('rect').attr('fill', 'url(#vig)').style('pointer-events', 'none');
-  G.grat = Z.append('path').attr('d', path(d3.geoGraticule().step([2, 2])())).attr('fill', 'none').style('stroke', 'var(--ink2)')
+  G.grat = Zb.append('path').attr('d', path(d3.geoGraticule().step([2, 2])())).attr('fill', 'none').style('stroke', 'var(--ink2)')
     .attr('stroke-opacity', 0.35).attr('stroke-width', 0.6).attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
 
   // Radar-like ripples around the coastline.
   const land = topojson.merge(topo, topo.objects.countries.geometries.filter(g => g.type) as any);
-  const rip = G.rip = Z.append('g').attr('class', 'rip').attr('fill', 'none').style('pointer-events', 'none');
+  const rip = G.rip = Zb.append('g').attr('class', 'rip').attr('fill', 'none').style('pointer-events', 'none');
   [26, 20, 15, 10.5, 7, 4].forEach((w, i) => {
     rip.append('path').attr('d', path(land)).style('stroke', 'var(--rip)').attr('stroke-opacity', 0.14 + i * 0.06).attr('stroke-width', w);
     rip.append('path').attr('class', 'seaS').attr('d', path(land)).attr('stroke-width', w - 1.3);
@@ -128,7 +140,7 @@ export async function initMap(): Promise<void> {
     .attr('stroke-width', 2.4).attr('vector-effect', 'non-scaling-stroke');
   G.pv = R0.append('g').selectAll<SVGPathElement, Prov>('path').data(provs).join('path').attr('d', path).style('stroke', 'var(--ink)')
     .attr('stroke-opacity', 0.16).attr('stroke-width', 0.5).attr('vector-effect', 'non-scaling-stroke').style('cursor', 'pointer')
-    .style('transition', 'opacity .3s').on('click', (ev, d) => showPop(ev, d));
+    .on('click', (ev, d) => showPop(ev, d)); // không CSS transition độ mờ: sóng đổi chủ (d3) đã chuyển dần, hai hiệu ứng chồng nhau vẽ lại cả bản đồ ~1,5 s
   const qt = provs.find(p => p.g === 'QT')!;
   G.qtn = R0.append('path').attr('d', path(qt)).attr('clip-path', 'url(#n17)').style('pointer-events', 'none');
   G.jpr = R0.append('rect').attr('clip-path', 'url(#vnclip)').attr('x', -PAD).attr('y', -PAD).attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('fill', 'url(#p-jp)').attr('opacity', 0).style('pointer-events', 'none');
@@ -144,15 +156,14 @@ export async function initMap(): Promise<void> {
   G.indo = R0.append('path').attr('d', path({ type: 'FeatureCollection', features: [vn, la, kh] })).attr('fill', 'none').attr('stroke', '#3f5b8c')
     .attr('stroke-width', 2.4).attr('stroke-opacity', 0.5).attr('stroke-dasharray', '8 4').attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
 
-  // Tour spotlight: darken everything but a soft circle around the focused event.
-  const mk = defs.append('mask').attr('id', 'spotm').attr('maskUnits', 'userSpaceOnUse').attr('x', -600).attr('y', -600).attr('width', 1600).attr('height', 1600);
-  const sg = defs.append('radialGradient').attr('id', 'spotg');
-  sg.append('stop').attr('offset', '45%').attr('stop-color', '#000');
-  sg.append('stop').attr('offset', '100%').attr('stop-color', '#fff');
-  mk.append('rect').attr('x', -600).attr('y', -600).attr('width', 1600).attr('height', 1600).attr('fill', '#fff');
-  G.spotC = mk.append('circle').attr('r', 60).attr('fill', 'url(#spotg)');
-  G.spot = Z.append('rect').attr('x', -600).attr('y', -600).attr('width', 1600).attr('height', 1600).attr('mask', 'url(#spotm)')
-    .style('fill', 'var(--paper)').attr('opacity', 0).style('transition', 'opacity .6s').style('pointer-events', 'none');
+  // Tour spotlight: darken everything but a soft circle around the focused event. Một gradient tròn (trong suốt ở giữa,
+  // đặc màu giấy từ bán kính trở ra) tô thẳng lên lớp phủ, không dùng mask: mask bắt vẽ lại cả lớp phủ 1600 đơn vị
+  // mỗi khung hình khi bay, và mỗi lần đổi bán kính. Tắt hẳn (display: none) khi không có tour.
+  const sg = G.spotC = defs.append('radialGradient').attr('id', 'spotg').attr('gradientUnits', 'userSpaceOnUse').attr('r', 60);
+  sg.append('stop').attr('offset', '45%').style('stop-color', 'var(--paper)').attr('stop-opacity', 0);
+  sg.append('stop').attr('offset', '100%').style('stop-color', 'var(--paper)').attr('stop-opacity', 1);
+  G.spot = Z.append('rect').attr('x', -600).attr('y', -600).attr('width', 1600).attr('height', 1600).attr('fill', 'url(#spotg)')
+    .attr('opacity', 0).style('display', 'none').style('pointer-events', 'none');
   G.hl = Z.append('path').style('fill', 'var(--acc)').attr('fill-opacity', 0.22).style('stroke', 'var(--acc)').attr('stroke-width', 2.2)
     .attr('vector-effect', 'non-scaling-stroke').style('pointer-events', 'none');
 
@@ -180,26 +191,32 @@ export async function initMap(): Promise<void> {
     });
   G.homeG = Z.append('g').attr('class', 'home').style('pointer-events', 'none');
   G.mk = Z.append('g');
-  G.fx = Z.append('g').attr('class', 'fxl').style('pointer-events', 'none'); // cảnh động của sự kiện (scene.ts)
-  G.call = Z.append('g').style('pointer-events', 'none');
+  // cảnh động của sự kiện (scene.ts) và nhãn tên sự kiện của tour: trên <svg id="mapfx"> riêng chồng lên bản đồ, nên
+  // mũi tên, khói, vòng sáng chạy mỗi khung hình chỉ vẽ lại lớp này, không vẽ lại tỉnh, mẫu tô, đường biên bên dưới
+  G.fxdefs = G.fxs.append('defs');
+  const Zf = G.Zf = G.fxs.append('g');
+  G.fx = Zf.append('g').attr('class', 'fxl').style('pointer-events', 'none');
+  G.call = Zf.append('g').style('pointer-events', 'none');
 
   // K_MIN < 1: cảnh hải trình dài thu cả bản đồ nhỏ lại; người dùng chụm / cuộn cũng đi được tới đó (không nhảy về 1)
   G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([K_MIN, 8]).on('zoom', ev => {
     if (ev.sourceEvent && isTouring()) pauseTour('map'); // kéo / chụm: tạm dừng, yên 5 s thì chạy tiếp (cả Đọc sử)
     G.k = ev.transform.k;
-    Z.attr('transform', ev.transform);
+    const t = String(ev.transform);
+    Z.attr('transform', t); Zb.attr('transform', t); Zf.attr('transform', t);
     rescale();
     if (G.k > 1.3 && !S.zoomed) { S.zoomed = true; save(); checkBadges(); }
   });
-  // Máy yếu: lớp gợn sóng quanh bờ biển (12 đường viền cả khu vực, nét dày) là phần tốn công vẽ nhất khi bản đồ
-  // bay / kéo / chụm (đo với CPU chậm 4 lần: 20 → 60 khung hình/giây khi ẩn nó). Tạm ẩn trong lúc chuyển động.
+  // Mọi máy (iPad Pro báo 8 nhân nên trước đây không được hưởng): lớp gợn sóng quanh bờ biển (12 đường viền cả khu
+  // vực, nét dày) và bộ lọc nét cổ (Lưu trữ) là phần tốn công vẽ nhất khi bản đồ bay / kéo / chụm (đo trên iPad Pro
+  // giả lập, CPU chậm 4 lần: bay 16 → 40 khung hình/giây khi ẩn chúng). Tạm ẩn trong lúc chuyển động.
   // Chỉ khi bản đồ thật sự di chuyển (một cú chạm chọn tỉnh không làm gợn sóng nháy).
   // Bảo hiểm: d3 có thể không báo 'end' (phần tử dưới ngón tay bị gỡ giữa cử chỉ): hiện lại sau 300 ms yên.
-  if (lite) {
-    let hid = false, t = 0;
-    const show = () => { clearTimeout(t); if (hid) { hid = false; G.rip.style('visibility', null); } };
-    G.zoom.on('zoom.lite', () => { if (!hid) { hid = true; G.rip.style('visibility', 'hidden'); } clearTimeout(t); t = window.setTimeout(show, 300); })
-      .on('end.lite', show);
+  {
+    let t = 0;
+    const still = () => { clearTimeout(t); if (moving) { moving = false; deco(); } };
+    G.zoom.on('zoom.lite', () => { if (!moving) { moving = true; deco(); } clearTimeout(t); t = window.setTimeout(still, 300); })
+      .on('end.lite', still);
   }
   svg.call(G.zoom).on('dblclick.zoom', null);
   // nút zoom, chạm bản đồ nghiêng là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
@@ -215,6 +232,24 @@ export async function initMap(): Promise<void> {
   ready = true;
   themeMap();
   rescale();
+  onQuality(themeMap); // mức hiệu ứng đổi (tự chỉnh / Cài đặt): gợn sóng, nét cổ theo mức mới
+}
+
+/* Bản đồ đang chuyển động (bay / kéo / chụm) hay đang kéo thanh năm: tạm bỏ gợn sóng và bộ lọc nét cổ. */
+let moving = false, busy = false;
+/** Nét cổ (Lưu trữ): bộ lọc làm rung nét đất; tắt ở mức hiệu ứng thấp. */
+const roughOn = () => S.theme === 'archive' && S.mstyle !== 'flat' && quality() >= 2;
+function deco(): void {
+  if (!G.rip) return;
+  putS(G.rip.node()!, 'visibility', moving ? 'hidden' : '');
+  const f = roughOn() && !moving && !busy ? 'url(#rough)' : null;
+  if (G.r0.attr('filter') !== f) G.r0.attr('filter', f);
+}
+/** Kéo thanh năm (view.ts): mỗi năm vẽ lại đất; bỏ bộ lọc nét cổ trong lúc kéo (Safari lọc lại cả vùng bằng CPU). */
+export function mapBusy(on: boolean): void {
+  if (busy === on) return;
+  busy = on;
+  if (ready) deco();
 }
 
 function buildPatterns(): void {
@@ -238,18 +273,20 @@ function buildPatterns(): void {
 export function themeMap(): void {
   if (!G.defs) return;
   buildPatterns();
-  const th = S.theme, co = th === 'archive' && S.mstyle !== 'flat';
+  const th = S.theme, co = roughOn(), q = quality();
   G.sea.attr('fill', th === 'poster' ? 'url(#p-sea)' : seaC());
   G.rip.selectAll('.seaS').attr('stroke', seaC());
-  G.rip.classed('off', !(co || th === 'night')).attr('filter', co ? 'url(#rough)' : null); // ẩn / hiện bằng lớp CSS (cảnh trận làm mờ thêm)
+  // ẩn / hiện bằng lớp CSS (cảnh trận tắt hẳn); mức hiệu ứng thấp: không gợn sóng
+  G.rip.classed('off', !((th === 'archive' && S.mstyle !== 'flat') || th === 'night') || q < 2).attr('filter', co ? 'url(#rough)' : null);
   G.others.attr('fill', landC()).attr('stroke-width', th === 'poster' ? 1.2 : 0.6);
   G.base.attr('fill', landC());
   document.getElementById('mapwrap')?.style.setProperty('--seac', seaC()); // nền khung = màu biển: bản đồ nghiêng không để lộ dải đen phía trên
-  G.r0.attr('filter', co ? 'url(#rough)' : null);
-  G.vig.attr('opacity', co ? 1 : 0);
-  G.edge.attr('opacity', th === 'poster' ? 0 : 1);
-  G.grat.attr('stroke-opacity', th === 'night' ? 0.35 : 0.18).attr('opacity', S.grat ? 1 : 0);
-  G.modern.attr('opacity', S.modern ? 1 : 0);
+  deco();
+  shown(G.vig, th === 'archive' && S.mstyle !== 'flat' ? 1 : 0);
+  shown(G.edge, th === 'poster' ? 0 : 1);
+  G.grat.attr('stroke-opacity', th === 'night' ? 0.35 : 0.18);
+  shown(G.grat, S.grat ? 1 : 0);
+  shown(G.modern, S.modern ? 1 : 0);
   paintMap(true);
 }
 
@@ -258,11 +295,15 @@ function fitViewBox(): void {
   // kích thước bố cục (bỏ qua transform: bản đồ có thể đang nghiêng khi vào trận)
   const n = G.svg.node()!, r = { width: n.clientWidth, height: n.clientHeight };
   if (!r.width || !r.height) return;
-  n.parentElement?.style.setProperty('--persp', `${Math.round(Math.max(900, r.height * 2.75))}px`);
+  n.closest<HTMLElement>('.mapwrap')?.style.setProperty('--persp', `${Math.round(Math.max(900, r.height * 2.75))}px`);
   const a = r.width / r.height;
   const vw = Math.max(W, H * a), vh = Math.max(H, W / a);
   const box: [[number, number], [number, number]] = [[(W - vw) / 2, (H - vh) / 2], [(W + vw) / 2, (H + vh) / 2]];
-  G.svg.attr('viewBox', `${box[0][0]} ${box[0][1]} ${vw} ${vh}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  const vb = `${box[0][0]} ${box[0][1]} ${vw} ${vh}`;
+  for (const s of [G.svg, G.bg, G.fxs]) s.attr('viewBox', vb).attr('preserveAspectRatio', 'xMidYMid meet');
+  // bộ lọc nét cổ: chỉ phần có thể thấy khi thu nhỏ nhất (K_MIN), cộng một lề
+  const fw = vw / K_MIN + 60, fh = vh / K_MIN + 60;
+  G.rough.attr('x', W / 2 - fw / 2).attr('y', H / 2 - fh / 2).attr('width', fw).attr('height', fh);
   G.vig.attr('x', box[0][0]).attr('y', box[0][1]).attr('width', vw).attr('height', vh);
   const px = r.width / vw; // screen px per SVG unit
   // cho kéo bản đồ lên khỏi thanh tour (~90 px dưới) và xuống khỏi nhãn trên cùng (~44 px): mũi Cà Mau không bị che
@@ -273,16 +314,39 @@ function fitViewBox(): void {
 }
 
 /** Keep markers, labels and callouts at constant screen size while zoomed. */
+let lastK = NaN;
 function rescale(): void {
   if (!ready) return;
   const k = (G.k || 1) / G.f;
+  // zoom không đổi (vẽ lại theo năm, kéo thanh năm): chỉ đặt cho phần tử mới. Ghi lại cùng giá trị vẫn bắt trình duyệt
+  // vẽ lại: bán kính vùng sáng của tour ghi lại mỗi lần đổi năm từng làm vẽ lại cả bản đồ (~300 ms mỗi khung trên CPU chậm)
+  const same = k === lastK;
+  lastK = k;
+  if (!same) G.spotC.attr('r', 75 / k);
   const keep = (d: Pt) => `translate(${d.p}) scale(${1 / k})`;
-  G.spotC.attr('r', 75 / k);
-  G.call.selectAll<SVGGElement, Pt>('g.co').attr('transform', keep);
-  G.labels.selectAll<SVGTextElement, Pt>('text').attr('transform', keep);
-  G.cities.selectAll<SVGGElement, Pt>('g').attr('transform', keep);
-  G.mk.selectAll<SVGGElement, Pt>('g.m').attr('transform', keep);
-  G.homeG.selectAll<SVGGElement, Pt>('g').attr('transform', keep);
+  const fresh = function (this: Element) { return !same || !this.hasAttribute('transform'); };
+  G.call.selectAll<SVGGElement, Pt>('g.co').filter(fresh).attr('transform', keep);
+  G.labels.selectAll<SVGTextElement, Pt>('text').filter(fresh).attr('transform', keep);
+  G.cities.selectAll<SVGGElement, Pt>('g').filter(fresh).attr('transform', keep);
+  G.mk.selectAll<SVGGElement, Pt>('g.m').filter(fresh).attr('transform', keep);
+  G.homeG.selectAll<SVGGElement, Pt>('g').filter(fresh).attr('transform', keep);
+}
+
+/** Đặt thuộc tính chỉ khi giá trị đổi (null: bỏ thuộc tính): vẽ lại theo năm ghi hàng chục thuộc tính mỗi khung hình. */
+function put(n: Element, k: string, v: string | number | null): void {
+  const s = v === null ? null : String(v);
+  if (n.getAttribute(k) === s) return;
+  if (s === null) n.removeAttribute(k); else n.setAttribute(k, s);
+}
+/** Như put cho thuộc tính CSS viết trên phần tử. */
+function putS(n: SVGElement | HTMLElement, k: string, v: string): void {
+  if (n.style.getPropertyValue(k) !== v) n.style.setProperty(k, v);
+}
+/** Lớp phủ tuỳ năm (vạch 17, Nhật chiếm đóng…): ẩn hẳn (display: none) thay vì độ mờ 0, khỏi vẽ cả lớp vô hình. */
+function shown(s: Sel<any>, op: number): void {
+  const n = s.node() as SVGElement;
+  put(n, 'opacity', op);
+  putS(n, 'display', op ? '' : 'none');
 }
 
 /* ---------- region popover ---------- */
@@ -322,9 +386,13 @@ function showPop(ev: MouseEvent, d: Prov | 'la' | 'kh'): void {
   buzz(8);
 }
 
+let homeAt = '';
 /** Quê nhà của dòng họ (chế độ Chơi): nhà nhỏ có mái, luôn hiện trên bản đồ. */
 export function paintHome(l: [number, number] | null): void {
   if (!ready) return;
+  const key = l ? l.join(',') : '';
+  if (key === homeAt) return; // vẽ lại theo năm: nhà vẫn ở chỗ cũ, không dựng lại (mỗi lần dựng là một lần vẽ lại vùng ấy)
+  homeAt = key;
   G.homeG.selectAll('*').remove();
   if (!l) return;
   const g = G.homeG.append('g').datum<Pt>({ p: proj(l)! });
@@ -339,6 +407,8 @@ const regOf = (g: Region) => (g === 'QT' ? 'T2' : g);
 
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 const cyOf = new WeakMap<Prov, number>();
+/** Tỉnh đang chuyển dần độ mờ (đổi hướng của chương) tới mức nào. */
+const dimTo = new WeakMap<Element, string>();
 let lastShift = 0;
 
 /** Repaint for the current year; `quiet` skips the regime-change wave (used for look changes). */
@@ -347,23 +417,39 @@ export function paintMap(quiet = false, y = S.year): void {
   const R = regime2(y), te = tourEra(), pk = te && y === S.year ? optOf(te) : curPick(y); // tour qua mốc khép chương (ĐBP 1954): hướng của chương ấy
   const dim = !!(pk && pk.fac && R.legend.includes(pk.fac));
   const op = (d: Prov) => (dim && R.reg[regOf(d.g)] !== pk!.fac ? 0.5 : 1);
-  const before = new Map<SVGPathElement, string | null>();
-  G.pv.each(function () { before.set(this, this.getAttribute('fill')); });
-  G.pv.interrupt().attr('fill', d => fill(R.reg[regOf(d.g)])).attr('opacity', op);
-  // Provinces that changed hands sweep in north → south, with a low drum.
-  const moved = G.pv.filter(function () { const b = before.get(this); return b != null && b !== this.getAttribute('fill'); });
-  if (!moved.empty() && !calm.matches && !quiet) {
+  // Provinces that changed hands sweep in north → south, with a low drum. Chỉ ghi khi màu / độ mờ đổi.
+  const moved = new Set<SVGPathElement>(), still = quiet || calm.matches;
+  G.pv.interrupt().each(function (d) {
+    const b = this.getAttribute('fill'), f = fill(R.reg[regOf(d.g)]);
+    if (b === f) return;
+    this.setAttribute('fill', f);
+    if (b != null) moved.add(this);
+  });
+  G.pv.each(function (d) {
+    const o = String(op(d));
+    if (moved.has(this) && !still) { d3.select(this).interrupt('dim'); dimTo.delete(this); return; } // sóng đổi chủ lo phần này
+    if (dimTo.get(this) === o || this.getAttribute('opacity') === o) return; // đang chuyển dần tới đúng mức ấy: không bắt đầu lại
+    // đổi hướng của chương (tỉnh không thuộc phe bạn mờ đi): chuyển dần 0,3 s như trước, bằng d3 (không CSS transition).
+    // Đang kéo thanh năm: đặt thẳng (mỗi khung hình vẽ lại, chuyển dần chỉ làm cả bản đồ vẽ lại suốt lúc kéo)
+    d3.select(this).interrupt('dim');
+    if (still || busy || this.getAttribute('opacity') === null) { dimTo.delete(this); this.setAttribute('opacity', o); return; }
+    dimTo.set(this, o);
+    d3.select(this).transition('dim').duration(300).attr('opacity', o).on('end', () => dimTo.delete(this));
+  });
+  if (moved.size && !still) {
     const cy = (d: Prov) => { if (!cyOf.has(d)) cyOf.set(d, path.centroid(d)[1]); return cyOf.get(d)!; };
-    moved.attr('opacity', 0.1).transition().delay(d => Math.max(0, cy(d) / H) * 520).duration(650).ease(d3.easeCubicOut).attr('opacity', op);
+    G.pv.filter(function () { return moved.has(this); }).attr('opacity', 0.1).transition().delay(d => Math.max(0, cy(d) / H) * 520).duration(650).ease(d3.easeCubicOut).attr('opacity', op);
     if (Date.now() - lastShift > 700) { SND.shift(); lastShift = Date.now(); }
   }
-  G.qtn.attr('fill', fill(R.reg.T1)).attr('opacity', R.l17 ? (dim && R.reg.T1 !== pk!.fac ? 0.5 : 1) : 0);
-  G.jpr.attr('opacity', R.jp ? 1 : 0);
-  G.la.attr('fill', fill(R.laos));
-  G.kh.attr('fill', fill(R.camb));
-  G.l17.attr('opacity', R.l17 ? 1 : 0);
-  G.indo.attr('opacity', R.laos || R.camb ? 1 : 0);
-  G.cities.selectAll<SVGTextElement, unknown>('text[data-city="Sài Gòn"]').text(y >= 1976 ? 'TP. HCM' : 'Sài Gòn');
+  put(G.qtn.node()!, 'fill', fill(R.reg.T1));
+  shown(G.qtn, R.l17 ? (dim && R.reg.T1 !== pk!.fac ? 0.5 : 1) : 0);
+  shown(G.jpr, R.jp ? 1 : 0);
+  put(G.la.node()!, 'fill', fill(R.laos));
+  put(G.kh.node()!, 'fill', fill(R.camb));
+  shown(G.l17, R.l17 ? 1 : 0);
+  shown(G.indo, R.laos || R.camb ? 1 : 0);
+  const sg = G.cities.select<SVGTextElement>('text[data-city="Sài Gòn"]'), sgT = y >= 1976 ? 'TP. HCM' : 'Sài Gòn';
+  if (sg.text() !== sgT) sg.text(sgT);
 
   // Event markers for the last three years. Keyed join: markers that stay in the window keep their element, so a
   // finger resting on one is not detached mid-gesture (that left d3's touch gesture stuck and the map frozen).
@@ -386,9 +472,9 @@ export function paintMap(quiet = false, y = S.year): void {
     const pulse = g.select('circle.pulse');
     if (on && pulse.empty()) g.insert('circle', ':first-child').attr('r', 8).attr('fill', 'none').style('stroke', 'var(--red)').attr('stroke-width', 2).attr('class', 'pulse');
     else if (!on && !pulse.empty()) pulse.remove();
-    const m = g.select('.mk');
-    if (v.diary) m.style('fill', on ? 'var(--red)' : 'var(--acc)');
-    else m.style('fill', on ? 'var(--red)' : 'var(--ink)').attr('opacity', on ? 1 : 0.65);
+    const m = g.select<SVGElement>('.mk').node()!;
+    if (v.diary) putS(m, 'fill', on ? 'var(--red)' : 'var(--acc)');
+    else { putS(m, 'fill', on ? 'var(--red)' : 'var(--ink)'); put(m, 'opacity', on ? 1 : 0.65); }
   });
   highlight();
   rescale();
@@ -408,16 +494,24 @@ let hlId: string | null = null;
 function highlight(): void {
   const v = isTouring() ? rt.focusEv : null;
   if (!v) {
-    if (hlId !== null) { G.spot.attr('opacity', 0); G.hl.attr('d', null); G.call.selectAll('*').remove(); hlId = null; }
+    if (hlId !== null) {
+      // vùng sáng mờ dần rồi tắt hẳn (không còn lớp phủ vô hình phải vẽ)
+      G.spot.interrupt().transition().duration(calm.matches ? 0 : 600).attr('opacity', 0).on('end', () => { if (hlId === null) G.spot.style('display', 'none'); });
+      G.hl.attr('d', null); G.call.selectAll('*').remove(); hlId = null;
+    }
     return;
   }
   if (hlId === v.id) return;
+  const was = hlId !== null;
   hlId = v.id;
   const p = proj(v.l)!;
   G.spotC.attr('cx', p[0]).attr('cy', p[1]);
-  G.spot.attr('opacity', S.theme === 'night' ? 0.62 : 0.55);
+  const sp = G.spot.interrupt().style('display', null);
+  if (!was) sp.attr('opacity', 0);
+  sp.transition().duration(calm.matches ? 0 : 600).attr('opacity', S.theme === 'night' ? 0.62 : 0.55);
   const f = featOf(v);
-  G.hl.attr('d', f ? path(f) : null).attr('filter', S.theme === 'night' ? 'url(#glow)' : null);
+  // quầng sáng (bộ lọc làm mờ) quanh tỉnh đang kể: chỉ ở mức hiệu ứng đủ
+  G.hl.attr('d', f ? path(f) : null).attr('filter', S.theme === 'night' && quality() >= 2 ? 'url(#glow)' : null);
   G.call.selectAll('*').remove();
   const g = G.call.append('g').attr('class', 'co').datum<Pt>({ p });
   const t = v.t.length > 34 ? v.t.slice(0, 33) + '…' : v.t;
@@ -436,7 +530,7 @@ function highlight(): void {
 export function fxHost(): { g: SVGGElement; defs: SVGDefsElement; proj: (l: [number, number]) => [number, number]; k: () => number; ppu: () => number } | null {
   if (!ready) return null;
   // k: chia cho k để nét / chữ giữ cỡ cố định; ppu: px màn hình cho một đơn vị chiếu ở mức zoom hiện tại
-  return { g: G.fx.node()!, defs: G.defs.node()!, proj: l => proj(l) as [number, number], k: () => (G.k || 1) / G.f, ppu: () => (G.k || 1) * (G.px || 1) };
+  return { g: G.fx.node()!, defs: G.fxdefs.node()!, proj: l => proj(l) as [number, number], k: () => (G.k || 1) / G.f, ppu: () => (G.k || 1) * (G.px || 1) };
 }
 
 /** Zoom level that frames the province (or Laos/Cambodia) containing the event. */
@@ -474,6 +568,7 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number, padB
 /** Bay tới phép biến đổi `t`; giảm chuyển động: đặt ngay, không bay. */
 function fly(t: d3.ZoomTransform, ms: number): void {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { G.svg.interrupt().call(G.zoom.transform, t); return; }
+  watch(ms); // đo khung hình lúc bay: máy chậm thì tự bớt hiệu ứng (ui/quality.ts)
   G.svg.transition().duration(ms).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }
 

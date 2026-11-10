@@ -31,7 +31,7 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await page.getByRole('button', { name: /Xem chương 1 diễn ra/ }).click();
   await expect(page.locator('#tourb')).toBeVisible();
   await expect(page.locator('#main')).toHaveJSProperty('inert', false);
-  await expect(page.locator('#map g.co')).toHaveCount(1); // tour callout on the map
+  await expect(page.locator('#mapfx g.co')).toHaveCount(1); // tour callout on the map
   // the first stop (Đà Nẵng 1858) opens with a title card (sides, no ranking), then a small slug replaces the population tag
   await expect(page.locator('#mapwrap .ttl')).toContainText('Trận đánh');
   expect(await page.locator('#mapwrap .ttl .sides span').count()).toBeGreaterThanOrEqual(1);
@@ -42,7 +42,7 @@ test('first run: onboarding → turning point → outcome → chapter tour', asy
   await expect(lt).toBeVisible({ timeout: 8000 });
   await expect(lt.locator('.lt-h')).toContainText('1/3');
   await expect(lt.locator('.lt-h')).toContainText('2/3', { timeout: 7000 });
-  expect(await page.locator('#map g.scene g.bd').count()).toBeGreaterThanOrEqual(2);
+  expect(await page.locator('#mapfx g.scene g.bd').count()).toBeGreaterThanOrEqual(2);
   // "›" steps the battle beat by beat (a tap on the caption does the same), then moves on to the next event
   await page.locator('#tourb [data-t=next]').click();
   await expect(lt.locator('.lt-h')).toContainText('3/3', { timeout: 1500 });
@@ -384,7 +384,43 @@ test('appearance: theme picked at onboarding, changed in settings, kept after re
   await expect(page.getByRole('switch', { name: 'Đường biên hiện nay' })).toHaveAttribute('aria-checked', 'true');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'poster');
-  await expect(page.locator('#map rect[fill="url(#p-sea)"]')).toHaveCount(1); // poster's half-tone sea
+  await expect(page.locator('#mapbg rect[fill="url(#p-sea)"]')).toHaveCount(1); // poster's half-tone sea
+  expect(errors).toEqual([]);
+});
+
+test('smooth map: static layers apart, ripples rest while moving, nothing rebuilt while scrubbing, effects level in settings', async ({ page }) => {
+  const errors = await boot(page, midGame);
+  // sea, graticule and coastal ripples live on their own background layer; the tour spotlight is off, not just transparent
+  await expect(page.locator('#mapbg .rip')).toHaveCount(1);
+  await expect(page.locator('#map .rip')).toHaveCount(0);
+  await expect(page.locator('#map rect[fill="url(#spotg)"]')).toHaveCSS('display', 'none');
+  await expect(page.locator('#map mask')).toHaveCount(0);
+  // the ripples step aside while the map flies and come back once it rests
+  await page.locator('#zin').click();
+  await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'hidden');
+  await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'visible', { timeout: 3000 });
+  // dragging the timeline inside one chapter keeps the guide's portrait (it used to blink out every frame)
+  const guide = await page.locator('#eraR .av').elementHandle();
+  const trk = (await page.locator('#trk').boundingBox())!, x = (y: number) => trk.x + ((y - 1858) / (2026 - 1858)) * trk.width;
+  await page.mouse.move(x(1954.5), trk.y + trk.height / 2);
+  await page.mouse.down();
+  for (const y of [1956, 1958, 1961, 1963]) await page.mouse.move(x(y + 0.5), trk.y + trk.height / 2);
+  await page.mouse.up();
+  await expect(page.locator('#yr')).toHaveText('1963');
+  expect(await guide!.evaluate(e => e.isConnected)).toBe(true);
+  // Hồ sơ → Cài đặt: effects level (auto by default); "Nhẹ" drops the ripples and is kept after a reload
+  await page.locator('.tab[data-t=me]').click();
+  await expect(page.getByRole('button', { name: 'Tự động', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Nhẹ', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '1');
+  await expect(page.locator('#mapbg .rip')).toHaveClass(/off/);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '1');
+  await page.locator('.tab[data-t=me]').click();
+  await expect(page.getByRole('button', { name: 'Nhẹ', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Tự động', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '2');
+  await expect(page.locator('#mapbg .rip')).not.toHaveClass(/off/);
   expect(errors).toEqual([]);
 });
 
@@ -503,7 +539,7 @@ test('an event page replays its battle scene; Back closes the replay without lea
   await expect(page.locator('#mapwrap .lt')).toContainText('Độc Lập', { timeout: 1500 });
   await page.locator('#mapwrap .lt').click();
   await expect(page.locator('#mapwrap .lt')).toContainText('A1, C1', { timeout: 1500 });
-  await expect(page.locator('#map g.scene text.fx-at')).not.toHaveCount(0); // place names at the arrow heads
+  await expect(page.locator('#mapfx g.scene text.fx-at')).not.toHaveCount(0); // place names at the arrow heads
   await page.goBack();
   await expect(page.locator('#replb')).toHaveCount(0);
   expect(page.url()).toContain('localhost');
@@ -547,21 +583,21 @@ test('battle pieces follow the sources: a doubted attack, an engagement, an unop
   };
   // Vịnh Bắc Bộ: the 4.8 attack is shown dotted with a "?" (declassified 2005); Maddox and the torpedo boats engage
   await replay('vb64');
-  await expect(page.locator('#map g.scene text.fx-q')).toHaveCount(1, { timeout: 20000 });
-  await expect(page.locator('#map g.scene[data-contacts="1"]')).toHaveCount(1);
-  await expect(page.locator('#map g.scene g.pc[data-kind=boat]').first()).toBeAttached();
+  await expect(page.locator('#mapfx g.scene text.fx-q')).toHaveCount(1, { timeout: 20000 });
+  await expect(page.locator('#mapfx g.scene[data-contacts="1"]')).toHaveCount(1);
+  await expect(page.locator('#mapfx g.scene g.pc[data-kind=boat]').first()).toBeAttached();
   // Vĩnh Long 1867: handed over without resistance, so no explosions
   await replay('vl67');
   await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('3/3', { timeout: 15000 });
   await page.waitForTimeout(2500);
-  await expect(page.locator('#map g.scene circle[fill="url(#fx-boom)"]')).toHaveCount(0);
+  await expect(page.locator('#mapfx g.scene circle[fill="url(#fx-boom)"]')).toHaveCount(0);
   // Điện Biên Phủ: the siege of Hồng Cúm draws a ring; the battle closes on its end date, the event's own words,
   // the three fallen French positions greyed out, and a way into the perspectives
   await replay('dbp');
-  await expect(page.locator('#map g.scene circle.fx-ring')).toHaveCount(1, { timeout: 16000 });
+  await expect(page.locator('#mapfx g.scene circle.fx-ring')).toHaveCount(1, { timeout: 16000 });
   await expect(page.locator('#mapwrap .endw .stamp')).toHaveText('7.5.1954', { timeout: 18000 }); // beats are read at ≥2.8 s each
   await expect(page.locator('#mapwrap .lt.end p')).toContainText('thất thủ');
-  await expect(page.locator('#map g.scene rect[fill-opacity="0"]')).toHaveCount(3, { timeout: 2000 });
+  await expect(page.locator('#mapfx g.scene rect[fill-opacity="0"]')).toHaveCount(3, { timeout: 2000 });
   await page.locator('#mapwrap .lt.end [data-tab=v]').click();
   await expect(page.locator('.ov #et button[data-k="v"]')).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('#replb')).toHaveCount(0);

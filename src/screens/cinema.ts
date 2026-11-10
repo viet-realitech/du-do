@@ -4,6 +4,7 @@ import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, lineage, rank } from '../play';
 import { wikiFor, probe } from '../wiki';
 import { esc, app } from '../ui/dom';
+import { watch } from '../ui/quality';
 import { SND, buzz } from '../audio';
 import { mood } from '../music';
 import { fxOn } from '../scene';
@@ -44,10 +45,19 @@ export function eraImage(e: Era, ms: number, big = false): Promise<string | null
   return Promise.race([preloadEra(e, big), new Promise<null>(res => setTimeout(() => res(null), ms))]);
 }
 
-const imgHtml = (src: string | null, y: number) => (src ? `<div class="cine-img${y < 1976 ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -5 : 5}%;--ky:${Math.round((Math.random() - 0.5) * 6)}%"><img class="bgb" alt="" src="${esc(src)}"><img class="fg" alt="" src="${esc(src)}"></div>` : '<div class="cine-img none"></div>');
+/** Nền mờ của ảnh nhỏ / khác chiều: bản thu nhỏ 60 px của Commons phóng ra toàn màn hình tự nhoè, không cần bộ lọc
+    blur(26px) trên một ảnh toàn màn hình (iPad luôn rơi vào chế độ này; năm đếm lên, cảnh chuyển mờ bắt vẽ lại nền
+    mờ ấy mỗi khung hình). Ảnh không phải bản thu nhỏ của Commons: giữ bộ lọc. */
+const tiny = (src: string) => (/\/\d+px-[^/]+$/.test(src) ? src.replace(/\/(\d+)px-([^/]+)$/, '/60px-$2') : '');
+const imgHtml = (src: string | null, y: number) => (src ? `<div class="cine-img${y < 1976 ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -5 : 5}%;--ky:${Math.round((Math.random() - 0.5) * 6)}%"><img class="bgb${tiny(src) ? ' tiny' : ''}" alt="" src="${esc(tiny(src) || src)}"><img class="fg" alt="" src="${esc(src)}"></div>` : '<div class="cine-img none"></div>');
 /** Ảnh quá nhỏ cho màn hình (phóng hơn ~1,7 lần thì vỡ hạt) hay khác chiều (ảnh ngang trên màn dọc): hiện trọn ảnh, nền là
     chính ảnh ấy làm mờ, không phóng kiểu Ken Burns. */
 function fitLowRes(root: ParentNode): void {
+  // bản thu nhỏ không tải được: về ảnh lớn có bộ lọc nhoè như trước
+  root.querySelectorAll<HTMLImageElement>('.cine-img img.bgb.tiny').forEach(b => b.addEventListener('error', () => {
+    const fg = b.parentElement?.querySelector<HTMLImageElement>('img.fg');
+    if (fg) { b.classList.remove('tiny'); b.src = fg.src; }
+  }, { once: true }));
   root.querySelectorAll<HTMLImageElement>('.cine-img img.fg').forEach(img => {
     const check = () => {
       if (!img.naturalWidth) return;
@@ -79,9 +89,12 @@ export function opener(e: Era, done: (played: boolean) => void): void {
   SND.gong();
   buzz([30, 60, 30]);
   let over = false;
-  const shut = () => { over = true; app.inert = false; if (killOpener === kill) killOpener = null; box.classList.add('out'); setTimeout(() => box.remove(), 450); };
-  const kill = () => { if (!over) shut(); };
-  const end = () => { if (over) return; shut(); done(true); };
+  const fade = () => { box.classList.add('out'); setTimeout(() => box.remove(), 450); };
+  const shut = () => { over = true; app.inert = false; if (killOpener === kill) killOpener = null; };
+  const kill = () => { if (!over) { shut(); fade(); } };
+  // hết màn: dựng bảng chọn hướng ngay dưới màn còn đặc, hai khung hình sau mới mờ màn đi; lần vẽ đầu của bảng (cả trang
+  // chữ và nền tối) không rơi vào giữa lúc màn đang mờ dần (một khung ~300 ms trên CPU chậm)
+  const end = () => { if (over) return; shut(); done(true); requestAnimationFrame(() => requestAnimationFrame(fade)); };
   killOpener = kill;
   box.onclick = end;
   app.inert = true; // bàn phím / trình đọc màn hình không lọt xuống bản đồ phía sau
@@ -96,7 +109,7 @@ export function opener(e: Era, done: (played: boolean) => void): void {
     yr.textContent = String(Math.round(y0 + (e.cy - y0) * q));
     if (k < 1) requestAnimationFrame(tick); else { yr.classList.add('hit'); SND.stamp(); }
   };
-  setTimeout(() => requestAnimationFrame(tick), 350);
+  setTimeout(() => { requestAnimationFrame(tick); watch(dur); }, 350); // đo khung hình lúc năm đếm lên (ui/quality.ts)
   setTimeout(end, 3600);
 }
 
@@ -250,6 +263,7 @@ export function montage(): void {
     sc.innerHTML = html;
     stage.querySelectorAll('.scene-s').forEach(o => { o.classList.add('gone'); setTimeout(() => o.remove(), 700); });
     stage.appendChild(sc);
+    watch(900); // lúc hai cảnh chồng mờ vào nhau
     fitLowRes(sc);
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {

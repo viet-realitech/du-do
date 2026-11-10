@@ -12,6 +12,7 @@ import { esc, layer, sheet, ghost } from '../ui/dom';
 import { SND, buzz } from '../audio';
 import { hasTTS, hasVoice, speak } from '../narration';
 import { openShare, resetAll } from './ending';
+import { qmode, setQMode, type QMode } from '../ui/quality';
 import './about';
 
 /** Value compass: cumulative points per value (max ≈ 18). */
@@ -67,8 +68,10 @@ export function paneMe(): void {
   ${sw('music', 'Nhạc nền', S.music)}
   ${sw('narr', `Giọng đọc${hasTTS && !hasVoice() ? ' <span class="muted" style="font-size:13px">· chưa có giọng tiếng Việt</span>' : ''}`, S.narr)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
-  ${sw('haptic', 'Rung', S.haptic)}
+  ${sw('haptic', 'Rung <span class="muted" style="font-size:13px">· máy và khung bản đồ khi pháo nổ</span>', S.haptic)}
   ${sw('fx', 'Cảnh động <span class="muted" style="font-size:13px">· trận đánh 3D, phim tư liệu</span>', S.fx)}
+  <div class="row sb" style="padding:6px 0"><span class="muted">Hiệu ứng</span><div class="seg" style="width:240px;flex:none">${([['auto', 'Tự động'], ['full', 'Đầy đủ'], ['lite', 'Nhẹ']] as [QMode, string][]).map(([v, l]) => `<button class="${qmode() === v ? 'on' : ''}" style="height:30px;font-size:14px" data-a="qmode" data-v="${v}" aria-pressed="${qmode() === v}">${l}</button>`).join('')}</div></div>
+  <p class="muted" style="font-size:13px;margin:0 0 4px">Tự động: máy chạy chậm thì tự bớt gợn sóng, khói và rung để bản đồ mượt hơn.</p>
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
   ${done === 6 || (!isPlay() && S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
@@ -89,6 +92,7 @@ on('set', el => {
   if ((k === 'fx' || k === 'sound') && !S[k]) endScene();
   if (k === 'grain' || k === 'modern' || k === 'grat') { applyTheme(); SND.tick(); }
 });
+on('qmode', el => { setQMode(el.dataset.v as QMode); paneMe(); SND.tick(); });
 on('rate', el => { S.rate = +el.dataset.r!; save(); paneMe(); speak(`Tốc độ ${el.dataset.l!.toLowerCase()}.`); });
 on('share', () => openShare());
 // Xoá cả dòng họ / tiến trình: hỏi lại trước (nút Huỷ được chọn sẵn)
