@@ -170,7 +170,7 @@ function wireTiles(root: HTMLElement, v: HistEvent, w: WikiInfo): void {
 
 const tile = (v: HistEvent, w: WikiInfo, i: number) => {
   const m = w.media[i];
-  return `<button data-a="media" data-id="${v.id}" data-i="${i}" aria-label="Xem tư liệu ${i + 1}"><img src="${m.thumb || m.src}" alt="" loading="lazy" data-i="${i}">${m.type === 'video' ? '<span class="vplay">▶</span>' : ''}</button>`;
+  return `<button data-a="media" data-id="${v.id}" data-i="${i}" aria-label="Xem tư liệu ${i + 1}"><img src="${m.thumb || m.src}" alt="" loading="lazy" data-i="${i}">${m.type === 'video' ? `<span class="vplay">${icon('play', 22)}</span>` : ''}</button>`;
 };
 
 function fillStrip(v: HistEvent, w: WikiInfo): void {

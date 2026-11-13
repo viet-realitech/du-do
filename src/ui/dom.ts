@@ -102,21 +102,20 @@ export function toast(html: string, onShow?: () => void, wait = false): void {
   tq.push({ html, onShow, wait });
   if (!tBusy) nextToast();
 }
-/** Đang có thông báo hiện hay chờ hiện (huy hiệu chờ tới lượt). */
-export const toastBusy = () => tBusy;
 function nextToast(): void {
-  const t = tq[0];
-  if (!t) { tBusy = false; return; }
+  if (!tq.length) { tBusy = false; return; }
   tBusy = true;
   whenClear(() => {
     const n = document.createElement('div');
     n.setAttribute('role', 'status');
-    n.innerHTML = t.html;
+    n.innerHTML = tq[0].html;
     n.style.visibility = 'hidden';
     app.appendChild(n);
-    const spot = toastSpot(n);
-    if (!spot && t.wait) { n.remove(); setTimeout(nextToast, 600); return; }
-    tq.shift();
+    // huy hiệu đang chờ chỗ không chặn thông báo trả lời một cái chạm xếp sau nó
+    const i = toastSpot(n) || !tq[0].wait ? 0 : tq.findIndex(x => !x.wait);
+    if (i < 0) { n.remove(); setTimeout(nextToast, 600); return; }
+    const [t] = tq.splice(i, 1);
+    if (i) { n.innerHTML = t.html; toastSpot(n); }
     n.style.visibility = '';
     t.onShow?.();
     setTimeout(() => { n.remove(); setTimeout(nextToast, 300); }, 2800);

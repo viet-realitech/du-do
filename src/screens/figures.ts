@@ -3,6 +3,7 @@ import { bornLine } from '../data/surnames';
 import { S, save, figOpen, figsMet } from '../state';
 import { esc, layer, sheet, toast } from '../ui/dom';
 import { av, initials } from '../ui/bits';
+import { icon } from '../ui/icons';
 import { buzz } from '../audio';
 import { checkBadges } from '../badges';
 import { FIGIMG, figFocus, figImgPage } from '../wiki';
@@ -19,10 +20,11 @@ export function openFig(id: string): void {
   if (!S.figSeen.includes(id)) { S.figSeen.push(id); save(); }
   const chose = ERAS.flatMap(e => e.opts.filter(o => o.guide === id).map(o => [e, o] as const));
   const img = FIGIMG[id] ? ` src="${esc(FIGIMG[id])}" focus="${figFocus(id)}" credit="Wikimedia Commons" credit-href="${esc(figImgPage(id))}"` : '';
-  sheet(`<div class="row" style="gap:16px;align-items:center"><div style="width:96px;height:96px;flex:none"><image-slot id="fg-${id}" shape="circle" placeholder="Chân dung" initials="${esc(initials(f[0]))}"${img}></image-slot></div>
-  <div><div class="mono muted">${f[1]}${sideName(id) ? ' · ' + sideName(id) : ''}</div><h2 style="margin-top:4px">${f[0]}</h2><div class="muted" style="font-style:italic">${f[2]}${bornLine(id) ? ` · ${esc(bornLine(id))}` : ''}</div></div></div>
+  // ảnh hồ sơ chữ nhật khung đôi (như thẻ nhân vật trong bảng), tên / năm / vai trò đặt bên cạnh như nhãn bảo tàng
+  sheet(`<div class="fhead"><div class="fph"><image-slot id="fg-${id}" shape="rect" placeholder="Chân dung" initials="${esc(initials(f[0]))}"${img}></image-slot></div>
+  <div><div class="mono muted">${f[1]}${sideName(id) ? ' · ' + sideName(id) : ''}</div><h2 style="margin-top:4px">${f[0]}</h2><div class="muted" style="font-style:italic;margin-top:2px">${f[2]}${bornLine(id) ? ` · ${esc(bornLine(id))}` : ''}</div></div></div>
   <p style="margin-top:16px">${f[3]}</p>
-  ${figEvents(id).length ? `<div class="rule"></div><div class="mono muted">Sự kiện liên quan</div>${figEvents(id).map(v => `<button class="row evl" data-a="ev" data-id="${v.id}"><span class="mono muted">${v.y}</span><span style="flex:1">${esc(v.t)}</span><span class="muted">›</span></button>`).join('')}` : ''}
+  ${figEvents(id).length ? `<div class="rule"></div><div class="mono muted">Sự kiện liên quan</div>${figEvents(id).map(v => `<button class="row evl" data-a="ev" data-id="${v.id}"><span class="mono muted">${v.y}</span><span style="flex:1">${esc(v.t)}</span><span class="muted">${icon('next', 16)}</span></button>`).join('')}` : ''}
   ${chose.length ? `<div class="rule"></div><div class="mono muted">Đồng hành khi bạn chọn</div>${chose.map(([e, o]) => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${e.cy}</span> · ${o.label}${S.picks[e.id] === o.id ? ' <span class="mono" style="color:var(--acc)">· đã chọn</span>' : ''}</div>`).join('')}` : ''}
   <p class="muted" style="font-size:13px;margin-top:16px">Tiểu sử tóm lược từ sử liệu công khai.</p>`, true).dataset.fig = id; // trang sự kiện mở từ đây thì đóng xong mở lại thẻ này
   checkBadges();

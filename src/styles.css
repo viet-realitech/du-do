@@ -445,7 +445,11 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .kick > .mono:first-child { color: var(--acc) }
 .kick.must > .mono:first-child { color: var(--red) }
 .kick .i { display: inline-block; vertical-align: -3px; margin-right: 5px }
-@container (max-width: 520px) { .kick { flex-direction: column; align-items: flex-start } }
+@container (max-width: 520px) {
+  .kick { flex-direction: column; align-items: flex-start }
+  h2 { font-size: 26px } /* tờ ở cột bên (~340 px chữ): tít 30 px gãy ba dòng */
+  .opt h3 { font-size: 19.5px }
+}
 .era-row { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule) }
 .era-row .n { font: 800 28px/1 var(--disp); color: var(--ink3) }
 .bar { height: 6px; background: var(--paper3); overflow: hidden }
@@ -481,6 +485,9 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .fcard { display: grid; grid-template-columns: 60px 1fr; column-gap: 12px; align-content: start; border-top: 1px solid var(--rule); padding: 14px 0 12px; text-align: left }
 .fcard > .av { grid-row: span 3; width: 60px; height: 76px; font-size: 20px; border-radius: 1px; border: 1px solid var(--ink3); box-shadow: 0 0 0 3px var(--paper), 0 0 0 3.75px var(--rule) }
 .fcard .nm.h4 { align-self: end }
+/* bảng nhân vật: ảnh hồ sơ 96 × 120 khung đôi bên cạnh tên (không còn ảnh tròn 96 px) */
+.fhead { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 18px; align-items: center }
+.fph { width: 96px; height: 120px; border: 1px solid var(--ink3); box-shadow: 0 0 0 3px var(--paper), 0 0 0 3.75px var(--rule); border-radius: 1px; overflow: hidden }
 .fcard.off { opacity: .55 }
 .fcard.off .nm { filter: blur(3px) }
 input.f { width: 100%; height: 50px; border: 1px solid var(--ink); border-radius: var(--r); background: var(--paper); padding: 0 14px; font: 400 19px var(--serif); color: var(--ink) }
@@ -783,7 +790,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .pane, .ov { padding-left: max(var(--gut), calc((100% - var(--read)) / 2)); padding-right: max(var(--gut), calc((100% - var(--read)) / 2)) }
   .ov.splash, .ov.intro { padding-left: max(var(--gut), calc((100% - 640px) / 2)); padding-right: max(var(--gut), calc((100% - 640px) / 2)) }
   .sp-t { font-size: 96px }
-  .plate-svg { height: clamp(200px, 40vh, 460px) }
+  .plate-svg { height: clamp(200px, 48vh, 640px) }
   .hpick .plate-svg { height: 250px }
   .snames { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) }
   /* máy tính bảng dọc: bảng neo đáy trọn bề ngang (không còn tờ 640 px hở hai bên), chữ trong một cột đọc ~680 px;
