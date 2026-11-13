@@ -351,9 +351,10 @@ test('map sheet: new players open on Lưu trữ (a saved theme stays), the popul
   await expect(page.locator('#play use')).toHaveAttribute('href', '#i-pause');
   await expect(page.locator('#tourb [data-t=stop] use')).toHaveAttribute('href', '#i-stop');
   // phone: the tour bar is the sheet's lower margin band, not a card floating over the map
-  const map = (await page.locator('#mapwrap').boundingBox())!, bar = async () => (await page.locator('#tourb').boundingBox())!;
-  await expect.poll(async () => { const b = await bar(); return Math.abs(b.y + b.height - (map.y + map.height)); }).toBeLessThan(3); // after the bar slides in
-  expect(Math.abs((await bar()).x - map.x)).toBeLessThan(3);
+  // (measured against the sheet inside its 6px neatline band, i.e. the frame's padding box)
+  const map = await page.locator('#mapwrap').evaluate(e => { const r = e.getBoundingClientRect(); return { x: r.left + e.clientLeft, y: r.top + e.clientTop, w: e.clientWidth, h: e.clientHeight }; });
+  const bar = async () => (await page.locator('#tourb').boundingBox())!;
+  await expect.poll(async () => { const b = await bar(); return Math.max(Math.abs(b.y + b.height - (map.y + map.h)), Math.abs(b.x - map.x), Math.abs(b.width - map.w)); }).toBeLessThan(2); // after the bar slides in
   await page.locator('#tourb [data-t=stop]').click();
   await expect(page.locator('#play use')).toHaveAttribute('href', '#i-play');
   expect(errors).toEqual([]);
