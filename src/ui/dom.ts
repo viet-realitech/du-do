@@ -88,8 +88,15 @@ function toastSpot(n: HTMLElement): string | null {
   const cls = wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : top.matches('.ov') ? 'under' : 'top';
   n.className = 'toast ' + cls;
   if (!box || cls === 'under') return cls;
-  const a = n.getBoundingClientRect(), b = box.getBoundingClientRect();
+  // đo theo bố cục, không theo khung hình đang chạy hiệu ứng: tờ vừa mở còn đang trượt lên, thông báo đang trượt vào
+  const a = place(n), b = place(box as HTMLElement);
   return a.bottom + 6 <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right ? cls : null;
+}
+/** Hộp của phần tử theo bố cục (offset*, bỏ qua transform của hiệu ứng), toạ độ trong #app. */
+function place(e: HTMLElement): { top: number; left: number; bottom: number; right: number } {
+  let top = 0, left = 0;
+  for (let x: HTMLElement | null = e; x && x !== app; x = x.offsetParent as HTMLElement | null) { top += x.offsetTop; left += x.offsetLeft; }
+  return { top, left, bottom: top + e.offsetHeight, right: left + e.offsetWidth };
 }
 
 /* Thông báo xếp hàng: mỗi lúc một cái, cái sau chờ cái trước tắt (trước đây huy hiệu cách nhau 1,4 s mà mỗi cái sống
