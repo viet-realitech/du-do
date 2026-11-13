@@ -3,8 +3,9 @@ import { S, optOf, familyName, archetype, nameChain } from '../state';
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, rank, endingNow, bigChoices, factsFromState } from '../play';
 import { rarityLine, chronLine } from '../data/endings';
-import { wikiFor, probe } from '../wiki';
+import { wikiFor } from '../wiki';
 import { esc, app } from '../ui/dom';
+import { icon } from '../ui/icons';
 import { watch } from '../ui/quality';
 import { SND, buzz } from '../audio';
 import { mood } from '../music';
@@ -13,61 +14,88 @@ import { speak, hush } from '../narration';
 import { recording } from '../voice';
 import { chrKey, epiKey } from '../speech';
 
-/* Điện ảnh: màn mở chương ở mỗi điểm rẽ (ảnh tư liệu chạy chậm, năm đếm lên, tên chương) và "phim hành trình" ở
-   kết cục (mỗi thế hệ một cảnh: ảnh, năm, dòng gia phả). Chạm để bỏ qua / sang cảnh. */
+/* Điện ảnh: màn mở chương ở mỗi điểm rẽ (ảnh tư liệu, năm đếm lên, tên chương) và "phim hành trình" ở kết cục (mỗi thế
+   hệ một cảnh: ảnh, năm, dòng gia phả). Chạm để bỏ qua / sang cảnh.
+   Như phòng xem tư liệu của kho lưu trữ: nền tối, ảnh là một bản in đặt trong lề giấy bồi (passe-partout), trọn khung,
+   đúng tỉ lệ, không phóng quá cỡ thật 1,5 lần; chữ nằm trên tấm nhãn riêng (bên phải khi màn ngang, bên dưới khi màn
+   dọc), không bao giờ đè lên ảnh. Không nền nhoè, không dải đen che mép ảnh. */
 
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 /** Sự kiện đại diện cho mỗi điểm rẽ (ảnh của màn mở chương và của phim hành trình). */
 const KEY_EV: Record<string, string> = { e1: 'dn58', e2: 'cv85', e3: 'yb30', e4: 'ng45', e5: 'dbp', e6: 'sg75' };
+/** Chú thích ảnh tư liệu của từng chương, theo tên tập tin trên Commons (bài Wikipedia đổi ảnh đầu bài thì dùng chú
+    thích của bài, không thì chỉ ghi nguồn). `true`: ảnh chụp thời nay, không giả màu phim cũ. */
+const KEY_CAP: Record<string, [string, boolean?]> = {
+  'french ships at danang 1858.jpg': ['Tàu chiến Pháp ở Đà Nẵng, 1858 · tranh khắc thời ấy'],
+  'ngomon2.jpg': ['Ngọ Môn, Kinh thành Huế · ảnh chụp thời nay', true],
+  'portraits of 13 nationalists executed in yen-bay on 17 june 1930.png': ['Mười ba đảng viên Việt Nam Quốc dân Đảng bị xử tử ở Yên Bái, 17.6.1930 · trang báo đương thời'],
+  'cách mạng tháng 8 b.jpg': ['Người Hà Nội tiến vào Phủ Khâm sai Bắc Bộ, 19.8.1945'],
+  'victory in battle of dien bien phu.jpg': ['Lá cờ trên nóc hầm De Castries, 1954 · cảnh quay lại cho phim tư liệu của Roman Karmen'],
+  'tank 843 and tank 390 at the gates of independence palace.jpg': ['Xe tăng 843 và 390 ở cổng Dinh Độc Lập, 30.4.1975'],
+};
+const fileKey = (s: string) => decodeURIComponent(s).replace(/_/g, ' ').replace(/^(File|Tập tin|Image|Hình):/i, '').trim().toLowerCase();
 
-const cache = new Map<string, Promise<string | null>>();
-async function load(e: Era, big: boolean): Promise<string | null> {
+/** Ảnh tư liệu đã tải xong: địa chỉ, cỡ thật (dựng khung đúng tỉ lệ ngay, không chờ sự kiện load, không đo lại) và chú thích. */
+export interface Pic { src: string; w: number; h: number; cap: string; now?: boolean }
+
+/** Bề ngang ảnh Commons cần: cạnh dài màn hình × ~0,62 (phần dành cho bản in) × mật độ điểm ảnh (tính tối đa 2).
+    Commons chỉ cấp các cỡ chuẩn (960 / 1280 / 1920…; cỡ lạ như 1600 bị từ chối 400). */
+function want(): number {
+  const need = Math.max(innerWidth, innerHeight) * 0.62 * Math.min(2, devicePixelRatio || 1);
+  return need > 1280 ? 1920 : need > 960 ? 1280 : 960;
+}
+/** Tải và giải mã sẵn ảnh (cảnh chuyển không khựng vì giải mã ảnh 1920 px); null nếu hỏng hay nhỏ hơn `minW`. */
+function grab(src: string, minW: number, cap: [string, boolean?]): Promise<Pic | null> {
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => {
+      if (im.naturalWidth < minW) { res(null); return; }
+      const p: Pic = { src, w: im.naturalWidth, h: im.naturalHeight, cap: cap[0], now: cap[1] };
+      (im.decode ? im.decode() : Promise.resolve()).then(() => res(p), () => res(p));
+    };
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+}
+async function load(e: Era): Promise<Pic | null> {
   const v = EV.find(x => x.id === KEY_EV[e.id]);
   if (!v) return null;
   const w = await wikiFor(v).catch(() => null);
   const m = w?.media.find(x => x.type === 'image' && !x.bad);
   if (!m) return null;
-  const src = big ? m.src : m.thumb || m.src;
-  // phim hành trình (toàn màn hình): ảnh thu nhỏ của Commons (…/500px-…) thì thử bản 1280 px trước (Commons chỉ cấp
-  // các cỡ chuẩn: 1280 / 1920…; 1600 bị từ chối 400). Ảnh gốc nhỏ hơn thì probe hỏng, dùng lại ảnh thu nhỏ.
-  const wide = big ? src.replace(/\/(\d+)px-/, (x, n) => (+n < 1280 ? '/1280px-' : x)) : src;
-  if (wide !== src && (await probe(wide, 600))) return wide;
-  return (await probe(src, 120)) ? src : null;
+  const cap = KEY_CAP[fileKey(m.file)] || [m.cap ? m.cap.replace(/\s+/g, ' ').trim() : 'Ảnh tư liệu'];
+  // ảnh thu nhỏ của Commons (…/960px-…): thử cỡ chuẩn lớn hơn mà màn hình cần; ảnh gốc nhỏ hơn cỡ ấy thì Commons báo lỗi,
+  // lùi một cỡ, cuối cùng dùng chính ảnh của bài
+  const n = +(m.src.match(/\/(\d+)px-[^/]+$/)?.[1] || 0), top = want();
+  for (const c of [1920, 1280]) {
+    if (!n || c <= n || c > top) continue;
+    const p = await grab(m.src.replace(/\/\d+px-([^/]+)$/, `/${c}px-$1`), 600, cap);
+    if (p) return p;
+  }
+  return grab(m.src, 120, cap);
 }
+const cache = new Map<string, Promise<Pic | null>>();
+/** Kết quả đã có (kể cả không có ảnh): màn mở chương dựng khung ngay, không phải chờ. */
+const got = new Map<string, Pic | null>();
 /** Tải sẵn ảnh tư liệu của chương (một lần; gọi trước khi cần: lúc tour chương trước chạy, lúc mở màn kết). */
-export function preloadEra(e: Era | undefined, big = false): Promise<string | null> {
+export function preloadEra(e: Era | undefined): Promise<Pic | null> {
   if (!e) return Promise.resolve(null);
-  const k = e.id + (big ? ':b' : '');
-  if (!cache.has(k)) cache.set(k, load(e, big).catch(() => null));
-  return cache.get(k)!;
+  if (!cache.has(e.id)) cache.set(e.id, load(e).catch(() => null).then(p => { got.set(e.id, p); return p; }));
+  return cache.get(e.id)!;
 }
 /** Ảnh tư liệu của chương (ảnh đầu bài Wikipedia của sự kiện đại diện), hoặc null nếu chưa có trong `ms`. */
-export function eraImage(e: Era, ms: number, big = false): Promise<string | null> {
-  return Promise.race([preloadEra(e, big), new Promise<null>(res => setTimeout(() => res(null), ms))]);
+export function eraImage(e: Era, ms: number): Promise<Pic | null> {
+  return Promise.race([preloadEra(e), new Promise<null>(res => setTimeout(() => res(null), ms))]);
 }
+// ván mới: màn mở chương đầu tiên đến ngay sau phần giới thiệu, tải sẵn ảnh của nó khi máy rảnh
+if (!S.picks.e1) setTimeout(() => void preloadEra(ERAS[0]), 4000);
 
-/** Nền mờ của ảnh nhỏ / khác chiều: bản thu nhỏ 60 px của Commons phóng ra toàn màn hình tự nhoè, không cần bộ lọc
-    blur(26px) trên một ảnh toàn màn hình (iPad luôn rơi vào chế độ này; năm đếm lên, cảnh chuyển mờ bắt vẽ lại nền
-    mờ ấy mỗi khung hình). Ảnh không phải bản thu nhỏ của Commons: giữ bộ lọc. */
-const tiny = (src: string) => (/\/\d+px-[^/]+$/.test(src) ? src.replace(/\/(\d+)px-([^/]+)$/, '/60px-$2') : '');
-const imgHtml = (src: string | null, y: number) => (src ? `<div class="cine-img${y < 1976 ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -5 : 5}%;--ky:${Math.round((Math.random() - 0.5) * 6)}%"><img class="bgb${tiny(src) ? ' tiny' : ''}" alt="" src="${esc(tiny(src) || src)}"><img class="fg" alt="" src="${esc(src)}"></div>` : '<div class="cine-img none"></div>');
-/** Ảnh quá nhỏ cho màn hình (phóng hơn ~1,7 lần thì vỡ hạt) hay khác chiều (ảnh ngang trên màn dọc): hiện trọn ảnh, nền là
-    chính ảnh ấy làm mờ, không phóng kiểu Ken Burns. */
-function fitLowRes(root: ParentNode): void {
-  // bản thu nhỏ không tải được: về ảnh lớn có bộ lọc nhoè như trước
-  root.querySelectorAll<HTMLImageElement>('.cine-img img.bgb.tiny').forEach(b => b.addEventListener('error', () => {
-    const fg = b.parentElement?.querySelector<HTMLImageElement>('img.fg');
-    if (fg) { b.classList.remove('tiny'); b.src = fg.src; }
-  }, { once: true }));
-  root.querySelectorAll<HTMLImageElement>('.cine-img img.fg').forEach(img => {
-    const check = () => {
-      if (!img.naturalWidth) return;
-      const low = img.naturalWidth < 0.6 * innerWidth * (devicePixelRatio || 1), turned = Math.sign(img.naturalWidth - img.naturalHeight) !== Math.sign(innerWidth - innerHeight);
-      if (low || turned) img.parentElement?.classList.add('fit');
-    };
-    if (img.complete) check(); else img.addEventListener('load', check, { once: true });
-  });
-}
+/** Bản in: ảnh trọn khung trong lề giấy bồi, dòng chú thích và nguồn ở lề dưới. Bề rộng tính bằng CSS theo ô chứa (đơn vị
+    cq), tỉ lệ thật của ảnh (--ar) và cỡ thật (--nw): ảnh nhỏ thành bản in nhỏ, không phóng vỡ hạt. */
+const printHtml = (p: Pic, y: number) => `<div class="pic" style="--ar:${(p.w / p.h).toFixed(4)};--nw:${p.w}"><figure class="print${y < 1976 && !p.now ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -1.5 : 1.5}%;--ky:${Math.round((Math.random() - 0.5) * 2)}%">
+  <div class="win"><img alt="" decoding="async" src="${esc(p.src)}"></div><figcaption><span>${esc(p.cap)}</span><span class="cr">Wikimedia Commons</span></figcaption></figure></div>`;
+/** Nút đóng (✕) vẽ bằng nét như bộ biểu tượng, không dùng ký tự (lệch tâm tuỳ phông). */
+const X_ICON = '<svg class="i" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
 /** Huỷ màn mở chương đang chạy (không gọi `done` của nó) khi một màn mới thay chỗ. */
 let killOpener: (() => void) | null = null;
@@ -78,13 +106,11 @@ export function opener(e: Era, done: (played: boolean) => void): void {
   if (!fxOn() || calm.matches) { done(false); return; }
   const prev = ERAS[ERAS.indexOf(e) - 1], y0 = prev ? prev.cy : e.cy - 1;
   const box = document.createElement('div');
-  box.className = 'cine';
+  box.className = 'cine op';
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-modal', 'true');
   box.setAttribute('aria-label', `Điểm rẽ ${e.n}: ${e.title}`);
-  box.innerHTML = `<div class="cine-img none"></div><i class="cine-bar t"></i><i class="cine-bar b"></i>
-  <div class="cine-t"><div class="mono">Điểm rẽ ${e.n}/6 · Thế hệ ${e.n}</div><div class="yr">${y0}</div><h1>${esc(e.title)}</h1>
-  ${isPlay() ? `<div class="mono fam">${esc(familyName())}</div>` : ''}</div><button class="lnk skip" aria-label="Bỏ qua">Bỏ qua ›</button>`;
+  box.innerHTML = `<button class="lnk skip" aria-label="Bỏ qua">Bỏ qua ›</button>`;
   document.body.appendChild(box);
   mood('gate');
   SND.gong();
@@ -100,18 +126,28 @@ export function opener(e: Era, done: (played: boolean) => void): void {
   box.onclick = end;
   app.inert = true; // bàn phím / trình đọc màn hình không lọt xuống bản đồ phía sau
   box.querySelector<HTMLElement>('.skip')!.focus({ preventScroll: true });
-  requestAnimationFrame(() => box.classList.add('on'));
-  void eraImage(e, 1400).then(src => { if (src && !over) { const old = box.querySelector('.cine-img')!; old.outerHTML = imgHtml(src, e.cy); fitLowRes(box); } });
-  // năm đếm từ điểm rẽ trước lên năm của điểm rẽ này
-  const yr = box.querySelector<HTMLElement>('.yr')!, t0 = performance.now(), dur = 1500;
-  const tick = (now: number) => {
+  // ảnh đã tải sẵn (tour chương trước đã tải): dựng khung ngay; chưa xong thì chờ tối đa 0,3 s rồi dựng không ảnh (ảnh đến
+  // muộn không chen vào giữa màn, vì khung bản in và tấm nhãn đã đặt chỗ)
+  const pic = got.has(e.id) ? Promise.resolve(got.get(e.id) ?? null) : eraImage(e, 300);
+  void pic.then(p => {
     if (over) return;
-    const k = Math.min(1, (now - t0) / dur), q = 1 - Math.pow(1 - k, 3);
-    yr.textContent = String(Math.round(y0 + (e.cy - y0) * q));
-    if (k < 1) requestAnimationFrame(tick); else { yr.classList.add('hit'); SND.stamp(); }
-  };
-  setTimeout(() => { requestAnimationFrame(tick); watch(dur); }, 350); // đo khung hình lúc năm đếm lên (ui/quality.ts)
-  setTimeout(end, 3600);
+    const fr = document.createElement('div');
+    fr.className = 'frame' + (p ? '' : ' bare');
+    fr.innerHTML = `${p ? printHtml(p, e.cy) : ''}<div class="plate"><div class="mono k">Điểm rẽ ${e.n}/6 · Thế hệ ${e.n}</div><div class="yr">${y0}</div><h1>${esc(e.title)}</h1>${isPlay() ? `<div class="mono fam">${esc(familyName())}</div>` : ''}</div>`;
+    box.prepend(fr);
+    requestAnimationFrame(() => box.classList.add('on'));
+    // năm đếm từ điểm rẽ trước lên năm của điểm rẽ này (lớp riêng: không vẽ lại bản in mỗi khung)
+    const yr = fr.querySelector<HTMLElement>('.yr')!, dur = 1500;
+    let t0 = 0;
+    const tick = (now: number) => {
+      if (over) return;
+      const k = Math.min(1, Math.max(0, (now - t0) / dur)), q = 1 - Math.pow(1 - k, 3);
+      yr.textContent = String(Math.round(y0 + (e.cy - y0) * q));
+      if (k < 1) requestAnimationFrame(tick); else { yr.classList.add('hit'); SND.stamp(); }
+    };
+    setTimeout(() => { t0 = performance.now(); requestAnimationFrame(tick); watch(dur); }, 350); // đo khung hình lúc năm đếm lên (ui/quality.ts)
+    setTimeout(end, 3600);
+  });
 }
 
 /* ---------- phim hành trình ---------- */
@@ -126,7 +162,7 @@ function clipMs(url: string): Promise<number> {
   });
 }
 
-interface Slide { y: number; head: string; title: string; lines: string[]; img: Promise<string | null>; say?: [string, string] }
+interface Slide { y: number; head: string; title: string; pick: string; lines: string[]; img: Promise<Pic | null>; say?: [string, string] }
 
 function slides(): Slide[] {
   const f = factsFromState(); // dòng gia phả theo quê (data/endings.ts chronLine)
@@ -140,9 +176,24 @@ function slides(): Slide[] {
     const big = isPlay() ? bigChoices(e, 1)[0] : undefined;
     if (big) lines.push(`${big.y} · ${big.out}`);
     for (const n of S.names) if (n.y >= e.cy && n.y < end) lines.push(`${n.y} · ${n.from} đổi thành ${n.to}`);
-    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: `${e.title} · ${o.label}`, lines, img: eraImage(e, 6000, true), say: chron === CHRONICLE[o.id] ? [chron, chrKey(o.id)] : undefined }); // câu đã chỉnh theo quê: không có bản thu
+    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: e.title, pick: o.label, lines, img: eraImage(e, 6000), say: chron === CHRONICLE[o.id] ? [chron, chrKey(o.id)] : undefined }); // câu đã chỉnh theo quê: không có bản thu
   }
   return out;
+}
+
+/** Tấm cuối của phim: tờ hồ sơ khép lại, viền đôi như khung bản đồ. Tên họ, dấu kết cục, tên kết cục, câu tóm, dải sáu
+    điểm rẽ (năm, đoạn thước, hướng đã chọn), độ hiếm, hạng gia sản (Trò chơi), lời khép theo họ, chữ "Hết". */
+function endPlate(): string {
+  const { f, e: end, title } = endingNow(), ar = archetype(), rar = end ? rarityLine(end.id, f.mode) : null;
+  const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
+  const t = end ? title : ar ? ar[0] : 'Hành trình đã khép';
+  const d = end ? end.line : ar ? ar[1] : '';
+  const strip = ERAS.map(e => { const o = optOf(e); return `<li${o ? '' : ' class="none"'}><b>${e.cy}</b><i></i><span>${o ? esc(o.label) : '—'}</span></li>`; }).join('');
+  return `<div class="plate fin"><div class="mono k">Hồ sơ dòng họ · ${esc(nameChain())} · 1858 – 2026</div>
+   ${end ? `<span class="stamp">Kết cục · ${esc(end.seal)}</span>` : ''}<h1>${esc(t)}</h1>${d ? `<p class="d">${esc(d)}</p>` : ''}
+   <ol class="strip" aria-label="Sáu điểm rẽ và hướng dòng họ đã chọn">${strip}</ol>
+   ${rar ? `<p class="r">${esc(rar.lead)}</p>` : ''}${isPlay() ? `<p class="r">Gia sản: ${esc(rank()[0])}</p>` : ''}
+   ${epi ? `<p class="epi">${esc(epi)}</p>` : ''}<div class="het">Hết</div></div>`;
 }
 
 /** Phim hành trình: mỗi thế hệ một cảnh (~5 s), cảnh cuối là kết cục của dòng họ. Chạm phải / trái để sang / lùi. */
@@ -150,15 +201,14 @@ export function montage(): void {
   if (document.querySelector('.cine.film:not(.out)')) return; // đang chiếu: không chồng phim thứ hai
   const list = slides();
   if (!list.length) return;
-  const { f, e: end, title } = endingNow(), ar = archetype(), skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
-  const rar = end ? rarityLine(end.id, f.mode) : null;
+  const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
   const box = document.createElement('div');
   box.className = 'cine film';
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-modal', 'true');
   box.setAttribute('aria-label', 'Phim hành trình');
   box.innerHTML = `<div class="prog">${list.map(() => '<i><b></b></i>').join('')}<i><b></b></i></div><div class="stage" aria-live="polite"></div>
-  <button class="x" aria-label="Đóng">✕</button><button class="pz" aria-label="Tạm dừng" aria-pressed="false">❚❚</button>`;
+  <button class="x" aria-label="Đóng">${X_ICON}</button><button class="pz" aria-label="Tạm dừng" aria-pressed="false">${icon('pause')}</button>`;
   document.body.appendChild(box);
   mood('finale');
   requestAnimationFrame(() => box.classList.add('on'));
@@ -166,17 +216,20 @@ export function montage(): void {
   const per = calm.matches ? 7000 : 5200;
   let i = -1, seq = 0, timer = 0, closed = false, paused = false;
   const pz = box.querySelector<HTMLButtonElement>('.pz')!;
+  const pzShow = () => { pz.innerHTML = icon(paused ? 'play' : 'pause'); pz.setAttribute('aria-label', paused ? 'Chạy tiếp' : 'Tạm dừng'); pz.setAttribute('aria-pressed', String(paused)); };
+  /* Thanh tiến độ chạy bằng scaleX (trình duyệt tự nội suy trên lớp riêng): đổi width mỗi khung hình thì cả phim phải dàn
+     trang lại 60 lần mỗi giây. Đọc chỗ đang đứng qua kiểu đã tính (không ép dàn trang). */
+  const at = (b: HTMLElement) => { const m = getComputedStyle(b).transform; return m.startsWith('matrix(') ? +m.slice(7).split(',')[0] || 0 : 0; };
+  const hold = (b: HTMLElement, k: number) => { b.style.setProperty('transition', 'none', 'important'); b.style.transform = `scaleX(${k})`; };
   /** Tạm dừng: đứng ở cảnh này (thanh tiến độ, lời thuyết minh dừng); chạy tiếp: kể lại cảnh này từ đầu. */
   const toggle = () => {
     paused = !paused;
-    pz.textContent = paused ? '▶' : '❚❚';
-    pz.setAttribute('aria-label', paused ? 'Chạy tiếp' : 'Tạm dừng');
-    pz.setAttribute('aria-pressed', String(paused));
+    pzShow();
     if (paused) {
       seq++; clearTimeout(timer); hush();
       const b = bars[i];
-      // đọc độ rộng đang chạy trước khi tắt hiệu ứng (tắt trước thì trình duyệt nhảy luôn tới cuối)
-      if (b) { const w = b.parentElement!.getBoundingClientRect().width || 1, now = b.getBoundingClientRect().width; b.style.setProperty('transition', 'none', 'important'); b.style.width = `${(now / w) * 100}%`; }
+      // đọc chỗ đang chạy tới trước khi tắt hiệu ứng (tắt trước thì trình duyệt nhảy luôn tới cuối)
+      if (b) hold(b, at(b));
     } else void show(i);
   };
   const back = document.activeElement as HTMLElement | null;
@@ -201,17 +254,14 @@ export function montage(): void {
   addEventListener('keydown', key);
   app.inert = true;
   box.querySelector<HTMLElement>('.x')!.focus({ preventScroll: true });
-  /** Thanh tiến độ của cảnh `j` chạy đầy trong `ms`. */
   /** Thanh tiến độ của cảnh `j` chạy từ chỗ đang đứng tới `to`% trong `ms` (gọi lại được để chỉnh theo bản thu). */
   const fill = (j: number, ms: number, to = 100) => {
-    const b = bars[j], w = b.parentElement!.getBoundingClientRect().width || 1;
-    const now = Math.min(100, (b.getBoundingClientRect().width / w) * 100);
-    b.style.setProperty('transition', 'none', 'important');
-    b.style.width = `${now}%`;
-    void b.offsetWidth;
+    const b = bars[j];
+    hold(b, Math.min(1, at(b)));
+    void getComputedStyle(b).transform; // điểm xuất phát mới có hiệu lực trước khi bật lại chuyển tiếp
     // !important: giảm chuyển động vẫn thấy thanh tiến độ chạy (thước đo thời gian, không phải hiệu ứng)
-    b.style.setProperty('transition', `width ${Math.max(0, Math.round(ms))}ms linear`, 'important');
-    b.style.width = `${to}%`;
+    b.style.setProperty('transition', `transform ${Math.max(0, Math.round(ms))}ms linear`, 'important');
+    b.style.transform = `scaleX(${to / 100})`;
   };
   /** Thuyết minh bằng bản thu (giọng Thanh Bình) nếu có; xong thì sang cảnh. Không có bản thu: chỉ chữ, theo nhịp `wait`.
       Cảnh luôn đứng ít nhất `wait` (bản thu hỏng / mất mạng thì vẫn đủ thời gian đọc chữ). */
@@ -246,32 +296,27 @@ export function montage(): void {
     if (j < 0) j = 0;
     if (j > list.length) { close(); return; }
     i = j;
-    if (paused) { paused = false; pz.textContent = '❚❚'; pz.setAttribute('aria-label', 'Tạm dừng'); pz.setAttribute('aria-pressed', 'false'); }
+    if (paused) { paused = false; pzShow(); }
     const me = ++seq;
     clearTimeout(timer);
     hush();
-    bars.forEach((b, k) => { b.style.setProperty('transition', 'none', 'important'); b.style.width = k < j ? '100%' : '0%'; });
+    bars.forEach((b, k) => hold(b, k < j ? 1 : 0));
     SND.page();
-    let html: string;
+    const sc = document.createElement('div');
     if (j < list.length) {
-      const s = list[j], src = await Promise.race([s.img, new Promise<null>(res => setTimeout(() => res(null), 2200))]);
+      const s = list[j], p = await Promise.race([s.img, new Promise<null>(res => setTimeout(() => res(null), 2200))]);
       if (closed || me !== seq) return;
-      html = `${imgHtml(src, s.y)}<div class="cine-t low"><div class="mono">${esc(s.head)}</div><h2>${esc(s.title)}</h2>${s.lines.map((l, k) => `<p style="animation-delay:${0.5 + k * 0.6}s">${esc(l)}</p>`).join('')}</div>`;
+      sc.className = 'scene-s frame' + (p ? '' : ' bare');
+      sc.innerHTML = `${p ? printHtml(p, s.y) : ''}<div class="plate"><div class="mono k">${esc(s.head)}</div><h2>${esc(s.title)}</h2><div class="pick">Hướng đã chọn: <b>${esc(s.pick)}</b></div>${s.lines.map((l, k) => `<p${k ? ' class="x2"' : ''} style="animation-delay:${0.5 + k * 0.6}s">${esc(l)}</p>`).join('')}</div>`;
     } else {
-      // cảnh cuối: tên kết cục và tên họ (cả hai luồng), câu tóm, độ hiếm, hạng gia sản (Trò chơi), lời khép theo họ
-      const t = end ? title : ar ? ar[0] : 'Hành trình đã khép';
-      const d = end ? end.line : ar ? ar[1] : '';
-      html = `<div class="cine-img none"></div><div class="cine-t fin"><div class="mono">${esc(nameChain())} · 1858 – 2026</div>${end ? `<div class="mono seal">Kết cục · ${esc(end.seal)}</div>` : ''}<h1>${esc(t)}</h1>${d ? `<p>${esc(d)}</p>` : ''}
-      ${rar ? `<p class="mono" style="animation-delay:1s">${esc(rar.lead)}</p>` : ''}${isPlay() ? `<p class="mono" style="animation-delay:1.2s">${esc(rank()[0])}</p>` : ''}${epi ? `<p style="animation-delay:1.4s">${esc(epi)}</p>` : ''}</div>`;
+      // cảnh cuối: tấm hồ sơ khép (cả hai luồng)
+      sc.className = 'scene-s frame bare fin-s';
+      sc.innerHTML = endPlate();
       SND.fanfare();
     }
-    const sc = document.createElement('div');
-    sc.className = 'scene-s';
-    sc.innerHTML = html;
     stage.querySelectorAll('.scene-s').forEach(o => { o.classList.add('gone'); setTimeout(() => o.remove(), 700); });
     stage.appendChild(sc);
     watch(900); // lúc hai cảnh chồng mờ vào nhau
-    fitLowRes(sc);
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {
       const parts: [string, string][] = [];

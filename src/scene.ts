@@ -88,7 +88,8 @@ const PIECE = 1.35;
 const piece = () => PIECE * (innerWidth >= 700 ? 1.3 : 1);
 const HAPTIC: Record<string, number[]> = { land: [25, 40, 60], siege: [40, 30, 40, 30, 90], naval: [25, 70, 25], landing: [30, 50, 60], uprising: [10, 110, 10, 110, 10], air: [18] };
 
-/** Tít mở trận: tên trận, thời gian, nơi, các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
+/** Tít mở trận, kẻ thẳng lên tờ bản đồ như tên trận trên sơ đồ chiến dịch: nhãn, tên trận, nét hoa văn, thời gian và nơi
+    (nơi trùng tên trận thì bỏ), các phe (không xếp hạng, không "đấu với"); sau đó thu thành dòng nhỏ góc trên. */
 const TTL_AT = 550;
 /** Lúc (ms) cảnh bắt đầu vẽ: bản đồ đã bay tới nơi (zoomTo 1,2 s), kích thước tính theo zoom lúc đó. */
 const DRAW_AT = 1250;
@@ -97,9 +98,10 @@ function titleCard(r: Run, v: HistEvent, sc: Scene): void {
   if (!wrap) return;
   const sides = [...new Set([...sc.arrows.map(a => a[2]), ...sc.hold.map(h => h[2])])];
   const card = document.createElement('div');
-  card.className = 'ttl';
+  card.className = v.t.length > 26 ? 'ttl long' : 'ttl'; // tên trận dài ("Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng"): cỡ nhỏ hơn, không phủ nửa bản đồ
   card.setAttribute('aria-hidden', 'true'); // thẻ dưới bản đồ đã có tên trận cho trình đọc màn hình
-  card.innerHTML = `<div class="mono">Trận đánh · ${esc(v.d)}</div><h2>${esc(v.t)}</h2>${v.p ? `<p>${esc(v.p)}</p>` : ''}<div class="sides">${sides.map(sd => `<span><i style="--c:${SIDE_COLOR[sd] || '#f1e6c8'}"></i>${esc(sideName(sd, v.y))}</span>`).join('')}</div>`;
+  const where = v.p && !v.t.includes(v.p) ? ` · ${esc(v.p)}` : '';
+  card.innerHTML = `<div class="mono">Trận đánh</div><h2>${esc(v.t)}</h2><div class="orn"><i></i></div><div class="d">${esc(v.d)}${where}</div><div class="sides">${sides.map(sd => `<span><i style="--c:${SIDE_COLOR[sd] || '#f1e6c8'}"></i>${esc(sideName(sd, v.y))}</span>`).join('')}</div>`;
   wrap.classList.add('scn');
   // thẻ tên trận hiện khi bản đồ đã bay gần tới nơi (không đè lên nơi cũ), tắt trước mũi tên đầu tiên
   later(r, TTL_AT, () => { wrap.appendChild(card); r.ttl = card; requestAnimationFrame(() => card.classList.add('on')); });

@@ -49,7 +49,8 @@ export function replayEvent(id: string): void {
     bar = document.createElement('div');
     bar.id = 'replb';
     bar.className = 'tour replay';
-    bar.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rpause" aria-label="Giữ cảnh" aria-pressed="false" title="Giữ cảnh">${icon('pause')}</button><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">${icon('next')}</button><button class="chip" data-t="again">${icon('again', 15)}Xem lại</button><button class="chip" data-t="rclose">Đóng</button>`;
+    // nhãn "Xem lại · năm" và tên sự kiện; nút chạy lại ghi "Từ đầu" (không lặp chữ "Xem lại"), điện thoại hẹp chỉ còn biểu tượng
+    bar.innerHTML = `<div class="rl"><div class="mono muted"></div><div class="rt"></div></div><button class="chip ic" data-t="rpause" aria-label="Giữ cảnh" aria-pressed="false" title="Giữ cảnh">${icon('pause')}</button><button class="chip ic" data-t="rnext" aria-label="Nhịp kế tiếp" title="Nhịp kế tiếp">${icon('next')}</button><button class="chip" data-t="again" aria-label="Xem lại từ đầu" title="Xem lại từ đầu">${icon('again', 15)}<span>Từ đầu</span></button><button class="chip" data-t="rclose">Đóng</button>`;
     wrap.appendChild(bar);
     bar.addEventListener('click', ev => {
       const a = (ev.target as Element).closest<HTMLElement>('[data-t]')?.dataset.t;
