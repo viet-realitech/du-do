@@ -822,8 +822,10 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .cine .frame.bare > .plate::before { width: min(320px, 70%); margin-inline: auto; transform-origin: 50% 50% }
 .cine .plate > * { opacity: 0; animation: rise .7s .2s forwards }
 .cine .plate .k { font-size: 12px; letter-spacing: .18em; color: var(--ca) }
-.cine .plate .yr { font: 800 clamp(60px, min(38cqi, 16vh), 172px)/.8 var(--disp); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.02em; color: var(--ca); margin: 16px 0 16px -.03em; opacity: 1; animation: none; will-change: transform; transform-origin: 0 80% } /* năm đếm lên trên lớp riêng */
-.cine .frame.bare .plate .yr { font-size: clamp(84px, min(30cqi, 22vh), 200px); margin-left: 0; transform-origin: 50% 80% }
+/* năm đếm lên: lớp riêng (không vẽ lại bản in mỗi khung) và hộp cỡ cố định (bốn chữ số đều nhau): đổi chữ số chỉ dàn lại
+   chính nó, không dàn lại cả tấm nhãn và khung (đo trên iPad, CPU chậm 4 lần: 4,3 → 0,8 ms mỗi khung) */
+.cine .plate .yr { font: 800 clamp(60px, min(38cqi, 16vh), 172px)/.8 var(--disp); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.02em; color: var(--ca); margin: 16px 0 16px -.03em; opacity: 1; animation: none; will-change: transform; transform-origin: 0 80%; contain: size layout style; width: 2.62em; height: .8em; white-space: nowrap }
+.cine .frame.bare .plate .yr { font-size: clamp(84px, min(30cqi, 22vh), 200px); margin: 16px auto; transform-origin: 50% 80% }
 .cine .plate .yr.hit { animation: hit .45s cubic-bezier(.2, 1.6, .4, 1) }
 [data-theme=night] .cine .plate .yr { font-weight: 600 }
 [data-theme=poster] .cine .plate .yr { font-weight: 900; letter-spacing: -.04em }
