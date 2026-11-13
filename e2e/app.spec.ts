@@ -610,8 +610,11 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await expect(page.getByText('Gia phả mở đầu · Họ Tôn Thất / Nguyễn Phúc')).toBeVisible();
   await expect(page.locator('#slore .kin .av')).not.toHaveCount(0);
   await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
-  // generation 1 has nothing to harvest yet: the chapter opener, then the turning point
+  // generation 1 has nothing to harvest yet: the chapter opener, then the turning point. Offline (no archive photo) the
+  // opener is the caption plate alone, not an empty print frame
   await expect(page.locator('.cine')).toBeVisible();
+  await expect(page.locator('.cine .plate h1')).toHaveText('Tiếng súng Sơn Trà');
+  await expect(page.locator('.cine .print')).toHaveCount(0);
   // Back skips the opener instead of leaving the app
   await page.goBack();
   await expect(page.locator('.cine')).toHaveCount(0);
@@ -869,17 +872,82 @@ test('ending (reading mode): the path picks its own ending, with the family name
   await expect(cf.locator('.cf-real')).toContainText('Hướng chiếm ưu thế: Chủ hoà');
   // later divergences keep a folded what-if under their row; the dominant pick (Đổi Mới) has none
   await expect(page.locator('details.cf')).toHaveCount(4);
-  // the gia phả now shows in reading mode too; the closing line stays
+  // the gia phả now shows in reading mode too, one mark per generation on its timeline, before the path table; the
+  // closing line stays
   await expect(page.getByText('Gia phả Họ Trần')).toBeVisible();
+  await expect(page.locator('.end-gp .gp .chron.gen')).toHaveCount(6);
+  await expect(page.locator('.end-path .pr')).toHaveCount(6);
+  expect(await page.evaluate(() => !!(document.querySelector('.end-gp')!.compareDocumentPosition(document.querySelector('.end-path')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
-  // the journey film ends on the ending title and the family name
+  // the journey film ends on a closed-dossier plate: the ending title, the family name, the six picks as a strip
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
   await expect(page.locator('.cine.film .fin h1')).toHaveText('Bốn đời canh tân');
   await expect(page.locator('.cine.film .fin .mono').first()).toContainText('Họ Trần');
+  await expect(page.locator('.cine.film .fin .strip li')).toHaveCount(6);
+  await expect(page.locator('.cine.film .fin .strip li').first()).toContainText('Canh tân');
   await page.locator('.cine.film .x').click();
   await page.getByRole('button', { name: 'Tạo thẻ chia sẻ' }).click();
   await expect(page.getByAltText('Thẻ kết quả')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+/* Ảnh tư liệu của phim hành trình: một bản in trọn ảnh trong lề giấy bồi, không nền nhoè, không phóng quá 1,5 lần cỡ thật,
+   tấm nhãn không đè lên ảnh; màn dọc và màn ngang. Wikipedia / Commons được giả lập bằng một ảnh vẽ sẵn 1280 × 853. */
+for (const [name, w, h] of [['phone', 390, 844], ['iPad landscape', 1194, 834]] as const) {
+  test(`journey film (${name}): the archive photo is a whole print beside its caption plate, never under it`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] } });
+    const png = Buffer.from(await page.evaluate(() => {
+      const c = document.createElement('canvas'); c.width = 1280; c.height = 853;
+      const x = c.getContext('2d')!; x.fillStyle = '#8a7a60'; x.fillRect(0, 0, 1280, 853); x.fillStyle = '#2a2018'; x.fillRect(320, 200, 640, 420);
+      return c.toDataURL('image/png').split(',')[1];
+    }), 'base64');
+    const sizes: string[] = [];
+    const cors = { 'access-control-allow-origin': '*' };
+    await page.route(/vi\.wikipedia\.org\/w\/api\.php/, r => r.fulfill({ headers: cors, json: { query: { pages: { 1: { title: 'Ảnh thử', fullurl: 'https://vi.wikipedia.org/wiki/x', extract: 'x', pageimage: 'Test.png', thumbnail: { source: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Test.png/960px-Test.png' } } } } } }));
+    await page.route(/rest_v1\/page\/media-list/, r => r.fulfill({ headers: cors, json: { items: [] } }));
+    await page.route(/upload\.wikimedia\.org\/.*px-Test\.png/, r => { sizes.push(r.request().url().match(/\/(\d+)px-/)![1]); return r.fulfill({ contentType: 'image/png', body: png }); });
+    await page.locator('#card [data-a=end].c').click();
+    await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
+    const scene = page.locator('.cine.film .scene-s:not(.gone)');
+    await expect(scene.locator('.print img')).toBeVisible({ timeout: 6000 });
+    await page.locator('.cine.film .pz').click(); // hold the slide while measuring
+    await page.waitForTimeout(1200); // entrance animations settle
+    const m = await scene.evaluate(s => {
+      const r = (e: Element | null) => { const b = e!.getBoundingClientRect(); return { x: b.left, y: b.top, r: b.right, b: b.bottom, w: b.width, h: b.height }; };
+      return { print: r(s.querySelector('.print')), win: r(s.querySelector('.print .win')), plate: r(s.querySelector('.plate')), imgs: s.querySelectorAll('img').length, vw: innerWidth, vh: innerHeight };
+    });
+    expect(m.imgs).toBe(1); // no blurred copy behind the photo
+    // the whole print is on screen, at the photo's own proportions (not cropped), and not blown up past 1.5x
+    expect(m.print.x).toBeGreaterThanOrEqual(0);
+    expect(m.print.r).toBeLessThanOrEqual(m.vw);
+    expect(m.print.y).toBeGreaterThanOrEqual(40); // below the progress bar and the buttons
+    expect(m.print.b).toBeLessThanOrEqual(m.vh);
+    expect(Math.abs(m.win.w / m.win.h - 1280 / 853)).toBeLessThan(0.02);
+    expect(m.win.w).toBeLessThanOrEqual(1280 * 1.5 + 1);
+    // the caption plate sits beside (landscape) or under (portrait) the print, never over it
+    const overlap = Math.max(0, Math.min(m.print.r, m.plate.r) - Math.max(m.print.x, m.plate.x)) * Math.max(0, Math.min(m.print.b, m.plate.b) - Math.max(m.print.y, m.plate.y));
+    expect(overlap).toBe(0);
+    if (w > h) expect(m.plate.x).toBeGreaterThan(m.print.r); else expect(m.plate.y).toBeGreaterThan(m.print.b);
+    // Commons is asked for a standard thumbnail width larger than the article's 960 px, never an odd size
+    expect(sizes.length).toBeGreaterThan(0);
+    for (const s of sizes) expect(['960', '1280', '1920']).toContain(s);
+    expect(sizes).toContain(w > h ? '1920' : '1280');
+    expect(errors).toEqual([]);
+  });
+}
+
+test('share card carries the public address of the game', async ({ page }) => {
+  await page.addInitScript(() => {
+    const f = CanvasRenderingContext2D.prototype.fillText, seen: string[] = ((window as any).__txt = []);
+    CanvasRenderingContext2D.prototype.fillText = function (this: CanvasRenderingContext2D, t: string, x: number, y: number, mw?: number) { seen.push(String(t)); return mw === undefined ? f.call(this, t, x, y) : f.call(this, t, x, y, mw); };
+  });
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] } });
+  await page.locator('#card [data-a=end].c').click();
+  await page.getByRole('button', { name: 'Tạo thẻ chia sẻ' }).click();
+  await expect(page.getByAltText('Thẻ kết quả')).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__txt as string[])).toContain('du-do-seven.vercel.app');
   expect(errors).toEqual([]);
 });
 
@@ -961,6 +1029,11 @@ test.describe('iPad layouts', () => {
         await page.locator('#beats li').nth(2).locator('button').click();
         await expect(page.locator('#beats li').nth(2)).toHaveClass(/on/, { timeout: 1500 });
         await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('3/4');
+        // the caption floats right above the replay bar, in the same column (same left and right edges)
+        const lt = (await page.locator('#mapwrap .lt').boundingBox())!, bar = (await page.locator('#replb').boundingBox())!;
+        expect(Math.abs(lt.x - bar.x)).toBeLessThan(1.5);
+        expect(Math.abs(lt.x + lt.width - (bar.x + bar.width))).toBeLessThan(1.5);
+        expect(lt.y + lt.height).toBeLessThanOrEqual(bar.y + 1);
         await page.locator('#replb [data-t=rclose]').click();
         await expect(page.locator('#beats')).toBeHidden();
       } else {
