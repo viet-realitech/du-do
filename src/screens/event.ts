@@ -4,6 +4,7 @@ import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
 import { S, save, rt, allEv, evEra, chYear, curPick, figOpen } from '../state';
 import { av } from '../ui/bits';
+import { icon } from '../ui/icons';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer, remember } from '../ui/dom';
 import { checkBadges } from '../badges';
@@ -12,7 +13,7 @@ import { evKey, evSpeechFull } from '../speech';
 import { stopTour, pauseTour, resumeTour } from '../tour';
 import { hidePop } from '../map';
 import { renderMain } from '../view';
-import { wikiFor, cachedWiki, probe, type WikiInfo } from '../wiki';
+import { wikiFor, cachedWiki, probe, mediaCaption, commonsPage, type WikiInfo } from '../wiki';
 import { openMedia } from './lightbox';
 import { openSrc } from './sources';
 import { canReplay, closeReplay } from '../replay';
@@ -24,8 +25,9 @@ type Tab = 'x' | 'v' | 'm' | 's';
 /** Góc nhìn sử học nào là "của phe" dòng họ theo (sử liệu quốc tế, Pháp không phải tiếng nói của phe người chơi). */
 export const SIDE_PV = ['vn', 'vnch', 'nguyen'];
 const TABS: [Tab, string][] = [['x', 'Diễn biến'], ['v', 'Góc nhìn'], ['m', 'Ảnh, phim'], ['s', 'Nguồn']];
-const KIND_ICON: Record<string, string> = { 'Trận đánh': '◆', 'Hiệp ước': '■' };
-const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">‹</button>`;
+const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">${icon('prev', 20)}</button>`;
+/** nút Nghe / Dừng: hai nhãn sẵn trong nút, data-on chọn nhãn (narration.ts hush() gỡ data-on khi lời đọc dừng) */
+const LISTEN = `<span class="l1">${icon('listen', 16)}Nghe</span><span class="l2">${icon('stop', 14)}Dừng</span>`;
 
 /** Trang sự kiện mở từ bảng Nhân vật / Sử liệu / Hồ sơ (và thẻ nhân vật đang mở): đóng thì về lại đó, không về bản đồ trống.
     Đích quay về ghi trên chính trang (data-ret), suy từ những gì đang thật sự mở (không từ thanh tab, có thể đã cũ). */
@@ -50,7 +52,7 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
 
   if (v.diary) {
     const real = EV.find(x => x.y === v.y), home0 = homeChoice(v); // người viết nhật ký đi xa; ở nhà, cả họ đã quyết thế này
-    layer.innerHTML = `<div class="ov"><div class="row sb">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
+    layer.innerHTML = `<div class="ov evp"><div class="evtop">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
      <div style="margin-top:22px"><span class="stamp acc">Nhật ký dòng họ · ${v.y}</span></div>
      <h1 style="margin:16px 0 6px;font-size:32px">${esc(v.t)}</h1><div class="dbl"></div>
      <p style="font:italic 400 21px/1.45 var(--serif)">${esc(v.s)}</p>
@@ -62,12 +64,12 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
   }
 
   const vs = [...v.v].sort((a, b) => Number(b[0] === mine) - Number(a[0] === mine));
-  layer.innerHTML = `<div class="ov">
-  <div class="row sb">${closeBtn}<span class="mono muted" style="flex:1;text-align:center">Chương ${e.n}</span>${ownCard(v) ? `<button class="chip${decided(v.id) ? '' : ' on'}" data-a="card" data-id="${v.id}">${decided(v.id) ? '✓ Đã quyết' : '◆ Dòng họ làm gì?'}</button>` : ''}<button class="chip nbtn" data-a="listen" data-id="${v.id}">▶ Nghe</button></div>
-  <div class="hero"><image-slot id="ev-${v.id}" shape="rect" busy placeholder="Đang tìm ảnh tư liệu…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">⤢</button>${canReplay(v) ? `<button class="hplay" data-a="replay" data-id="${v.id}">▶ Xem diễn biến</button>` : ''}</div>
-  <div style="margin-top:14px" class="mono"><span style="color:var(--red)">${KIND_ICON[v.k] || '●'} ${v.k}</span> · ${v.d}</div>
-  <h1 style="margin:8px 0 6px;font-size:30px">${esc(v.t)}</h1>
-  <div class="muted" style="font-style:italic;font-size:16px">${esc(v.p)}</div>
+  layer.innerHTML = `<div class="ov evp">
+  <div class="evtop">${closeBtn}<span class="mono muted">Chương ${e.n} · ${esc(e.title)}</span>${ownCard(v) ? `<button class="chip${decided(v.id) ? '' : ' on'}" data-a="card" data-id="${v.id}">${decided(v.id) ? '✓ Đã quyết' : `${icon('seal', 12)}Dòng họ làm gì?`}</button>` : ''}<button class="chip nbtn" data-a="listen" data-id="${v.id}">${LISTEN}</button></div>
+  <figure class="hfig"><div class="hero"><image-slot id="ev-${v.id}" shape="rect" busy placeholder="Đang tìm ảnh tư liệu…"></image-slot><button class="hzoom" id="hzoom" hidden aria-label="Xem ảnh lớn">${icon('zoom', 16)}</button>${canReplay(v) ? `<button class="hplay" data-a="replay" data-id="${v.id}">${icon('play', 14)}Xem diễn biến</button>` : ''}</div><figcaption class="hcap" id="hcap-${v.id}" hidden></figcaption></figure>
+  <div class="evk mono"><span>${v.k}</span> · ${v.d}</div>
+  <h1 class="evh">${esc(v.t)}</h1>
+  ${v.p && v.p !== v.t ? `<div class="evp-p">${esc(v.p)}</div>` : ''}
   <div class="dbl"></div>
   <div class="seg" id="et" role="tablist">${TABS.map(([k, l]) => `<button role="tab" id="et-${k}" data-k="${k}" aria-controls="eb" aria-selected="${k === tab}" tabindex="${k === tab ? 0 : -1}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('')}</div>
   <div id="eb" style="margin-top:16px" role="tabpanel"></div></div>`;
@@ -84,7 +86,7 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
     }
     if (k === 'v') {
       if (!S.pvSeen.includes(v.id)) { S.pvSeen.push(v.id); save(); }
-      return vs.map(([pp, tx]) => `<div class="pv${pp === mine ? ' mine' : ''}"><div class="row sb"><span class="mono muted">${P[pp]}</span>${pp === mine ? '<span class="mono" style="color:var(--acc)">Gần lựa chọn của bạn</span>' : ''}</div><q>${esc(tx)}</q></div>`).join('') +
+      return vs.map(([pp, tx]) => `<div class="pv${pp === mine ? ' mine' : ''}"><div class="pvh"><span class="mono muted">${P[pp]}</span>${pp === mine ? '<span class="mono" style="color:var(--acc)">Gần lựa chọn của bạn</span>' : ''}</div><q>${esc(tx)}</q></div>`).join('') +
         `<p class="muted" style="font-size:14px;margin-top:14px">Các góc nhìn được tóm lược từ sử liệu công khai, xếp ngang hàng nhau. Ứng dụng không đứng về phía nào.</p>`;
     }
     if (k === 'm') return `<div class="skel" style="height:120px;border-radius:14px"></div><div class="mgrid" style="margin-top:18px">${'<div class="skel" style="aspect-ratio:4/3;border-radius:10px"></div>'.repeat(6)}</div>`;
@@ -133,9 +135,13 @@ async function loadHero(v: HistEvent): Promise<void> {
     if (!(await probe(m.src, 60))) { m.bad = true; continue; }
     const sl = document.getElementById('ev-' + v.id);
     if (!sl) return;
+    const tall = await aspect(m.src);
+    if (!document.getElementById('ev-' + v.id)) return;
+    sl.closest('.hero')?.classList.toggle('tall', tall);
+    if (tall) sl.setAttribute('focus', 'object-fit:contain;object-position:50% 50%');
     sl.setAttribute('src', m.src);
-    sl.setAttribute('credit', 'Wikimedia Commons');
-    sl.setAttribute('credit-href', 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(m.file.replace(/ /g, '_')));
+    const cap = document.getElementById('hcap-' + v.id);
+    if (cap) { cap.innerHTML = `${esc(mediaCaption(m))} · <a href="${esc(commonsPage(m))}" target="_blank" rel="noopener">Wikimedia Commons</a>`; cap.hidden = false; }
     const z = $<HTMLButtonElement>('#hzoom');
     if (z) { z.hidden = false; z.onclick = () => openMedia(v.id, w!.media.indexOf(m)); }
     break;
@@ -204,9 +210,13 @@ async function mediaTab(v: HistEvent): Promise<void> {
 function listen(id: string, b: HTMLElement): void {
   const v = allEv().find(x => x.id === id);
   if (!v) return;
-  if (b.textContent!.startsWith('■')) { hush(); return; }
-  const ok = speak(evSpeechFull(v), () => { b.textContent = '▶ Nghe'; }, true, evKey(v));
-  if (ok) b.textContent = '■ Dừng';
+  if (b.dataset.on) { hush(); return; }
+  const ok = speak(evSpeechFull(v), () => { delete b.dataset.on; }, true, evKey(v));
+  if (ok) b.dataset.on = '1';
+}
+/** Ảnh dọc hay ngang (đọc kích thước thật khi ảnh tải xong; ảnh đã nằm trong bộ nhớ đệm sau probe nên nhanh). */
+function aspect(src: string): Promise<boolean> {
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im.naturalHeight > im.naturalWidth * 1.05); im.onerror = () => res(false); im.src = src; });
 }
 
 on('listen', el => listen(el.dataset.id!, el));

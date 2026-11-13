@@ -35,7 +35,7 @@ export function hush(): void {
   if (clip) { clip.pause(); clip = null; }
   if (hasTTS) speechSynthesis.cancel();
   duck(false);
-  document.querySelectorAll<HTMLElement>('.nbtn').forEach(b => (b.textContent = '▶ Nghe'));
+  document.querySelectorAll<HTMLElement>('.nbtn').forEach(b => delete b.dataset.on); // nút "Nghe" của trang sự kiện trở lại
 }
 
 /** Break narration into sentences (and long clauses) with a pause after each, like a documentary voice-over.
