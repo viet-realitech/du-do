@@ -738,7 +738,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .thc.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) }
 /* mỗi thẻ là một tấm bản đồ nhỏ theo đúng màu của giao diện ấy: năm, khung đôi, hình Việt Nam (theme.ts) */
 .thc .pvw { display: block; position: relative; height: 92px; border-radius: var(--r); overflow: hidden; background: var(--paper); color: var(--ink); padding: 8px 9px; border: 1px solid var(--rule) }
-.thc .pvw b { display: block; font: 800 22px/.9 var(--disp); color: var(--acc); letter-spacing: -.01em }
+.thc .pvw b { display: block; font: 800 22px/.9 var(--disp); color: var(--acc); letter-spacing: -.01em; font-variant-numeric: lining-nums } /* Playfair: số kiểu cũ nhảy lên xuống */
 .thc .pvw[data-theme=night] b { font-weight: 600; font-size: 24px }
 .thc .pvw svg { position: absolute; right: 10px; bottom: 9px; height: 52px; width: auto; border: 1px solid var(--neat); outline: .5px solid var(--neat); outline-offset: 2px }
 .thc .pvw[data-theme=poster] { box-shadow: inset 0 0 0 2px var(--ink) }
@@ -911,7 +911,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .sp-t { font-size: 112px }
   .sp-sub { font-size: 25px }
   .ov.splash .plate-svg { height: min(64vh, 560px) }
-  .ov.intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 64px; align-items: start; padding: calc(var(--sat) + 44px) max(56px, calc((100% - 1160px) / 2)) calc(var(--sab) + 44px) }
+  .ov.intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 64px; align-items: start; align-content: safe center; padding: calc(var(--sat) + 44px) max(56px, calc((100% - 1160px) / 2)) calc(var(--sab) + 44px) }
   .ov.intro .in-set > .in-lbl:first-child { margin-top: 2px }
   /* trang sự kiện / nhật ký: tờ đọc ~560 px bên phải, bản đồ năm ấy vẫn hiện bên trái (không còn cột 720 px giữa hai
      lề trống 237 px che mất bản đồ) */
