@@ -14,33 +14,33 @@ function badgeState(): Record<string, boolean> {
   };
 }
 
-/* Thông báo huy hiệu xếp hàng: mỗi cái cách nhau 1,4 s, chờ màn điện ảnh (mở chương / phim) chiếu xong và chờ
-   người chơi quyết xong điểm rẽ / thẻ đang mở (không che tiêu đề, không chen tiếng kèn vào lời dẫn). */
-const queue: (() => void)[] = [];
+/* Thông báo huy hiệu: chờ màn điện ảnh / tít mở trận chiếu xong và chờ người chơi quyết xong điểm rẽ / thẻ đang mở
+   (không che tiêu đề, không chen tiếng kèn vào lời dẫn). Nhiều huy hiệu cùng lúc (cuối hành trình) gộp thành một thông
+   báo thay vì ba cái nối nhau; hàng đợi trong ui/dom.ts bảo đảm không thông báo nào đè lên cái khác. */
+type B = { ic: string; name: string; d: string };
+const queue: B[] = [];
 let draining = false;
 const deciding = () => !!document.querySelector('#layer #go, #layer #cgo, #layer #xgo');
 function drain(): void {
   whenClear(() => {
     if (deciding()) { setTimeout(drain, 600); return; }
-    const fn = queue.shift();
-    if (!fn) { draining = false; return; }
-    fn();
-    if (queue.length) setTimeout(drain, 1400); else draining = false;
+    const bs = queue.splice(0);
+    draining = false;
+    if (!bs.length) return;
+    const [b] = bs, more = bs.length > 1;
+    toast(`<span class="bi">${more ? bs.length : b.ic}</span><span><span class="mono">${more ? `${bs.length} huy hiệu mới` : 'Huy hiệu mới'}</span><b>${more ? bs.map(x => x.name).join(', ') : b.name}</b>${more ? '' : `<small>${b.d}</small>`}</span>`,
+      () => { SND.fanfare(); buzz(20); }, true);
   });
 }
 
-/** Award newly earned badges, announcing each with a staggered toast + chime. */
+/** Award newly earned badges, announcing them with a toast + chime once nothing is in the way. */
 export function checkBadges(): void {
   const st = badgeState();
   BADGES.forEach(([id, ic, name, d]) => {
     if (!st[id] || S.badges.includes(id)) return;
     S.badges.push(id);
     save();
-    queue.push(() => {
-      toast(`<span class="bi">${ic}</span><span><span class="mono" style="opacity:.7">Huy hiệu mới</span><br><b>${name}</b> · ${d}</span>`);
-      SND.fanfare();
-      buzz(20);
-    });
+    queue.push({ ic, name, d });
   });
   if (queue.length && !draining) { draining = true; setTimeout(drain, 400); }
 }

@@ -68,41 +68,73 @@ export function clearLayer(): void {
   if (!isTouring()) hush();
 }
 
-/** Màn mở chương hay phim hành trình đang chiếu (che cả toast). */
-export const cineOpen = () => !!document.querySelector('body > .cine:not(.out)');
+/** Màn mở chương, phim hành trình hay tít mở trận đang chiếu: thông báo chờ, không đè lên khoảnh khắc ấy. */
+export const cineOpen = () => !!document.querySelector('body > .cine:not(.out), #mapwrap .ttl:not(.out)');
 /** Chạy `fn` khi không còn màn điện ảnh nào che (ngay nếu không có). */
 export function whenClear(fn: () => void): void {
   if (cineOpen()) setTimeout(() => whenClear(fn), 500); else fn();
 }
 
-/** Chỗ đặt thông báo khi có bảng / trang đang mở, để không che tiêu đề của bảng hay nút ‹ của trang: màn rộng còn chỗ
-    trống bên phải thì đặt cạnh phải; trang (.ov, như kết luận) thì đặt dưới hàng đầu trang; bảng cao chạm đỉnh màn hình
-    thì đặt ở đáy (thông báo không nhận chạm). */
-function toastSpot(): string {
+/** Màn rộng hai cột (bản đồ trái, cột bên phải), cùng điều kiện với bố cục trong styles.css. */
+export const wideLayout = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px)');
+
+/** Chỗ đặt thông báo, không che nội dung đang đọc: màn rộng đặt trên góc trái tấm bản đồ (bảng là tờ ở cột bên, hộp ở
+    giữa); điện thoại / máy tính bảng dọc: không gì mở thì ngay trên thanh tab (không che năm, tên chương ở đầu trang),
+    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trả null khi chỗ ấy vẫn đè lên tờ
+    đang mở (bảng cao gần chạm đỉnh): huy hiệu chờ tới khi có chỗ, thông báo trả lời một cái chạm vẫn hiện trên cùng. */
+function toastSpot(n: HTMLElement): string | null {
   const top = layer.lastElementChild as HTMLElement | null;
-  if (!top || !top.matches('.scrim, .ov')) return '';
-  const box = (top.matches('.scrim') ? top.querySelector('.sheet') : top)?.getBoundingClientRect();
-  if (!box) return '';
-  const free = top.matches('.ov') ? (innerWidth - Math.min(innerWidth, 720)) / 2 : innerWidth - box.right; // .ov: cột đọc giữa màn
-  if (free >= 260) return ' side';
-  if (top.matches('.ov')) return ' under';
-  return box.top < 84 ? ' low' : '';
+  const box = top?.matches('.scrim') ? top.querySelector('.sheet') : top?.matches('.ov') ? top : null;
+  const cls = wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : top.matches('.ov') ? 'under' : 'top';
+  n.className = 'toast ' + cls;
+  if (!box || cls === 'under') return cls;
+  // đo theo bố cục, không theo khung hình đang chạy hiệu ứng: tờ vừa mở còn đang trượt lên, thông báo đang trượt vào
+  const a = place(n), b = place(box as HTMLElement);
+  return a.bottom + 6 <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right ? cls : null;
+}
+/** Hộp của phần tử theo bố cục (offset*, bỏ qua transform của hiệu ứng), toạ độ trong #app. */
+function place(e: HTMLElement): { top: number; left: number; bottom: number; right: number } {
+  let top = 0, left = 0;
+  for (let x: HTMLElement | null = e; x && x !== app; x = x.offsetParent as HTMLElement | null) { top += x.offsetTop; left += x.offsetLeft; }
+  return { top, left, bottom: top + e.offsetHeight, right: left + e.offsetWidth };
 }
 
-export function toast(html: string): void {
-  if (cineOpen()) { whenClear(() => toast(html)); return; }
-  const n = document.createElement('div');
-  n.className = 'toast' + toastSpot();
-  n.setAttribute('role', 'status');
-  n.innerHTML = html;
-  app.appendChild(n);
-  setTimeout(() => n.remove(), 2800);
+/* Thông báo xếp hàng: mỗi lúc một cái, cái sau chờ cái trước tắt (trước đây huy hiệu cách nhau 1,4 s mà mỗi cái sống
+   2,8 s ở cùng một chỗ: hai cái chồng lên nhau). `onShow`: tiếng kèn, rung đúng lúc thông báo hiện. `wait`: chờ tới khi
+   có chỗ không đè lên tờ đang mở (huy hiệu); không có thì hiện ngay (trả lời một thao tác). */
+type Toast = { html: string; onShow?: () => void; wait?: boolean };
+const tq: Toast[] = [];
+let tBusy = false;
+export function toast(html: string, onShow?: () => void, wait = false): void {
+  tq.push({ html, onShow, wait });
+  if (!tBusy) nextToast();
+}
+function nextToast(): void {
+  if (!tq.length) { tBusy = false; return; }
+  tBusy = true;
+  whenClear(() => {
+    const n = document.createElement('div');
+    n.setAttribute('role', 'status');
+    n.innerHTML = tq[0].html;
+    n.style.visibility = 'hidden';
+    app.appendChild(n);
+    // huy hiệu đang chờ chỗ không chặn thông báo trả lời một cái chạm xếp sau nó
+    const i = toastSpot(n) || !tq[0].wait ? 0 : tq.findIndex(x => !x.wait);
+    if (i < 0) { n.remove(); setTimeout(nextToast, 600); return; }
+    const [t] = tq.splice(i, 1);
+    if (i) { n.innerHTML = t.html; toastSpot(n); }
+    n.style.visibility = '';
+    t.onShow?.();
+    setTimeout(() => { n.remove(); setTimeout(nextToast, 300); }, 2800);
+  });
 }
 
-/** Bottom sheet in the overlay layer. `dismiss` lets a tap on the scrim close it. */
-export function sheet(html: string, dismiss = false): HTMLElement {
+/** Bảng trong lớp phủ: điện thoại là bảng kéo lên từ đáy; máy tính bảng dọc là bảng neo đáy trọn bề ngang (bản đồ phía
+    trên vẫn thấy); máy tính bảng ngang / màn rộng là tờ hồ sơ đặt thay cột bên, bản đồ vẫn hiện. `kind`: 'wide' = hộp rộng
+    giữa màn (điểm rẽ: ba ngả đường đặt cạnh nhau), 'dlg' = hộp nhỏ giữa màn (đố nhanh, xác nhận). `dismiss`: chạm nền đóng. */
+export function sheet(html: string, dismiss = false, kind?: 'wide' | 'dlg'): HTMLElement {
   const d = document.createElement('div');
-  d.className = 'scrim';
+  d.className = 'scrim' + (kind ? ' ' + kind : '');
   d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
   if (dismiss) d.addEventListener('click', e => { if (e.target === d) ghost(d); });
   else d.dataset.lock = '1'; // a decision is required: Back/Escape won't dismiss it

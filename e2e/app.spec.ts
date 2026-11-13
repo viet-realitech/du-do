@@ -932,6 +932,96 @@ test('reading mode: skipping chapter 6 leads to the conclusion, not to a bare 20
   expect(errors).toEqual([]);
 });
 
+test('play mode: after a card decision the family event comes into view, the unpicked options fold, values read as a ledger', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Tôn Thất', surname: 'tonthat', home: 'hn', year: 1945, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0 }, 'ng45');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
+  await expect(page.locator('.scrim .steps')).toContainText('Biến cố riêng'); // the second decision is announced up front
+  // values are ledger lines in the text face (name, then a signed number), not monospace pills
+  const fx = page.locator('.scrim .opt .fx').first();
+  expect(await fx.evaluate(e => getComputedStyle(e).fontFamily)).not.toMatch(/Mono/i);
+  await expect(fx.locator('b')).toHaveText(/^[+−]\d+$/);
+  await page.locator('.scrim .opt').first().click();
+  await page.locator('#cgo').click();
+  await expect(page.locator('.scrim .sheet > [role=radiogroup] .opt.skip')).toHaveCount(2);
+  await expect(page.locator('.scrim .xsp > h3')).toBeInViewport(); // not ~900 px below the fold
+  await expect(page.locator('.scrim .steps')).toHaveClass(/two/);
+  expect(errors).toEqual([]);
+});
+
+test('toasts come one at a time, above the tab bar on the main screen', async ({ page }) => {
+  const errors = await boot(page, midGame);
+  await page.waitForTimeout(800);
+  // notices in a row (a locked chapter-6 figure tapped twice, plus any badge earned at start): never drawn on top of each other
+  const tap = () => page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'fig'; b.dataset.id = 'vvk'; document.body.appendChild(b); b.click(); b.remove(); });
+  await tap(); await tap();
+  let most = 0, shown = 0;
+  for (let t = 0; t < 32; t++) { const n = await page.locator('.toast:visible').count(); most = Math.max(most, n); shown += n; await page.waitForTimeout(250); }
+  expect(most).toBe(1);
+  expect(shown).toBeGreaterThan(14); // more than one notice's 2,8 s: the second showed after the first
+  // on the main screen a notice sits above the tab bar, not over the year in the header
+  await expect(page.locator('.toast')).toHaveCount(0, { timeout: 8000 });
+  await tap();
+  await expect(page.locator('.toast:visible')).toHaveCount(1);
+  await page.waitForTimeout(600); // đã trượt vào chỗ
+  const tb = (await page.locator('.toast:visible').boundingBox())!, yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+  expect(tb.y).toBeGreaterThan(yr.y + yr.height);
+  expect(tb.y + tb.height).toBeLessThanOrEqual(tabs.y);
+  expect(errors).toEqual([]);
+});
+
+test('onboarding: the cover shows a map plate with Hoàng Sa and Trường Sa; the home picker marks the chosen home on it', async ({ page }) => {
+  const errors = await boot(page);
+  await expect(page.locator('.sp-plate .pl-vn')).toBeAttached();
+  await expect(page.locator('.sp-plate .pl-lab')).toHaveText(['Q.đ. Hoàng Sa', 'Q.đ. Trường Sa']);
+  await page.getByRole('button', { name: /Vào trò chơi/ }).click();
+  await expect(page.locator('.hp-map .pl-dot.on text')).toHaveText('Hà Nội');
+  await page.getByRole('button', { name: 'Cần Thơ' }).click();
+  await expect(page.locator('.hp-map .pl-dot.on text')).toHaveText('Cần Thơ');
+  await expect(page.getByRole('button', { name: 'Cần Thơ', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /Bắt đầu năm 1858 ở Cần Thơ/ })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test.describe('iPad sheets', () => {
+  test('landscape: a card is a document in the side column, the map beside it stays uncovered', async ({ page }) => {
+    await page.setViewportSize({ width: 1180, height: 820 });
+    const errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'na', year: 1954, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
+      quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 30 } }, 'dbp');
+    await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+    await page.locator('#tourb [data-t=skip]').click();
+    await expect(page.locator('.scrim h2')).toHaveText('Điện Biên Phủ', { timeout: 8000 });
+    const map = (await page.locator('#mapwrap').boundingBox())!, sh = (await page.locator('.scrim .sheet').boundingBox())!;
+    expect(sh.x).toBeGreaterThanOrEqual(map.x + map.width - 1);
+    expect(Math.round(sh.height)).toBe(820);
+    expect(errors).toEqual([]);
+  });
+  test('landscape: the turning point shows its three roads side by side, the confirm button in view without scrolling', async ({ page }) => {
+    await page.setViewportSize({ width: 1180, height: 820 });
+    const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1930, picks: { e1: 'canhtan', e2: 'duytan' }, quiz: { e1: [true, true], e2: [true, true] } });
+    await page.waitForTimeout(800);
+    await page.locator('#eraR').click();
+    await expect(page.locator('#layer .opt[data-o="cs"]')).toBeAttached({ timeout: 12000 });
+    const ys = await page.locator('#layer .opt').evaluateAll(os => os.map(o => Math.round(o.getBoundingClientRect().y)));
+    expect(new Set(ys).size).toBe(1);
+    const d = await page.locator('#layer .scrim .sheet').evaluate(e => [e.scrollHeight, e.clientHeight]);
+    expect(d[0]).toBeLessThanOrEqual(d[1] + 1);
+    await expect(page.locator('#go')).toBeInViewport();
+    expect(errors).toEqual([]);
+  });
+  test('portrait: sheets dock across the full width at the bottom, the map above stays in view', async ({ page }) => {
+    await page.setViewportSize({ width: 820, height: 1180 });
+    const errors = await boot(page, midGame);
+    await page.locator('.tab[data-t=src]').click();
+    await page.locator('#sl .src[data-a=src]').first().click();
+    const box = () => page.locator('.scrim .sheet').evaluate(e => { const r = e.getBoundingClientRect(); return [r.x, r.width, Math.round(r.bottom)]; });
+    await expect.poll(box).toEqual([0, 820, 1180]); // sau khi trượt lên xong
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('iPad layouts', () => {
   for (const [name, w, h, twoCol] of [['portrait', 820, 1180, false], ['landscape', 1180, 820, true]] as const) {
     test(`${name}: full-screen ${twoCol ? 'map + side panel' : 'single column'}`, async ({ page }) => {
