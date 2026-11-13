@@ -176,7 +176,7 @@ async function makeCard(): Promise<string> {
   // kết cục và độ hiếm (chưa chọn đủ sáu điểm rẽ: kiểu người theo các hướng đã chọn)
   const { e: end, title, f } = endingNow(), a = archetype(), rar = end ? rarityLine(end.id, f.mode) : null;
   x.fillStyle = ink; line(end ? title : a ? a[0] : 'Đang trên đường', n => `${it}500 ${n}px ${serif}`, 44, 326);
-  if (rar) { x.fillStyle = ink2; line(rar.lead.toUpperCase(), n => `500 ${n}px ${mono}`, 22, 366); }
+  if (rar) { const f2 = (n: number) => `500 ${n}px ${mono}`; x.fillStyle = ink2; line(rar.lead.toUpperCase(), f2, 22, 366, { num: f2 }); }
   let y = 420;
   x.fillStyle = ink; x.fillRect(100, y - 30, W - 200, 2);
   ERAS.forEach(e => {

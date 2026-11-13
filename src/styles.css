@@ -185,7 +185,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .ttl.on { opacity: 1; transform: translate(-50%, -50%) }
 .ttl.out { opacity: 0 }
 .ttl .mono { color: var(--red); letter-spacing: .32em; margin-right: -.32em }
-.ttl h2 { margin: 8px 0 0; font: 700 clamp(30px, 9vw, 44px)/1.04 var(--disp); color: var(--ink); text-wrap: balance; text-shadow: 0 0 10px var(--paper), 0 0 2px var(--paper) }
+.ttl h2 { margin: 8px 0 0; font: 700 clamp(27px, 7.6vw, 44px)/1.06 var(--disp); color: var(--ink); text-wrap: balance; text-shadow: 0 0 10px var(--paper), 0 0 2px var(--paper) }
 .ttl .orn { display: flex; align-items: center; gap: 9px; width: min(240px, 66%); margin: 11px auto 9px }
 .ttl .orn::before, .ttl .orn::after { content: ''; flex: 1; border-top: .75px solid var(--ink2) }
 .ttl .orn i { width: 6px; height: 6px; background: var(--ink2); transform: rotate(45deg) }
@@ -846,7 +846,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .cine.film .scene-s.gone { animation: fadeout .7s both }
 .cine.film .prog { position: absolute; top: calc(var(--sat) + 25px); left: max(var(--cside), env(safe-area-inset-left)); right: calc(max(var(--cside), env(safe-area-inset-right)) + 92px); z-index: 5; display: flex; gap: 6px }
 .cine.film .prog i { flex: 1; height: 2px; background: rgba(241, 232, 212, .2); overflow: hidden }
-.cine.film .prog b { display: block; height: 100%; width: 0; background: var(--ca) }
+.cine.film .prog b { display: block; height: 100%; width: 100%; background: var(--ca); transform: scaleX(0); transform-origin: 0 50% } /* chạy bằng scaleX (cinema.ts fill): không dàn trang mỗi khung */
 .cine.film .x, .cine.film .pz { position: absolute; top: calc(var(--sat) + 4px); z-index: 6; width: 44px; height: 44px; display: grid; place-items: center; color: var(--ct) }
 .cine.film .x { right: calc(max(var(--cside), env(safe-area-inset-right)) - 13px) }
 .cine.film .pz { right: calc(max(var(--cside), env(safe-area-inset-right)) + 33px) }
@@ -909,7 +909,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .end-body { display: flex; flex-direction: column }
 .end-main, .end-side { display: contents }
 .end-reg { order: 1 } .end-gp { order: 2 } .end-body .cf-card { order: 3 } .end-res { order: 4 } .end-cmp { order: 5 } .end-path { order: 6 }
-.end-sec { margin-top: 36px }
+.end-sec { margin-top: 32px }
 .end-sh { border-top: 3px double var(--ink); padding-top: 12px; margin-bottom: 16px }
 .end-sh .mono { color: var(--ink3) }
 .end-sh h2 { font-size: clamp(23px, 1.2vw + 18px, 30px); margin-top: 4px }
@@ -929,12 +929,12 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 /* gia phả: trục dọc, mỗi đời một chấm đặc, việc lớn và đổi họ một chấm rỗng nhỏ */
 .gp { list-style: none; margin: 0; padding: 0; position: relative }
 .gp::before { content: ''; position: absolute; left: 63px; top: 10px; bottom: 16px; border-left: 1px solid var(--ink2) }
-.gp .chron { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 32px; padding: 0 0 20px; border: 0; font-size: inherit; line-height: inherit; color: var(--ink); position: relative }
+.gp .chron { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 32px; padding: 0 0 16px; border: 0; font-size: inherit; line-height: inherit; color: var(--ink); position: relative }
 .gp .chron::before { content: ''; position: absolute; left: 58px; top: 5px; width: 11px; height: 11px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 3px var(--paper) }
 .gp .y { font: 700 22px/1 var(--disp); font-variant-numeric: lining-nums tabular-nums; text-align: right }
 .gp .gen .mono { display: block; width: auto; color: var(--ink3); margin-bottom: 4px }
 .gp .gen p { font-size: var(--t-body); line-height: 1.45 }
-.gp .gp-dec, .gp .nm { padding-bottom: 16px }
+.gp .gp-dec, .gp .nm { padding-bottom: 12px }
 .gp .gp-dec::before, .gp .nm::before { left: 60px; top: 6px; width: 7px; height: 7px; background: var(--paper); border: 1.25px solid var(--ink2) }
 .gp .gp-dec .y, .gp .nm .y { font: 500 14px/1.3 var(--serif); font-variant-numeric: lining-nums tabular-nums; color: var(--ink3) }
 .gp .gp-dec p, .gp .nm p { font-size: 15px; line-height: 1.4; color: var(--ink2) }
@@ -943,7 +943,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 [data-theme=poster] .gp-epi { font-style: normal }
 /* thẻ giả định */
 .cf-card { margin-top: 22px; border: 1.5px dashed var(--ink2); border-radius: var(--r); padding: 14px 16px; background: color-mix(in srgb, var(--paper2) 55%, transparent) }
-.end-body .cf-card { margin-top: 36px }
+.end-body .cf-card { margin-top: 32px }
 .cf-card h2 { margin: 8px 0 8px; font-size: 24px }
 .cf-card > p { font-size: 16px; line-height: 1.42 }
 .cf-tag { display: inline-block; border: 1px solid var(--red); color: var(--red); border-radius: var(--r); padding: 1px 6px; font-size: 10.5px }
@@ -976,7 +976,7 @@ details.cf .cf-tag { margin-right: 6px; font-style: normal }
 /* con đường của bạn và lịch sử: mỗi điểm rẽ một dòng sổ, cột năm bên trái như mục lục chương */
 .path { list-style: none; margin: 0; padding: 0; border-bottom: .75px solid var(--rule) }
 .path-h { display: none }
-.path .pr { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 16px; padding: 14px 0 16px; border-top: 1px solid var(--rule) }
+.path .pr { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 16px; padding: 12px 0 14px; border-top: 1px solid var(--rule) }
 .path .pr:first-child { border-top: 0; padding-top: 2px }
 .path .y { font: 700 20px/1.2 var(--disp); font-variant-numeric: lining-nums tabular-nums; color: var(--ink2) }
 .path h3 { font-size: var(--t-lead); line-height: 1.2 }

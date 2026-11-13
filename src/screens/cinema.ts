@@ -93,7 +93,7 @@ if (!S.picks.e1) setTimeout(() => void preloadEra(ERAS[0]), 4000);
 /** Bản in: ảnh trọn khung trong lề giấy bồi, dòng chú thích và nguồn ở lề dưới. Bề rộng tính bằng CSS theo ô chứa (đơn vị
     cq), tỉ lệ thật của ảnh (--ar) và cỡ thật (--nw): ảnh nhỏ thành bản in nhỏ, không phóng vỡ hạt. */
 const printHtml = (p: Pic, y: number) => `<div class="pic" style="--ar:${(p.w / p.h).toFixed(4)};--nw:${p.w}"><figure class="print${y < 1976 && !p.now ? ' old' : ''}" style="--kx:${Math.random() < 0.5 ? -1.5 : 1.5}%;--ky:${Math.round((Math.random() - 0.5) * 2)}%">
-  <div class="win"><img alt="" src="${esc(p.src)}"></div><figcaption><span>${esc(p.cap)}</span><span class="cr">Wikimedia Commons</span></figcaption></figure></div>`;
+  <div class="win"><img alt="" decoding="async" src="${esc(p.src)}"></div><figcaption><span>${esc(p.cap)}</span><span class="cr">Wikimedia Commons</span></figcaption></figure></div>`;
 /** Nút đóng (✕) vẽ bằng nét như bộ biểu tượng, không dùng ký tự (lệch tâm tuỳ phông). */
 const X_ICON = '<svg class="i" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
@@ -141,7 +141,7 @@ export function opener(e: Era, done: (played: boolean) => void): void {
     let t0 = 0;
     const tick = (now: number) => {
       if (over) return;
-      const k = Math.min(1, (now - t0) / dur), q = 1 - Math.pow(1 - k, 3);
+      const k = Math.min(1, Math.max(0, (now - t0) / dur)), q = 1 - Math.pow(1 - k, 3);
       yr.textContent = String(Math.round(y0 + (e.cy - y0) * q));
       if (k < 1) requestAnimationFrame(tick); else { yr.classList.add('hit'); SND.stamp(); }
     };
@@ -217,6 +217,10 @@ export function montage(): void {
   let i = -1, seq = 0, timer = 0, closed = false, paused = false;
   const pz = box.querySelector<HTMLButtonElement>('.pz')!;
   const pzShow = () => { pz.innerHTML = icon(paused ? 'play' : 'pause'); pz.setAttribute('aria-label', paused ? 'Chạy tiếp' : 'Tạm dừng'); pz.setAttribute('aria-pressed', String(paused)); };
+  /* Thanh tiến độ chạy bằng scaleX (trình duyệt tự nội suy trên lớp riêng): đổi width mỗi khung hình thì cả phim phải dàn
+     trang lại 60 lần mỗi giây. Đọc chỗ đang đứng qua kiểu đã tính (không ép dàn trang). */
+  const at = (b: HTMLElement) => { const m = getComputedStyle(b).transform; return m.startsWith('matrix(') ? +m.slice(7).split(',')[0] || 0 : 0; };
+  const hold = (b: HTMLElement, k: number) => { b.style.setProperty('transition', 'none', 'important'); b.style.transform = `scaleX(${k})`; };
   /** Tạm dừng: đứng ở cảnh này (thanh tiến độ, lời thuyết minh dừng); chạy tiếp: kể lại cảnh này từ đầu. */
   const toggle = () => {
     paused = !paused;
@@ -224,8 +228,8 @@ export function montage(): void {
     if (paused) {
       seq++; clearTimeout(timer); hush();
       const b = bars[i];
-      // đọc độ rộng đang chạy trước khi tắt hiệu ứng (tắt trước thì trình duyệt nhảy luôn tới cuối)
-      if (b) { const w = b.parentElement!.getBoundingClientRect().width || 1, now = b.getBoundingClientRect().width; b.style.setProperty('transition', 'none', 'important'); b.style.width = `${(now / w) * 100}%`; }
+      // đọc chỗ đang chạy tới trước khi tắt hiệu ứng (tắt trước thì trình duyệt nhảy luôn tới cuối)
+      if (b) hold(b, at(b));
     } else void show(i);
   };
   const back = document.activeElement as HTMLElement | null;
@@ -252,14 +256,12 @@ export function montage(): void {
   box.querySelector<HTMLElement>('.x')!.focus({ preventScroll: true });
   /** Thanh tiến độ của cảnh `j` chạy từ chỗ đang đứng tới `to`% trong `ms` (gọi lại được để chỉnh theo bản thu). */
   const fill = (j: number, ms: number, to = 100) => {
-    const b = bars[j], w = b.parentElement!.getBoundingClientRect().width || 1;
-    const now = Math.min(100, (b.getBoundingClientRect().width / w) * 100);
-    b.style.setProperty('transition', 'none', 'important');
-    b.style.width = `${now}%`;
-    void b.offsetWidth;
+    const b = bars[j];
+    hold(b, Math.min(1, at(b)));
+    void getComputedStyle(b).transform; // điểm xuất phát mới có hiệu lực trước khi bật lại chuyển tiếp
     // !important: giảm chuyển động vẫn thấy thanh tiến độ chạy (thước đo thời gian, không phải hiệu ứng)
-    b.style.setProperty('transition', `width ${Math.max(0, Math.round(ms))}ms linear`, 'important');
-    b.style.width = `${to}%`;
+    b.style.setProperty('transition', `transform ${Math.max(0, Math.round(ms))}ms linear`, 'important');
+    b.style.transform = `scaleX(${to / 100})`;
   };
   /** Thuyết minh bằng bản thu (giọng Thanh Bình) nếu có; xong thì sang cảnh. Không có bản thu: chỉ chữ, theo nhịp `wait`.
       Cảnh luôn đứng ít nhất `wait` (bản thu hỏng / mất mạng thì vẫn đủ thời gian đọc chữ). */
@@ -298,7 +300,7 @@ export function montage(): void {
     const me = ++seq;
     clearTimeout(timer);
     hush();
-    bars.forEach((b, k) => { b.style.setProperty('transition', 'none', 'important'); b.style.width = k < j ? '100%' : '0%'; });
+    bars.forEach((b, k) => hold(b, k < j ? 1 : 0));
     SND.page();
     const sc = document.createElement('div');
     if (j < list.length) {
