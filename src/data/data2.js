@@ -41,7 +41,7 @@ const DIARY={
  cs:[[1931,'Xô viết làng',[105.68,18.67],'Làng bạn chia lại ruộng công, bỏ thuế thân. Vài tháng sau, máy bay Pháp ném bom.'],[1941,'Đường lên Pác Bó',[106.05,22.97],'Bạn mang muối và giấy in lên hang Cốc Bó, gặp một ông cụ gầy mặc áo chàm.']],
  qdd:[[1930,'Sau tiếng súng Yên Bái',[104.87,21.72],'Đồng chí bị bắt gần hết. Bạn đốt sổ sách, đổi tên, đi về phía biên giới.'],[1940,'Qua biên giới',[106.76,21.85],'Bạn sang Quảng Tây, gia nhập một tổ chức người Việt lưu vong do Trung Hoa Dân Quốc hậu thuẫn.']],
  laphien:[[1932,'Bài báo bị kiểm duyệt',[105.85,21.03],'Bài bạn viết đòi Hội đồng có thêm ghế người Việt. Một nửa trang báo in trắng.'],[1940,'Lính Nhật trên phố',[105.85,21.03],'Bạn thấy lính Nhật và lính Pháp cùng gác một đầu cầu. Không ai hỏi ý kiến người Việt.']],
- vm:[[1947,'Việt Bắc thu đông',[105.7,22.1],'Bạn cõng tài liệu qua rừng khi quân dù Pháp nhảy xuống Bắc Kạn.'],[1954,'Kéo pháo vào Điện Biên',[103.02,21.39],'Hàng nghìn người kéo pháo bằng tay lên dốc, đêm nào cũng làm.']],
+ vm:[[1947,'Việt Bắc thu đông',[105.7,22.1],'Bạn cõng tài liệu qua rừng khi quân dù Pháp nhảy xuống Bắc Kạn.'],[1954,'Kéo pháo vào Điện Biên',[103.02,21.39],'Hàng nghìn người kéo pháo bằng tay lên dốc, đêm nào cũng làm.',3]],
  qg:[[1950,'Tốt nghiệp trường Đà Lạt',[108.44,11.94],'Bạn nhận cấp hiệu thiếu uý Quân đội Quốc gia. Quân phục vẫn may theo kiểu Pháp.'],[1954,'Bản tin từ Genève',[105.85,21.03],'Đơn vị bạn nhận lệnh rút vào Nam trong vòng 300 ngày.']],
  tl:[[1946,'Làng hai chính quyền',[106.34,20.45],'Ban ngày lính Pháp đi càn, ban đêm du kích về họp. Bạn học cách im lặng với cả hai.'],[1952,'Gặt lúa dưới tiếng máy bay',[106.34,20.45],'Bạn gặt đêm để tránh máy bay. Một nửa thóc nộp thuế, nửa còn lại chôn dưới đất.']],
  bac:[[1965,'Đào hầm ở Hà Nội',[105.85,21.03],'Mỗi nhà một hầm cá nhân ven vỉa hè. Con bạn đi sơ tán về quê.'],[1972,'Mười hai ngày đêm',[105.85,21.03],'B-52 ném bom phố Khâm Thiên. Bạn đào bới đống đổ nát tìm hàng xóm.']],
@@ -51,14 +51,16 @@ const DIARY={
  doimoi:[[1988,'Ruộng khoán',[106.34,20.45],'Hợp tác xã giao ruộng cho từng hộ. Vụ đầu tiên, nhà bạn thừa thóc.'],[2007,'Ngày vào WTO',[106.70,10.78],'Xưởng may nhỏ của bạn nhận đơn hàng đầu tiên từ châu Âu.']],
  radi:[[1979,'Đêm ra khơi',[105.2,9.2],'Ba mươi người trên chiếc ghe dài mười hai mét. Bạn giữ la bàn và nắm gạo rang.'],[1995,'Về Tân Sơn Nhất',[106.66,10.82],'Hai mươi năm sau, bạn quay lại với hộ chiếu nước khác, tóc đã điểm bạc.']]
 };
+/* "Gia đình bạn" ở điểm rẽ: cha của thế hệ mới là chính người đã chọn ở điểm rẽ trước (và đã quyết các thẻ liệt kê ngay
+   dưới), nên ông còn sống qua chương ấy; người ngã xuống là đời ông. Trò chơi biết quê, thẻ, biến cố: gate.ts ctxFor. */
 const CTX={
- e2:{chien:'Cha bạn ngã xuống ở đồn Chí Hoà. Bạn lớn lên với thanh gươm treo trên vách.',canhtan:'Cha bạn để lại một rương điều trần chép tay và vài cuốn sách chữ Tây.',hoa:'Cha bạn từng theo sứ bộ sang Pháp. Ông dặn: giữ người trước, giữ đất sau.'},
- e3:{canvuong:'Cha bạn mất trong rừng Hương Khê. Sổ của Pháp ghi gia đình là "phiến loạn".',dongdu:'Cha bạn từng sang Nhật, về nước mở hiệu thuốc bắc làm nơi liên lạc.',duytan:'Cha bạn dạy ở Đông Kinh Nghĩa Thục. Nhà còn cả tủ sách mới.'},
- e4:{cs:'Cha bạn vừa ra tù Côn Đảo, đang liên lạc với những người ở Pác Bó.',qdd:'Cha bạn sống lưu vong ở Quảng Tây, vừa theo quân Trung Hoa Dân Quốc về nước.',laphien:'Cha bạn làm thông phán ở Hà Nội, quen cả quan Pháp lẫn nhà nho.'},
+ e2:{chien:'Ông nội bạn ngã xuống ở đồn Chí Hoà; cha bạn theo Trương Định một thời rồi về quê. Thanh gươm của ông còn treo trên vách.',canhtan:'Cha bạn còn giữ một rương điều trần chép tay và vài cuốn sách chữ Tây.',hoa:'Cha bạn từng theo sứ bộ sang Pháp. Ông dặn: giữ người trước, giữ đất sau.'},
+ e3:{canvuong:'Cha bạn theo nghĩa quân Hương Khê; khi chủ tướng mất, ông về làng chôn giấu súng dưới chân ruộng. Sổ của Pháp ghi gia đình là "phiến loạn".',dongdu:'Cha bạn từng sang Nhật, về nước mở hiệu thuốc bắc làm nơi liên lạc.',duytan:'Cha bạn dạy ở Đông Kinh Nghĩa Thục. Nhà còn cả tủ sách mới.'},
+ e4:{cs:'Cha bạn từng qua nhà tù Côn Đảo rồi lên Pác Bó; giờ ông là cán bộ Việt Minh ở tỉnh.',qdd:'Cha bạn sống lưu vong ở Quảng Tây, vừa theo quân Trung Hoa Dân Quốc về nước.',laphien:'Cha bạn làm thông phán ở Hà Nội, quen cả quan Pháp lẫn nhà nho.'},
  e5:{vm:'Cha bạn vừa từ chiến khu về, áo còn mùi khói bếp.',qg:'Cha bạn là sĩ quan trẻ của Quân đội Quốc gia, đóng ở Hà Nội.',tl:'Làng nhà bạn ở vùng xôi đậu. Cha mẹ bạn đã quen sống giữa hai làn đạn.'},
  e6:{bac:'Cha bạn vào Sài Gòn sau 21 năm, gặp lại họ hàng chưa từng biết mặt.',nam:'Cha bạn là cựu sĩ quan VNCH, vừa nhận giấy gọi trình diện "học tập cải tạo".',thuba:'Cha mẹ bạn từng xuống đường đòi hoà bình. Hoà bình đã đến, theo cách không ai lường trước.'}
 };
-D.ERAS.forEach(e=>{e.ctx=CTX[e.id]||null;e.opts.forEach(o=>{o.fx=FX[o.id];o.guide=GUIDE[o.id];o.diary=(DIARY[o.id]||[]).map((d,i)=>({id:'d-'+o.id+i,y:d[0],d:String(d[0]),k:'Nhật ký',t:d[1],l:d[2],s:d[3],p:'Nhật ký dòng họ (hư cấu)',v:[],src:[],diary:true,era:e.id}));});});
+D.ERAS.forEach(e=>{e.ctx=CTX[e.id]||null;e.opts.forEach(o=>{o.fx=FX[o.id];o.guide=GUIDE[o.id];o.diary=(DIARY[o.id]||[]).map((d,i)=>({id:'d-'+o.id+i,y:d[0],d:String(d[0]),k:'Nhật ký',t:d[1],l:d[2],s:d[3],p:'Nhật ký dòng họ (hư cấu)',v:[],src:[],diary:true,era:e.id,m:d[4]}));});});
 D.ERAS[4].hist='Ngày 30.4.1975, lực lượng của VNDCCH và CH miền Nam VN vào Sài Gòn. Hai miền thống nhất năm 1976.';
 
 D.FIG={
@@ -144,13 +146,29 @@ D.FIG={
  vcc:['Võ Chí Công','1912–2011','Chủ tịch HĐNN','Phó Bí thư Trung ương Cục miền Nam 1961–1975, Bộ trưởng Nông nghiệp 1977–1979. Chủ tịch Hội đồng Nhà nước 1987–1992. Mất tại TP.HCM ngày 8.9.2011.'],
  tvk2:['Trần Văn Khê','1921–2015','Nhà nghiên cứu âm nhạc','Sang Pháp năm 1949, tiến sĩ âm nhạc học Đại học Sorbonne (1958), nghiên cứu tại CNRS. Về sống ở TP.HCM năm 2006, mất tại đây ngày 24.6.2015.'],
 };
+/* Câu đố cuối chương: bốn câu mỗi chương, mỗi câu gắn một sự kiện của chương (phần tử cuối). Chỉ hỏi câu mà sự kiện đã
+   hiện trong tour hay đã mở trang, hai câu mỗi lần, câu chưa hỏi trên máy này trước (gate.ts quizFor): đọc rồi chơi không
+   gặp lại đúng hai câu cũ. Sự kiện của hai câu đầu luôn có trong tour Đọc sử (tour.ts MUST); hai câu sau gắn thẻ cả nước,
+   nên Trò chơi, kể cả khi bấm "Điểm rẽ ›", đã đi qua chúng. */
 D.QUIZ={
- e1:[['Năm 1858, liên quân Pháp – Tây Ban Nha nổ súng đầu tiên ở đâu?',['Đà Nẵng','Gia Định','Thuận An'],0,'Bán đảo Sơn Trà, Đà Nẵng, ngày 1.9.1858.'],['Hiệp ước nào đặt cả Đại Nam dưới quyền bảo hộ Pháp?',['Nhâm Tuất 1862','Giáp Tuất 1874','Giáp Thân 1884'],2,'Hiệp ước Patenôtre, ngày 6.6.1884.']],
- e2:[['Ai khởi xướng phong trào Đông Du?',['Phan Châu Trinh','Phan Bội Châu','Hoàng Hoa Thám'],1,'Phan Bội Châu đưa khoảng 200 thanh niên sang Nhật (1905–1909).'],['Liên bang Đông Dương thành lập năm nào?',['1862','1887','1911'],1,'Ngày 17.10.1887; Lào nhập năm 1899.']],
- e3:[['Khởi nghĩa Yên Bái do tổ chức nào lãnh đạo?',['VN Quốc dân đảng','Đảng Cộng sản','Duy Tân hội'],0,'Do Nguyễn Thái Học lãnh đạo, tháng 2.1930.'],['Mặt trận Việt Minh thành lập ở đâu?',['Pác Bó','Tân Trào','Hồng Kông'],0,'Pác Bó, Cao Bằng, tháng 5.1941.']],
- e4:[['Tuyên ngôn Độc lập được đọc vào ngày nào?',['19.8.1945','2.9.1945','19.12.1946'],1,'Tại quảng trường Ba Đình, Hà Nội.'],['Hiệp ước Élysée 1949 lập ra nhà nước nào?',['VN Cộng hoà','Quốc gia Việt Nam','Đế quốc Việt Nam'],1,'Quốc gia Việt Nam, do Bảo Đại làm Quốc trưởng.']],
- e5:[['Hiệp định Genève hẹn tổng tuyển cử vào năm nào?',['1955','1956','1960'],1,'Tháng 7.1956. Cuộc tổng tuyển cử không diễn ra.'],['Hiệp định Paris 1973 quy định điều gì?',['Mỹ rút quân trong 60 ngày','Tổng tuyển cử ngay','Chia đôi tại vĩ tuyến 17'],0,'Quân Mỹ rút hết trong 60 ngày sau khi ký.']],
- e6:[['Đổi Mới được quyết định tại Đại hội nào?',['Đại hội IV','Đại hội V','Đại hội VI'],2,'Đại hội VI, tháng 12.1986.'],['Từ 1.7.2025, Việt Nam có bao nhiêu tỉnh, thành?',['34','45','63'],0,'Sắp xếp từ 63 xuống 34 đơn vị hành chính cấp tỉnh.']]
+ e1:[['Năm 1858, liên quân Pháp – Tây Ban Nha nổ súng đầu tiên ở đâu?',['Đà Nẵng','Gia Định','Thuận An'],0,'Bán đảo Sơn Trà, Đà Nẵng, ngày 1.9.1858.','dn58'],['Hiệp ước nào đặt cả Đại Nam dưới quyền bảo hộ Pháp?',['Nhâm Tuất 1862','Giáp Tuất 1874','Giáp Thân 1884'],2,'Hiệp ước Patenôtre, ngày 6.6.1884.','pt84'],
+  ['Hiệp ước Nhâm Tuất 1862 nhượng cho Pháp vùng nào?',['Ba tỉnh miền Đông Nam Kỳ','Ba tỉnh miền Tây Nam Kỳ','Cả sáu tỉnh Nam Kỳ'],0,'Biên Hoà, Gia Định, Định Tường và đảo Côn Lôn; ba tỉnh miền Tây mất năm 1867.','nt62'],
+  ['Hiệp ước Giáp Tuất 1874 thừa nhận điều gì?',['Sáu tỉnh Nam Kỳ thuộc Pháp','Pháp bảo hộ Bắc Kỳ','Quân Pháp đóng ở Kinh thành Huế'],0,'Đổi lại, Pháp rút quân khỏi các thành ở Bắc Kỳ.','gt74']],
+ e2:[['Ai khởi xướng phong trào Đông Du?',['Phan Châu Trinh','Phan Bội Châu','Hoàng Hoa Thám'],1,'Phan Bội Châu đưa khoảng 200 thanh niên sang Nhật (1905–1909).','dd05'],['Liên bang Đông Dương thành lập năm nào?',['1862','1887','1911'],1,'Ngày 17.10.1887; Lào nhập năm 1899.','ld87'],
+  ['Chiếu Cần Vương ban ra nhân danh vị vua nào?',['Tự Đức','Hàm Nghi','Duy Tân'],1,'Vua Hàm Nghi, sau khi rời Kinh thành Huế ra Tân Sở tháng 7.1885.','cv85'],
+  ['Trong Thế chiến I, khoảng bao nhiêu người Đông Dương được đưa sang Pháp làm lính chiến và lính thợ?',['Khoảng 10.000','Gần 100.000','Hơn 500.000'],1,'Gần 100.000 người, nhiều người về nước với những ý tưởng mới.','ww14']],
+ e3:[['Khởi nghĩa Yên Bái do tổ chức nào lãnh đạo?',['VN Quốc dân đảng','Đảng Cộng sản','Duy Tân hội'],0,'Do Nguyễn Thái Học lãnh đạo, tháng 2.1930.','yb30'],['Mặt trận Việt Minh thành lập ở đâu?',['Pác Bó','Tân Trào','Hồng Kông'],0,'Pác Bó, Cao Bằng, tháng 5.1941.','vm41'],
+  ['Hội nghị thành lập Đảng Cộng sản Việt Nam (2.1930) họp ở đâu?',['Hồng Kông','Quảng Châu','Hà Nội'],0,'Ở Cửu Long, Hồng Kông; tháng 10.1930 đổi tên thành Đảng Cộng sản Đông Dương.','cs30'],
+  ['Thời Mặt trận Bình dân (1936–1939), điều gì được nới ra ở Đông Dương?',['Báo chí và hội họp','Thuế thân bị bãi bỏ','Đông Dương được tự trị'],0,'Tù chính trị được thả, báo chí tiếng Việt nở rộ; năm 1939 lại bị cấm.','mt36']],
+ e4:[['Tuyên ngôn Độc lập được đọc vào ngày nào?',['19.8.1945','2.9.1945','19.12.1946'],1,'Tại quảng trường Ba Đình, Hà Nội.','ng45'],['Hiệp ước Élysée 1949 lập ra nhà nước nào?',['VN Cộng hoà','Quốc gia Việt Nam','Đế quốc Việt Nam'],1,'Quốc gia Việt Nam, do Bảo Đại làm Quốc trưởng.','el49'],
+  ['Lời kêu gọi Toàn quốc kháng chiến ra đời vào ngày nào?',['2.9.1945','19.12.1946','7.5.1954'],1,'Lời kêu gọi đề ngày 19.12.1946, phát trên đài sáng hôm sau.','tk46'],
+  ['Trận Điện Biên Phủ kéo dài bao lâu?',['12 ngày đêm','56 ngày đêm','81 ngày đêm'],1,'Từ 13.3 đến 7.5.1954; tướng de Castries bị bắt.','dbp']],
+ e5:[['Cuộc di cư 1954 đưa khoảng bao nhiêu người từ Bắc vào Nam?',['Khoảng 100.000','800.000 – 1 triệu','Hơn 3 triệu'],1,'Phần lớn là giáo dân; chiều ngược lại, khoảng 80.000 – 130.000 người tập kết ra Bắc.','dc54'],['Hiệp định Paris 1973 quy định điều gì?',['Mỹ rút quân trong 60 ngày','Tổng tuyển cử ngay','Chia đôi tại vĩ tuyến 17'],0,'Quân Mỹ rút hết trong 60 ngày sau khi ký.','pr73'],
+  ['Tổng tấn công Tết Mậu Thân diễn ra năm nào?',['1965','1968','1972'],1,'Đêm 30 rạng 31.1.1968, ở hơn 100 đô thị miền Nam; Huế bị chiếm gần một tháng.','mt68'],
+  ['Chiến tranh kết thúc ở Sài Gòn vào ngày nào?',['30.4.1975','2.9.1975','2.7.1976'],0,'Trưa 30.4.1975, Tổng thống Dương Văn Minh tuyên bố đầu hàng; ngày 2.7.1976 nước Cộng hoà xã hội chủ nghĩa Việt Nam ra đời.','sg75']],
+ e6:[['Đổi Mới được quyết định tại Đại hội nào?',['Đại hội IV','Đại hội V','Đại hội VI'],2,'Đại hội VI, tháng 12.1986.','dm86'],['Từ 1.7.2025, Việt Nam có bao nhiêu tỉnh, thành?',['34','45','63'],0,'Sắp xếp từ 63 xuống 34 đơn vị hành chính cấp tỉnh.','st25'],
+  ['Việt Nam và Mỹ bình thường hoá quan hệ năm nào?',['1986','1995','2007'],1,'Ngày 11.7.1995; cuối tháng ấy Việt Nam gia nhập ASEAN.','hn95'],
+  ['Năm 2007, Việt Nam là thành viên thứ bao nhiêu của WTO?',['100','150','170'],1,'Thành viên thứ 150, từ ngày 11.1.2007.','wto07']]
 };
 D.BADGES=[
  ['start','◈','Mở hồ sơ','Bắt đầu hành trình'],['r10','❡','Mọt sử','Đọc 10 sự kiện'],['r40','✒','Sử gia','Đọc 40 sự kiện'],['s5','▤','Nhà lưu trữ','Mở 5 sử liệu'],

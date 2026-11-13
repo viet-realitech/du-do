@@ -48,7 +48,7 @@ const ERAS = [
  {id:'e6', n:6, from:1976, to:2026, cy:1976, title:'Sau tiếng súng',
   q:'Đất nước thống nhất nhưng kiệt quệ: cấm vận, hai cuộc chiến biên giới, lạm phát. Bạn chọn con đường nào?',
   opts:[
-   {id:'baocap', tag:'vutrang', label:'Giữ kế hoạch hoá', who:'Kinh tế tập trung', d:'Hợp tác xã, tem phiếu, quốc doanh.', out:'Bạn xếp hàng mua gạo bằng tem phiếu. Đến giữa thập niên 1980, lạm phát lên mức ba con số.', persp:'vn'},
+   {id:'baocap', tag:'giunep', label:'Giữ kế hoạch hoá', who:'Kinh tế tập trung', d:'Hợp tác xã, tem phiếu, quốc doanh.', out:'Bạn xếp hàng mua gạo bằng tem phiếu. Đến giữa thập niên 1980, lạm phát lên mức ba con số.', persp:'vn'},
    {id:'doimoi', tag:'caicach', label:'Đổi Mới', who:'Đại hội VI, 1986', d:'Kinh tế thị trường định hướng XHCN, mở cửa.', out:'Bạn mở một xưởng nhỏ sau năm 1986. Khoán 10, rồi ASEAN, rồi WTO.', persp:'vn'},
    {id:'radi', tag:'thuongthuyet', label:'Ra đi', who:'Cộng đồng hải ngoại', d:'Rời quê hương, dựng đời sống mới nơi xứ người.', out:'Bạn vượt biển, qua trại tị nạn, định cư ở Mỹ, Pháp, Úc. Sau 1995, bạn có thể quay về thăm quê.', persp:'vnch'}],
   prev:'doimoi', hist:'Đổi Mới 1986 đưa Việt Nam hội nhập. Năm 2025, cả nước sắp xếp lại còn 34 tỉnh, thành.'}

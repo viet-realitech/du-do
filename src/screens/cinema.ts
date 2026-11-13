@@ -1,8 +1,8 @@
 import { ERAS, EV, type Era } from '../data';
 import { S, optOf, familyName, archetype, nameChain } from '../state';
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
-import { isPlay, rank, endingNow, bigChoices } from '../play';
-import { rarityLine } from '../data/endings';
+import { isPlay, rank, endingNow, bigChoices, factsFromState } from '../play';
+import { rarityLine, chronLine } from '../data/endings';
 import { wikiFor, probe } from '../wiki';
 import { esc, app } from '../ui/dom';
 import { watch } from '../ui/quality';
@@ -129,17 +129,18 @@ function clipMs(url: string): Promise<number> {
 interface Slide { y: number; head: string; title: string; lines: string[]; img: Promise<string | null>; say?: [string, string] }
 
 function slides(): Slide[] {
+  const f = factsFromState(); // dòng gia phả theo quê (data/endings.ts chronLine)
   const out: Slide[] = [];
   for (const e of ERAS) {
     const o = optOf(e);
     if (!o) continue;
     const nx = ERAS[ERAS.indexOf(e) + 1], end = nx ? nx.cy : 2026;
     // dòng gia phả (cả hai luồng, có bản thu), việc lớn nhất dòng họ quyết trong đời ấy (Trò chơi), các lần đổi họ
-    const lines = [CHRONICLE[o.id] || o.out];
+    const chron = chronLine(o.id, f, CHRONICLE), lines = [chron];
     const big = isPlay() ? bigChoices(e, 1)[0] : undefined;
     if (big) lines.push(`${big.y} · ${big.out}`);
     for (const n of S.names) if (n.y >= e.cy && n.y < end) lines.push(`${n.y} · ${n.from} đổi thành ${n.to}`);
-    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: `${e.title} · ${o.label}`, lines, img: eraImage(e, 6000, true), say: CHRONICLE[o.id] ? [CHRONICLE[o.id], chrKey(o.id)] : undefined });
+    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: `${e.title} · ${o.label}`, lines, img: eraImage(e, 6000, true), say: chron === CHRONICLE[o.id] ? [chron, chrKey(o.id)] : undefined }); // câu đã chỉnh theo quê: không có bản thu
   }
   return out;
 }
@@ -149,7 +150,7 @@ export function montage(): void {
   if (document.querySelector('.cine.film:not(.out)')) return; // đang chiếu: không chồng phim thứ hai
   const list = slides();
   if (!list.length) return;
-  const { f, e: end, title } = endingNow(), ar = archetype(), skey = S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
+  const { f, e: end, title } = endingNow(), ar = archetype(), skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
   const rar = end ? rarityLine(end.id, f.mode) : null;
   const box = document.createElement('div');
   box.className = 'cine film';

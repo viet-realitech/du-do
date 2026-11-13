@@ -1,10 +1,10 @@
 import { ERAS, F, VAL, pop, regime2, type Era } from './data';
-import { S, save, rt, Y0, Y1, eraOf, evEra, curPick, optOf, chYear, values, allEv, visEv, setFocus, pct } from './state';
+import { S, save, rt, Y0, Y1, eraOf, evEra, curPick, optOf, chYear, values, allEv, visEv, setFocus, pct, familyName } from './state';
 import { on } from './ui/actions';
 import { $, esc, announce } from './ui/dom';
 import { av, flag } from './ui/bits';
 import { paintMap, paintHome, hidePop, mapBusy } from './map';
-import { isPlay, pendingCard, cardOf, mustDecide, home, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice, ownCard } from './play';
+import { isPlay, pendingCard, cardOf, mustDecide, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice, ownCard, placeAt } from './play';
 import { openCard, relChip } from './screens/card';
 import { SND, ac } from './audio';
 import { stopTour, isTourPaused, resumeTour, canResumeChapter, tourEra, tourPause } from './tour';
@@ -69,7 +69,7 @@ export function renderMain(): void {
   setText($('#popl')!, pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu');
   renderLegend(y, pk);
   paintMap();
-  paintHome(isPlay() ? home()[2] : null);
+  paintHome(isPlay() ? placeAt(y).l : null); // sau 1954: nơi dòng họ đang sống (di cư, tập kết)
   renderVals();
   renderRes();
   $('#fbtn')!.classList.toggle('act', S.filt !== 'Tất cả');
@@ -148,7 +148,7 @@ export function renderCard(): void {
   if (must) cls += ' must';
   // dựng lại thẻ (‹ / › bằng bàn phím): giữ tiêu điểm trên nút tương ứng thay vì để rơi về <body>
   const f = c.contains(document.activeElement) ? document.activeElement as HTMLElement : null, fa = f?.dataset.a, fd = f?.dataset.d;
-  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký dòng họ' : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
+  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký ' + esc(familyName().replace(/^Họ /, 'họ ')) : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
     <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`)) return;
   if (f) (c.querySelector<HTMLElement>(`[data-a="${fa}"]${fd ? `[data-d="${fd}"]` : ''}`) || c.querySelector<HTMLElement>('.c'))?.focus({ preventScroll: true });
 }

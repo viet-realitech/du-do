@@ -3,14 +3,14 @@ import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices }
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
-import { epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts } from '../data/endings';
+import { chronLine, epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts } from '../data/endings';
 import { on } from '../ui/actions';
 import { app, esc, layer, sheet, toast, clearLayer } from '../ui/dom';
 import { checkBadges } from '../badges';
 import { stopTour } from '../tour';
 import { renderMain, invalidateTrack } from '../view';
 import { compass } from './profile';
-import { openQuiz, openHarvest } from './gate';
+import { openQuiz, openHarvest, quizFor } from './gate';
 import { splash } from './onboarding';
 import { setTab } from '../tabs';
 import { montage, preloadEra } from './cinema';
@@ -19,37 +19,25 @@ import { montage, preloadEra } from './cinema';
 export function endGame(e: Era): void {
   rt.flowTo = null;
   const h = harvest(e, Y1);
-  if (h) openHarvest(e, h, Y1, S.quiz.e6 ? 'Xem kết cục dòng họ' : 'Đố nhanh chương 6', goEnd); else goEnd();
+  if (h) openHarvest(e, h, Y1, S.quiz.e6 || !quizFor('e6').length ? 'Xem kết cục dòng họ' : 'Đố nhanh chương 6', goEnd); else goEnd();
 }
 
 /** Kết luận. Đọc sử: câu đố chương 6 chỉ hỏi khi vừa xem hết chương 6 (như mọi chương: chương chưa xem không đố). */
 export function goEnd(): void {
-  if (!S.quiz.e6 && (isPlay() || rt.toured === 'e6')) openQuiz('e6', openEnd);
+  if (!S.quiz.e6 && (isPlay() || rt.toured === 'e6') && quizFor('e6').length) openQuiz('e6', openEnd);
   else openEnd();
-}
-
-/** Dòng gia phả của một hướng. Trò chơi biết quê nên nói đúng người miền nào làm gì sau Genève (dòng chung của "Miền
-    Bắc", "Miền Nam" phải gộp cả người ở lại lẫn người tập kết, di cư); các hướng khác dùng dòng biên niên chung. */
-function chronLine(id: string, f: Facts): string {
-  const reg = f.home?.region, north = reg === 'B' || reg === 'T1';
-  if (reg && id === 'bac') return north
-    ? (f.flags.has('dicu') ? 'Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
-    : (f.flags.has('tapketN') ? 'Thế hệ 5 tập kết ra Bắc năm 1954; có người sau đó theo đường Trường Sơn trở lại miền Nam.' : 'Thế hệ 5 ở lại miền Nam, đứng về phía cách mạng; qua những năm Tố Cộng, rồi Mặt trận Dân tộc Giải phóng miền Nam ra đời cuối năm 1960.');
-  if (reg && id === 'nam') return north
-    ? 'Thế hệ 5 di cư vào Nam năm 1954, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.'
-    : 'Thế hệ 5 sống ở miền Nam, qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.';
-  return CHRONICLE[id] || ERAS.flatMap(e => e.opts).find(o => o.id === id)?.out || '';
 }
 
 /** Gia phả (cả hai luồng): dòng biên niên theo hướng đã chọn; Trò chơi thêm tối đa hai việc lớn dòng họ đã quyết trong
     mỗi đời (lời kết trên thẻ) và các lần đổi họ; cuối cùng là lời khép theo họ. */
 function giaPha(f: Facts): string {
-  const epi = EPILOGUES[S.surname || surnameKey(S.name)];
+  // lời khép theo họ gốc của dòng họ: nhà họ Nguyễn lấy họ Lê để tránh sổ "phiến loạn" không thành chuyện của họ Lê
+  const epi = EPILOGUES[S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name)];
   const rows: [number, string][] = [];
   for (const e of ERAS) {
     const o = optOf(e);
     if (!o) continue;
-    rows.push([e.cy, `<div class="chron"><span class="mono muted">${e.cy}</span><span>${esc(chronLine(o.id, f))}</span></div>`]);
+    rows.push([e.cy, `<div class="chron"><span class="mono muted">${e.cy}</span><span>${esc(chronLine(o.id, f, CHRONICLE))}</span></div>`]);
     if (isPlay()) for (const c of bigChoices(e)) rows.push([c.y + 0.1, `<div class="chron gp-dec"><span class="mono muted">${c.y}</span><span><i>${esc(c.label)}.</i> ${esc(c.out)}</span></div>`]);
   }
   for (const n of S.names) rows.push([n.y + 0.5, `<div class="chron"><span class="mono muted">${n.y}</span><span><b>${esc(n.from)}</b> đổi thành <b>${esc(n.to)}</b> · ${esc(n.why)}</span></div>`]);

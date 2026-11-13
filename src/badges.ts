@@ -4,7 +4,7 @@ import { toast, whenClear } from './ui/dom';
 import { SND, buzz } from './audio';
 
 function badgeState(): Record<string, boolean> {
-  const ms = matchStats(), tags = new Set(picked().map(o => o.tag));
+  const ms = matchStats(), tags = new Set(picked().map(o => o.tag).filter(t => t !== 'giunep')); // ba kiểu: đấu tranh, cải cách, hoà hoãn
   const real = S.seen.filter(i => !i.startsWith('d-')).length;
   return {
     start: S.step === 'play', r10: real >= 10, r40: real >= 40, s5: S.srcSeen.length >= 5, pv10: S.pvSeen.length >= 10,

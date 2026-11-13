@@ -22,16 +22,19 @@ const walk = (i: number, acc: string[]) => {
 walk(0, []);
 
 let bad = 0, runs = 0, minG = 100, lowAt = '';
-const starve = new Set<string>();
+// lúa gạo ≤ 5 (bạc còn thì vẫn đong được gạo, payFx) và nghèo kiệt (lúa gạo cộng bạc ≤ 5: không còn gì để đổi)
+const starve = new Set<string>(), broke = new Set<string>();
 const fails: string[] = [];
 // họ có biến cố riêng theo họ (cùng '' = không chọn họ nào trong danh sách)
 const surnames = ['', ...new Set(SPECIAL.flatMap(c => c.when.surnames || []))];
 /** Chọn như dòng họ trung thành: hợp đường nhất mà đủ sức (rẻ hơn nếu ngang nhau); ghi lại lần lựa chọn hợp đường bị khoá.
     `rename[i]`: lựa chọn đổi họ (thẻ hiện nhãn "Đổi họ", không tính là hợp / trái đường). */
-function choose(tag: string, chs: { fx: Fx; label: string; rename?: boolean }[], y: number): number {
-  const opts = chs.map((ch, i) => ({ i, al: ch.rename ? 0 : P.alignment(ch.fx, y), no: P.canAfford(ch.fx), cost: P.cost(ch.fx) }));
-  // thẻ không lựa chọn nào đủ sức: lựa chọn rẻ nhất vẫn bấm được (như card.ts)
-  if (opts.every(o => o.no)) opts.reduce((b, o) => (o.cost < b.cost ? o : b)).no = null;
+function choose(tag: string, chs: { fx: Fx; label: string; rename?: boolean; key?: string }[], y: number): number {
+  const als = chs.map(ch => (ch.rename ? 0 : P.alignment(ch.fx, y, ch.key)));
+  // như card.ts: không lựa chọn nào đủ sức thì lựa chọn rẻ nhất mở; chỉ còn lựa chọn trái đường thì lựa chọn không trái
+  // đường rẻ nhất mở (play.ts locks)
+  const no = P.locks(chs.map(ch => ch.fx), als);
+  const opts = chs.map((ch, i) => ({ i, al: als[i], no: no[i], cost: P.cost(ch.fx) }));
   const ok = opts.filter(o => !o.no);
   // bị khoá thật: có lựa chọn hợp đường nhưng không cái nào đủ sức, trong khi lựa chọn khác vẫn đủ
   const loyal = opts.filter(o => o.al > 0), locked = loyal.length && loyal.every(o => o.no) ? loyal[0] : null;
@@ -55,7 +58,7 @@ for (const sk of surnames) for (const [hid] of P.HOMES) for (const path of paths
       const c = P.cardOf(v);
       if (!c || !(P.mustDecide(v) || P.specialFor(v))) continue; // như pendingCard: bắt buộc, hay có biến cố riêng
       const y = st.chYear(v);
-      P.decide(v, choose(`${who} ${v.id} (${v.y})`, c[2].map(ch => ({ fx: ch[2], label: ch[0] })), y));
+      P.decide(v, choose(`${who} ${v.id} (${v.y})`, c[2].map((ch, i) => ({ fx: ch[2], label: ch[0], key: P.alKey(v, i) })), y));
       const sp = P.specialFor(v);
       if (sp && !P.specialDecided(sp)) {
         const i = choose(`${who} ${sp.id} (${v.y})`, sp.choices.map(ch => ({ fx: ch[2], label: ch[0], rename: !!ch[4] })), y);
@@ -64,11 +67,12 @@ for (const sk of surnames) for (const [hid] of P.HOMES) for (const path of paths
       }
       if (S.res.g < minG) { minG = S.res.g; lowAt = `${who} ${v.id} (${v.y})`; }
       if (S.res.g <= 5) starve.add(who);
+      if (S.res.g + S.res.b <= 5) broke.add(who);
     }
   });
   P.harvest(ERAS[ERAS.length - 1], 2026);
 }
-console.log(`mô phỏng trung thành: ${runs} lượt (${surnames.length} họ × ${P.HOMES.length} quê × ${paths.length} con đường), ${bad} lần lựa chọn hợp đường bị khoá; lúa gạo thấp nhất ${minG} (${lowAt}); ${starve.size} lượt có lúc lúa gạo ≤ 5`);
-for (const x of [...starve].slice(0, 12)) console.log('  đói: ' + x);
+console.log(`mô phỏng trung thành: ${runs} lượt (${surnames.length} họ × ${P.HOMES.length} quê × ${paths.length} con đường), ${bad} lần lựa chọn hợp đường bị khoá; lúa gạo thấp nhất ${minG} (${lowAt}); ${starve.size} lượt có lúc lúa gạo ≤ 5, ${broke.size} lượt có lúc cả lúa gạo lẫn bạc cộng lại ≤ 5`);
+for (const x of [...broke].slice(0, 12)) console.log('  kiệt: ' + x);
 for (const f of fails.slice(0, 30)) console.log('  ' + f);
 if (process.argv.includes('--strict') && bad) process.exit(1);

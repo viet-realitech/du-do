@@ -163,7 +163,8 @@ test('reading mode: ▶ late in a chapter tours what is left of it; 2026 offers 
 });
 
 test('reading mode: a tour stopped at Genève resumes chapter 4 after a reload, even with a filter, then quizzes it and moves on', async ({ page }) => {
-  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1954, filt: 'Trận đánh', tourAt: { e: 'e4', id: 'gnv' }, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'tl' }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true] } });
+  // the steps before Genève were watched before the reload (their events are what the quiz may ask about)
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1954, filt: 'Trận đánh', tourAt: { e: 'e4', id: 'gnv' }, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'tl' }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, shown: ['ng45', 'tk46', 'el49', 'dbp'] });
   await page.locator('#play').click();
   await expect(page.locator('#tourb .mono').first()).toContainText('Chương 4', { timeout: 5000 }); // not chapter 5 at 1955
   await expect(page.locator('#card')).toContainText('Genève', { timeout: 5000 });
@@ -274,6 +275,113 @@ test('play mode: Điện Biên Phủ and Genève, still owed at 1954, are played
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 }); // chapter 4 resumes at Điện Biên Phủ
   await expect(page.locator('#eraNo')).toContainText('Chương 4');
   await expect(page.getByText('Mùa màng')).toHaveCount(0); // not the generation-4 harvest / turning point 5 first
+  expect(errors).toEqual([]);
+});
+
+/** Trò chơi, bản lưu dựng sẵn: mọi thẻ trước thẻ `upTo` (theo thứ tự trong cards.ts, cũng là thứ tự thời gian) đã quyết. */
+async function bootPlay(page: Page, st: Record<string, unknown>, upTo: string, key = 'seeded') {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
+  const cards = { ...Object.fromEntries(ids.slice(0, ids.indexOf(upTo)).map(id => [id, 0])), ...(st.cards as object || {}) };
+  const s = { step: 'play', mode: 'play', cardv: {}, xFrom: 2026, narr: false, ...st, cards };
+  // một lần cho mỗi khoá: tải lại trang không ghi đè bản lưu; khoá khác thì dựng bản lưu mới trong cùng thẻ
+  await page.addInitScript(([x, k]) => { if (!sessionStorage.getItem(k)) { localStorage.setItem('dudo-v2-play', x); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem(k, '1'); } }, [JSON.stringify(s), key]);
+  await page.goto('/');
+  return errors;
+}
+
+test('play mode: turning point 5 moves the family — a Huế family that picks Miền Bắc regroups North and gets the North\'s cards', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Phan', surname: 'phan', home: 'hue', year: 1955, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 40, d: 40, b: 40, u: 40 } }, 'dc54');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  // land reform is a northern card: owed now that the family lives in the North, told from a regrouped family's side
+  await expect(page.locator('.scrim h2')).toHaveText('Cải cách ruộng đất ở miền Bắc', { timeout: 8000 });
+  await expect(page.locator('.scrim .sheet')).toContainText('Huế → miền Bắc');
+  await expect(page.locator('.scrim .sheet')).toContainText('Chạm tới nơi dòng họ đang sống (miền Bắc)');
+  await expect(page.locator('.scrim .opt h3').first()).toHaveText('Về nông trường khai hoang');
+  await page.locator('.scrim .opt').first().click();
+  await page.locator('#cgo').click();
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  // the 1954 migration card asks whether the whole household goes (not "where to live" again, not a southern host's card)
+  await expect(page.locator('.scrim h2')).toHaveText('Cuộc di cư 1954', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Cả nhà cùng ra Bắc', 'Người đi, vợ con ở lại giữ đất']);
+  expect(errors).toEqual([]);
+});
+
+test('play mode: Điện Biên Phủ seen from Nghệ An (free zone), and rice short but silver to spare', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'na', year: 1954, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 5, d: 40, b: 40, u: 30 } }, 'dbp');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('.scrim h2')).toHaveText('Điện Biên Phủ', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Đi dân công Điện Biên', 'Đóng thuế nông nghiệp', 'Ở nhà giữ làng, nghe tin chiến thắng']);
+  // not enough rice, but silver covers it (one for one), said on the option; the loyal option is not locked
+  const go = page.locator('.scrim .opt').first();
+  await expect(go).toBeEnabled();
+  await expect(go).toContainText('Bỏ 5 bạc đong gạo');
+  await expect(go).toContainText('Hợp đường bạn theo');
+  await go.click();
+  await page.locator('#cgo').click();
+  await expect(page.locator('.scrim .resrow')).toContainText('Lúa gạo 0');
+  await expect(page.locator('.scrim .resrow')).toContainText('Bạc 31');
+  expect(errors).toEqual([]);
+});
+
+test('play mode: 30.4.1975 for a Third Force family that migrated South is not the old regime\'s reeducation call', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Lê', home: 'hn', year: 1975, picks: { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 20, d: 50, b: 20, u: 50 } }, 'sg75');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('.scrim h2')).toContainText('Sài Gòn', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Di tản', 'Ở lại, chờ hoà hợp', 'Đón quân giải phóng']);
+  await expect(page.locator('.scrim .opt').nth(1)).toContainText('Hợp đường bạn theo');
+  expect(errors).toEqual([]);
+});
+
+test('turning points: "Gia đình bạn" follows what the family lived (a father who returned, a new surname, no phantom branch)', async ({ page }) => {
+  // generation 2 followed Cần Vương and took the mother's surname after Hương Khê (1896)
+  let errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'na', year: 1930, picks: { e1: 'chien', e2: 'canvuong' },
+    names: [{ y: 1896, from: 'Họ Nguyễn', to: 'Họ Lê', why: 'Sau khi Hương Khê tan rã' }], xs: { hk96: 'x-canvuong96' }, cards: { 'x:x-canvuong96': 1 },
+    quiz: { e1: [true, true], e2: [true, true] }, harvests: ['e1'] }, 'cs30');
+  await page.locator('#hv-go').click(); // harvest of generation 2
+  if (await page.locator('.cine').count()) await page.goBack(); // chapter opener
+  const ctx = page.locator('.scrim .pv.mine');
+  await expect(ctx).toContainText('Cha bạn theo nghĩa quân Hương Khê', { timeout: 8000 });
+  await expect(ctx).toContainText('Năm 1896, Họ Nguyễn đổi thành Họ Lê.');
+  await expect(ctx).toContainText('Nguyễn Ái Quốc');
+  await expect(ctx).not.toContainText('Sổ của Pháp ghi gia đình');
+  await expect(ctx).not.toContainText('mất trong rừng');
+  expect(errors).toEqual([]);
+  // a Nghệ An family that stayed North and sent no branch South in 1954: no relatives to meet in Sài Gòn
+  errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'na', year: 1976, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac' },
+    cards: { dc54: 1, sg75: 1 }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'] }, 'tn76', 'seeded2');
+  await page.locator('#hv-go').click();
+  if (await page.locator('.cine').count()) await page.goBack();
+  await expect(page.locator('.scrim .pv.mine')).toContainText('tìm tin những người trong họ đã đi chiến trường', { timeout: 8000 });
+  await expect(page.locator('.scrim .pv.mine')).not.toContainText('họ hàng chưa từng biết mặt');
+  expect(errors).toEqual([]);
+});
+
+test('reading mode: the chapter quiz asks only about events the tour showed, before the next chapter takes the header', async ({ page }) => {
+  // chapter 1 watched (before a reload) at the 1862 treaty, resumed at Patenôtre; Đà Nẵng 1858 was never shown
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1884, tourAt: { e: 'e1', id: 'pt84' }, picks: { e1: 'chien' }, quiz: {}, shown: ['nt62'] });
+  await page.locator('#play').click();
+  await expect(page.locator('#card')).toContainText('Patenôtre', { timeout: 5000 });
+  const next = page.locator('#tourb [data-t=next]');
+  for (let k = 0; k < 12 && await page.locator('#tourb').count(); k++) { if (await next.count()) await next.click().catch(() => {}); await page.waitForTimeout(400); }
+  await expect(page.getByText(/Đố nhanh · Chương 1/i)).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('#eraNo')).toContainText('Chương 1'); // drawn over its own chapter, not over chapter 2's header
+  const asked: string[] = [];
+  for (let q = 0; q < 2; q++) {
+    await expect(page.locator('#layer .scrim h2')).not.toHaveText(asked); // the next question, not the one fading out
+    asked.push(await page.locator('#layer .scrim h2').textContent() || '');
+    await page.locator('#layer .scrim .qa').first().click();
+    await page.locator('#qn').click();
+  }
+  expect(asked.sort()).toEqual(['Hiệp ước Nhâm Tuất 1862 nhượng cho Pháp vùng nào?', 'Hiệp ước nào đặt cả Đại Nam dưới quyền bảo hộ Pháp?']);
   expect(errors).toEqual([]);
 });
 
@@ -717,7 +825,7 @@ test('ending (play mode): home, card decisions and harvest snapshots shape the e
   const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u });
   const st = { step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year: 2026, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' },
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true], e6: [true, true] }, cards, cardv: {}, xFrom: 2026,
-    harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'], snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(60, 50, 50, 50) }, res: r(60, 50, 50, 50) };
+    harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'], snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(50, 45, 45, 45) }, res: r(50, 45, 45, 45) };
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
   await page.goto('/');
   await page.locator('#card [data-a=end].c').click();
@@ -729,7 +837,7 @@ test('ending (play mode): home, card decisions and harvest snapshots shape the e
   await expect(page.locator('.end-rar')).toContainText(/\d+(,\d)?% dòng họ trong mô phỏng đi tới kết cục này/);
   await expect(page.locator('.cf-card h2')).toHaveText('Nếu triều đình dồn sức chủ chiến (1858–1862)');
   await expect(page.locator('.cf-card')).toContainText('khoảng 5% (1 trên 20)');
-  // wealth is ranked against families from the same home (210 in Hà Nội: between P5 and P25)
+  // wealth is ranked against families from the same home (185 in Hà Nội: between P5 and P25)
   await expect(page.locator('.ov.end .pv.mine').first()).toContainText('Nhà sa sút');
   await expect(page.locator('.gens li')).toHaveCount(6);
   await expect(page.locator('.gens li.best')).toContainText('Đời 5');

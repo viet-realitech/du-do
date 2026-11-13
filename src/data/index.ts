@@ -6,7 +6,8 @@ import provinces from './vn-provinces.json';
 export type Faction = 'dainam' | 'dnph' | 'phap' | 'phap_bh' | 'jp' | 'vndcch' | 'tc' | 'vnch' | 'cmlt' | 'chxhcn';
 export type Region = 'B' | 'T1' | 'QT' | 'T2' | 'NE' | 'NW';
 export type ValueKey = 'doc' | 'song' | 'tudo' | 'dk';
-export type Tag = 'vutrang' | 'caicach' | 'thuongthuyet';
+/** Kiểu lựa chọn; 'giunep' (giữ kế hoạch hoá sau 1975) không thuộc ba kiểu đấu tranh / cải cách / hoà hoãn. */
+export type Tag = 'vutrang' | 'caicach' | 'thuongthuyet' | 'giunep';
 export type LngLat = [number, number];
 
 export interface Quote { t: string; by: string; src: string }
@@ -27,6 +28,8 @@ export interface HistEvent {
   n?: [string, string][];
   diary?: boolean;
   era?: string;
+  /** Trang nhật ký: tháng (khi cùng năm với một sự kiện có thẻ, để dòng "Ở nhà" không nhắc việc xảy ra sau). */
+  m?: number;
 }
 
 export interface Option {
@@ -72,8 +75,8 @@ export interface Regime {
 
 /** [name, years, role, bio] */
 export type Figure = [string, string, string, string];
-/** [question, options, answerIndex, explanation] */
-export type QuizItem = [string, string[], number, string];
+/** [question, options, answerIndex, explanation, event id]: câu đố chỉ hỏi khi sự kiện ấy đã hiện trong tour. */
+export type QuizItem = [string, string[], number, string, string];
 /** [id, icon, name, description] */
 export type Badge = [string, string, string, string];
 
