@@ -906,7 +906,8 @@ test('ending (play mode): home, card decisions and harvest snapshots shape the e
   await expect(page.locator('.cf-card h2')).toHaveText('Nếu triều đình dồn sức chủ chiến (1858–1862)');
   await expect(page.locator('.cf-card')).toContainText('khoảng 5% (1 trên 20)');
   // wealth is ranked against families from the same home (185 in Hà Nội: between P5 and P25)
-  await expect(page.locator('.ov.end .pv.mine').first()).toContainText('Nhà sa sút');
+  await expect(page.locator('.end-rank')).toContainText('Nhà sa sút');
+  await expect(page.locator('.end-reg')).toContainText('Nhà sa sút'); // also on the summary register line
   await expect(page.locator('.gens li')).toHaveCount(6);
   await expect(page.locator('.gens li.best')).toContainText('Đời 5');
   await expect(page.locator('.gens li.worst')).toContainText('Đời 4');
