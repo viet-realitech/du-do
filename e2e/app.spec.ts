@@ -437,6 +437,74 @@ test('map renders the 1954 regime and legend', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('map sheet: new players open on Lưu trữ (a saved theme stays), the population cartouche clears the country names, icons are drawn', async ({ page }) => {
+  const errors = await boot(page);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'archive');
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#efe5cf');
+  await page.evaluate(s => localStorage.setItem('dudo-v2', s), JSON.stringify({ ...midGame, theme: 'night' }));
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'night');
+  await expect(page.locator('#map g.m').first()).toBeAttached();
+  // two-line cartouche (label, figure) in the sheet's corner, clear of "TRUNG QUỐC" on a phone
+  await expect(page.locator('#popl .cap')).toHaveText(/Dân số · 1943/i);
+  await expect(page.locator('#popl b')).toHaveText('≈ 22 triệu');
+  const tag = (await page.locator('#popl').boundingBox())!, cn = (await page.locator('#map text', { hasText: 'TRUNG QUỐC' }).boundingBox())!;
+  expect(tag.x + tag.width <= cn.x || cn.y + cn.height <= tag.y || tag.y + tag.height <= cn.y).toBe(true);
+  // one SVG sprite for the instruments, tabs and play / pause / stop (no Unicode glyphs sitting off-centre)
+  await expect(page.locator('#zin use')).toHaveAttribute('href', '#i-plus');
+  await expect(page.locator('.tab use')).toHaveCount(4);
+  await expect(page.locator('#play use')).toHaveAttribute('href', '#i-play');
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toBeVisible();
+  await expect(page.locator('#play use')).toHaveAttribute('href', '#i-pause');
+  await expect(page.locator('#tourb [data-t=stop] use')).toHaveAttribute('href', '#i-stop');
+  // phone: the tour bar is the sheet's lower margin band, not a card floating over the map
+  // (measured against the sheet inside its 6px neatline band, i.e. the frame's padding box)
+  const map = await page.locator('#mapwrap').evaluate(e => { const r = e.getBoundingClientRect(); return { x: r.left + e.clientLeft, y: r.top + e.clientTop, w: e.clientWidth, h: e.clientHeight }; });
+  const bar = async () => (await page.locator('#tourb').boundingBox())!;
+  await expect.poll(async () => { const b = await bar(); return Math.max(Math.abs(b.y + b.height - (map.y + map.h)), Math.abs(b.x - map.x), Math.abs(b.width - map.w)); }).toBeLessThan(2); // after the bar slides in
+  await page.locator('#tourb [data-t=stop]').click();
+  await expect(page.locator('#play use')).toHaveAttribute('href', '#i-play');
+  expect(errors).toEqual([]);
+});
+
+test('play mode, tablet: resource icons are drawn (not clipped to a hairline) and relations get their own legend row', async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 1180 });
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  const st = { step: 'play', mode: 'play', name: 'Họ Phan', surname: 'phan', home: 'na', year: 1861, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2 }, cardv: {}, res: { g: 40, d: 30, b: 25, u: 30 } };
+  await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
+  await page.goto('/');
+  await expect(page.locator('#res svg.ri')).toHaveCount(4);
+  for (const b of await page.locator('#res svg.ri').all()) expect((await b.boundingBox())!.height).toBeGreaterThan(10);
+  const row = page.locator('#legend .lr.rel');
+  await expect(row.locator('.relc')).toHaveCount(3); // Triều đình, Pháp, Làng xóm before 1930
+  await expect(row.locator('.relc').first()).toBeInViewport();
+  const lr = (await page.locator('#legend .lr').first().boundingBox())!, rr = (await row.boundingBox())!;
+  expect(rr.y).toBeGreaterThan(lr.y + lr.height - 1); // a row of its own, under the factions
+  expect(errors).toEqual([]);
+});
+
+test('landscape: the side column indexes the chapter; a row takes you to its event', async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  const errors = await boot(page, midGame);
+  const idx = page.locator('#idx');
+  await expect(idx).toBeVisible();
+  await expect(idx.locator('.cap')).toContainText('Mục lục chương V · 1954 – 1975');
+  expect(await idx.locator('li').count()).toBeGreaterThan(5);
+  const map = (await page.locator('#mapwrap').boundingBox())!;
+  expect((await idx.boundingBox())!.x).toBeGreaterThan(map.x + map.width - 1);
+  const row = idx.locator('button').nth(4), title = (await row.locator('span').textContent())!, y = (await row.locator('b').textContent())!;
+  await row.click();
+  await expect(page.locator('#card .t')).toHaveText(title);
+  await expect(page.locator('#yr')).toHaveText(y);
+  await expect(row).toHaveClass(/on/);
+  // the wide tab bar is a slim row, icons beside the words
+  expect((await page.locator('#tabs').boundingBox())!.height).toBeLessThan(60);
+  expect(errors).toEqual([]);
+});
+
 test('event detail tabs work offline and Back closes overlays without leaving the app', async ({ page }) => {
   const errors = await boot(page, { ...midGame, filt: 'Trận đánh' });
   await page.locator('#card .c').click();

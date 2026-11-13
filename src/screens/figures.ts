@@ -32,17 +32,17 @@ export function openFig(id: string): void {
 export function paneFig(): void {
   const met = figsMet(), ids = Object.keys(FIG);
   layer.innerHTML = `<div class="pane"><div class="mono muted">${met.size}/${ids.length} đã mở</div><h1 style="margin:6px 0 4px">Nhân vật</h1>
-  <p class="muted" style="font-size:16px;margin-bottom:6px">Mỗi điểm rẽ dòng họ bạn đi qua sẽ mở khoá những nhân vật của thời đó.</p>
+  <p class="muted" style="font-size:var(--t-body);margin-bottom:6px">Mỗi điểm rẽ dòng họ bạn đi qua sẽ mở khoá những nhân vật của thời đó.</p>
   ${ERAS.map(e => {
     const fs = ids.filter(id => FIGERA[id] === e.id), open = !!S.picks[e.id];
     const card = (id: string) => {
       const f = FIG[id];
-      return `<button class="fcard${open ? '' : ' off'}" data-a="fig" data-id="${id}"${open ? '' : ' aria-label="Nhân vật chưa mở"'}>${av(id, 0, !open)}<div class="nm" style="font:700 16.5px/1.15 var(--disp)">${f[0]}</div><div class="mono muted" style="margin-top:3px">${open ? f[1] : 'Chưa mở'}</div><div class="muted nm" style="font-size:13.5px;margin-top:4px;line-height:1.2">${f[2]}</div></button>`;
+      return `<button class="fcard${open ? '' : ' off'}" data-a="fig" data-id="${id}"${open ? '' : ' aria-label="Nhân vật chưa mở"'}>${av(id, 0, !open)}<div class="nm h4">${f[0]}</div><div class="mono muted" style="margin-top:4px">${open ? f[1] : 'Chưa mở'}</div><div class="muted nm small" style="margin-top:3px">${f[2]}</div></button>`;
     };
     // Nhóm theo phe / lĩnh vực (thứ tự SIDES); người đồng hành của điểm rẽ luôn đứng đầu nhóm.
     const groups = SIDES.map(([k, name]) => [name, fs.filter(id => FIGSIDE[id] === k)] as const).filter(g => g[1].length);
     const other = fs.filter(id => !FIGSIDE[id]); if (other.length) groups.push(['Khác', other]);
-    return `<div class="row sb" style="margin:22px 0 10px"><b style="font:700 18px var(--disp)">${e.n}. ${e.title}</b><span class="mono ${open ? '' : 'muted'}" style="${open ? 'color:var(--acc)' : ''}">${open ? 'Đã mở' : 'Mở năm ' + e.cy}</span></div>
+    return `<div class="row sb" style="margin:22px 0 10px"><b class="h4">${e.n}. ${e.title}</b><span class="mono ${open ? '' : 'muted'}" style="${open ? 'color:var(--acc)' : ''}">${open ? 'Đã mở' : 'Mở năm ' + e.cy}</span></div>
      ${groups.length > 1 ? groups.map(([name, g]) => `<div class="mono muted fside">${name} · ${g.length}</div><div class="fgrid">${g.map(card).join('')}</div>`).join('') : `<div class="fgrid">${fs.map(card).join('')}</div>`}`;
   }).join('')}</div>`;
 }

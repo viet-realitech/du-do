@@ -5,18 +5,15 @@ import '@fontsource/eb-garamond/latin-500';
 import '@fontsource/eb-garamond/vietnamese-500';
 import '@fontsource/eb-garamond/latin-600';
 import '@fontsource/eb-garamond/vietnamese-600';
+// Đèn dầu (night) dựng tít bằng chính EB Garamond: 700 / 800 thật cho tít, số liệu đậm (không để trình duyệt tự tô đậm)
+import '@fontsource/eb-garamond/latin-700';
+import '@fontsource/eb-garamond/vietnamese-700';
+import '@fontsource/eb-garamond/latin-800';
+import '@fontsource/eb-garamond/vietnamese-800';
 import '@fontsource/eb-garamond/latin-400-italic';
 import '@fontsource/eb-garamond/vietnamese-400-italic';
 import '@fontsource/eb-garamond/latin-500-italic';
 import '@fontsource/eb-garamond/vietnamese-500-italic';
-import '@fontsource/big-shoulders-display/latin-600';
-import '@fontsource/big-shoulders-display/vietnamese-600';
-import '@fontsource/big-shoulders-display/latin-700';
-import '@fontsource/big-shoulders-display/vietnamese-700';
-import '@fontsource/big-shoulders-display/latin-800';
-import '@fontsource/big-shoulders-display/vietnamese-800';
-import '@fontsource/big-shoulders-display/latin-900';
-import '@fontsource/big-shoulders-display/vietnamese-900';
 // Lưu trữ / Áp phích theme faces: only downloaded when that theme is in use.
 import '@fontsource/playfair-display/latin-500';
 import '@fontsource/playfair-display/vietnamese-500';

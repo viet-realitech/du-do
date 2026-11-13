@@ -170,11 +170,12 @@ D.QUIZ={
   ['Việt Nam và Mỹ bình thường hoá quan hệ năm nào?',['1986','1995','2007'],1,'Ngày 11.7.1995; cuối tháng ấy Việt Nam gia nhập ASEAN.','hn95'],
   ['Năm 2007, Việt Nam là thành viên thứ bao nhiêu của WTO?',['100','150','170'],1,'Thành viên thứ 150, từ ngày 11.1.2007.','wto07']]
 };
+// huy hiệu: khoá, chữ khắc trên ấn triện (một chữ, như con dấu), tên, điều kiện
 D.BADGES=[
- ['start','◈','Mở hồ sơ','Bắt đầu hành trình'],['r10','❡','Mọt sử','Đọc 10 sự kiện'],['r40','✒','Sử gia','Đọc 40 sự kiện'],['s5','▤','Nhà lưu trữ','Mở 5 sử liệu'],
- ['pv10','◐','Đa góc nhìn','Xem quan điểm ở 10 sự kiện'],['q6','✓','Trí nhớ tốt','Trả lời đúng 6 câu đố'],['q12','★','Thủ khoa','Đúng cả 12 câu đố'],['tags','⟁','Ba ngả đường','Chọn đủ cả ba kiểu lựa chọn'],
- ['against','↯','Ngược dòng','3 lần chọn khác hướng chiếm ưu thế'],['match','≡','Thuận dòng','Trùng hướng chiếm ưu thế 5/5'],['map','⌖','Người vẽ bản đồ','Phóng to bản đồ và chạm vào một vùng'],['fig8','☉','Người kết giao','Gặp 8 nhân vật'],
- ['diary','✎','Người giữ nhật ký','Đọc 6 trang nhật ký dòng họ'],['done','◉','Khép hồ sơ','Đi tới kết luận'],['share','⇪','Lan toả','Tạo thẻ chia sẻ']
+ ['start','Mở','Mở hồ sơ','Bắt đầu hành trình'],['r10','Đọc','Mọt sử','Đọc 10 sự kiện'],['r40','Sử','Sử gia','Đọc 40 sự kiện'],['s5','Lưu','Nhà lưu trữ','Mở 5 sử liệu'],
+ ['pv10','Nhìn','Đa góc nhìn','Xem quan điểm ở 10 sự kiện'],['q6','Nhớ','Trí nhớ tốt','Trả lời đúng 6 câu đố'],['q12','Khoa','Thủ khoa','Đúng cả 12 câu đố'],['tags','Ngả','Ba ngả đường','Chọn đủ cả ba kiểu lựa chọn'],
+ ['against','Ngược','Ngược dòng','3 lần chọn khác hướng chiếm ưu thế'],['match','Thuận','Thuận dòng','Trùng hướng chiếm ưu thế 5/5'],['map','Đồ','Người vẽ bản đồ','Phóng to bản đồ và chạm vào một vùng'],['fig8','Giao','Người kết giao','Gặp 8 nhân vật'],
+ ['diary','Ký','Người giữ nhật ký','Đọc 6 trang nhật ký dòng họ'],['done','Khép','Khép hồ sơ','Đi tới kết luận'],['share','Lan','Lan toả','Tạo thẻ chia sẻ']
 ];
 const fv=(id,arr)=>{const e=D.EV.find(x=>x.id===id);if(e)e.v.push(...arr);};
 const fq=(id,t,by,src)=>{const e=D.EV.find(x=>x.id===id);if(e)e.qt={t,by,src};};

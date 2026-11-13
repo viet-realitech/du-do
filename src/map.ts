@@ -515,9 +515,10 @@ function highlight(): void {
   G.call.selectAll('*').remove();
   const g = G.call.append('g').attr('class', 'co').datum<Pt>({ p });
   const t = v.t.length > 34 ? v.t.slice(0, 33) + '…' : v.t;
-  const bx = g.append('rect').attr('rx', 7).style('fill', 'var(--paper)').style('stroke', 'var(--acc)').attr('stroke-width', 1.2);
-  const t1 = g.append('text').attr('text-anchor', 'middle').attr('y', -38).style('font-family', 'var(--mono)').attr('font-size', 8.5)
-    .attr('letter-spacing', 1).style('fill', 'var(--acc)').text((v.diary ? 'NHẬT KÝ · ' : v.k.toUpperCase() + ' · ') + v.y);
+  // nhãn chú dẫn như trên bản đồ in: khung vuông, dòng loại · năm bằng chữ hoa giãn cùng họ chữ thân bài
+  const bx = g.append('rect').attr('rx', 1.5).style('fill', 'var(--paper)').style('stroke', 'var(--acc)').attr('stroke-width', 1.2);
+  const t1 = g.append('text').attr('text-anchor', 'middle').attr('y', -38).style('font-family', 'var(--serif)').attr('font-weight', 500)
+    .attr('font-size', 9).attr('letter-spacing', 1.3).style('fill', 'var(--acc)').text((v.diary ? 'NHẬT KÝ · ' : v.k.toUpperCase() + ' · ') + v.y);
   const t2 = g.append('text').attr('text-anchor', 'middle').attr('y', -24).style('font-family', 'var(--disp)').attr('font-weight', 700)
     .attr('font-size', 13).style('fill', 'var(--ink)').text(t);
   const w = Math.max(t1.node()!.getComputedTextLength(), t2.node()!.getComputedTextLength()) + 20;

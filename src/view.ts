@@ -3,6 +3,7 @@ import { S, save, rt, Y0, Y1, eraOf, evEra, curPick, optOf, chYear, values, allE
 import { on } from './ui/actions';
 import { $, esc, announce } from './ui/dom';
 import { av, flag } from './ui/bits';
+import { icon } from './ui/icons';
 import { paintMap, paintHome, hidePop, mapBusy } from './map';
 import { isPlay, pendingCard, cardOf, mustDecide, RES, powersAt, allPicked, needsDecision, specialFor, homeChoice, ownCard, placeAt } from './play';
 import { openCard, relChip } from './screens/card';
@@ -46,12 +47,12 @@ function setHtml(el: Element, h: string): boolean {
 }
 const setText = (el: Element, t: string): void => { if (el.textContent !== t) el.textContent = t; };
 
-/** Chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
+/** Hàng chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
+const edge = (r: HTMLElement): void => { r.classList.toggle('over', r.scrollWidth > r.clientWidth + 2); r.classList.toggle('end', r.scrollLeft + r.clientWidth >= r.scrollWidth - 2); };
+let edgeW = false;
 function legendEdge(): void {
-  const lg = $('#legend')!;
-  const upd = () => { lg.classList.toggle('over', lg.scrollWidth > lg.clientWidth + 2); lg.classList.toggle('end', lg.scrollLeft + lg.clientWidth >= lg.scrollWidth - 2); };
-  if (!lg.dataset.w) { lg.dataset.w = '1'; lg.addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); }
-  upd();
+  $('#legend')!.querySelectorAll<HTMLElement>('.lr').forEach(r => { r.addEventListener('scroll', () => edge(r), { passive: true }); edge(r); });
+  if (!edgeW) { edgeW = true; addEventListener('resize', () => $('#legend')!.querySelectorAll<HTMLElement>('.lr').forEach(edge)); }
 }
 export function renderMain(): void {
   const y = S.year, R = regime2(y), e = tourEra() || eraOf(y), pk = optOf(e);
@@ -65,8 +66,9 @@ export function renderMain(): void {
   else if (!isPlay()) { ds('a', 'pickera'); ds('id', e.id); } // Đọc sử: điểm rẽ của chương, không bắt buộc
   else if (er.dataset.a) delete er.dataset.a;
   setText($('#lbl')!, R.label);
+  // ô ghi chú góc bản đồ: nhãn (năm số liệu) và con số, hai dòng hẹp, không đè tên nước ở góc trên
   const pp = pop(y);
-  setText($('#popl')!, pp ? `Dân số ${pp[1]} · ${pp[0]}` : 'Dân số: chưa có số liệu');
+  setHtml($('#popl')!, pp ? `<span class="cap">Dân số · ${pp[0]}</span><b>${pp[1]}</b>` : '<span class="cap">Dân số</span><b class="na">chưa có số liệu</b>');
   renderLegend(y, pk);
   paintMap();
   paintHome(isPlay() ? placeAt(y).l : null); // sau 1954: nơi dòng họ đang sống (di cư, tập kết)
@@ -74,15 +76,18 @@ export function renderMain(): void {
   renderRes();
   $('#fbtn')!.classList.toggle('act', S.filt !== 'Tất cả');
   renderCard();
+  renderIndex();
   renderScrub();
 }
 
 /** Chú giải các phe của năm y (Trò chơi: kèm quan hệ với các thế lực). Xem lại diễn biến trong Trò chơi gọi với năm của
     cảnh (bản đồ vẽ biên giới năm ấy, năm đang chơi giữ nguyên). */
 export function renderLegend(y = S.year, pk = optOf(tourEra() || eraOf(y))): void {
-  const h = regime2(y).legend
+  // hai hàng: các phe trên bản đồ; Trò chơi thêm hàng quan hệ của dòng họ với các thế lực (trước đây chung một hàng,
+  // trên điện thoại hai phần ba bị khuất bên phải)
+  const h = `<div class="lr">${regime2(y).legend
     .map(k => `<span${pk && pk.fac === k ? ' style="font-weight:600"' : ''}>${flag(k)}${F[k].n}${pk && pk.fac === k ? ' · bạn' : ''}</span>`)
-    .join('') + (isPlay() ? '<span class="sep"></span>' + powersAt(y).map(k => relChip(k, y)).join('') : '');
+    .join('')}</div>` + (isPlay() ? `<div class="lr rel">${powersAt(y).map(k => relChip(k, y)).join('')}</div>` : '');
   if (setHtml($('#legend')!, h)) legendEdge(); // đo độ tràn (ép dàn trang) chỉ khi chú giải đổi
 }
 
@@ -131,7 +136,7 @@ export function renderCard(): void {
   const miss = ERAS.filter(e => !S.picks[e.id]);
   if (y >= Y1 && (!isPlay() || !miss.length)) {
     const m = miss[0];
-    cardOut(c, 'card cta', `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">◆</button>` : '<button class="rb" data-a="end" aria-label="Xem kết luận">→</button>'}`);
+    cardOut(c, 'card cta', `<button class="c" data-a="end"><div class="mono" style="opacity:.75">Hành trình hoàn tất</div><div class="cl"><div class="t">Xem kết luận: con đường của bạn và lịch sử</div><div class="s">${m ? `Còn ${miss.length} điểm rẽ chưa chọn (◆ để chọn, từ năm ${m.cy}); kết luận để trống các chương đó.` : '168 năm, sáu thế hệ, mọi nhánh hội tụ về hôm nay.'}</div></div></button>${m ? `<button class="rb" data-a="pickera" data-id="${m.id}" aria-label="Chọn điểm rẽ năm ${m.cy}">${icon('seal', 16)}</button>` : `<button class="rb" data-a="end" aria-label="Xem kết luận">${icon('arrow')}</button>`}`);
     return;
   }
   const v = rt.focusEv, pk = v ? curPick(chYear(v)) : undefined;
@@ -139,7 +144,7 @@ export function renderCard(): void {
   const minePv = isPlay() && pk && SIDE_PV.includes(pk.persp) ? v?.v?.find(([p]) => p === pk.persp)?.[1] : undefined;
   let cls = 'card' + (v && v.diary ? ' diary' : '');
   if (!v) {
-    cardOut(c, cls, `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div>`);
+    cardOut(c, cls, `<div class="c"><div class="mono muted">Kéo dòng thời gian</div><div class="cl"><div class="t">Mỗi năm một trang hồ sơ</div><div class="s">Phóng to bản đồ, chạm vào một vùng để xem nó thuộc về ai.</div></div></div>`);
     return;
   }
   const seen = S.seen.includes(v.id);
@@ -148,9 +153,50 @@ export function renderCard(): void {
   if (must) cls += ' must';
   // dựng lại thẻ (‹ / › bằng bàn phím): giữ tiêu điểm trên nút tương ứng thay vì để rơi về <body>
   const f = c.contains(document.activeElement) ? document.activeElement as HTMLElement : null, fa = f?.dataset.a, fd = f?.dataset.d;
-  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? '✎ Nhật ký ' + esc(familyName().replace(/^Họ /, 'họ ')) : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</button>
-    <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${open ? '◆' : '✓'}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">‹</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">›</button></div>`)) return;
+  if (!cardOut(c, cls, `<button class="c" data-a="ev" data-id="${v.id}"><div class="mono muted"${v.diary ? ' style="color:var(--acc)"' : ''}>${v.diary ? 'Nhật ký ' + esc(familyName().replace(/^Họ /, 'họ ')) : v.k} · ${v.d}${v.y < y ? ` · ${y - v.y} năm trước` : ''}${seen ? ' · đã đọc' : ''}</div><div class="cl"><div class="t">${esc(v.t)}</div>${minePv ? `<div class="s"><b class="pvl">Phe bạn:</b> ${esc(minePv)}</div>` : hc ? `<div class="s"><b class="pvl">Ở nhà</b> cả họ “${esc(hc.ch[0])}”${hc.al > 0 ? ':' : '; riêng bạn:'} ${esc(v.s)}</div>` : `<div class="s">${esc(v.s)}</div>`}</div></button>
+    <div class="nav">${card ? `<button class="rb${open ? ' act' : ''}" data-a="card" data-id="${v.id}" aria-label="${open ? 'Dòng họ bạn làm gì?' : 'Xem quyết định'}">${icon(open ? 'seal' : 'check', 16)}</button>` : `<button class="rb" data-a="step" data-d="-1" aria-label="Sự kiện trước">${icon('prev')}</button>`}<button class="rb" data-a="step" data-d="1" aria-label="Sự kiện sau">${icon('next')}</button></div>`)) return;
   if (f) (c.querySelector<HTMLElement>(`[data-a="${fa}"]${fd ? `[data-d="${fd}"]` : ''}`) || c.querySelector<HTMLElement>('.c'))?.focus({ preventScroll: true });
+}
+
+/* ---------- mục lục chương (cột bên, màn hình ngang) ---------- */
+/** Cột bên màn hình ngang (styles.css, cùng điều kiện): ở đó mới có chỗ cho mục lục. */
+const side = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px)');
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
+let idxKey = '', idxOn = '', idxT = 0;
+/** Mục lục các sự kiện của chương đang xem (theo bộ lọc): năm, tên, loại; sự kiện đang xem gạch chân đỏ. Chạm một dòng
+    để tới sự kiện ấy. Trước đây cột bên trống gần nửa dưới thẻ sự kiện. Chỉ dựng lại khi chương / bộ lọc / số đã đọc đổi. */
+function renderIndex(): void {
+  if (!side.matches) return;
+  const box = $('#idx')!, e = tourEra() || eraOf(S.year);
+  const key = e.id + S.filt + S.seen.length;
+  if (key !== idxKey) {
+    idxKey = key; idxOn = '';
+    const L = visEv().filter(v => evEra(v) === e);
+    box.innerHTML = `<div class="cap muted">Mục lục chương ${ROMAN[e.n]} · ${e.from} – ${e.to >= Y1 ? 'nay' : e.to}</div><ol>${L.map(v =>
+      `<li><button data-a="idx" data-id="${v.id}"${S.seen.includes(v.id) ? ' class="seen"' : ''}><b>${v.y}</b><span>${esc(v.t)}</span><em>${v.diary ? 'Nhật ký' : v.k}</em></button></li>`).join('')}</ol>`;
+  }
+  const id = rt.focusEv?.id || '';
+  if (id === idxOn) return;
+  idxOn = id;
+  box.querySelector('.on')?.classList.remove('on');
+  const b = id ? box.querySelector<HTMLElement>(`[data-id="${id}"]`) : null;
+  b?.classList.add('on');
+  // dòng đang xem luôn trong khung, nhưng chỉ cuộn khi thanh năm đã yên (cuộn giữa lúc kéo là ép dàn trang mỗi khung)
+  clearTimeout(idxT);
+  if (b) idxT = window.setTimeout(() => b.isConnected && b.scrollIntoView({ block: 'nearest' }), 160);
+}
+side.addEventListener('change', () => { idxKey = ''; idxOn = ''; renderIndex(); });
+
+/** Tới một sự kiện (mục lục): như ‹ / ›, kể cả dừng ở điểm rẽ / thẻ còn nợ trong Trò chơi. */
+function goEv(id: string): void {
+  const v = visEv().find(x => x.id === id);
+  if (!v) return;
+  stopTour();
+  if ((isPlay() && pendingGate(v.y)) || pendingCard(v.y)) { setYear(v.y, true); return; }
+  S.year = v.y;
+  rt.focusEv = v;
+  save();
+  renderMain();
 }
 
 /* ---------- timeline ---------- */
@@ -312,6 +358,7 @@ export function initMainControls(): void {
   });
   on('filt', (el, ev) => { ev.stopPropagation(); S.filt = el.dataset.k!; save(); setFocus(); closeFilter(true); renderMain(); announce(`Lọc: ${S.filt}`); });
   on('step', el => stepEv(+el.dataset.d!));
+  on('idx', el => { ac(); SND.page(); goEv(el.dataset.id!); });
   on('ev', el => openEvent(el.dataset.id!, (el.dataset.tab as 'x' | 'v' | 'm' | 's') || 'x')); // data-tab: mở thẳng một thẻ (Góc nhìn từ khép trận)
   on('fig', el => openFig(el.dataset.id!));
   on('end', () => (isPlay() ? endGame(ERAS[ERAS.length - 1]) : goEnd()));

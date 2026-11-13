@@ -77,7 +77,7 @@ export interface State {
 
 const def: State = {
   step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, music: true, theme: 'night', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
+  filt: 'Tất cả', sound: true, music: true, theme: 'archive', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
 function load(mode = activeMode()): State {

@@ -4,6 +4,7 @@ import { mood, eraMood } from './music';
 import { ERAS, QUIZ, type Era, type HistEvent } from './data';
 import { S, save, rt, Y1, eraOf, evEra, allEv, setFocus } from './state';
 import { $, announce } from './ui/dom';
+import { icon } from './ui/icons';
 import { SND } from './audio';
 import { canSpeak, hush, speak, speaking } from './narration';
 import { evKey, evSpeech, evSpeechFull } from './speech';
@@ -340,7 +341,7 @@ export function stopTour(): void {
   const tb = $('#tourb'), had = !!tb?.contains(document.activeElement);
   tb?.remove();
   const p = $('#play');
-  if (p) { p.textContent = '▶'; p.setAttribute('aria-label', 'Chạy chương này'); if (had) p.focus({ preventScroll: true }); } // ■: tiêu điểm sang ▶
+  if (p) { p.innerHTML = icon('play'); p.setAttribute('aria-label', 'Chạy chương này'); if (had) p.focus({ preventScroll: true }); } // ■: tiêu điểm sang ▶
 }
 
 /** Trình đọc màn hình: báo bước tour mới (vùng ẩn, lịch sự, không chen lời đọc). */
@@ -426,10 +427,10 @@ function tourBar(): void {
   const state = paused === 'card' ? '<span class="tlg"> · chờ quyết định</span><span class="tsh"> · chờ chọn</span>' : paused ? '<span class="tlg"> · tạm dừng</span><span class="tsh"> · dừng</span>' : '';
   const left = tour.rush ? L.slice(i).filter(v => needsDecision(v)).length : 0;
   b.innerHTML = `<div style="flex:1;min-width:0"><div class="mono muted">${tour.rush ? `Còn ${left} quyết định` : `${at}/${n}`}<span class="tch"> · Chương ${e.n}</span>${state}</div><div class="prog"><i style="width:${(at / n) * 100}%"></i></div></div>
-    ${paused && paused !== 'card' ? '<button class="chip on" data-t="resume">▶ Tiếp</button>' : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : '<button class="chip ic" data-t="next" aria-label="Tiếp: nhịp trận kế tiếp, hết nhịp thì sự kiện kế tiếp" title="Nhịp / sự kiện kế tiếp">›</button>'}${tour.rush ? '' : `<button class="chip${tour.arm ? ' on' : ''}" data-t="skip">${tour.arm ? `Bỏ ${L.length - i - 1} sự kiện? ›` : 'Điểm rẽ ›'}</button>`}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">■</button>`;
+    ${paused && paused !== 'card' ? `<button class="chip on" data-t="resume">${icon('play', 14)}Tiếp</button>` : `<button class="chip${S.narr ? ' on' : ''}" data-t="narr" aria-label="Giọng đọc" aria-pressed="${S.narr}">Giọng</button>`}${paused ? '' : `<button class="chip ic" data-t="next" aria-label="Tiếp: nhịp trận kế tiếp, hết nhịp thì sự kiện kế tiếp" title="Nhịp / sự kiện kế tiếp">${icon('next')}</button>`}${tour.rush ? '' : `<button class="chip${tour.arm ? ' on' : ''}" data-t="skip">${tour.arm ? `Bỏ ${L.length - i - 1} sự kiện?` : 'Điểm rẽ'}${icon('next', 14)}</button>`}<button class="chip ic" data-t="stop" aria-label="Dừng" title="Dừng">${icon('stop', 16)}</button>`;
   if (fk) (b.querySelector<HTMLElement>(`[data-t="${fk}"]`) || b.querySelector<HTMLElement>(fk === 'next' ? '[data-t=resume]' : '[data-t=stop]'))?.focus({ preventScroll: true });
   const pb = $('#play')!;
-  pb.textContent = paused && paused !== 'card' ? '▶' : '❚❚';
+  pb.innerHTML = icon(paused && paused !== 'card' ? 'play' : 'pause');
   pb.setAttribute('aria-label', paused === 'card' ? 'Đang chờ quyết định' : paused ? 'Chạy tiếp chương' : 'Tạm dừng chương');
 }
 
