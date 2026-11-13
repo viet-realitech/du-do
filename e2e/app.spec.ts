@@ -814,7 +814,7 @@ test('ending (play mode): home, card decisions and harvest snapshots shape the e
   const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u });
   const st = { step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year: 2026, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' },
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true], e6: [true, true] }, cards, cardv: {}, xFrom: 2026,
-    harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'], snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(60, 50, 50, 50) }, res: r(60, 50, 50, 50) };
+    harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'], snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(50, 45, 45, 45) }, res: r(50, 45, 45, 45) };
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
   await page.goto('/');
   await page.locator('#card [data-a=end].c').click();
@@ -826,7 +826,7 @@ test('ending (play mode): home, card decisions and harvest snapshots shape the e
   await expect(page.locator('.end-rar')).toContainText(/\d+(,\d)?% dòng họ trong mô phỏng đi tới kết cục này/);
   await expect(page.locator('.cf-card h2')).toHaveText('Nếu triều đình dồn sức chủ chiến (1858–1862)');
   await expect(page.locator('.cf-card')).toContainText('khoảng 5% (1 trên 20)');
-  // wealth is ranked against families from the same home (210 in Hà Nội: between P5 and P25)
+  // wealth is ranked against families from the same home (185 in Hà Nội: between P5 and P25)
   await expect(page.locator('.ov.end .pv.mine').first()).toContainText('Nhà sa sút');
   await expect(page.locator('.gens li')).toHaveCount(6);
   await expect(page.locator('.gens li.best')).toContainText('Đời 5');
