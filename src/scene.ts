@@ -98,7 +98,7 @@ function titleCard(r: Run, v: HistEvent, sc: Scene): void {
   if (!wrap) return;
   const sides = [...new Set([...sc.arrows.map(a => a[2]), ...sc.hold.map(h => h[2])])];
   const card = document.createElement('div');
-  card.className = 'ttl';
+  card.className = v.t.length > 26 ? 'ttl long' : 'ttl'; // tên trận dài ("Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng"): cỡ nhỏ hơn, không phủ nửa bản đồ
   card.setAttribute('aria-hidden', 'true'); // thẻ dưới bản đồ đã có tên trận cho trình đọc màn hình
   const where = v.p && !v.t.includes(v.p) ? ` · ${esc(v.p)}` : '';
   card.innerHTML = `<div class="mono">Trận đánh</div><h2>${esc(v.t)}</h2><div class="orn"><i></i></div><div class="d">${esc(v.d)}${where}</div><div class="sides">${sides.map(sd => `<span><i style="--c:${SIDE_COLOR[sd] || '#f1e6c8'}"></i>${esc(sideName(sd, v.y))}</span>`).join('')}</div>`;

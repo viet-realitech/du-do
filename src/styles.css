@@ -202,6 +202,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 @media (min-width: 700px) { .ttl::before { inset: -34px -56px } } /* điện thoại: quầng hẹp, không phủ cột nút phóng to */
 @media (min-width: 1000px) { .lt p { font-size: 20px } .ttl { width: min(calc(100% - 100px), 640px) } .ttl h2 { font-size: 58px } .ttl .sides { font-size: 15px } }
+.ttl.long h2 { font-size: clamp(24px, 6.2vw, 34px) } /* tên trận dài: hai dòng vừa phải thay vì ba dòng lớn */
+@media (min-width: 1000px) { .ttl.long h2 { font-size: 40px } }
 #map .dimr { fill: var(--paper); opacity: 0; transition: opacity .7s }
 .mapwrap.scn #map .dimr { opacity: .55 }
 /* gợn sóng bờ biển: tắt hẳn khi cảnh trận / di chuyển chạy (bản đồ bay tới, rồi từng góc bản đồ được vẽ lại suốt cảnh) */
