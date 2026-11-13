@@ -60,6 +60,7 @@ export function ctxFor(e: Era, pp: string): string | null {
     if (hasFlag(['ditan'])) t = 'Tháng Tư năm ấy, cha bạn đưa cả nhà lên tàu ra biển; bạn lớn lên ở trại tị nạn, rồi ở một thành phố xa lạ.';
     else if (!hasFlag(['caitao']) && S.cards.sg75 === 2 && regionAt(1975) !== 'B') t = 'Ngày 30 tháng Tư, cha bạn treo cờ mở cửa; nhưng nhà từng sống dưới chính quyền Sài Gòn, lý lịch vẫn phải khai ba đời.';
   }
+  if (e.id === 'e6' && pp === 'thuba' && hasFlag(['ditan'])) t = 'Cha mẹ bạn từng xuống đường đòi hoà bình; tháng Tư năm ấy, cả nhà vẫn lên tàu ra biển. Bạn lớn lên ở trại tị nạn, rồi ở một thành phố xa lạ.';
   // đổi họ trong đời trước (biến cố riêng): ghi ngay ở "Gia đình bạn", cùng hệ quả với câu chuyện họ Nguyễn năm 1925
   const ren = prevE ? S.names.filter(n => n.y >= prevE.cy && n.y < e.cy) : [];
   const lines = ren.map(n => `Năm ${n.y}, ${n.from} đổi thành ${n.to}.`);

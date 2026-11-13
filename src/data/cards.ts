@@ -516,6 +516,13 @@ export const VARIANT: Record<string, Variant[]> = {
       ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
+    // nhà theo thành phần thứ ba (luôn ở miền Nam sau 1954): không làm cho chính quyền cũ, nên "ở lại" là chờ cái hội
+    // đồng ba thành phần Điều 12 Hiệp định Paris hẹn, không phải đi trình diện. Cùng thứ tự: di tản / ở lại / đón quân.
+    { picks: ['thuba'], choices: [
+      ['Di tản', 'Lên tàu, lên trực thăng, ra biển.', { g: -18, b: -15, d: -3, u: -5, qg: 5, my: 15, nn: -20 }, 'Guam, rồi California. Dòng họ bắt đầu lại từ số không, bằng tiếng Anh.', 'ditan'],
+      ['Ở lại, chờ hoà hợp', 'Tin lời Hiệp định Paris về một hội đồng hoà giải, hoà hợp dân tộc có cả thành phần thứ ba.', { b: -4, u: -2, lg: 3, nn: 3 }, 'Trưa 30 tháng Tư, ông Dương Văn Minh tuyên bố đầu hàng; hội đồng ba thành phần không bao giờ ra đời. Vài người quen được mời vào Mặt trận Tổ quốc, phần đông những người từng xuống đường đòi hoà bình lặng lẽ về nhà.'],
+      ['Đón quân giải phóng', 'Treo cờ, mở cửa.', { u: 4, vm: 12, nn: 15, qg: -15 }, 'Dòng họ có người vào uỷ ban quân quản phường.'],
+    ] },
   ],
   // Năm 1995 (bình thường hoá Việt – Mỹ): dòng họ đã ra đi nhìn về quê; nhà ở lại có người ở nước ngoài thì nhận kiều
   // hối. Đã về thăm quê lần đầu năm 1989 (x-kieuhoi89) thì lần này không còn là "lần đầu".

@@ -330,6 +330,17 @@ test('play mode: Điện Biên Phủ seen from Nghệ An (free zone), and rice s
   expect(errors).toEqual([]);
 });
 
+test('play mode: 30.4.1975 for a Third Force family that migrated South is not the old regime\'s reeducation call', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Lê', home: 'hn', year: 1975, picks: { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 20, d: 50, b: 20, u: 50 } }, 'sg75');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('.scrim h2')).toContainText('Sài Gòn', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Di tản', 'Ở lại, chờ hoà hợp', 'Đón quân giải phóng']);
+  await expect(page.locator('.scrim .opt').nth(1)).toContainText('Hợp đường bạn theo');
+  expect(errors).toEqual([]);
+});
+
 test('turning points: "Gia đình bạn" follows what the family lived (a father who returned, a new surname, no phantom branch)', async ({ page }) => {
   // generation 2 followed Cần Vương and took the mother's surname after Hương Khê (1896)
   let errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'na', year: 1930, picks: { e1: 'chien', e2: 'canvuong' },

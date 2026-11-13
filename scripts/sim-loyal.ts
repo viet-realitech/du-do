@@ -22,7 +22,8 @@ const walk = (i: number, acc: string[]) => {
 walk(0, []);
 
 let bad = 0, runs = 0, minG = 100, lowAt = '';
-const starve = new Set<string>();
+// lúa gạo ≤ 5 (bạc còn thì vẫn đong được gạo, payFx) và nghèo kiệt (lúa gạo cộng bạc ≤ 5: không còn gì để đổi)
+const starve = new Set<string>(), broke = new Set<string>();
 const fails: string[] = [];
 // họ có biến cố riêng theo họ (cùng '' = không chọn họ nào trong danh sách)
 const surnames = ['', ...new Set(SPECIAL.flatMap(c => c.when.surnames || []))];
@@ -66,11 +67,12 @@ for (const sk of surnames) for (const [hid] of P.HOMES) for (const path of paths
       }
       if (S.res.g < minG) { minG = S.res.g; lowAt = `${who} ${v.id} (${v.y})`; }
       if (S.res.g <= 5) starve.add(who);
+      if (S.res.g + S.res.b <= 5) broke.add(who);
     }
   });
   P.harvest(ERAS[ERAS.length - 1], 2026);
 }
-console.log(`mô phỏng trung thành: ${runs} lượt (${surnames.length} họ × ${P.HOMES.length} quê × ${paths.length} con đường), ${bad} lần lựa chọn hợp đường bị khoá; lúa gạo thấp nhất ${minG} (${lowAt}); ${starve.size} lượt có lúc lúa gạo ≤ 5`);
-for (const x of [...starve].slice(0, 12)) console.log('  đói: ' + x);
+console.log(`mô phỏng trung thành: ${runs} lượt (${surnames.length} họ × ${P.HOMES.length} quê × ${paths.length} con đường), ${bad} lần lựa chọn hợp đường bị khoá; lúa gạo thấp nhất ${minG} (${lowAt}); ${starve.size} lượt có lúc lúa gạo ≤ 5, ${broke.size} lượt có lúc cả lúa gạo lẫn bạc cộng lại ≤ 5`);
+for (const x of [...broke].slice(0, 12)) console.log('  kiệt: ' + x);
 for (const f of fails.slice(0, 30)) console.log('  ' + f);
 if (process.argv.includes('--strict') && bad) process.exit(1);
