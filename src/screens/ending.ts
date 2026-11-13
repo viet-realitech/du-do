@@ -80,7 +80,7 @@ export function openEnd(): void {
   stopTour();
   if (!S.ended) { S.ended = true; save(); }
   mood('finale');
-  ERAS.forEach(e => void preloadEra(e, true)); // ảnh cho phim hành trình
+  ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
   const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;
   // đầu trang: dấu triện, tên kết cục, lời kết riêng của dòng họ, tỷ lệ hiếm, vì sao; Đọc sử chưa chọn đủ: còn bỏ ngỏ
