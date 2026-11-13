@@ -29,13 +29,13 @@ export function fxChipsPlay(fx: Fx, got?: Fx, plain = false): string {
   };
   for (const [k, name, ic] of RES) {
     const n = got ? got[k] || fx[k] : fx[k]; if (!n) continue;
-    if (got && capped(k, n)) { out.push(`<span class="fx cap">${ic} ${name} ${n > 0 ? 'đã đầy' : 'đã cạn'}</span>`); continue; }
+    if (got && capped(k, n)) { out.push(`<span class="fx full">${ic} ${name} ${n > 0 ? 'đã đầy' : 'đã cạn'}</span>`); continue; }
     out.push(`<span class="fx ${n > 0 ? 'up' : 'dn'}">${ic} ${n > 0 ? '+' : ''}${n} ${name}</span>`);
   }
   for (const k of POW_KEYS) {
     const n = got ? got[k] || fx[k] : fx[k]; if (!n) continue;
     const [name, fac] = POWERS[k];
-    if (capped(k, n)) { out.push(`<span class="fx rel cap" title="Không đổi thêm được">${fac ? flag(fac) : ''}${name} ${n > 0 ? '· đã tin cậy tối đa' : '· đã thù địch tột độ'}</span>`); continue; }
+    if (capped(k, n)) { out.push(`<span class="fx rel full" title="Không đổi thêm được">${fac ? flag(fac) : ''}${name} ${n > 0 ? '· đã tin cậy tối đa' : '· đã thù địch tột độ'}</span>`); continue; }
     out.push(`<span class="fx rel ${n > 0 ? 'up' : 'dn'}">${fac ? flag(fac) : ''}${name} ${n > 0 ? '+' : ''}${n}</span>`);
   }
   return out.join('');

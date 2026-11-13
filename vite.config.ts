@@ -80,8 +80,9 @@ export default defineConfig({
         scope: './',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#16130f',
-        theme_color: '#16130f',
+        // Lưu trữ là phong cách mặc định: màn chờ khi mở ứng dụng cùng màu giấy, không loé nền tối
+        background_color: '#efe5cf',
+        theme_color: '#efe5cf',
         categories: ['education', 'games'],
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -92,8 +93,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Faces of the optional Lưu trữ / Áp phích themes are cached on first use instead.
-        globIgnores: ['og.png', '**/playfair-display-*', '**/be-vietnam-pro-*'],
+        // Lưu trữ (Playfair) is the default look, so its faces are precached; Áp phích's are cached on first use.
+        globIgnores: ['og.png', '**/be-vietnam-pro-*'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
@@ -104,7 +105,7 @@ export default defineConfig({
             options: { cacheName: 'voice-music', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
           },
           {
-            urlPattern: /\/assets\/(playfair-display|be-vietnam-pro)-[^/]+\.woff2?$/,
+            urlPattern: /\/assets\/be-vietnam-pro-[^/]+\.woff2?$/,
             handler: 'CacheFirst',
             options: { cacheName: 'theme-fonts', expiration: { maxEntries: 40 } },
           },

@@ -402,6 +402,9 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .toast b { font: 700 17px var(--disp) }
 .row { display: flex; gap: 12px; align-items: center }
 .row.sb { justify-content: space-between }
+/* dòng nhãn đầu bảng (sự kiện ◆ … | Họ … · quê): hẹp thì nhãn phải xuống nguyên dòng, không gãy "Hà / Nội" */
+.sheet > .row.sb:has(> .mono + .mono) { flex-wrap: wrap; row-gap: 3px }
+.sheet > .row.sb:has(> .mono + .mono) > .mono { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis }
 .era-row { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule) }
 .era-row .n { font: 800 28px/1 var(--disp); color: var(--ink3) }
 .bar { height: 6px; background: var(--paper3); overflow: hidden }
@@ -536,7 +539,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .fx.up { color: var(--ok); border: 1px solid currentColor; background: transparent }
 .fx.dn { color: var(--red); border: 1px solid currentColor; background: transparent }
 .fx.rel .flag { width: 14px; height: 10px; margin-right: 2px }
-.fx.cap { color: var(--ink3); border: 1px dashed currentColor; background: transparent; font-style: italic }
+/* đã đầy / đã cạn: nét đứt, không nghiêng (phông đơn cách không có nghiêng thật). Tên lớp không là .cap: .cap là nhãn chữ hoa */
+.fx.full { color: var(--ink3); border: 1px dashed currentColor; background: transparent }
 .al.akin { color: var(--acc); border-color: currentColor; border-style: dashed }
 .alrow .al + .al { margin-left: 6px }
 .pv .did { list-style: none; margin: 6px 0 0; padding: 0; font-size: 15px; line-height: 1.35 }
@@ -674,7 +678,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .hd { grid-area: hd; padding: calc(var(--sat) + 26px) var(--gut) 0 8px }
   .yr { font-size: 84px }
   [data-theme=archive] .yr { font-size: 74px }
-  [data-theme=poster] .yr { font-size: 80px }
+  [data-theme=poster] .yr { font-size: clamp(70px, 6vw, 80px) } /* cột bên hẹp (iPad ngang): "Theo Việt Minh" vẫn một dòng */
   .eraR { white-space: normal; max-width: 100%; display: block; line-height: 1.35 } /* "Miền Nam — VNCH" xuống dòng thay vì cắt */
   .eraR .av { display: inline-grid; vertical-align: middle; margin-right: 6px }
   .hd .era { min-width: 0 }
