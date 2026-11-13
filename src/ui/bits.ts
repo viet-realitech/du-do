@@ -50,7 +50,7 @@ export function fill(k: Faction | null | undefined): string {
 }
 
 export const fxChips = (fx: Option['fx']) =>
-  Object.entries(fx || {}).map(([k, n]) => `<span class="fx">+${n} ${VAL.find(v => v[0] === k)![1]}</span>`).join('');
+  Object.entries(fx || {}).map(([k, n]) => `<span class="fx v">${VAL.find(v => v[0] === k)![1]} <b>+${n}</b></span>`).join(''); // điểm giá trị: dòng sổ như gia sản
 
 export function initials(n: string): string {
   const w = n.replace(/\s*\(.*\)\s*$/, '').split(' '); // bỏ biệt danh trong ngoặc

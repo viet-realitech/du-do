@@ -6,13 +6,14 @@ import { S, save, rt, familyName, quizAsked, markAsked } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost, calm, announce, radios } from '../ui/dom';
 import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, type Harvest } from '../play';
-import { fxChipsPlay, relChip } from './card';
+import { fxChipsPlay, relRows } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
 import { hush, speak } from '../narration';
 import { checkBadges } from '../badges';
 import { stopTour, startTour } from '../tour';
 import { layer } from '../ui/dom';
+import { icon } from '../ui/icons';
 import { renderMain, invalidateTrack } from '../view';
 import { opener } from './cinema';
 import { fxOn } from '../scene';
@@ -109,7 +110,7 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
   stopTour();
   clearLayer();
   SND.chime();
-  const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">◆ Mùa màng · Thế hệ ${e.n} khép lại</span><span class="mono muted">${esc(familyName())} · ${esc(home()[1])}</span></div>
+  const d = sheet(`<div class="kick"><span class="mono">Mùa màng · Thế hệ ${e.n} khép lại</span><span class="mono muted">${esc(familyName())} · ${esc(home()[1])}</span></div>
   <h2 style="margin:10px 0 6px">Gia sản sau một đời người</h2>
   <p class="muted" style="margin-bottom:12px">${e.title}, ${e.cy}–${ERAS[e.n]?.cy ?? 2026}. Ruộng đất, người trong họ và các mối quan hệ quyết định mùa màng.</p>
   ${h.top ? `<div class="hv-top"><span class="mono muted">Việc lớn của đời này</span> ${esc(h.top)}</div>` : ''}
@@ -118,8 +119,8 @@ export function openHarvest(e: Era, h: Harvest, y: number, go: string, next: () 
   <div class="rule"></div>
   <div class="resrow">${RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('')}</div>
   <div class="mono muted" style="margin-top:12px">Quan hệ</div>
-  <div class="fxs" style="margin-top:6px">${[...new Set([...(ruler(h.ry) ? [ruler(h.ry)!] : []), ...powersAt(y)])].map(k => relChip(k, h.ry)).join('')}</div>
-  <div style="height:16px"></div><button class="btn" id="hv-go">${esc(go)} ›</button>`);
+  ${relRows([...new Set([...(ruler(h.ry) ? [ruler(h.ry)!] : []), ...powersAt(y)])], h.ry)}
+  <div class="sfoot"><button class="btn" id="hv-go">${esc(go)} ${icon('next', 16)}</button></div>`);
   renderMain();
   d.querySelector<HTMLButtonElement>('#hv-go')!.onclick = () => { ghost(d); next(); };
 }
@@ -135,10 +136,10 @@ export function openQuiz(eid: string, done?: () => void): void {
     const [q, opts, a, ex] = qs[i];
     markAsked(q);
     clearLayer();
-    const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--acc)">★ Đố nhanh · Chương ${e.n}</span><span class="mono muted">Câu ${i + 1}/${qs.length}</span></div>
-     <h2 style="margin:12px 0 16px">${q}</h2><div>${opts.map((o, j) => `<button class="qa" data-j="${j}">${o}</button>`).join('')}</div>
-     <p id="qex" class="muted" aria-live="polite" style="margin-top:12px;min-height:24px;font-size:16px"></p><div style="height:8px"></div>
-     <button class="btn" id="qn" disabled>${i < qs.length - 1 ? 'Câu tiếp' : eid === 'e6' ? (isPlay() ? 'Xem kết cục' : 'Xem kết luận') : 'Tiếp tục hành trình'}</button><button class="lnk" id="qs">Bỏ qua</button>`);
+    const d = sheet(`<div class="kick"><span class="mono">Đố nhanh · Chương ${e.n}</span><span class="mono muted">Câu ${i + 1}/${qs.length}</span></div>
+     <h2 style="margin:12px 0 16px">${q}</h2><div class="qas">${opts.map((o, j) => `<button class="qa" data-j="${j}">${o}</button>`).join('')}</div>
+     <p id="qex" class="muted" aria-live="polite" style="margin-top:12px;min-height:24px;font-size:16px"></p>
+     <div class="sfoot"><button class="btn" id="qn" disabled>${i < qs.length - 1 ? 'Câu tiếp' : eid === 'e6' ? (isPlay() ? 'Xem kết cục' : 'Xem kết luận') : 'Tiếp tục hành trình'}</button><button class="lnk" id="qs">Bỏ qua</button></div>`, false, 'dlg');
     d.querySelectorAll<HTMLButtonElement>('.qa').forEach(b => (b.onclick = () => {
       if (res.length > i) return;
       const j = +b.dataset.j!, ok = j === a;
@@ -197,18 +198,18 @@ function choice(e: Era, quiet: boolean): void {
   const did = prevE ? choicesIn(0, 0, prevE).filter(x => mustDecide(x.v)).slice(0, 3).reverse() : [];
   // nhãn của mỗi hướng: tiếp nối / rẽ khỏi đường thế hệ trước, và người cùng họ dẫn đầu hướng đó
   const tag = (o: Option) => {
-    const k = kinIn(o), t = (pp ? (continues(pp, o.id) ? '<span class="al mono ok">Tiếp nối đường cũ</span>' : '<span class="al mono">Rẽ hướng</span>') : '') +
-      (k ? `<span class="al mono akin" title="${esc(FIG[k.id][0] + (bornLine(k.id) ? ', ' + bornLine(k.id) : ''))}">${esc(kinLabel(k))}</span>` : '');
+    const k = kinIn(o), t = (pp ? (continues(pp, o.id) ? '<span class="al ok">Tiếp nối đường cũ</span>' : '<span class="al">Rẽ hướng</span>') : '') +
+      (k ? `<span class="al akin" title="${esc(FIG[k.id][0] + (bornLine(k.id) ? ', ' + bornLine(k.id) : ''))}">${esc(kinLabel(k))}</span>` : '');
     return t ? `<div class="alrow">${t}</div>` : '';
   };
-  const d = sheet(`<div class="row sb"><span class="mono" style="color:var(--red)">◆ Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
-  <h2 style="margin:8px 0 8px">${e.title}</h2>
-  ${ctx || did.length ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div>${ctx ? `<p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p>` : ''}${did.length ? `<ul class="did">${did.map(x => `<li><span class="mono muted">${x.v.y}</span> ${esc(x.ch[0])}</li>`).join('')}</ul>` : ''}</div>` : ''}
-  <p class="muted" style="margin-bottom:14px">${e.q}</p>
+  const d = sheet(`<div class="kick must"><span class="mono">${icon('seal', 12)}Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
+  <h2 style="margin:10px 0 8px">${e.title}</h2>
+  <div class="gq">${ctx || did.length ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div>${ctx ? `<p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p>` : ''}${did.length ? `<ul class="did">${did.map(x => `<li><span class="mono muted">${x.v.y}</span> ${esc(x.ch[0])}</li>`).join('')}</ul>` : ''}</div>` : ''}
+  <p class="muted" style="margin-bottom:14px">${e.q}</p></div>
   <div class="listen" id="lst"><i class="pulse"></i><span>Đang kể lời dẫn…</span><button class="lnk" id="lskip">Chọn ngay ›</button></div>
-  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="mono muted">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
+  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="tag">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
-  <div style="height:12px"></div><button class="btn" id="go" disabled>Đi theo hướng này</button>${isPlay() ? '' : '<button class="lnk" data-a="gate-later">Đọc chương trước, chọn sau ›</button>'}`);
+  <div class="sfoot"><button class="btn" id="go" disabled>Đi theo hướng này</button>${isPlay() ? '' : '<button class="lnk" data-a="gate-later">Đọc chương trước, chọn sau ›</button>'}</div>`, false, 'wide');
   // Đọc sử: điểm rẽ không bắt buộc (Back / Escape = "chọn sau"); Trò chơi: phải chọn
   if (!isPlay()) delete d.dataset.lock;
   radios(d.querySelector('[role=radiogroup]'), d.querySelector('h2'));
@@ -251,17 +252,17 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   // ngọn cờ của hướng vừa chọn mở ra, người đồng hành bước vào: dòng họ đứng về một phía
   sheet(`<div class="unfurl">${o.fac ? flag(o.fac) : `<i class="flag nf"></i>`}<div class="uf-t"><span class="mono">Thế hệ ${e.n} chọn · ${e.cy}</span><b>${o.label}</b></div>${av(o.guide, 52)}</div>
   <h2 style="margin:14px 0 8px">Con đường của bạn</h2>${bridge ? `<p>${bridge}</p>` : ''}<p>${esc(out)}</p>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${fxChips(o.fx)}</div>
+  <div class="fxs" style="margin-top:12px">${fxChips(o.fx)}</div>
   ${isPlay() && Object.keys(eraFx(o.id)).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(eraFx(o.id), got)}</div>` : ''}
   <div class="rule"></div>
   <button class="row" style="width:100%;text-align:left" data-a="fig" data-id="${o.guide}">${av(o.guide, 46)}<span style="flex:1"><span class="mono muted">Người đồng hành</span><br><b style="font:700 18px var(--disp)">${FIG[o.guide][0]}</b> <span class="muted" style="font-size:14px">· ${FIG[o.guide][2]}</span></span><span class="muted">›</span></button>
-  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al mono akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])}${bornLine(kin.id) ? ` (${esc(bornLine(kin.id))})` : ''} cũng đi con đường này.</p>` : ''}
+  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])}${bornLine(kin.id) ? ` (${esc(bornLine(kin.id))})` : ''} cũng đi con đường này.</p>` : ''}
   <div class="rule"></div><div class="mono" style="color:var(--acc)">Mở khoá ${fs.length} nhân vật</div>
-  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center">${av(id, 48)}<span>${FIG[id][0].replace(/\s*\(.*\)\s*$/, '').split(' ').slice(-2).join(' ')}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:64px;font-size:12px;line-height:1.15;text-align:center"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết ›</span></button>` : ''}</div>
-  ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">✎ Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${d.y}</span> · ${esc(d.t)}</div>`).join('')}` : ''}
-  <div style="height:18px"></div>${isPlay()
-    ? `<button class="btn go" data-a="watch" data-e="${e.id}"><i class="cd"></i><span>▶ Sống qua thế hệ ${e.n}</span></button><p class="muted" style="font-size:13px;text-align:center;margin-top:10px">Chương tự bắt đầu; chạm nhân vật để đọc thêm trước.</p>`
-    : `<button class="btn" data-a="watch" data-e="${e.id}">▶ Xem chương ${e.n} diễn ra</button><button class="lnk" data-a="close">Tự kéo dòng thời gian</button>`}`);
+  <div class="figs">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}">${av(id, 48)}<span>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết</span></button>` : ''}</div>
+  ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div class="chron"><span class="mono muted">${d.y}</span><span>${esc(d.t)}</span></div>`).join('')}` : ''}
+  <div class="sfoot">${isPlay()
+    ? `<button class="btn go" data-a="watch" data-e="${e.id}"><i class="cd"></i><span>${icon('play', 16)}</span><span>Sống qua thế hệ ${e.n}</span></button><p class="muted note">Chương tự bắt đầu; chạm nhân vật để đọc thêm trước.</p>`
+    : `<button class="btn" data-a="watch" data-e="${e.id}">${icon('play', 16)}Xem chương ${e.n} diễn ra</button><button class="lnk" data-a="close">Tự kéo dòng thời gian</button>`}</div>`);
   if (!isPlay()) return;
   // Trò chơi: đọc kết cục rồi tự sang chương; chạm vào nhân vật / nhật ký thì dừng đếm, để người chơi tự bấm.
   const d = layer.lastElementChild as HTMLElement, bar = d.querySelector<HTMLElement>('.cd')!;

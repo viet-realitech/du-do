@@ -1,5 +1,6 @@
 import { app, esc, layer } from '../ui/dom';
 import { SND } from '../audio';
+import { icon } from '../ui/icons';
 import { cachedWiki, commonsPage, mediaCaption, videoUrl, type Media } from '../wiki';
 
 /* Fullscreen media viewer: swipe ←/→ to page, swipe ↓ to close, pinch / double-tap / wheel to zoom. */
@@ -17,9 +18,9 @@ export async function openMedia(id: string, start: number): Promise<void> {
   d.className = 'lb';
   d.setAttribute('role', 'dialog');
   d.setAttribute('aria-modal', 'true');
-  d.innerHTML = `<div class="lbtop"><button class="back" aria-label="Đóng">✕</button><span class="mono" data-r="n" style="color:#aaa"></span><a data-r="src" class="mono" target="_blank" rel="noopener">Nguồn ↗</a></div>
+  d.innerHTML = `<div class="lbtop"><button class="back" aria-label="Đóng">${icon('close')}</button><span class="mono" data-r="n" style="color:#aaa"></span><a data-r="src" class="mono" target="_blank" rel="noopener">Nguồn ↗</a></div>
   <div class="lbstage"><div class="lbtrack"></div></div>
-  <button class="lbnav l" aria-label="Trước">‹</button><button class="lbnav r" aria-label="Sau">›</button>
+  <button class="lbnav l" aria-label="Trước">${icon('prev', 22)}</button><button class="lbnav r" aria-label="Sau">${icon('next', 22)}</button>
   <div class="lbcap" data-r="cap"></div><div class="lbdots" data-r="dots"></div><div class="lbhint">Vuốt để chuyển · chụm hoặc chạm đúp để phóng to</div>`;
   app.appendChild(d);
   // hộp thoại thật: trang phía sau không nhận tiêu điểm / trình đọc màn hình, tiêu điểm vào nút đóng
@@ -52,7 +53,7 @@ export async function openMedia(id: string, start: number): Promise<void> {
     navR.disabled = idx === M.length - 1;
     if (m.type === 'video') {
       img = null;
-      T.innerHTML = `<div class="lbvid"><img src="${esc(m.thumb || m.src)}" alt=""><button class="lbbig" aria-label="Phát video">▶</button></div>`;
+      T.innerHTML = `<div class="lbvid"><img src="${esc(m.thumb || m.src)}" alt=""><button class="lbbig" aria-label="Phát video">${icon('play', 28)}</button></div>`;
       T.querySelector('img')!.onerror = () => fail(m);
       q('.lbbig').onclick = e => { e.stopPropagation(); playVid(m); };
     } else {

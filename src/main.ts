@@ -25,6 +25,9 @@ import '@fontsource/playfair-display/latin-500-italic';
 import '@fontsource/playfair-display/vietnamese-500-italic';
 import '@fontsource/be-vietnam-pro/latin-400';
 import '@fontsource/be-vietnam-pro/vietnamese-400';
+// Áp phích: chữ nghiêng thật cho ghi chú bên lề, lời kết cục (trình duyệt không phải tự xiên chữ đứng)
+import '@fontsource/be-vietnam-pro/latin-400-italic';
+import '@fontsource/be-vietnam-pro/vietnamese-400-italic';
 import '@fontsource/be-vietnam-pro/latin-500';
 import '@fontsource/be-vietnam-pro/vietnamese-500';
 import '@fontsource/be-vietnam-pro/latin-600';
