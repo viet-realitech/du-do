@@ -409,7 +409,8 @@ test('an event opened from Sử liệu returns there, through a replay too', asy
   await page.locator('.ov .hero .hplay').click(); // replay, then Đóng: back on the event page
   await expect(page.locator('#replb')).toBeVisible();
   await page.locator('#replb [data-t=rclose]').click();
-  await expect(page.locator('.ov h1')).toContainText('Điện Biên Phủ');
+  // #layer > .ov: the page that left for the replay may still be fading out (ghost) when the replay is closed at once
+  await expect(page.locator('#layer > .ov h1')).toContainText('Điện Biên Phủ');
   await page.keyboard.press('Escape'); // and the page closes back to the Sử liệu pane, not the bare map
   await expect(page.locator('#layer .pane')).toBeVisible();
   await expect(page.locator('.tab[data-t=src]')).toHaveClass(/on/);
