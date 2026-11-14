@@ -49,6 +49,16 @@ export const esc = (s: unknown) =>
 
 export const calm = matchMedia('(prefers-reduced-motion: reduce)');
 
+/** Đưa nút vào khung nhìn của chính tờ bảng / trang chứa nó (như scrollIntoView 'nearest'), không cuộn các khung ngoài:
+    scrollIntoView cuộn mọi khung chứa, kể cả #app khi tờ đang trượt lên còn thò dưới mép màn hình. */
+export function reveal(el: Element | null): void {
+  const box = el?.closest<HTMLElement>('.sheet, .ov, .pane');
+  if (!el || !box) return;
+  const r = el.getBoundingClientRect(), b = box.getBoundingClientRect(), top = b.top + box.clientTop, bottom = top + box.clientHeight;
+  const d = r.top < top ? r.top - top : r.bottom > bottom ? Math.min(r.bottom - bottom, r.top - top) : 0;
+  if (d) box.scrollBy({ top: d, behavior: calm.matches ? 'auto' : 'smooth' });
+}
+
 /** Let `els` play their exit animation outside the live layer (inert, no ids), then drop them.
     The layer itself is empty at once, so callers can render the next screen immediately. */
 export function ghost(...els: Element[]): void {
