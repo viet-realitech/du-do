@@ -104,16 +104,16 @@ function variantIx(v: HistEvent): number | undefined {
     (!x.picks || x.picks.some(p => picked.includes(p))) && !x.notPicks?.some(p => picked.includes(p)) &&
     (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })) && (!x.flags || hasFlag(x.flags, v.y)));
 }
-/** Cờ mà mỗi thẻ có thể mang (bộ gốc và mọi bộ thay thế): hasFlag chỉ dựng thẻ (cardOf) của những thẻ có thể mang cờ
-    đang hỏi, không dựng lại cả trăm thẻ (và các bộ thay thế theo cờ lồng nhau) mỗi lần vẽ. */
-const CAN: Record<string, Set<Flag>> = {};
-for (const [id, c] of Object.entries(CARD)) CAN[id] = new Set([c[2], ...(VARIANT[id] || []).map(x => x.choices)].flat().map(ch => ch[4]).filter((f): f is Flag => !!f));
+/** Sự kiện và biến cố riêng có thể mang mỗi cờ (bộ gốc và mọi bộ thay thế): hasFlag chỉ xét chúng, không dựng lại cả
+    trăm thẻ (và các bộ thay thế theo cờ lồng nhau) mỗi lần vẽ. */
+const FLAG_EV: Partial<Record<Flag, HistEvent[]>> = {}, FLAG_SP: Partial<Record<Flag, [SpecialCard, number][]>> = {};
+for (const v of EV) if (!v.diary && CARD[v.id]) for (const ch of [CARD[v.id][2], ...(VARIANT[v.id] || []).map(x => x.choices)].flat()) if (ch[4]) { const l = (FLAG_EV[ch[4]] ||= []); if (!l.includes(v)) l.push(v); }
+for (const c of SPECIAL) { const y = EV.find(x => x.id === c.ev)?.y; if (y != null) for (const ch of c.choices) if (ch[5]) { const l = (FLAG_SP[ch[5]] ||= []); if (!l.some(x => x[0] === c)) l.push([c, y]); } }
 /** Dòng họ đã chốt một lựa chọn mang một trong các cờ này ở sự kiện trước năm y (thẻ thường, biến cố riêng). */
 export function hasFlag(fs: readonly Flag[], y = 9999): boolean {
-  for (const v of EV) if (!v.diary && v.y < y && decided(v.id) && fs.some(f => CAN[v.id]?.has(f))) { const f = cardOf(v)?.[2][S.cards[v.id]]?.[4]; if (f && fs.includes(f)) return true; }
-  for (const c of SPECIAL) {
-    const i = S.cards['x:' + c.id], ev = EV.find(x => x.id === c.ev), f = i != null && ev && ev.y < y ? c.choices[i]?.[5] : undefined;
-    if (f && fs.includes(f)) return true;
+  for (const f of fs) {
+    for (const v of FLAG_EV[f] || []) if (v.y < y && decided(v.id)) { const g = cardOf(v)?.[2][S.cards[v.id]]?.[4]; if (g && fs.includes(g)) return true; }
+    for (const [c, cy] of FLAG_SP[f] || []) { const i = S.cards['x:' + c.id], g = i != null && cy < y ? c.choices[i]?.[5] : undefined; if (g && fs.includes(g)) return true; }
   }
   return false;
 }
