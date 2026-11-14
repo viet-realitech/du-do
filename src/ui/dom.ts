@@ -17,6 +17,10 @@ export function remember(el: Element, who: Element | null = document.activeEleme
 if (mainEl) new MutationObserver(recs => {
   const back = recs.flatMap(r => [...r.removedNodes]).map(n => invoker.get(n as Element)).filter((x): x is HTMLElement => !!x).pop();
   mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov');
+  // màn rộng: tờ ở cột bên / trang sự kiện cao trọn màn đè lên mép phải thanh tab; styles.css dồn thanh tab sang trái theo
+  // bề ngang tờ (không cắt "Hồ sơ" thành "Hồ"). Một thuộc tính đổi khi mở / đóng, không phải :has() đo lại mỗi lần đổi DOM
+  const side = layer.querySelector(':scope > .ov.evp') ? 'page' : layer.querySelector(':scope > .scrim:not(.wide):not(.dlg)') ? 'panel' : '';
+  if ((mainEl.dataset.side || '') !== side) { if (side) mainEl.dataset.side = side; else delete mainEl.dataset.side; }
   // bảng chồng lên trang / bảng khác (nhân vật trên trang sự kiện, xác nhận trên Hồ sơ…): mọi lớp dưới bảng trên cùng
   // không nhận tiêu điểm (Shift+Tab không lọt xuống nút bị che), bảng trên cùng đóng thì lớp dưới dùng lại được
   const kids = [...layer.children] as HTMLElement[], top = kids.map(k => k.matches('.scrim')).lastIndexOf(true);
@@ -80,14 +84,17 @@ export const wideLayout = matchMedia('(min-width: 1000px) and (min-aspect-ratio:
 
 /** Chỗ đặt thông báo, không che nội dung đang đọc: màn rộng đặt trên góc trái tấm bản đồ (bảng là tờ ở cột bên, hộp ở
     giữa); điện thoại / máy tính bảng dọc: không gì mở thì ngay trên thanh tab (không che năm, tên chương ở đầu trang),
-    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trả null khi chỗ ấy vẫn đè lên tờ
-    đang mở (bảng cao gần chạm đỉnh): huy hiệu chờ tới khi có chỗ, thông báo trả lời một cái chạm vẫn hiện trên cùng. */
+    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trang kết cục: chân màn hình (dưới
+    hàng nút là đầu hồ sơ, họ và dấu kết cục vừa hiện). Trang trọn màn trên màn rộng: dưới hàng nút như điện thoại (góc
+    bản đồ nằm dưới trang; trước đây huy hiệu chờ, thử lại mỗi 600 ms, tới khi đóng trang). Trả null khi chỗ ấy vẫn đè
+    lên tờ đang mở (bảng cao gần chạm đỉnh): huy hiệu chờ tới khi có chỗ, thông báo trả lời một cái chạm vẫn hiện trên cùng. */
 function toastSpot(n: HTMLElement): string | null {
   const top = layer.lastElementChild as HTMLElement | null;
   const box = top?.matches('.scrim') ? top.querySelector('.sheet') : top?.matches('.ov') ? top : null;
-  const cls = wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : top.matches('.ov') ? 'under' : 'top';
+  const page = !!top?.matches('.ov') && !(wideLayout.matches && top.matches('.evp')); // trang sự kiện màn rộng: tờ ở cột bên
+  const cls = top?.matches('.ov.end') ? 'foot' : page ? 'under' : wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : 'top';
   n.className = 'toast ' + cls;
-  if (!box || cls === 'under') return cls;
+  if (!box || page) return cls;
   // đo theo bố cục, không theo khung hình đang chạy hiệu ứng: tờ vừa mở còn đang trượt lên, thông báo đang trượt vào
   const a = place(n), b = place(box as HTMLElement);
   return a.bottom + 6 <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right ? cls : null;

@@ -514,15 +514,22 @@ function highlight(): void {
   G.hl.attr('d', f ? path(f) : null).attr('filter', S.theme === 'night' && quality() >= 2 ? 'url(#glow)' : null);
   G.call.selectAll('*').remove();
   const g = G.call.append('g').attr('class', 'co').datum<Pt>({ p });
-  const t = v.t.length > 34 ? v.t.slice(0, 33) + '…' : v.t;
+  // tít dài (8 / 42 sự kiện): hai dòng, gãy ở chỗ cách giữa gần nhất (không cắt "…Cách mạn…" giữa chữ); khung cao thêm
+  // một dòng về phía trên, mũi chỉ giữ nguyên chỗ
+  const ws = v.t.split(' ');
+  let cut = 0;
+  if (v.t.length > 34) for (let i = 1, best = Infinity; i < ws.length; i++) { const d = Math.abs(ws.slice(0, i).join(' ').length - v.t.length / 2); if (d < best) { best = d; cut = i; } }
+  const lines = cut ? [ws.slice(0, cut).join(' '), ws.slice(cut).join(' ')] : [v.t], up = (lines.length - 1) * 14;
   // nhãn chú dẫn như trên bản đồ in: khung vuông, dòng loại · năm bằng chữ hoa giãn cùng họ chữ thân bài
   const bx = g.append('rect').attr('rx', 1.5).style('fill', 'var(--paper)').style('stroke', 'var(--acc)').attr('stroke-width', 1.2);
-  const t1 = g.append('text').attr('text-anchor', 'middle').attr('y', -38).style('font-family', 'var(--serif)').attr('font-weight', 500)
+  const t1 = g.append('text').attr('text-anchor', 'middle').attr('y', -38 - up).style('font-family', 'var(--serif)').attr('font-weight', 500)
     .attr('font-size', 9).attr('letter-spacing', 1.3).style('fill', 'var(--acc)').text((v.diary ? 'NHẬT KÝ · ' : v.k.toUpperCase() + ' · ') + v.y);
-  const t2 = g.append('text').attr('text-anchor', 'middle').attr('y', -24).style('font-family', 'var(--disp)').attr('font-weight', 700)
-    .attr('font-size', 13).style('fill', 'var(--ink)').text(t);
-  const w = Math.max(t1.node()!.getComputedTextLength(), t2.node()!.getComputedTextLength()) + 20;
-  bx.attr('x', -w / 2).attr('y', -52).attr('width', w).attr('height', 36);
+  const t2 = g.append('text').attr('text-anchor', 'middle').attr('y', -24 - up).style('font-family', 'var(--disp)').attr('font-weight', 700)
+    .attr('font-size', 13).style('fill', 'var(--ink)');
+  lines.forEach((l, i) => t2.append('tspan').attr('x', 0).attr('dy', i ? 14 : 0).text(l));
+  const tw = t2.selectAll<SVGTSpanElement, unknown>('tspan').nodes().map(n => n.getComputedTextLength());
+  const w = Math.max(t1.node()!.getComputedTextLength(), ...tw) + 20;
+  bx.attr('x', -w / 2).attr('y', -52 - up).attr('width', w).attr('height', 36 + up);
   g.append('path').attr('d', 'M-5,-16 L0,-10 L5,-16Z').style('fill', 'var(--acc)');
   g.style('opacity', 0).transition().delay(500).duration(400).style('opacity', 1);
 }

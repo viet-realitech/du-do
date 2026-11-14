@@ -251,6 +251,9 @@ function beatList(r: Run, v: HistEvent): HTMLElement | null {
     return `<li data-i="${i}" style="--c:${SIDE_COLOR[side] || '#f1e6c8'}"><button type="button"><span class="bn">${i + 1}</span><span><b>${esc(sideName(side, v.y))}</b>${m ? ` <em>${esc(m[1])}</em>` : ''}<br>${esc(text)}</span></button></li>`;
   }).join('')}</ol>`;
   box.hidden = false;
+  // lớp trên #main thay cho #main:has(.beats:not([hidden])) trong styles.css: :has() bắt trình duyệt xét lại #main sau mỗi
+  // thay đổi DOM bên trong (năm, thẻ, mục lục), kéo thanh năm là tính lại kiểu cả cột bên mỗi khung
+  document.getElementById('main')?.classList.add('has-beats');
   box.querySelectorAll<HTMLButtonElement>('li button').forEach((b, i) => (b.onclick = () => {
     if (cur !== r || !r.alive || r.paused) return; // đang giữ cảnh: ▶ trước
     const t = r.marks[i], now = vnow(r);
@@ -1020,6 +1023,7 @@ export function endScene(instant = false): void {
   if (r.list) {
     const had = r.list.contains(document.activeElement);
     r.list.hidden = true; r.list.innerHTML = '';
+    document.getElementById('main')?.classList.remove('has-beats');
     if (had) requestAnimationFrame(focusFallback); // đang đứng trên một nhịp của danh sách: không để tiêu điểm rơi về <body>
   }
   if (r.raf) cancelAnimationFrame(r.raf);
