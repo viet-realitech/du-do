@@ -99,8 +99,8 @@ on('share', () => openShare());
 on('reset', () => {
   const who = isPlay() ? familyName() : 'tiến trình đọc sử';
   const d = sheet(`<div class="mono muted">Bắt đầu lại</div><h2 style="margin:8px 0 6px">Xoá ${esc(who)} và bắt đầu lại từ 1858?</h2>
-    <p class="muted" style="margin:0 0 16px">Các lựa chọn, thẻ quyết định và gia sản sẽ mất; không hoàn tác được.</p>
-    <div class="row" style="gap:10px"><button class="btn ghost" data-a="reset-no">Huỷ</button><button class="btn" data-a="reset-yes">Xoá, bắt đầu lại</button></div>`, true);
+    <p class="muted" style="margin:0 0 16px">${isPlay() ? 'Các lựa chọn, thẻ quyết định và gia sản sẽ mất' : 'Các lựa chọn ở điểm rẽ và tiến trình đọc sẽ mất'}; không hoàn tác được.</p>
+    <div class="row" style="gap:10px"><button class="btn ghost" data-a="reset-no">Huỷ</button><button class="btn" data-a="reset-yes">Xoá, bắt đầu lại</button></div>`, true, 'dlg'); // hộp xác nhận nhỏ giữa màn, không phải tờ cao cả màn
   d.querySelector<HTMLElement>('[data-a=reset-no]')!.focus();
 });
 on('reset-no', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); });

@@ -87,8 +87,13 @@ export const BORN: Record<string, string> = {
 };
 /** "khai sinh X" / "hoàng tộc X" cho dòng phụ dưới tên. */
 export const bornLine = (id: string): string => (BORN[id] ? (/^hoàng tộc/.test(BORN[id]) ? BORN[id] : 'khai sinh ' + BORN[id]) : '');
-/** Tên hiển thị chuẩn: "Họ X". */
-export const asFamily = (name: string): string => { const n = name.normalize('NFC').replace(/^họ\s+/i, '').trim(); return n ? 'Họ ' + n[0].toUpperCase() + n.slice(1) : ''; };
+/** Tên hiển thị chuẩn: "Họ X". Gõ toàn chữ hoa hay toàn chữ thường ("NGUYỄN", "tôn thất") thì viết hoa đầu mỗi chữ
+    ("Nguyễn", "Tôn Thất"); gõ hoa thường xen kẽ thì giữ đúng cách viết đã gõ. */
+export const asFamily = (name: string): string => {
+  let n = name.normalize('NFC').replace(/^họ\s+/i, '').trim().replace(/\s+/g, ' ');
+  if (n === n.toLocaleUpperCase('vi') || n === n.toLocaleLowerCase('vi')) n = n.toLocaleLowerCase('vi').replace(/(^|\s)(\S)/g, (_, s, c) => s + c.toLocaleUpperCase('vi'));
+  return n ? 'Họ ' + n[0].toUpperCase() + n.slice(1) : '';
+};
 /** Cách viết khớp với họ đã gõ (Huỳnh vẫn là Huỳnh dù chung khoá với Hoàng), hoặc cách viết đầu. */
 export const spellingOf = (key: string, typed: string): string => { const l = SURNAMES.find(s => s.key === key); if (!l) return ''; const t = norm(typed); return l.names.find(x => x.toLowerCase() === t) || l.names[0]; };
 

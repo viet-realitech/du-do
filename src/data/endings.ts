@@ -72,6 +72,8 @@ export interface Ending {
 /** Rời đất nước: đời thứ sáu "Ra đi", hay một lựa chọn đưa cả nhà (hay một nhánh) ra nước ngoài trên thẻ sự kiện. */
 const EXIT: Flag[] = ['ditan', 'vuotbien', 'odp', 'lylichDi', 'ly79Di'];
 export const away = (f: Facts) => f.picks[5] === 'radi' || EXIT.some(x => f.flags.has(x));
+/** Cả nhà (không chỉ một nhánh) ra nước ngoài trên thẻ sự kiện: di tản, vượt biển, ra đi có trật tự, "bán chính thức". */
+const GONE: Flag[] = ['ditan', 'vuotbien', 'odp', 'ly79Di'];
 export const sum = (r?: Res) => (r ? r.g + r.d + r.b + r.u : 0);
 const NUMW = ['Không', 'Một', 'Hai', 'Ba', 'Bốn', 'Năm', 'Sáu'];
 
@@ -261,7 +263,10 @@ export function epilogue(id: string, f: Facts): string {
       const lows = r ? RN.filter(([k]) => r[k] <= 25).sort((a, b) => r[a[0]] - r[b[0]]) : [];
       const shown = (lows.length ? lows : r ? [...RN].sort((a, b) => r[a[0]] - r[b[0]]).slice(0, 2) : []).slice(0, 3);
       const low = r ? `gia sản của ${ho} chỉ còn ${list(shown.map(([k, n]) => `${n} ${r[k]}`))}` : `${ho} còn lại rất ít`;
-      return `Sáu đời ${ho}${oQue} đi qua giặc giã, đói kém và những lần phải chọn phe.${gd ? ` ${cap(genName(gd.worst))}, những người ${doi(f, gd.worst)}, mất mát nhiều nhất.` : ''} Đến năm 2026, ${low}. Gia phả không đứt: người còn lại giữ cái tên và thắp hương cho cả những người không về.`;
+      // nhà đã di cư năm 1954 hay cả nhà đã ra nước ngoài: nói đường dòng họ đã đi, không ghim cả sáu đời vào quê gốc
+      const mv = north(f) && (f.picks[4] === 'nam' || f.picks[4] === 'thuba' || f.flags.has('dicu')), out = f.picks[5] === 'radi' || GONE.some(x => f.flags.has(x));
+      const where = que && (mv || out) ? `, từ ${que}${mv ? ' vào Nam' : ''}${out ? `${mv ? ' rồi' : ''} ra xứ người` : ''},` : oQue;
+      return `Sáu đời ${ho}${where} đi qua giặc giã, đói kém và những lần phải chọn phe.${gd ? ` ${cap(genName(gd.worst))}, những người ${doi(f, gd.worst)}, mất mát nhiều nhất.` : ''} Đến năm 2026, ${low}. Gia phả không đứt: người còn lại giữ cái tên và thắp hương cho cả những người không về.`;
     }
     case 'xanam':
       return `${cap(atHo(4))}; ${exitClause(f)}, rồi dựng lại đời sống ở xứ người. ${f.flags.has('kieuhoi') ? `Từ cuối thập niên 1980, tiền và thùng đồ gửi về sửa lại nhà, xây lại mộ tổ${oQue}.` : 'Nhiều năm liền, những lá thư là sợi dây duy nhất nối hai bờ.'} Năm 2026, ${ho} có hai bàn thờ, một ở ${que || 'quê nhà'} và một ở bên kia đại dương; con cháu đời thứ bảy nói tiếng Việt với ông bà và một thứ tiếng khác ở trường.`;

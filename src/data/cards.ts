@@ -655,6 +655,18 @@ export const VARIANT: Record<string, Variant[]> = {
       ['Gửi người già, trẻ nhỏ đi lánh', 'Đưa người già, trẻ nhỏ vào Đà Nẵng, xa tiếng pháo.', { g: -6, b: -6, d: -1 }, 'Ba tháng ở nhờ người quen. Tháng Chín, Cổ thành được tái chiếm; cả nhà lại đoàn tụ.'],
     ] },
   ],
+  // Linebacker II (18 – 29.12.1972) với một nhà miền Bắc không ở Hà Nội: nhà Nam Định (thành phố đã bị ném bom nhiều lần
+  // năm 1972) không "sơ tán khỏi Hà Nội"; nhà miền Nam tập kết ra Bắc không có quê ngoài này để về.
+  lb72: [
+    { homes: ['nd'], regions: ['B'], choices: [
+      ['Sơ tán khỏi thành phố Nam Định', 'Đưa người già, trẻ nhỏ về các làng ngoại thành tránh bom.', { g: -6, b: -4 }, 'Năm ấy thành phố đã nhiều lần bị ném bom. Những đêm cuối năm, cả xóm sơ tán đứng nhìn về phía Hà Nội, trời đỏ rực.'],
+      ['Ở lại trực chiến', 'Người của họ trong tự vệ nhà máy.', { d: -1, u: 6, vm: 12 }, 'Cả mùa đông canh trận địa bên bờ sông Đào. Tin Hà Nội bắn rơi B-52 về qua loa phóng thanh.'],
+    ] },
+    { from: ['T2', 'NE', 'NW'], regions: ['B'], choices: [
+      ['Sơ tán về nông thôn', 'Theo cơ quan, nhà trường về nơi sơ tán; quê thật ở tận miền Nam.', { g: -6, b: -4 }, 'Mười hai ngày đêm B-52 rải bom Hà Nội, Hải Phòng. Ở nơi sơ tán, người tập kết ngồi nghe đài, nhẩm tính bao giờ hiệp định ký xong để về Nam.'],
+      ['Ở lại trực chiến', 'Người của họ trong tự vệ khu tập thể.', { d: -1, u: 6, vm: 12 }, 'Bắn rơi một máy bay, được ghi tên trên báo.'],
+    ] },
+  ],
   bmt75: [
     { homes: ['hue', 'qn'], regions: ['T2'], choices: [
       ['Chạy vào Đà Nẵng', 'Tin Buôn Ma Thuột thất thủ; cả nhà theo dòng người trên Quốc lộ 1.', { g: -10, b: -8, d: -2 }, 'Đèo Hải Vân kẹt cứng người và xe. Tới Đà Nẵng ít hôm thì thành phố cũng đổi chủ; cả nhà lần về làng.'],
