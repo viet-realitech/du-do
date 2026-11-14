@@ -60,7 +60,10 @@ export function renderMain(): void {
   setText($('#eraNo')!, `Chương ${e.n}/6 · Thế hệ ${e.n}`);
   setText($('#eraT')!, e.title);
   const er = $('#eraR')!;
-  setHtml(er, pk ? `${av(pk.guide)}${esc(pk.label)}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng');
+  // nhãn ba chữ trở lên: hai chữ cuối dính nhau, cột hẹp xuống dòng thành "Miền Nam / — VNCH", "Giải pháp / Bảo Đại"
+  // (không treo "—" cuối dòng, không để "Đại" một mình)
+  const lb = pk ? esc(pk.label) : '';
+  setHtml(er, pk ? `${av(pk.guide)}${lb.split(' ').length > 2 ? lb.replace(/ (\S+)$/, '\u00a0$1') : lb}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng');
   const ds = (k: 'a' | 'id', v: string) => { if (er.dataset[k] !== v) er.dataset[k] = v; };
   if (pk) { ds('a', 'fig'); ds('id', pk.guide); }
   else if (!isPlay()) { ds('a', 'pickera'); ds('id', e.id); } // Đọc sử: điểm rẽ của chương, không bắt buộc

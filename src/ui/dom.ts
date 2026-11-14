@@ -84,15 +84,16 @@ export const wideLayout = matchMedia('(min-width: 1000px) and (min-aspect-ratio:
 
 /** Chỗ đặt thông báo, không che nội dung đang đọc: màn rộng đặt trên góc trái tấm bản đồ (bảng là tờ ở cột bên, hộp ở
     giữa); điện thoại / máy tính bảng dọc: không gì mở thì ngay trên thanh tab (không che năm, tên chương ở đầu trang),
-    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trang kết cục: chân màn hình (dưới
-    hàng nút là đầu hồ sơ, họ và dấu kết cục vừa hiện). Trang trọn màn trên màn rộng: dưới hàng nút như điện thoại (góc
+    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trang kết cục: dưới hàng nút là đầu
+    hồ sơ (họ, dấu kết cục vừa hiện), nên đặt ở chân màn hình; màn rộng thì dải trên cùng, giữa nút ‹ và nhãn trang (chân
+    màn là thẻ giả định "Nếu…"). Trang trọn màn trên màn rộng: dưới hàng nút như điện thoại (góc
     bản đồ nằm dưới trang; trước đây huy hiệu chờ, thử lại mỗi 600 ms, tới khi đóng trang). Trả null khi chỗ ấy vẫn đè
     lên tờ đang mở (bảng cao gần chạm đỉnh): huy hiệu chờ tới khi có chỗ, thông báo trả lời một cái chạm vẫn hiện trên cùng. */
 function toastSpot(n: HTMLElement): string | null {
   const top = layer.lastElementChild as HTMLElement | null;
   const box = top?.matches('.scrim') ? top.querySelector('.sheet') : top?.matches('.ov') ? top : null;
   const page = !!top?.matches('.ov') && !(wideLayout.matches && top.matches('.evp')); // trang sự kiện màn rộng: tờ ở cột bên
-  const cls = top?.matches('.ov.end') ? 'foot' : page ? 'under' : wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : 'top';
+  const cls = top?.matches('.ov.end') ? (wideLayout.matches ? 'top' : 'foot') : page ? 'under' : wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : 'top';
   n.className = 'toast ' + cls;
   if (!box || page) return cls;
   // đo theo bố cục, không theo khung hình đang chạy hiệu ứng: tờ vừa mở còn đang trượt lên, thông báo đang trượt vào
