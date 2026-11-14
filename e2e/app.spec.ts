@@ -374,8 +374,8 @@ test('play mode: a family that evacuated in April 1975 lives abroad — gate 6 a
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 40, d: 40, b: 40, u: 40 } }, 'tn76');
   await page.locator('#hv-go').click();
   if (await page.locator('.cine').count()) await page.goBack();
-  await expect(page.locator('.scrim .pv.mine')).toContainText('lên tàu ra biển', { timeout: 8000 });
-  await expect(page.locator('.scrim .opt h3')).toHaveText(['Gửi quà nuôi người ở quê', 'Về nước làm ăn', 'Bám rễ nơi xứ người']);
+  await expect(page.locator('#layer > .scrim .pv.mine')).toContainText('lên tàu ra biển', { timeout: 8000 });
+  await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Gửi quà nuôi người ở quê', 'Về nước làm ăn', 'Bám rễ nơi xứ người']);
   await page.locator('#lskip').click();
   await page.locator('.scrim .opt[data-o=radi]').click();
   await page.locator('#go').click();
@@ -383,15 +383,16 @@ test('play mode: a family that evacuated in April 1975 lives abroad — gate 6 a
   await expect(page.locator('#layer > .scrim').last()).toContainText('Phạm Duy');
   await page.locator('[data-a=watch]').click();
   await page.locator('#tourb [data-t=skip]').click();
+  // #layer > .scrim: bảng đang mở, không bắt nhầm bảng cũ đang mờ dần (ghost, 320 ms)
   // 1976: năm đầu ở xứ người, không phải hợp tác xã; thẻ chiến tranh biên giới Tây Nam (Cần Thơ) không còn là việc của nhà
-  await expect(page.locator('.scrim h2')).toHaveText('Cộng hoà XHCN Việt Nam', { timeout: 8000 });
-  await expect(page.locator('.scrim .kick')).toContainText('Cần Thơ → xứ người');
-  await expect(page.locator('.scrim .opt h3')).toHaveText(['Ở lại với hội thánh bảo trợ', 'Theo họ hàng sang Pháp', 'Dọn về California']);
-  await page.locator('.scrim .opt').first().click();
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Cộng hoà XHCN Việt Nam', { timeout: 8000 });
+  await expect(page.locator('#layer > .scrim .kick')).toContainText('Cần Thơ → xứ người');
+  await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Ở lại với hội thánh bảo trợ', 'Theo họ hàng sang Pháp', 'Dọn về California']);
+  await page.locator('#layer > .scrim .opt').first().click();
   await page.locator('#cgo').click();
   await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
-  await expect(page.locator('.scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
-  await expect(page.locator('.scrim .opt h3').first()).toHaveText('Bảo lãnh người thân theo diện đoàn tụ');
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
+  await expect(page.locator('#layer > .scrim .opt h3').first()).toHaveText('Bảo lãnh người thân theo diện đoàn tụ');
   expect(errors).toEqual([]);
 });
 
