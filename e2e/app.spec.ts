@@ -596,6 +596,54 @@ test('figures lock until their turning point; profile, about and share card', as
   expect(errors).toEqual([]);
 });
 
+test('ending: the dossier takes focus; restarting is a small dialog and leaves no notice of the old game behind', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, badges: ['start'] });
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toBeFocused();
+  await expect(page.locator('.toast')).toBeVisible({ timeout: 6000 }); // huy hiệu của ván này ("Khép hồ sơ"…)
+  await page.locator('.ov.end [data-a=reset]').click();
+  const dlg = page.locator('#layer > .scrim.dlg');
+  await expect(dlg).toBeVisible();
+  await expect(dlg).not.toContainText('gia sản'); // Đọc sử không có gia sản
+  await page.locator('[data-a=reset-yes]').click();
+  await expect(page.locator('.toast')).toHaveCount(0);
+  await page.waitForTimeout(3500);
+  await expect(page.locator('.toast')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('a figure with no related events still has a close button reachable with Tab', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1883, picks: { e1: 'canhtan' }, quiz: {} });
+  await page.locator('#eraR').click();
+  const x = page.locator('#layer > .scrim .sx');
+  await expect(x).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(x).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#layer > .scrim')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('onboarding: a surname typed in all caps is shown as "Họ Nguyễn"', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
+  await page.locator('#nm').fill('NGUYỄN');
+  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
+  await expect(page.locator('.scrim .kick').first()).toContainText('Họ Nguyễn');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2')!).name)).toBe('Họ Nguyễn');
+  expect(errors).toEqual([]);
+});
+
+test('play mode: Linebacker II speaks to a Nam Định family (not "leave Hà Nội")', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Phạm', surname: 'pham', home: 'nd', year: 1972, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 50, d: 50, b: 50, u: 50 } }, 'lb72');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('.scrim h2')).toHaveText('Chiến dịch Linebacker II', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Sơ tán khỏi thành phố Nam Định', 'Ở lại trực chiến']);
+  expect(errors).toEqual([]);
+});
+
 test('appearance: theme picked at onboarding, changed in settings, kept after reload', async ({ page }) => {
   const errors = await boot(page);
   await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
