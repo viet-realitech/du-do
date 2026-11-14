@@ -20,10 +20,10 @@ const NORTH: Region[] = ['B', 'T1'];
     chọn Miền Nam hay Thành phần thứ ba thì di cư vào Nam, sống quanh Sài Gòn – Biên Hoà như phần đông người di cư, và
     ở lại đó cả sau 1975; nhà chọn ở lại mà rồi vẫn vào Nam trước khi đội cải cách về (x-diachu53) cũng vậy. Nhà phía
     nam vĩ tuyến 17 chọn Miền Bắc thì tập kết ra Bắc, sau 1975 về lại quê. Thẻ theo vùng, bên cai quản (mùa màng), nhãn
-    "chạm tới quê" đều theo vùng này. */
+    "chạm tới quê" đều theo vùng này. Bản lưu có trước việc dời nhà: những năm trước lúc mở lại vẫn ở quê (S.movedFrom). */
 export function regionAt(y: number): Region {
   const g = home()[3], p = S.picks.e5;
-  if (y < 1954 || !p) return g;
+  if (y < 1954 || !p || y < S.movedFrom) return g;
   if (NORTH.includes(g)) return p === 'nam' || p === 'thuba' || S.cards['x:x-diachu53'] === 2 ? 'NE' : g;
   return p === 'bac' && y < 1976 ? 'B' : g;
 }

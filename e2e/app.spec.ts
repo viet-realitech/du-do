@@ -285,7 +285,8 @@ async function bootPlay(page: Page, st: Record<string, unknown>, upTo: string, k
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
   const cards = { ...Object.fromEntries(ids.slice(0, ids.indexOf(upTo)).map(id => [id, 0])), ...(st.cards as object || {}) };
-  const s = { step: 'play', mode: 'play', cardv: {}, xFrom: 2026, narr: false, ...st, cards };
+  // `shown`: bản lưu của bản hiện tại (bản lưu không có nó là bản có trước việc điểm rẽ 5 dời nhà, state.ts movedFrom)
+  const s = { step: 'play', mode: 'play', cardv: {}, xFrom: 2026, narr: false, shown: [], ...st, cards };
   // một lần cho mỗi khoá: tải lại trang không ghi đè bản lưu; khoá khác thì dựng bản lưu mới trong cùng thẻ
   await page.addInitScript(([x, k]) => { if (!sessionStorage.getItem(k)) { localStorage.setItem('dudo-v2-play', x); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem(k, '1'); } }, [JSON.stringify(s), key]);
   await page.goto('/');
@@ -308,6 +309,33 @@ test('play mode: turning point 5 moves the family — a Huế family that picks 
   // the 1954 migration card asks whether the whole household goes (not "where to live" again, not a southern host's card)
   await expect(page.locator('.scrim h2')).toHaveText('Cuộc di cư 1954', { timeout: 8000 });
   await expect(page.locator('.scrim .opt h3')).toHaveText(['Cả nhà cùng ra Bắc', 'Người đi, vợ con ở lại giữ đất']);
+  expect(errors).toEqual([]);
+});
+
+test('play mode: a save from before turning point 5 moved the family keeps its place (no rewind to 1955)', async ({ page }) => {
+  // bản lưu của bản cũ (không có `shown`): nhà Hà Nội chọn Miền Nam, các thẻ cả nước và miền Bắc đã quyết như bản cũ đòi
+  const rows = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '([^']*)'/gm)];
+  const cards = Object.fromEntries(rows.filter(m => m[2] === 'all' || m[2].split(',').includes('B')).map(m => [m[1], 0]));
+  const old = (year: number) => ({ step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year, narr: false, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam', ...(year >= 2026 ? { e6: 'doimoi' } : {}) },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], ...(year >= 2026 ? { e5: [true, true], e6: [true, true] } : {}) }, cards, cardv: {}, xs: {}, xFrom: 1858, names: [],
+    harvests: year >= 2026 ? ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'] : ['e1', 'e2', 'e3', 'e4'], ended: year >= 2026 });
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  await page.addInitScript(([x, y]) => {
+    if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', x); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); }
+    else if (!sessionStorage.getItem('seeded2')) { localStorage.setItem('dudo-v2-play', y); sessionStorage.setItem('seeded2', '1'); }
+  }, [JSON.stringify(old(1966)), JSON.stringify(old(2026))]);
+  await page.goto('/');
+  await expect(page.locator('#yr')).toHaveText('1966');
+  await page.waitForTimeout(1500);
+  await expect(page.locator('#tourb')).toBeHidden(); // không dựng lại tour chương 5 để hỏi thẻ miền Nam năm 1955
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2-play')!).year)).toBe(1966);
+  // bản lưu cũ đã xong: vẫn ở năm 2026, kết luận còn đó
+  await page.reload();
+  await expect(page.locator('#yr')).toHaveText('2026');
+  await expect(page.locator('#card [data-a=end]')).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2-play')!).year)).toBe(2026);
   expect(errors).toEqual([]);
 });
 
