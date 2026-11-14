@@ -334,7 +334,7 @@ test('play mode: a save from before turning point 5 moved the family keeps its p
   // bản lưu cũ đã xong: vẫn ở năm 2026, kết luận còn đó
   await page.reload();
   await expect(page.locator('#yr')).toHaveText('2026');
-  await expect(page.locator('#card [data-a=end]')).toBeVisible();
+  await expect(page.locator('#card .c[data-a=end]')).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2-play')!).year)).toBe(2026);
   expect(errors).toEqual([]);
 });
@@ -366,6 +366,32 @@ test('play mode: 30.4.1975 for a Third Force family that migrated South is not t
   await expect(page.locator('.scrim h2')).toContainText('Sài Gòn', { timeout: 8000 });
   await expect(page.locator('.scrim .opt h3')).toHaveText(['Di tản', 'Ở lại, chờ hoà hợp', 'Đón quân giải phóng']);
   await expect(page.locator('.scrim .opt').nth(1)).toContainText('Hợp đường bạn theo');
+  expect(errors).toEqual([]);
+});
+
+test('play mode: a family that evacuated in April 1975 lives abroad — gate 6 and the cards after speak from there', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'ct', year: 1976, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam' }, cards: { sg75: 0 },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 40, d: 40, b: 40, u: 40 } }, 'tn76');
+  await page.locator('#hv-go').click();
+  if (await page.locator('.cine').count()) await page.goBack();
+  await expect(page.locator('.scrim .pv.mine')).toContainText('lên tàu ra biển', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Gửi quà nuôi người ở quê', 'Về nước làm ăn', 'Bám rễ nơi xứ người']);
+  await page.locator('#lskip').click();
+  await page.locator('.scrim .opt[data-o=radi]').click();
+  await page.locator('#go').click();
+  await expect(page.locator('#layer > .scrim').last()).toContainText('nhập quốc tịch');
+  await expect(page.locator('#layer > .scrim').last()).toContainText('Phạm Duy');
+  await page.locator('[data-a=watch]').click();
+  await page.locator('#tourb [data-t=skip]').click();
+  // 1976: năm đầu ở xứ người, không phải hợp tác xã; thẻ chiến tranh biên giới Tây Nam (Cần Thơ) không còn là việc của nhà
+  await expect(page.locator('.scrim h2')).toHaveText('Cộng hoà XHCN Việt Nam', { timeout: 8000 });
+  await expect(page.locator('.scrim .kick')).toContainText('Cần Thơ → xứ người');
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Ở lại với hội thánh bảo trợ', 'Theo họ hàng sang Pháp', 'Dọn về California']);
+  await page.locator('.scrim .opt').first().click();
+  await page.locator('#cgo').click();
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  await expect(page.locator('.scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3').first()).toHaveText('Bảo lãnh người thân theo diện đoàn tụ');
   expect(errors).toEqual([]);
 });
 

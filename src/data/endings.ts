@@ -1,4 +1,4 @@
-import { ERAS } from './index';
+import { ERAS, type HistEvent, type LngLat } from './index';
 import RARITY from './endings-rarity.json';
 
 /* Kết cục dòng họ cho cả hai luồng (Đọc sử: 12 kết cục; Trò chơi: 15), lời kết cá nhân hoá, lớp giả định "Nếu…"
@@ -38,6 +38,35 @@ const OPT = Object.fromEntries(ERAS.flatMap(e => e.opts.map(o => [o.id, o]))) as
     thương thuyết, đứng ngoài). */
 const side = (id: string) => { const p = OPT[id]?.persp; return p === 'vn' || p === 'vnch' ? p : 'giua'; };
 const caicach = (id: string) => OPT[id]?.tag === 'caicach';
+
+/** Trang nhật ký riêng của nhà đã di tản (đời thứ sáu ở xứ người), đặt ở nơi nó chạm tới quê nhà. */
+const page = (id: string, y: number, t: string, l: LngLat, s: string): HistEvent => ({ id, y, d: String(y), k: 'Nhật ký', t, l, s, p: 'Nhật ký dòng họ (hư cấu)', v: [], src: [], diary: true, era: 'e6' });
+/** Điểm rẽ 6 với một nhà đã di tản tháng 4.1975 (cờ 'ditan'): cả nhà đã ở xứ người, nên ba hướng nói từ bên ấy, cùng id
+    (kết cục, quan hệ, nhãn Hợp / Trái đường đọc như cũ): gửi quà nuôi họ hàng qua những năm bao cấp (quan hệ với Nhà
+    nước như "giữ kế hoạch hoá"), về nước làm ăn khi cửa mở, hay bám rễ nơi xứ người. `doi`, `chron`: cụm cho lời kết và
+    dòng gia phả; trang nhật ký "Đêm ra khơi" 1979, "Sổ gạo" Hà Nội 1980 không còn đúng với nhà này nên thay. Người đồng
+    hành: Trần Văn Khê (sống ở Pháp, giữ mối dây với quê nhà), Võ Văn Kiệt (thủ tướng những năm mở cửa đón Việt kiều về),
+    Phạm Duy (rời nước năm 1975) thay cho Lê Duẩn, Nguyễn Văn Linh của những nhà ở trong nước. */
+export const ABROAD6: Record<string, { label: string; who: string; d: string; out: string; doi: string; chron: string; guide: string; diary: HistEvent[] }> = {
+  baocap: { label: 'Gửi quà nuôi người ở quê', who: 'Những thùng quà thời bao cấp', guide: 'tvk2',
+    d: 'Đi làm hai ca; thuốc tây, vải, bột ngọt đóng thùng gửi qua bưu điện, chịu thuế để họ hàng ở quê được nhận.',
+    out: 'Bạn lớn lên giữa những thùng quà đóng dở trong phòng khách. Ở quê, họ hàng bán dần từng lọ thuốc, từng xấp vải để đong gạo qua những năm tem phiếu.',
+    doi: 'gửi quà về nuôi họ hàng thời bao cấp',
+    chron: 'Thế hệ 6 lớn lên ở xứ người; lương làm hai ca thành những thùng quà gửi về nuôi họ hàng qua những năm tem phiếu, lạm phát ba con số.',
+    diary: [page('d-xbaocap0', 1981, 'Thùng quà về tới quê', [106.70, 10.78], 'Thùng quà gửi từ California về tới Bưu điện Thành phố sau ba tháng. Họ hàng xếp hàng nhận, đóng thuế, rồi bán dần thuốc tây, vải vóc để đong gạo.')] },
+  doimoi: { label: 'Về nước làm ăn', who: 'Việt kiều, sau Đổi Mới', guide: 'vvk',
+    d: 'Theo dõi Đổi Mới từ xa; khi Mỹ bỏ cấm vận (1994), mang vốn, mang nghề về quê.',
+    out: 'Bạn học nghề, đi làm ở xứ người. Tháng 2.1994 Mỹ bỏ cấm vận, và bạn ở trong những chuyến bay đầu tiên về làm ăn: giấy phép mất hai năm, đối tác đổi ba lần, nhưng xưởng vẫn đứng.',
+    doi: 'về nước làm ăn sau khi Mỹ bỏ cấm vận',
+    chron: 'Thế hệ 6 lớn lên ở xứ người; sau khi Mỹ bỏ cấm vận năm 1994, về nước mở xưởng, nối đường làm ăn giữa hai bờ đại dương.',
+    diary: [page('d-xdoimoi0', 1994, 'Ngày bỏ cấm vận', [106.66, 10.82], 'Mỹ bỏ cấm vận tháng 2.1994. Chuyến bay về Tân Sơn Nhất chật người mang va li giấy tờ: hồ sơ xin giấy phép, bản vẽ xưởng, danh thiếp in hai thứ tiếng.'), ...OPT.doimoi.diary.slice(1)] },
+  radi: { label: 'Bám rễ nơi xứ người', who: 'Cộng đồng hải ngoại', guide: 'pd',
+    d: 'Nhập quốc tịch, mở tiệm, cho con học trường bên này; quê nhà ở trong ký ức và những lá thư.',
+    out: 'Bạn lớn lên ở một thành phố xa lạ, nhập quốc tịch, nói tiếng Việt ở nhà và tiếng Anh ở trường. Sau năm 1995, bạn có thể quay về thăm quê.',
+    doi: 'bám rễ ở xứ người sau năm 1975',
+    chron: 'Thế hệ 6 lớn lên ở xứ người, nhập quốc tịch, dựng lại đời sống trong cộng đồng người Việt; sau năm 1995 mới có người về thăm quê.',
+    diary: OPT.radi.diary.slice(1) },
+};
 
 export interface PathF { m: number; div: number; turns: number; nVN: number; nVNCH: number; nG: number; cc: number }
 export function pathF(p: string[]): PathF {
@@ -200,6 +229,7 @@ const DOI: Record<string, string> = {
 export function doi(f: Facts, i: number): string {
   const id = f.picks[i], reg = f.home?.region;
   if (!reg) return DOI[id] || '';
+  if (ABROAD6[id] && f.flags.has('ditan')) return ABROAD6[id].doi; // đời thứ sáu của nhà đã di tản sống ở xứ người
   // điểm rẽ 5 dời nhà (play.ts regionAt): nhà miền Bắc theo Miền Nam / Thành phần thứ ba thì di cư, nhà miền Nam theo
   // Miền Bắc thì tập kết
   if (id === 'nam') return north(f) ? 'di cư vào Nam năm 1954' : DOI.nam;
@@ -217,6 +247,7 @@ export function doi(f: Facts, i: number): string {
     Nam theo Miền Bắc thì tập kết ra Bắc và về lại quê sau 1975. Không có câu riêng: dòng biên niên chung (CHRONICLE). */
 export function chronLine(id: string, f: Facts, chron: Record<string, string>): string {
   const reg = f.home?.region, nth = north(f), q = f.home?.name || '';
+  if (reg && ABROAD6[id] && f.flags.has('ditan')) return ABROAD6[id].chron;
   if (reg && id === 'bac') return nth
     ? (f.flags.has('dicu') ? 'Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
     : `Thế hệ 5 tập kết ra Bắc năm 1954${f.flags.has('nguoiDi54') ? ', để vợ con ở lại quê chờ lời hẹn hai năm' : ''}; năm 1975 mới về lại ${q}.`;

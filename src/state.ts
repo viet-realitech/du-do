@@ -140,7 +140,10 @@ const CH: Record<string, string> = { dbp: 'e4', gnv: 'e4' };
 export const evEra = (v: HistEvent): Era => ERAS.find(e => e.id === (v.diary ? v.era : CH[v.id])) || eraOf(v.y);
 /** Năm đại diện của sự kiện trong chương của nó (tra hướng đã chọn, biến cố riêng…): Điện Biên Phủ → 1953. */
 export const chYear = (v: HistEvent): number => { const e = evEra(v), nx = ERAS[ERAS.indexOf(e) + 1]; return Math.max(e.cy, Math.min(v.y, nx ? nx.cy - 1 : v.y)); };
-export const optOf = (e: Era): Option | undefined => e.opts.find(o => o.id === S.picks[e.id]);
+/** Một hướng như dòng họ này thấy nó: play.ts gán (nhà đã di tản năm 1975 thấy các hướng của điểm rẽ 6 nói từ xứ người,
+    cùng id); state.ts không nhập play.ts để tránh vòng nhập. */
+export const optView = { of: (o: Option): Option => o };
+export const optOf = (e: Era): Option | undefined => { const o = e.opts.find(x => x.id === S.picks[e.id]); return o && optView.of(o); };
 export const curPick = (y: number) => optOf(eraOf(y));
 export const picked = (): Option[] => ERAS.map(optOf).filter((o): o is Option => !!o);
 
