@@ -1134,3 +1134,61 @@ test.describe('iPad layouts', () => {
     });
   }
 });
+
+test.describe('short and wide windows', () => {
+  const ng45 = { name: 'Họ Tôn Thất', surname: 'tonthat', home: 'hn', year: 1945, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0 };
+  test('phone landscape: the map gets room beside the story column, the tab bar stays on screen, the app never scrolls', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    const errors = await bootPlay(page, ng45, 'ng45');
+    await expect(page.locator('#map g.m').first()).toBeAttached();
+    const map = (await page.locator('#mapwrap').boundingBox())!, card = (await page.locator('#card').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+    expect(map.height).toBeGreaterThan(200); // trước đây 12 px
+    expect(card.x).toBeGreaterThan(map.x + map.width - 1);
+    expect(tabs.y + tabs.height).toBeLessThanOrEqual(391);
+    // a card decision scrolls its sheet to the family event; the app frame itself never stays scrolled
+    await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+    await page.locator('#tourb [data-t=skip]').click();
+    await expect(page.locator('.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
+    await page.locator('.scrim .opt').first().evaluate(b => (b as HTMLElement).click());
+    await page.locator('#cgo').evaluate(b => (b as HTMLElement).click());
+    await expect(page.locator('.scrim .xsp > h3')).toBeVisible();
+    expect(await page.locator('#app').evaluate(a => a.scrollTop)).toBe(0);
+    const shift = await page.evaluate(async () => { const a = document.getElementById('app')!, d = document.createElement('div'); d.style.cssText = 'position:absolute;top:1500px;width:4px;height:4px'; a.appendChild(d); d.scrollIntoView(); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); const t = a.scrollTop; d.remove(); return t; });
+    expect(shift).toBe(0);
+    await page.locator('.xopts .opt').first().evaluate(b => (b as HTMLElement).click());
+    await page.locator('#xgo').evaluate(b => (b as HTMLElement).click());
+    await page.locator('.scrim .btn[data-a="close-card"]').click();
+    await expect(page.locator('#layer > .scrim')).toHaveCount(0);
+    await page.locator('.tab[data-t=me]').click();
+    await expect(page.locator('#layer > .pane')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+  for (const [name, w, h] of [['phone', 390, 664], ['iPad landscape', 1180, 820]] as const) {
+    test(`${name}: badges earned on the ending show while it is open, clear of the dossier masthead`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, badges: ['start'] });
+      await page.locator('#card [data-a=end].c').click();
+      const t = page.locator('.toast:visible');
+      await expect(t).toHaveCount(1, { timeout: 4000 }); // màn rộng: trước đây chờ tới khi đóng trang
+      await expect(t).toContainText('huy hiệu');
+      await page.waitForTimeout(500); // đã trượt vào chỗ
+      const a = (await t.boundingBox())!, m = (await page.locator('.end-mast').boundingBox())!;
+      expect(a.y + a.height <= m.y || a.y >= m.y + m.height).toBe(true);
+      expect(errors).toEqual([]);
+    });
+  }
+  test('iPad landscape: the event page leaves every tab label whole; closing it marks its index row read in place', async ({ page }) => {
+    await page.setViewportSize({ width: 1180, height: 820 });
+    const errors = await boot(page, midGame);
+    const row = page.locator('#idx button:not(.seen)').first(), id = (await row.getAttribute('data-id'))!;
+    await page.evaluate(() => { const w = window as unknown as { rb: number }; w.rb = 0; new MutationObserver(r => { for (const m of r) if ([...m.addedNodes].some(n => n.nodeName === 'OL')) w.rb++; }).observe(document.getElementById('idx')!, { childList: true }); });
+    await page.evaluate(i => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = i; document.body.appendChild(b); b.click(); b.remove(); }, id);
+    const pg = (await page.locator('#layer > .ov.evp').boundingBox())!;
+    await expect.poll(async () => Math.max(...(await page.locator('.tab').evaluateAll(ts => ts.map(t => t.getBoundingClientRect().right))))).toBeLessThanOrEqual(pg.x);
+    await page.locator('#layer .ov .back').click();
+    await expect(page.locator(`#idx button[data-id="${id}"]`)).toHaveClass(/seen/);
+    expect(await page.evaluate(() => (window as unknown as { rb: number }).rb)).toBe(0);
+    expect(errors).toEqual([]);
+  });
+});

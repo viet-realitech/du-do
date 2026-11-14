@@ -5,6 +5,9 @@ import { SND } from '../audio';
 export const $ = <T extends Element = HTMLElement>(s: string, root: ParentNode = document) => root.querySelector<T>(s);
 export const app = document.getElementById('app')!;
 export const layer = document.getElementById('layer')!;
+/* Khung ứng dụng (overflow: hidden) không bao giờ đứng cuộn: scrollIntoView / focus trong một bảng từng kéo cả #app lên
+   32 px khi phần chính cao hơn màn hình (điện thoại ngang, cửa sổ nhỏ), đầu trang bị cắt mãi không về */
+app.addEventListener('scroll', () => { if (app.scrollTop || app.scrollLeft) app.scrollTo(0, 0); }, { passive: true });
 /* Bảng chọn / trang chi tiết / màn mở đầu đang phủ: phần chính phía sau không nhận tiêu điểm bàn phím, trình đọc
    màn hình không đọc lẫn (trước đây Tab đi vào bản đồ, các nút ẩn sau bảng). Bảng Nhân vật / Sử liệu / Hồ sơ
    (.pane) không phủ thanh thẻ nên không tính. */

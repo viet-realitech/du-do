@@ -72,10 +72,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .chip .i { display: inline-block; margin: 0 -2px }
 
 /* app shell: always full screen; tablet / desktop layouts are at the end of this file */
-/* overflow: clip (không phải hidden): khung ứng dụng không cuộn được kể cả bằng lệnh. scrollIntoView trong một bảng từng
-   cuộn luôn cả #app khi phần chính cao hơn màn hình (điện thoại ngang), đầu trang lệch lên 32 px mãi không về */
+/* hidden, không clip: clip làm Chromium thôi tải trước ảnh lazy nằm dưới mép trang cuộn bên trong (ảnh tư liệu trang sự
+   kiện chỉ tải khi cuộn tới). Khung không bao giờ đứng lệch: ui/dom.ts đưa #app về 0 nếu có lệnh nào cuộn nó */
 #app { position: relative; width: 100%; height: 100dvh; overflow: hidden; background: var(--paper); isolation: isolate; color: var(--ink) }
-@supports (overflow: clip) { #app { overflow: clip } } /* riêng một luật: bản thu gọn CSS gộp hai khai báo liền nhau, mất hidden cho Safari cũ */
 #app.grain::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .12; mix-blend-mode: screen;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .35  0 0 0 0 .2  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"), radial-gradient(120% 80% at 50% 40%, transparent 55%, rgba(110, 80, 40, .22))

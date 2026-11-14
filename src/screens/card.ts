@@ -157,7 +157,8 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
   // cuộn tới đầu biến cố (trước đây nó nằm ~900 px dưới mép màn hình, không gì báo còn một quyết định)
   if (xh) { xh.tabIndex = -1; xh.focus({ preventScroll: true }); }
   const top = sh.querySelector<HTMLElement>('.xsp');
-  if (top) requestAnimationFrame(() => top.scrollIntoView({ block: 'start', behavior: calm.matches ? 'auto' : 'smooth' }));
+  // cuộn chính tờ bảng (không scrollIntoView: lệnh ấy cuộn cả mọi khung chứa, kể cả #app khi phần chính cao hơn màn hình)
+  if (top) requestAnimationFrame(() => sh.scrollTo({ top: sh.scrollTop + top.getBoundingClientRect().top - sh.getBoundingClientRect().top - 10, behavior: calm.matches ? 'auto' : 'smooth' }));
   let sel = -1, mom = moms[0]?.names[0] || 'Nguyễn';
   const xmom = sh.querySelector<HTMLElement>('#xmom')!, xgo = sh.querySelector<HTMLButtonElement>('#xgo')!;
   sh.querySelectorAll<HTMLButtonElement>('.xopts .opt').forEach(b => (b.onclick = () => {
