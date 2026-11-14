@@ -5,7 +5,7 @@ import { ERAS, type HistEvent } from '../data';
 import type { Fx } from '../data/cards';
 import { S, rt, familyName, allEv, chYear } from '../state';
 import { on } from '../ui/actions';
-import { esc, sheet, toast, ghost, calm, radios } from '../ui/dom';
+import { esc, sheet, toast, ghost, calm, radios, reveal } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { icon } from '../ui/icons';
 import { SND, buzz } from '../audio';
@@ -84,7 +84,7 @@ export function openCard(v: HistEvent, inTour = false): void {
     d.querySelectorAll('.opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
     cgo.disabled = false;
     cgo.textContent = 'Quyết định';
-    cgo.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' });
+    reveal(cgo);
     SND.tick();
     buzz(8);
   }));
@@ -124,7 +124,7 @@ function finish(d: HTMLElement, v: HistEvent, inTour: boolean): void {
   d.querySelector('.sheet')!.insertAdjacentHTML('beforeend', `<div style="height:14px"></div><button class="btn" data-a="close-card"${outs.length ? ` aria-describedby="${outs.join(' ')}"` : ''}>${inTour || rt.flowTo ? 'Tiếp tục ▶' : 'Tiếp tục'}</button>`);
   const nx = d.querySelector<HTMLElement>('.btn[data-a="close-card"]');
   nx?.focus({ preventScroll: true });
-  nx?.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' }); // điện thoại: nút nằm dưới mép bảng
+  reveal(nx); // điện thoại: nút nằm dưới mép bảng
   delete d.dataset.lock;
   if (rt.card?.id === v.id) rt.card = null;
   // thẻ mở từ trang sự kiện: nút ◆ trên đầu trang thành "✓ Đã quyết"
@@ -157,7 +157,8 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
   // cuộn tới đầu biến cố (trước đây nó nằm ~900 px dưới mép màn hình, không gì báo còn một quyết định)
   if (xh) { xh.tabIndex = -1; xh.focus({ preventScroll: true }); }
   const top = sh.querySelector<HTMLElement>('.xsp');
-  if (top) requestAnimationFrame(() => top.scrollIntoView({ block: 'start', behavior: calm.matches ? 'auto' : 'smooth' }));
+  // cuộn chính tờ bảng (không scrollIntoView: lệnh ấy cuộn cả mọi khung chứa, kể cả #app khi phần chính cao hơn màn hình)
+  if (top) requestAnimationFrame(() => sh.scrollTo({ top: sh.scrollTop + top.getBoundingClientRect().top - sh.getBoundingClientRect().top - 10, behavior: calm.matches ? 'auto' : 'smooth' }));
   let sel = -1, mom = moms[0]?.names[0] || 'Nguyễn';
   const xmom = sh.querySelector<HTMLElement>('#xmom')!, xgo = sh.querySelector<HTMLButtonElement>('#xgo')!;
   sh.querySelectorAll<HTMLButtonElement>('.xopts .opt').forEach(b => (b.onclick = () => {
@@ -165,7 +166,7 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
     sh.querySelectorAll('.xopts .opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
     xmom.hidden = sp.choices[sel][4] !== 'mother';
     xgo.disabled = false;
-    xgo.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' });
+    reveal(xgo);
     SND.tick();
   }));
   sh.querySelectorAll<HTMLButtonElement>('#xmom .chip').forEach(b => (b.onclick = () => { mom = b.dataset.m!; sh.querySelectorAll('#xmom .chip').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); }); }));

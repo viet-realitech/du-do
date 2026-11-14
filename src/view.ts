@@ -60,7 +60,10 @@ export function renderMain(): void {
   setText($('#eraNo')!, `Chương ${e.n}/6 · Thế hệ ${e.n}`);
   setText($('#eraT')!, e.title);
   const er = $('#eraR')!;
-  setHtml(er, pk ? `${av(pk.guide)}${esc(pk.label)}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng');
+  // nhãn ba chữ trở lên: hai chữ cuối dính nhau, cột hẹp xuống dòng thành "Miền Nam / — VNCH", "Giải pháp / Bảo Đại"
+  // (không treo "—" cuối dòng, không để "Đại" một mình)
+  const lb = pk ? esc(pk.label) : '';
+  setHtml(er, pk ? `${av(pk.guide)}${lb.split(' ').length > 2 ? lb.replace(/ (\S+)$/, '\u00a0$1') : lb}` : isPlay() ? 'Chưa chọn' : '◆ Chọn hướng');
   const ds = (k: 'a' | 'id', v: string) => { if (er.dataset[k] !== v) er.dataset[k] = v; };
   if (pk) { ds('a', 'fig'); ds('id', pk.guide); }
   else if (!isPlay()) { ds('a', 'pickera'); ds('id', e.id); } // Đọc sử: điểm rẽ của chương, không bắt buộc
@@ -110,6 +113,7 @@ let shownRes: Record<string, number> | null = null, resKey = '';
 function renderRes(): void {
   const el = $('#res')!;
   el.hidden = !isPlay();
+  $('#main')!.classList.toggle('has-res', isPlay()); // thay #main:has(#res:not([hidden])) (xem has-beats, scene.ts)
   if (!isPlay()) { shownRes = null; resKey = ''; return; }
   // Số nổi lên khi gia sản đổi so với lần cuối thấy rõ màn chính (không có bảng che, kể cả bảng đang đóng).
   const covered = !!document.querySelector('#layer .scrim, #layer .ov, #app > .exiting');
@@ -162,13 +166,19 @@ export function renderCard(): void {
 /** Cột bên màn hình ngang (styles.css, cùng điều kiện): ở đó mới có chỗ cho mục lục. */
 const side = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px)');
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
-let idxKey = '', idxOn = '', idxT = 0;
+let idxKey = '', idxOn = '', idxT = 0, idxSeen = 0, idxArr: string[] | null = null;
 /** Mục lục các sự kiện của chương đang xem (theo bộ lọc): năm, tên, loại; sự kiện đang xem gạch chân đỏ. Chạm một dòng
-    để tới sự kiện ấy. Trước đây cột bên trống gần nửa dưới thẻ sự kiện. Chỉ dựng lại khi chương / bộ lọc / số đã đọc đổi. */
+    để tới sự kiện ấy. Trước đây cột bên trống gần nửa dưới thẻ sự kiện. Chỉ dựng lại khi chương / bộ lọc đổi (hay danh
+    sách đã đọc được thay: chơi lại, đổi chế độ); vừa đọc thêm một sự kiện thì chỉ đánh dấu dòng ấy (đóng trang sự kiện
+    không dựng lại cả danh sách, dàn lại cả cột bên: một cú khựng trên iPad). */
 function renderIndex(): void {
   if (!side.matches) return;
   const box = $('#idx')!, e = tourEra() || eraOf(S.year);
-  const key = e.id + S.filt + S.seen.length;
+  const key = e.id + S.filt;
+  if (S.seen !== idxArr || S.seen.length < idxSeen) idxKey = '';
+  else if (key === idxKey && S.seen.length > idxSeen)
+    for (const b of box.querySelectorAll<HTMLElement>('button[data-id]:not(.seen)')) if (S.seen.includes(b.dataset.id!)) b.classList.add('seen');
+  idxSeen = S.seen.length; idxArr = S.seen;
   if (key !== idxKey) {
     idxKey = key; idxOn = '';
     const L = visEv().filter(v => evEra(v) === e);

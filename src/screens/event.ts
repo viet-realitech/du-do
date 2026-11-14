@@ -52,7 +52,7 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
 
   if (v.diary) {
     const real = EV.find(x => x.y === v.y), home0 = homeChoice(v); // người viết nhật ký đi xa; ở nhà, cả họ đã quyết thế này
-    layer.innerHTML = `<div class="ov evp"><div class="evtop">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
+    layer.innerHTML = `<div class="ov evp diary"><div class="evtop">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
      <div style="margin-top:22px"><span class="stamp acc">Nhật ký dòng họ · ${v.y}</span></div>
      <h1 style="margin:16px 0 6px;font-size:32px">${esc(v.t)}</h1><div class="dbl"></div>
      <p style="font:italic 400 21px/1.45 var(--serif)">${esc(v.s)}</p>
@@ -155,8 +155,10 @@ async function loadHero(v: HistEvent): Promise<void> {
 /** A failed thumbnail becomes a hatched "ẢNH TƯ LIỆU" tile and is dropped from the viewer. */
 function wireTiles(root: HTMLElement, v: HistEvent, w: WikiInfo): void {
   root.querySelectorAll<HTMLImageElement>('img[data-i]').forEach(img => {
-    if (img.complete && img.naturalWidth) img.classList.add('in');
-    else img.addEventListener('load', () => img.classList.add('in'), { once: true });
+    // ô cũng mang .in: ánh chạy chờ ảnh (styles.css) dừng lại khi ảnh đã hiện
+    const shown = () => { img.classList.add('in'); img.parentElement?.classList.add('in'); };
+    if (img.complete && img.naturalWidth) shown();
+    else img.addEventListener('load', shown, { once: true });
     img.addEventListener('error', () => {
       const b = img.parentElement;
       img.remove();

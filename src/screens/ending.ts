@@ -159,6 +159,12 @@ async function makeCard(): Promise<string> {
   const disp = c('--disp'), mono = c('--mono'), serif = c('--serif'), ink = c('--ink'), ink2 = c('--ink2'), acc = c('--acc'), paper = c('--paper'), paper3 = c('--paper3');
   // Áp phích không tải kiểu nghiêng của Be Vietnam Pro: chữ đứng thay vì nghiêng giả
   const it = S.theme === 'poster' ? '' : 'italic ';
+  // fonts.ready không tải phông chưa dùng trong trang: nhãn đã sang chữ thân bài nên phông đơn cách chưa tải, canvas vẽ
+  // thẻ đầu tiên bằng phông dự phòng thiếu "Ồ", "Ế" ("DƯ ĐÔ` · HÔ`SƠ", "KÊT CỤC"). Tải trước mọi kiểu chữ thẻ dùng.
+  try {
+    await Promise.all([`500 24px ${mono}`, `600 30px ${mono}`, `900 120px ${disp}`, `700 34px ${disp}`, `${it}500 44px ${serif}`, `400 30px ${serif}`, `${it}400 28px ${serif}`]
+      .map(f => document.fonts.load(f, 'ĐỒẾỜỮẪỆ 0123456789' + familyName())));
+  } catch { /* vẽ bằng phông dự phòng */ }
   /** Một dòng chữ, thu nhỏ cỡ cho vừa bề ngang (tên kết cục, tên họ dài). Các cụm chữ số vẽ bằng phông đơn cách: Playfair và
       Garamond mặc định là số kiểu cổ (nhấp nhô quanh dòng chân chữ), canvas không bật được số thẳng hàng. */
   const line = (t: string, font: (px: number) => string, px: number, at: number, o: { max?: number; x0?: number; right?: boolean; num?: (px: number) => string } = {}) => {
@@ -173,12 +179,16 @@ async function makeCard(): Promise<string> {
   x.fillStyle = paper; x.fillRect(0, 0, W, HH);
   x.strokeStyle = ink; x.lineWidth = 3; x.strokeRect(40, 40, W - 80, HH - 80); x.lineWidth = 1; x.strokeRect(54, 54, W - 108, HH - 108);
   x.fillStyle = ink2; x.font = `500 24px ${mono}`; x.fillText('DƯ ĐỒ · HỒ SƠ DÒNG HỌ · 1858 – 2026', 100, 135);
-  x.fillStyle = acc; line(familyName(), n => `900 ${n}px ${disp}`, 120, 260);
+  // dấu chồng của tên họ ("ầ" trong Trần, "ễ" trong Nguyễn) cao ~125 px trên dòng chân chữ: đặt tên đủ thấp để dấu cách
+  // dòng nhãn phía trên 18 px (trước đây dấu huyền chạm "1858"), phần dưới thẻ dịch xuống theo (còn ~60 px trống trên chân thẻ)
+  x.font = `900 120px ${disp}`;
+  const dy = Math.min(30, Math.max(0, Math.ceil(135 + 18 + x.measureText(familyName()).actualBoundingBoxAscent) - 260));
+  x.fillStyle = acc; line(familyName(), n => `900 ${n}px ${disp}`, 120, 260 + dy);
   // kết cục và độ hiếm (chưa chọn đủ sáu điểm rẽ: kiểu người theo các hướng đã chọn)
   const { e: end, title, f } = endingNow(), a = archetype(), rar = end ? rarityLine(end.id, f.mode) : null;
-  x.fillStyle = ink; line(end ? title : a ? a[0] : 'Đang trên đường', n => `${it}500 ${n}px ${serif}`, 44, 326);
-  if (rar) { const f2 = (n: number) => `500 ${n}px ${mono}`; x.fillStyle = ink2; line(rar.lead.toUpperCase(), f2, 22, 366, { num: f2 }); }
-  let y = 420;
+  x.fillStyle = ink; line(end ? title : a ? a[0] : 'Đang trên đường', n => `${it}500 ${n}px ${serif}`, 44, 326 + dy);
+  if (rar) { const f2 = (n: number) => `500 ${n}px ${mono}`; x.fillStyle = ink2; line(rar.lead.toUpperCase(), f2, 22, 366 + dy, { num: f2 }); }
+  let y = 420 + dy;
   x.fillStyle = ink; x.fillRect(100, y - 30, W - 200, 2);
   ERAS.forEach(e => {
     const o = optOf(e);

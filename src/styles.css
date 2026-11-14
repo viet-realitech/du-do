@@ -7,7 +7,7 @@
   --paper: #efe5cf; --paper2: #e5d6b6; --paper3: #d9c7a1;
   --ink: #2e2216; --ink2: #5f4c36; --ink3: #6b5840; --rule: rgba(46, 34, 22, .16);
   --neat: var(--ink); /* đường viền khung bản đồ, cột nút, phiếu sự kiện */
-  --red: #a8322b; --acc: #2e2216; --rip: #4e5f5a; --ok: #4f7a46; --gold: #c99a2e;
+  --red: #a8322b; --acc: #2e2216; --rip: #4e5f5a; --ok: #3e6437; --gold: #c99a2e; /* --ok: chữ 13 px đạt 5,4 : 1 trên giấy (#4f7a46 chỉ 4 : 1) */
   --shine: rgba(255, 255, 255, .45); --cardline: rgba(46, 34, 22, .16);
   --serif: 'EB Garamond', Georgia, serif; --disp: 'Playfair Display', Georgia, serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -39,7 +39,7 @@
   --paper: #f2e7cd; --paper2: #e8d8b0; --paper3: #d6c08c;
   --ink: #16130f; --ink2: #3e362b; --ink3: #635847; --rule: rgba(22, 19, 15, .28);
   --neat: var(--ink);
-  --red: #c81f2a; --acc: #c81f2a; --rip: #4e5f5a; --ok: #4f7a46; --gold: #c99a2e;
+  --red: #c81f2a; --acc: #c81f2a; --rip: #4e5f5a; --ok: #3e6437; --gold: #c99a2e;
   --shine: rgba(255, 255, 255, .45); --cardline: var(--ink);
   --serif: 'Be Vietnam Pro', system-ui, sans-serif; --disp: 'Be Vietnam Pro', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -72,6 +72,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .chip .i { display: inline-block; margin: 0 -2px }
 
 /* app shell: always full screen; tablet / desktop layouts are at the end of this file */
+/* hidden, không clip: clip làm Chromium thôi tải trước ảnh lazy nằm dưới mép trang cuộn bên trong (ảnh tư liệu trang sự
+   kiện chỉ tải khi cuộn tới). Khung không bao giờ đứng lệch: ui/dom.ts đưa #app về 0 nếu có lệnh nào cuộn nó */
 #app { position: relative; width: 100%; height: 100dvh; overflow: hidden; background: var(--paper); isolation: isolate; color: var(--ink) }
 #app.grain::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .12; mix-blend-mode: screen;
@@ -87,7 +89,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .muted { color: var(--ink2) }
 
 /* main map screen */
-#main { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 1 }
+#main { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 1; padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px) } /* điện thoại ngang: không nằm dưới tai thỏ */
 .hd { padding: calc(var(--sat) + 14px) var(--gut) 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px }
 .yr { color: var(--acc); font: 600 80px/.82 var(--disp); letter-spacing: -.02em; font-variant-numeric: lining-nums tabular-nums }
 .hd .era { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; padding-bottom: 4px; max-width: 180px }
@@ -153,7 +155,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .reel img { width: 100%; height: 100%; object-fit: cover; display: block; animation: kb 11s ease-in-out forwards; transform-origin: 50% 40% }
 .reel.old img { filter: sepia(.55) contrast(1.08) brightness(.95) }
 .reel .flick { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .55)); }
-.reel.old .flick { background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, .6)), repeating-linear-gradient(90deg, transparent 0 37px, rgba(255, 255, 255, .06) 37px 38px); animation: flick .18s steps(2) infinite }
+/* nhấp nháy phim cũ dừng cùng lúc ảnh thôi trôi (kb 11 s = 61 nhịp .18 s): chạy mãi thì sau khi trận đã khép, khung phim
+   vẫn bắt bộ tổng hợp vẽ lại 60 lần mỗi giây chừng nào thanh xem lại còn mở */
+.reel.old .flick { background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, .6)), repeating-linear-gradient(90deg, transparent 0 37px, rgba(255, 255, 255, .06) 37px 38px); animation: flick .18s steps(2) 61 }
 .reel .mono { position: absolute; left: 8px; bottom: 6px; font-size: 10.5px; color: #f3ecdc; text-shadow: 0 1px 3px #000 }
 @keyframes kb { from { transform: scale(1.05) translate(0, 0) } to { transform: scale(1.28) translate(var(--kx, 4%), var(--ky, 2%)) } }
 @keyframes flick { 0% { opacity: .85 } 100% { opacity: 1 } }
@@ -208,7 +212,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .mapwrap.scn #map .dimr { opacity: .55 }
 /* gợn sóng bờ biển: tắt hẳn khi cảnh trận / di chuyển chạy (bản đồ bay tới, rồi từng góc bản đồ được vẽ lại suốt cảnh) */
 #mapbg .rip.off, .mapwrap.scn #mapbg .rip { display: none }
-.fx-at { font-family: var(--mono); font-weight: 600; letter-spacing: .02em }
+/* tên nơi mũi tiến quân tới (Him Lam, đồi Độc Lập): chữ có chân của bản đồ, mực viền giấy như nhãn tỉnh, không phải chữ
+   đơn cách đậm giả (Plex chỉ có 400 / 500) viền đen kiểu màn hình máy; Đèn dầu đảo --ink / --paper nên vẫn chữ sáng viền tối */
+.fx-at { font-family: var(--serif); font-weight: 600; letter-spacing: .06em; fill: var(--ink); stroke: var(--paper); stroke-width: 3px }
 .endw { position: absolute; top: 46px; left: 0; right: 0; text-align: center; z-index: 2; pointer-events: none }
 .endw .stamp { background: var(--paper); animation: stampin .55s cubic-bezier(.2, 1.3, .4, 1) backwards }
 .lt.end p { font-style: italic }
@@ -439,7 +445,8 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .src .tt { display: flex; justify-content: space-between; gap: 10px; align-items: baseline }
 .src h3 { font-size: 18px }
 /* Thông báo (huy hiệu, nhắc nhở): một mảnh giấy in mực, hiện từng cái một ở chỗ không che nội dung (ui/dom.ts toastSpot):
-   .low ngay trên thanh tab, .top phần nền trên tờ đang mở, .under dưới hàng nút đầu trang, .map góc trái tấm bản đồ (màn rộng) */
+   .low ngay trên thanh tab, .top phần nền trên tờ đang mở, .under dưới hàng nút đầu trang, .foot chân màn hình (trang kết
+   cục), .map góc trái tấm bản đồ (màn rộng) */
 .toast { position: absolute; left: 12px; right: 12px; top: calc(var(--sat) + 8px); z-index: 70; background: var(--ink); color: var(--paper); border-radius: var(--r); padding: 9px 12px; font-size: var(--t-s); line-height: 1.3; animation: toast 2.8s cubic-bezier(.16, 1, .3, 1) forwards; pointer-events: none; display: flex; gap: 12px; align-items: center; box-shadow: 0 0 0 1px var(--paper), 0 0 0 1.75px var(--ink), 0 10px 26px rgba(0, 0, 0, .3) }
 .toast .bi { width: 34px; height: 34px; border-radius: 3px; border: 1.5px solid var(--paper); box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 3px var(--paper); color: var(--paper); display: grid; place-items: center; font: 700 10.5px/1 var(--serif); letter-spacing: .04em; text-align: center; flex: none; transform: rotate(-4deg); animation: pop .5s } /* ấn triện của huy hiệu */
 .toast .mono { display: block; opacity: .75; font-size: 10.5px }
@@ -447,6 +454,7 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .toast small { display: block; font-size: var(--t-s); opacity: .85 }
 .toast.low { top: auto; bottom: calc(var(--tabh) + 8px); animation-name: toastup }
 .toast.under { top: calc(var(--sat) + 66px) }
+.toast.foot { top: auto; bottom: calc(var(--sab) + 14px); animation-name: toastup } /* trang kết cục: không đè đầu hồ sơ */
 @media (min-width: 700px) { .toast { left: 50%; right: auto; width: 400px; margin-left: -200px } }
 .toast.map { left: calc(var(--gut) + 16px); right: auto; width: 360px; margin-left: 0; top: calc(var(--sat) + 36px) }
 .row { display: flex; gap: 12px; align-items: center }
@@ -574,6 +582,9 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .skel { background: var(--paper3) linear-gradient(100deg, transparent 30%, var(--shine) 50%, transparent 70%) 0 0/250% 100%; animation: sh 1.3s linear infinite }
 @keyframes sh { from { background-position: 130% 0 } to { background-position: -30% 0 } }
 .mstrip button, .mgrid button { background: var(--paper3) linear-gradient(100deg, transparent 30%, var(--shine) 50%, transparent 70%) 0 0/250% 100%; animation: sh 1.3s linear infinite }
+/* ảnh đã hiện (event.ts wireTiles), ô hỏng thành ô gạch: thôi ánh chạy. Hiệu ứng nền không chạy trên bộ tổng hợp, chạy mãi
+   dưới ảnh là vẽ lại cả ô mỗi khung chừng nào trang còn mở */
+.mstrip button.in, .mgrid button.in, .mstrip button.ph, .mgrid button.ph { animation: none }
 .mstrip img, .mgrid img { opacity: 0; transform: scale(1.06); transition: opacity .45s ease-out, transform .8s cubic-bezier(.2, .8, .2, 1) }
 .mstrip img.in, .mgrid img.in { opacity: 1; transform: none }
 .lbvid { position: relative; max-width: 100% }
@@ -834,11 +845,21 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .lt { left: 0; right: 0; max-width: none; border: 0; border-top: 1px solid var(--rule); border-left: 3px solid var(--c, var(--acc)); border-radius: 0; box-shadow: none; margin-bottom: -8px; padding: 6px 12px 8px }
 }
 @media (min-width: 700px) and (max-aspect-ratio: 1/1) { .tour { padding: 9px 12px 9px 18px } .lt { padding: 8px 18px 10px } }
+/* máy tính bảng dọc: trang nhật ký (không ảnh, ~⅓ màn) là tờ neo đáy như bảng thẻ, bản đồ năm ấy vẫn thấy phía trên;
+   trước đây là trang trọn màn trống 70% */
+@media (min-width: 700px) and (max-aspect-ratio: 1/1) {
+  #layer > .ov.evp.diary { top: auto; max-height: 72%; padding-top: 26px; border-top: 1px solid var(--neat); box-shadow: 0 -3px 0 var(--paper), 0 -3.75px 0 var(--neat), 0 -16px 44px rgba(0, 0, 0, .22); animation: sheetup .5s cubic-bezier(.16, 1, .3, 1) }
+  [data-theme=poster] #layer > .ov.evp.diary { border-top: 2px solid var(--ink); box-shadow: 0 -4px 0 var(--ink) }
+}
 /* màn ngang: phụ đề nổi ngay trên thanh tour / xem lại, chung một cột với nó (cùng mép trái, cùng mép phải) */
 @media (min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px) { .lt { right: 14px; max-width: none } }
 
 /* ---------- landscape tablet / desktop: map left, story panel right, timeline across ---------- */
-@media (min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px) {
+/* Lưới hai cột của màn chính cho mọi cửa sổ ngang đủ rộng, kể cả cửa sổ thấp (điện thoại xoay ngang 844 × 390, cửa sổ
+   900 × 700): trước đây chúng rơi về chồng dọc của điện thoại, bản đồ còn 12 px, thanh tab nằm dưới mép màn hình không
+   chạm được. Bảng, trang sự kiện, mục lục chương thành cột bên chỉ ở màn rộng thật (khối sau, cùng điều kiện ui/dom.ts
+   wideLayout); cửa sổ thấp gọn lại ở các khối cuối mục này. */
+@media (min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px), (min-width: 700px) and (min-aspect-ratio: 5/4), (min-aspect-ratio: 3/2) and (max-height: 599px) {
   :root { --side: clamp(380px, 32vw, 460px); --tabh: calc(52px + var(--sab)) }
   #main {
     display: grid;
@@ -850,9 +871,12 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .yr { font-size: 84px }
   [data-theme=archive] .yr { font-size: 74px }
   [data-theme=poster] .yr { font-size: clamp(70px, 6vw, 80px) } /* cột bên hẹp (iPad ngang): "Theo Việt Minh" vẫn một dòng */
-  .eraR { white-space: normal; max-width: 100%; display: block; line-height: 1.35 } /* "Miền Nam — VNCH" xuống dòng thay vì cắt */
+  .eraR { white-space: normal; max-width: 100%; display: block; line-height: 1.35 } /* "Miền Nam — VNCH" xuống dòng thay vì cắt (chỗ gãy: view.ts) */
   .eraR .av { display: inline-grid; vertical-align: middle; margin-right: 6px }
   .hd .era { min-width: 0 }
+  /* cột tên chương ~155 px bên năm 74 px: 28 px gãy "Mùa thu / 1945", "Sau tiếng / súng"; 24 px giữ một dòng, tên dài
+     gãy cân hai dòng ("Tiếng súng / Sơn Trà") */
+  .hd .era b { font-size: 24px; text-wrap: balance }
   /* nhãn một hay hai dòng, chú giải một hay hai hàng tuỳ năm: giữ chỗ cho dòng thứ hai, thẻ bên dưới không nhảy lên xuống khi kéo năm */
   .lbl { grid-area: lbl; padding: 12px var(--gut) 0 8px; white-space: normal; height: auto; min-height: 48px }
   /* cột bên ~400 px: bốn thước một hàng thì "Nhân đinh 43" tràn; xếp 2 × 2 */
@@ -863,12 +887,21 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .legend { grid-area: legend; padding: 18px var(--gut) 0 8px; min-height: 44px; gap: 8px }
   .legend .lr { height: auto; flex-wrap: wrap; gap: 8px 16px; white-space: normal; overflow: visible }
   /* Trò chơi: chip quan hệ một tới ba hàng tuỳ năm; giữ đủ chỗ ba hàng để thẻ bên dưới không nhảy khi kéo năm / năm đếm lên */
-  #main:has(#res:not([hidden])) .legend { min-height: 123px }
+  #main.has-res .legend { min-height: 123px } /* view.ts renderRes đặt lớp (không dùng :has(): xem scene.ts beatList) */
   .card { grid-area: card; margin: 18px var(--gut) 0 8px; height: auto; min-height: 150px; padding: 18px 12px 16px 20px; align-items: flex-start }
   .card .c .cl { -webkit-line-clamp: 8 }
   .card .c .t { font-size: 24px; line-height: 1.15; margin: 6px 0 6px }
   .card .c .s { font-size: 16.5px; line-height: 1.38 }
   .card .nav { flex-direction: column }
+  .mapwrap { grid-area: map; margin: calc(var(--sat) + 22px) 20px 0 calc(var(--gut) + 3px) }
+  .scrub { grid-area: scrub; margin-top: 10px }
+  /* thanh tab màn rộng: thấp, biểu tượng cạnh chữ (không phải thanh tab điện thoại kéo dãn) */
+  .tabs { grid-area: tabs; height: var(--tabh); padding-top: 0; gap: 8px; align-items: stretch }
+  .tab { flex-direction: row; width: auto; gap: 8px; padding: 0 18px; font-size: 14.5px }
+  .tab .i { width: 20px; height: 20px }
+  .tab.on::before { top: -1px; left: 12px; right: 12px }
+}
+@media (min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 600px) {
   /* cảnh trận / di chuyển: các nhịp thành danh sách ở cột bên, đọc được từ xa; nhịp đang kể sáng, nhịp đã qua mờ */
   .beats:not([hidden]) { display: none; grid-area: beats; min-height: 0; overflow-y: auto; margin: 16px var(--gut) 0 8px; padding-bottom: 8px }
   /* danh sách nhịp kẻ dòng như mục lục chương (không phải chồng hộp): số nhịp màu phe, tên phe và ngày, ghi chú; nhịp đang
@@ -892,20 +925,16 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .idx button:hover span { color: var(--ink) }
   @media (min-height: 760px) {
     .beats:not([hidden]) { display: block } /* cửa sổ thấp: cột bên không đủ chỗ cho danh sách */
-    #main:has(.beats:not([hidden])) .idx { display: none } /* đang kể một trận: danh sách nhịp thay chỗ mục lục */
+    #main.has-beats .idx { display: none } /* đang kể một trận: danh sách nhịp thay chỗ mục lục */
     /* đang có danh sách nhịp (Trò chơi): chip quan hệ và chiều cao tối thiểu của thẻ nhường chỗ cho nó */
-    #main:has(.beats:not([hidden])) .legend .rel { display: none }
-    #main:has(.beats:not([hidden])) .card { min-height: 0 }
-    #main:has(.beats:not([hidden])) .card .c .s { display: none } /* tên trận đã ở thẻ; tóm tắt nhường chỗ cho danh sách nhịp */
-    #main:has(#beats:not([hidden])) .legend { min-height: 44px }
+    #main.has-beats .legend .rel { display: none }
+    #main.has-beats .card { min-height: 0 }
+    #main.has-beats .card .c .s { display: none } /* tên trận đã ở thẻ; tóm tắt nhường chỗ cho danh sách nhịp */
+    #main.has-beats .legend { min-height: 44px }
   }
-  .mapwrap { grid-area: map; margin: calc(var(--sat) + 22px) 20px 0 calc(var(--gut) + 3px) }
-  .scrub { grid-area: scrub; margin-top: 10px }
-  /* thanh tab màn rộng: thấp, biểu tượng cạnh chữ (không phải thanh tab điện thoại kéo dãn) */
-  .tabs { grid-area: tabs; height: var(--tabh); padding-top: 0; gap: 8px; align-items: stretch }
-  .tab { flex-direction: row; width: auto; gap: 8px; padding: 0 18px; font-size: 14.5px }
-  .tab .i { width: 20px; height: 20px }
-  .tab.on::before { top: -1px; left: 12px; right: 12px }
+  /* tờ ở cột bên / trang sự kiện cao trọn màn (ui/dom.ts đặt data-side): thanh tab canh giữa phần còn thấy bên trái */
+  #main[data-side=panel] .tabs { padding-right: calc(var(--side) + 16px) }
+  #main[data-side=page] .tabs { padding-right: min(560px, 46vw) }
 
   /* Bảng = tờ hồ sơ đặt đúng chỗ cột bên, cao trọn màn hình: bản đồ (nơi chốn, đường biên năm ấy) và thanh tour vẫn
      hiện, chỉ mờ nhẹ; không còn tờ 640 px phủ giữa cả bản đồ lẫn cột bên với nút chốt nằm dưới mép màn hình */
@@ -944,6 +973,49 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   [data-theme=poster] #layer > .ov.evp { border-left: 2px solid var(--ink); box-shadow: -4px 0 0 var(--ink) }
   [data-theme=poster] .sheet { border: 0; border-left: 2px solid var(--ink); box-shadow: -4px 0 0 var(--ink) }
   [data-theme=poster] .scrim.wide > .sheet, [data-theme=poster] .scrim.dlg > .sheet { border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink) }
+}
+/* cửa sổ ngang 600–779 px cao (máy tính xách tay, iPad trong Safari): cột bên vừa khít ở Trò chơi (gia sản, chip quan hệ
+   ba hàng, thẻ cao tối thiểu 150 px cần ~750 px); bớt khoảng đệm, nhãn không giữ chỗ dòng thứ hai */
+@media (min-width: 700px) and (min-aspect-ratio: 5/4) and (min-height: 600px) and (max-height: 779px) {
+  .hd { padding-top: calc(var(--sat) + 16px) }
+  .lbl { padding-top: 8px; min-height: 0 }
+  .vals { padding-top: 12px }
+  .res { padding-top: 10px }
+  .legend { padding-top: 12px }
+  .card { margin-top: 12px }
+}
+/* thấp hơn 720 px, Trò chơi: bốn thước giá trị (còn ở Hồ sơ) và chip quan hệ (năm 1945 năm thế lực, sáu hàng; còn ở bảng
+   mùa màng) nhường chỗ cho gia sản và thẻ sự kiện. Trước đây cửa sổ 1280 × 680 đẩy thanh năm và thanh tab xuống dưới mép
+   màn hình */
+@media (min-width: 700px) and (min-aspect-ratio: 5/4) and (min-height: 600px) and (max-height: 719px) {
+  #main.has-res .vals, #main.has-res .legend .rel { display: none }
+  #main.has-res .legend { min-height: 44px }
+  #main.has-res .card { min-height: 0 }
+  @media (max-height: 659px) { .card .c .cl { -webkit-line-clamp: 5 } }
+}
+/* điện thoại xoay ngang, cửa sổ thấp dưới 600 px: cột bên gọn chỉ còn năm, chương, gia sản (Trò chơi) hay thước giá trị
+   (Đọc sử) và thẻ sự kiện ba dòng; nhãn và chú giải nhường chỗ (thẻ, trang sự kiện vẫn đủ). Bản đồ cao ~250 px thay vì 12 */
+@media (min-width: 700px) and (min-aspect-ratio: 5/4) and (max-height: 599px), (min-aspect-ratio: 3/2) and (max-height: 599px) {
+  :root { --side: min(340px, 42vw); --tabh: calc(44px + var(--sab)) }
+  .hd { padding-top: calc(var(--sat) + 10px); gap: 10px }
+  .hd .yr, [data-theme] .hd .yr { font-size: 44px }
+  .hd .era { gap: 4px; padding-bottom: 2px }
+  .hd .era b, [data-theme] .hd .era b { font-size: 17px }
+  [data-theme=poster] .hd .era b { font-size: 15px }
+  .lbl, .legend { display: none }
+  #main.has-res .vals { display: none }
+  .vals, .res { padding-top: 8px; row-gap: 6px; column-gap: 16px }
+  .card { margin-top: 8px; min-height: 0; padding: 10px 10px 10px 14px }
+  .card .c .cl { -webkit-line-clamp: 3 }
+  .card .c .t { font-size: 18px; margin: 3px 0 2px }
+  .card .c .s { font-size: 14px; line-height: 1.3 }
+  .card .nav .rb { width: 32px; height: 32px }
+  .mapwrap { margin-top: calc(var(--sat) + 10px) }
+  .scrub { height: 56px; margin-top: 4px }
+  .tab { padding: 0 14px; font-size: 13.5px }
+  .lt p { -webkit-line-clamp: 2 } /* bản đồ thấp: phụ đề hai dòng, còn thấy nơi trận diễn ra */
+  .zoomc button { width: 32px; height: 32px } /* cột nút không chui dưới phụ đề / thanh tour neo đáy bản đồ */
+  .zoomc .i { width: 16px; height: 16px }
 }
 @keyframes panelin { from { transform: translateX(56px); opacity: 0 } }
 @keyframes panelout { to { transform: translateX(56px); opacity: 0 } }
@@ -1106,7 +1178,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .end-reg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin-top: 28px; border-top: 1.5px solid var(--ink); border-bottom: .75px solid var(--ink) }
 .end-reg > div { padding: 10px 12px 12px; border-left: 1px solid var(--rule) }
 .end-reg > div:first-child { border-left: 0; padding-left: 0 }
-.end-reg dt { color: var(--ink3) }
+.end-reg dt { color: var(--ink3); text-wrap: balance } /* "Trùng hướng / chiếm ưu thế", không treo "thế" một mình */
 .end-reg dd { margin: 6px 0 0 }
 .end-reg b { display: block; font: 700 var(--t-h3)/1.12 var(--disp) }
 .end-reg b.n { font-size: 36px; line-height: .95; font-variant-numeric: lining-nums tabular-nums; color: var(--acc) }

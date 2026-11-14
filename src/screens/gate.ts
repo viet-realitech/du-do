@@ -4,7 +4,7 @@ import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option, type QuizItem } from '../data';
 import { S, save, rt, familyName, quizAsked, markAsked } from '../state';
 import { on } from '../ui/actions';
-import { $, esc, sheet, clearLayer, ghost, calm, announce, radios } from '../ui/dom';
+import { $, esc, sheet, clearLayer, ghost, announce, radios, reveal } from '../ui/dom';
 import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, abroadOpt, type Harvest } from '../play';
 import { fxChipsPlay, relRows } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
@@ -221,7 +221,7 @@ function choice(e: Era, quiet: boolean): void {
     const go = $<HTMLButtonElement>('#go', d)!;
     go.disabled = false;
     go.textContent = `Đi theo hướng “${opts.find(o => o.id === selOpt)!.label}”`; // nút chốt gọi tên lựa chọn (như "Quyết định" trên thẻ)
-    go.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' }); // điện thoại: nút chốt thường nằm dưới mép màn hình
+    reveal(go); // điện thoại: nút chốt thường nằm dưới mép màn hình
     SND.tick();
     buzz(8);
   }));

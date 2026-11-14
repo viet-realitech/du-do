@@ -6,6 +6,9 @@ import { icon } from './icons';
 export const $ = <T extends Element = HTMLElement>(s: string, root: ParentNode = document) => root.querySelector<T>(s);
 export const app = document.getElementById('app')!;
 export const layer = document.getElementById('layer')!;
+/* Khung ứng dụng (overflow: hidden) không bao giờ đứng cuộn: scrollIntoView / focus trong một bảng từng kéo cả #app lên
+   32 px khi phần chính cao hơn màn hình (điện thoại ngang, cửa sổ nhỏ), đầu trang bị cắt mãi không về */
+app.addEventListener('scroll', () => { if (app.scrollTop || app.scrollLeft) app.scrollTo(0, 0); }, { passive: true });
 /* Bảng chọn / trang chi tiết / màn mở đầu đang phủ: phần chính phía sau không nhận tiêu điểm bàn phím, trình đọc
    màn hình không đọc lẫn (trước đây Tab đi vào bản đồ, các nút ẩn sau bảng). Bảng Nhân vật / Sử liệu / Hồ sơ
    (.pane) không phủ thanh thẻ nên không tính. */
@@ -18,6 +21,10 @@ export function remember(el: Element, who: Element | null = document.activeEleme
 if (mainEl) new MutationObserver(recs => {
   const back = recs.flatMap(r => [...r.removedNodes]).map(n => invoker.get(n as Element)).filter((x): x is HTMLElement => !!x).pop();
   mainEl.inert = !!layer.querySelector(':scope > .scrim, :scope > .ov');
+  // màn rộng: tờ ở cột bên / trang sự kiện cao trọn màn đè lên mép phải thanh tab; styles.css dồn thanh tab sang trái theo
+  // bề ngang tờ (không cắt "Hồ sơ" thành "Hồ"). Một thuộc tính đổi khi mở / đóng, không phải :has() đo lại mỗi lần đổi DOM
+  const side = layer.querySelector(':scope > .ov.evp') ? 'page' : layer.querySelector(':scope > .scrim:not(.wide):not(.dlg)') ? 'panel' : '';
+  if ((mainEl.dataset.side || '') !== side) { if (side) mainEl.dataset.side = side; else delete mainEl.dataset.side; }
   // bảng chồng lên trang / bảng khác (nhân vật trên trang sự kiện, xác nhận trên Hồ sơ…): mọi lớp dưới bảng trên cùng
   // không nhận tiêu điểm (Shift+Tab không lọt xuống nút bị che), bảng trên cùng đóng thì lớp dưới dùng lại được
   const kids = [...layer.children] as HTMLElement[], top = kids.map(k => k.matches('.scrim')).lastIndexOf(true);
@@ -42,6 +49,16 @@ export const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 export const calm = matchMedia('(prefers-reduced-motion: reduce)');
+
+/** Đưa nút vào khung nhìn của chính tờ bảng / trang chứa nó (như scrollIntoView 'nearest'), không cuộn các khung ngoài:
+    scrollIntoView cuộn mọi khung chứa, kể cả #app khi tờ đang trượt lên còn thò dưới mép màn hình. */
+export function reveal(el: Element | null): void {
+  const box = el?.closest<HTMLElement>('.sheet, .ov, .pane');
+  if (!el || !box) return;
+  const r = el.getBoundingClientRect(), b = box.getBoundingClientRect(), top = b.top + box.clientTop, bottom = top + box.clientHeight;
+  const d = r.top < top ? r.top - top : r.bottom > bottom ? Math.min(r.bottom - bottom, r.top - top) : 0;
+  if (d) box.scrollBy({ top: d, behavior: calm.matches ? 'auto' : 'smooth' });
+}
 
 /** Let `els` play their exit animation outside the live layer (inert, no ids), then drop them.
     The layer itself is empty at once, so callers can render the next screen immediately. */
@@ -81,14 +98,18 @@ export const wideLayout = matchMedia('(min-width: 1000px) and (min-aspect-ratio:
 
 /** Chỗ đặt thông báo, không che nội dung đang đọc: màn rộng đặt trên góc trái tấm bản đồ (bảng là tờ ở cột bên, hộp ở
     giữa); điện thoại / máy tính bảng dọc: không gì mở thì ngay trên thanh tab (không che năm, tên chương ở đầu trang),
-    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trả null khi chỗ ấy vẫn đè lên tờ
-    đang mở (bảng cao gần chạm đỉnh): huy hiệu chờ tới khi có chỗ, thông báo trả lời một cái chạm vẫn hiện trên cùng. */
+    trang (.ov) thì dưới hàng nút đầu trang, bảng thì phần nền trống phía trên tờ. Trang kết cục: dưới hàng nút là đầu
+    hồ sơ (họ, dấu kết cục vừa hiện), nên đặt ở chân màn hình; màn rộng thì dải trên cùng, giữa nút ‹ và nhãn trang (chân
+    màn là thẻ giả định "Nếu…"). Trang trọn màn trên màn rộng: dưới hàng nút như điện thoại (góc
+    bản đồ nằm dưới trang; trước đây huy hiệu chờ, thử lại mỗi 600 ms, tới khi đóng trang). Trả null khi chỗ ấy vẫn đè
+    lên tờ đang mở (bảng cao gần chạm đỉnh): huy hiệu chờ tới khi có chỗ, thông báo trả lời một cái chạm vẫn hiện trên cùng. */
 function toastSpot(n: HTMLElement): string | null {
   const top = layer.lastElementChild as HTMLElement | null;
   const box = top?.matches('.scrim') ? top.querySelector('.sheet') : top?.matches('.ov') ? top : null;
-  const cls = wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : top.matches('.ov') ? 'under' : 'top';
+  const page = !!top?.matches('.ov') && !(wideLayout.matches && top.matches('.evp')); // trang sự kiện màn rộng: tờ ở cột bên
+  const cls = top?.matches('.ov.end') ? (wideLayout.matches ? 'top' : 'foot') : page ? 'under' : wideLayout.matches ? 'map' : !top || top.matches('.pane') ? 'low' : 'top';
   n.className = 'toast ' + cls;
-  if (!box || cls === 'under') return cls;
+  if (!box || page) return cls;
   // đo theo bố cục, không theo khung hình đang chạy hiệu ứng: tờ vừa mở còn đang trượt lên, thông báo đang trượt vào
   const a = place(n), b = place(box as HTMLElement);
   return a.bottom + 6 <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right ? cls : null;
