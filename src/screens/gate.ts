@@ -5,7 +5,7 @@ import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option, type QuizItem } from '.
 import { S, save, rt, familyName, quizAsked, markAsked } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost, calm, announce, radios } from '../ui/dom';
-import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, type Harvest } from '../play';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, abroadOpt, type Harvest } from '../play';
 import { fxChipsPlay, relRows } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
@@ -53,7 +53,7 @@ export function ctxFor(e: Era, pp: string): string | null {
   }
   if (e.id === 'e6' && pp === 'bac') {
     t = !north ? (hasFlag(['nguoiDi54']) ? `Cha bạn về ${q} sau hai mươi mốt năm tập kết; mẹ bạn vẫn chờ ở quê, tóc đã bạc.` : `Cha bạn đưa cả nhà về lại ${q} sau hai mươi mốt năm tập kết; ruộng cũ đã qua tay người khác.`)
-      : regionAt(1975) !== reg ? 'Cả nhà đã vào Nam từ năm 1955, trước khi đội cải cách về làng; hai mươi năm sau, chuyện cũ vẫn chỉ kể trong nhà.'
+      : regionAt(1975) !== reg ? (hasFlag(['ditan']) ? 'Cả nhà đã vào Nam từ năm 1955, trước khi đội cải cách về làng; tháng Tư năm 1975, cha bạn lại đưa cả nhà lên tàu ra biển. Bạn lớn lên ở trại tị nạn, rồi ở một thành phố xa lạ.' : 'Cả nhà đã vào Nam từ năm 1955, trước khi đội cải cách về làng; hai mươi năm sau, chuyện cũ vẫn chỉ kể trong nhà.')
       : hasFlag(['tienNhanh']) ? 'Cha bạn vào Sài Gòn sau hai mươi mốt năm, gặp lại nhánh họ đã di cư năm 1954.'
       : 'Hoà bình rồi; cha bạn vào Nam tìm tin những người trong họ đã đi chiến trường, có người không về.';
   }
@@ -170,6 +170,7 @@ export function openChoice(e: Era): void {
 function choice(e: Era, quiet: boolean): void {
   stopTour();
   let selOpt: string | null = null;
+  const opts = e.opts.map(abroadOpt); // nhà đã di tản: điểm rẽ 6 nói từ xứ người (cùng id)
   clearLayer();
   mood('gate');
   if (!quiet) { SND.gong(); buzz([30, 60, 30]); }
@@ -207,7 +208,7 @@ function choice(e: Era, quiet: boolean): void {
   <div class="gq">${ctx || did.length ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div>${ctx ? `<p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p>` : ''}${did.length ? `<ul class="did">${did.map(x => `<li><span class="mono muted">${x.v.y}</span> ${esc(x.ch[0])}</li>`).join('')}</ul>` : ''}</div>` : ''}
   <p class="muted" style="margin-bottom:14px">${e.q}</p></div>
   <div class="listen" id="lst"><i class="pulse"></i><span>Đang kể lời dẫn…</span><button class="lnk" id="lskip">Chọn ngay ›</button></div>
-  <div role="radiogroup">${e.opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="tag">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
+  <div role="radiogroup">${opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="tag">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
   <p class="muted" style="font-size:13px;margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
   <div class="sfoot"><button class="btn" id="go" disabled>Đi theo hướng này</button>${isPlay() ? '' : '<button class="lnk" data-a="gate-later">Đọc chương trước, chọn sau ›</button>'}</div>`, false, 'wide');
   // Đọc sử: điểm rẽ không bắt buộc (Back / Escape = "chọn sau"); Trò chơi: phải chọn
@@ -219,7 +220,7 @@ function choice(e: Era, quiet: boolean): void {
     d.querySelectorAll('.opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
     const go = $<HTMLButtonElement>('#go', d)!;
     go.disabled = false;
-    go.textContent = `Đi theo hướng “${e.opts.find(o => o.id === selOpt)!.label}”`; // nút chốt gọi tên lựa chọn (như "Quyết định" trên thẻ)
+    go.textContent = `Đi theo hướng “${opts.find(o => o.id === selOpt)!.label}”`; // nút chốt gọi tên lựa chọn (như "Quyết định" trên thẻ)
     go.scrollIntoView({ block: 'nearest', behavior: calm.matches ? 'auto' : 'smooth' }); // điện thoại: nút chốt thường nằm dưới mép màn hình
     SND.tick();
     buzz(8);
@@ -235,7 +236,7 @@ function choice(e: Era, quiet: boolean): void {
     invalidateTrack();
     SND.stamp();
     buzz([10, 30, 40]);
-    outcome(e, e.opts.find(o => o.id === selOpt)!, got);
+    outcome(e, opts.find(o => o.id === selOpt)!, got);
   };
 }
 
@@ -270,8 +271,8 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   const go = () => { if (!armed || !layer.contains(d)) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
   // speak() gọi callback ngay (đồng bộ) khi không có giọng: khi đó dùng bộ đếm thay vì kết thúc lời đọc.
   let sync = true;
-  // giọng thu sẵn (như lời dẫn điểm rẽ) đọc câu chung; câu đã chỉnh theo quê thì giọng máy đọc đúng câu đang hiện
-  const spoke = speak(outSpeech(out), () => { if (!sync && armed) setTimeout(go, 700); }, false, out === o.out ? outKey(o.id) : undefined);
+  // giọng thu sẵn (như lời dẫn điểm rẽ) đọc câu chung; câu đã chỉnh theo quê (hay nói từ xứ người) thì giọng máy đọc đúng câu đang hiện
+  const spoke = speak(outSpeech(out), () => { if (!sync && armed) setTimeout(go, 700); }, false, out === e.opts.find(x => x.id === o.id)?.out ? outKey(o.id) : undefined);
   sync = false;
   const ms = spoke ? Math.max(6000, out.length * 95) : Math.max(7000, 4500 + out.length * 80); // tự đọc: đủ chậm
   bar.style.setProperty('animation-duration', ms + 'ms', 'important'); // giảm chuyển động vẫn thấy thanh đếm (không phải hiệu ứng bay)

@@ -39,6 +39,9 @@ export interface State {
   xs: Record<string, string>;
   /** Biến cố riêng chỉ áp dụng cho sự kiện từ năm này (bản lưu có trước tính năng: năm đang ở lúc mở lại). */
   xFrom: number;
+  /** Bản lưu có trước việc điểm rẽ 5 dời nhà (di cư, tập kết): năm đang ở lúc mở lại. Trước năm này dòng họ vẫn ở quê,
+      như lúc đã quyết các thẻ ấy (play.ts regionAt); 0 = bản lưu mới. */
+  movedFrom: number;
   year: number;
   picks: Record<string, string>;
   seen: string[];
@@ -76,7 +79,7 @@ export interface State {
 }
 
 const def: State = {
-  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
+  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, movedFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
   filt: 'Tất cả', sound: true, music: true, theme: 'archive', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
@@ -87,6 +90,9 @@ function load(mode = activeMode()): State {
   s = Object.assign({}, def, raw);
   // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
   if (!('xFrom' in raw)) s.xFrom = typeof raw.year === 'number' ? raw.year : Y0;
+  // Bản lưu có trước việc điểm rẽ 5 dời nhà (cùng bản với `shown`): những năm đã chơi giữ vùng quê như lúc chơi, không kéo
+  // dòng thời gian về 1955 bắt quyết lại thẻ của nơi ở mới (bản lưu đã xong thì không dời nhà nữa)
+  if (!('shown' in raw) && (raw.picks as Record<string, string> | undefined)?.e5) s.movedFrom = typeof raw.year === 'number' ? raw.year : Y1;
   s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])]; s.snap = { ...(s.snap || {}) }; s.shown = [...(s.shown || [])];
   // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa)
   s.cardv = { ...(s.cardv || {}) };
@@ -106,7 +112,7 @@ export function save(): void {
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
-  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
+  S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, movedFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;
   rt.card = null;
@@ -134,7 +140,10 @@ const CH: Record<string, string> = { dbp: 'e4', gnv: 'e4' };
 export const evEra = (v: HistEvent): Era => ERAS.find(e => e.id === (v.diary ? v.era : CH[v.id])) || eraOf(v.y);
 /** Năm đại diện của sự kiện trong chương của nó (tra hướng đã chọn, biến cố riêng…): Điện Biên Phủ → 1953. */
 export const chYear = (v: HistEvent): number => { const e = evEra(v), nx = ERAS[ERAS.indexOf(e) + 1]; return Math.max(e.cy, Math.min(v.y, nx ? nx.cy - 1 : v.y)); };
-export const optOf = (e: Era): Option | undefined => e.opts.find(o => o.id === S.picks[e.id]);
+/** Một hướng như dòng họ này thấy nó: play.ts gán (nhà đã di tản năm 1975 thấy các hướng của điểm rẽ 6 nói từ xứ người,
+    cùng id); state.ts không nhập play.ts để tránh vòng nhập. */
+export const optView = { of: (o: Option): Option => o };
+export const optOf = (e: Era): Option | undefined => { const o = e.opts.find(x => x.id === S.picks[e.id]); return o && optView.of(o); };
 export const curPick = (y: number) => optOf(eraOf(y));
 export const picked = (): Option[] => ERAS.map(optOf).filter((o): o is Option => !!o);
 
@@ -208,7 +217,7 @@ export function renameFamily(to: string, y: number, why: string): void {
 /** Bắt đầu lại gia sản (khi đổi sang chế độ Chơi giữa chừng). */
 export function resetPlay(): void {
   if (S.names.length) { S.name = S.names[0].from; S.surname = surnameKey(S.name); } // chơi lại: họ ban đầu
-  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.snap = {}; S.names = []; S.xs = {}; S.xFrom = 0;
+  S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.snap = {}; S.names = []; S.xs = {}; S.xFrom = 0; S.movedFrom = 0;
   save();
 }
 

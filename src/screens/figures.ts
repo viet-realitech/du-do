@@ -1,6 +1,6 @@
 import { ERAS, FIG, FIGERA, FIGSIDE, SIDES, sideName, figEvents } from '../data';
 import { bornLine } from '../data/surnames';
-import { S, save, figOpen, figsMet } from '../state';
+import { S, save, figOpen, figsMet, optView } from '../state';
 import { esc, layer, sheet, toast } from '../ui/dom';
 import { av, initials } from '../ui/bits';
 import { icon } from '../ui/icons';
@@ -18,7 +18,7 @@ export function openFig(id: string): void {
     return;
   }
   if (!S.figSeen.includes(id)) { S.figSeen.push(id); save(); }
-  const chose = ERAS.flatMap(e => e.opts.filter(o => o.guide === id).map(o => [e, o] as const));
+  const chose = ERAS.flatMap(e => e.opts.map(optView.of).filter(o => o.guide === id).map(o => [e, o] as const)); // nhà đã di tản: người đồng hành của điểm rẽ 6 theo bản xứ người
   // nguồn ảnh ghi ở dòng chú cuối bảng (khung ảnh hồ sơ 96 × 120 quá nhỏ cho một nhãn đè lên mặt người)
   const img = FIGIMG[id] ? ` src="${esc(FIGIMG[id])}" focus="${figFocus(id)}"` : '';
   // ảnh hồ sơ chữ nhật khung đôi (như thẻ nhân vật trong bảng), tên / năm / vai trò đặt bên cạnh như nhãn bảo tàng

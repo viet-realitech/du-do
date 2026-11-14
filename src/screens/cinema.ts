@@ -188,11 +188,12 @@ function endPlate(): string {
   const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
   const t = end ? title : ar ? ar[0] : 'Hành trình đã khép';
   const d = end ? end.line : ar ? ar[1] : '';
+  // hạng gia sản trùng tên kết cục ("Còn lại tên họ", "Vọng tộc"): không nhắc lại một dòng y hệt tiêu đề
   const strip = ERAS.map(e => { const o = optOf(e); return `<li${o ? '' : ' class="none"'}><b>${e.cy}</b><i></i><span>${o ? esc(o.label) : '—'}</span></li>`; }).join('');
   return `<div class="plate fin"><div class="mono k">Hồ sơ dòng họ · ${esc(nameChain())} · 1858 – 2026</div>
    ${end ? `<span class="stamp">Kết cục · ${esc(end.seal)}</span>` : ''}<h1>${esc(t)}</h1>${d ? `<p class="d">${esc(d)}</p>` : ''}
    <ol class="strip" aria-label="Sáu điểm rẽ và hướng dòng họ đã chọn">${strip}</ol>
-   ${rar ? `<p class="r">${esc(rar.lead)}</p>` : ''}${isPlay() ? `<p class="r">Gia sản: ${esc(rank()[0])}</p>` : ''}
+   ${rar ? `<p class="r">${esc(rar.lead)}</p>` : ''}${isPlay() && rank()[0] !== t ? `<p class="r">Gia sản: ${esc(rank()[0])}</p>` : ''}
    ${epi ? `<p class="epi">${esc(epi)}</p>` : ''}<div class="het">Hết</div></div>`;
 }
 

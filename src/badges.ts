@@ -33,6 +33,12 @@ function drain(): void {
   });
 }
 
+/** Bắt đầu lại từ 1858: huy hiệu của dòng họ vừa xoá chưa kịp báo thì bỏ. */
+export function clearBadgeQueue(): void {
+  queue.length = 0;
+  draining = false;
+}
+
 /** Award newly earned badges, announcing them with a toast + chime once nothing is in the way. */
 export function checkBadges(): void {
   const st = badgeState();

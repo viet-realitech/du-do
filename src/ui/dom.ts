@@ -1,6 +1,7 @@
 import { hush } from '../narration';
 import { isTouring } from '../tour';
 import { SND } from '../audio';
+import { icon } from './icons';
 
 export const $ = <T extends Element = HTMLElement>(s: string, root: ParentNode = document) => root.querySelector<T>(s);
 export const app = document.getElementById('app')!;
@@ -104,7 +105,7 @@ function place(e: HTMLElement): { top: number; left: number; bottom: number; rig
    có chỗ không đè lên tờ đang mở (huy hiệu); không có thì hiện ngay (trả lời một thao tác). */
 type Toast = { html: string; onShow?: () => void; wait?: boolean };
 const tq: Toast[] = [];
-let tBusy = false;
+let tBusy = false, tGen = 0;
 export function toast(html: string, onShow?: () => void, wait = false): void {
   tq.push({ html, onShow, wait });
   if (!tBusy) nextToast();
@@ -112,7 +113,9 @@ export function toast(html: string, onShow?: () => void, wait = false): void {
 function nextToast(): void {
   if (!tq.length) { tBusy = false; return; }
   tBusy = true;
+  const g = tGen;
   whenClear(() => {
+    if (g !== tGen) return; // hàng đợi đã xoá (bắt đầu lại): chuỗi cũ dừng, không hiện thông báo của dòng họ vừa xoá
     const n = document.createElement('div');
     n.setAttribute('role', 'status');
     n.innerHTML = tq[0].html;
@@ -135,9 +138,13 @@ function nextToast(): void {
 export function sheet(html: string, dismiss = false, kind?: 'wide' | 'dlg'): HTMLElement {
   const d = document.createElement('div');
   d.className = 'scrim' + (kind ? ' ' + kind : '');
-  d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
-  if (dismiss) d.addEventListener('click', e => { if (e.target === d) ghost(d); });
-  else d.dataset.lock = '1'; // a decision is required: Back/Escape won't dismiss it
+  // bảng đóng được (chạm nền, Escape) có thêm nút ✕ nhìn thấy, bấm được bằng bàn phím: bảng nhân vật không có sự kiện
+  // liên quan trước đây không có gì để bấm. Thẻ đã quyết: ✕ như nút "Đóng" của thẻ (đi tiếp luồng).
+  d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${dismiss ? `<button class="sx" aria-label="Đóng">${icon('close', 18)}</button>` : ''}${html}</div>`;
+  if (dismiss) {
+    d.addEventListener('click', e => { if (e.target === d) ghost(d); });
+    d.querySelector('.sx')!.addEventListener('click', () => { const own = d.querySelector<HTMLElement>('[data-a="close-card"]'); if (own) own.click(); else ghost(d); });
+  } else d.dataset.lock = '1'; // a decision is required: Back/Escape won't dismiss it
   // Sheet replacing a sheet: the old one just dissolves and the backdrop stays put.
   const swap = [...app.querySelectorAll('.exiting')].filter(g => g.querySelector(':scope > .scrim'));
   if (swap.length) { swap.forEach(g => g.classList.add('swap')); d.classList.add('cont'); }
@@ -194,4 +201,13 @@ export function focusFallback(): void {
     const b = document.querySelector<HTMLElement>(q);
     if (b && b.getClientRects().length && !b.closest('[inert]')) { b.focus({ preventScroll: true }); return; }
   }
+}
+
+/** Bắt đầu lại từ 1858: bỏ thông báo còn xếp hàng và thông báo đang hiện của dòng họ vừa xoá (huy hiệu "Lan toả" chờ
+    chỗ bên thẻ chia sẻ không hiện ra giữa màn mở đầu của ván mới). */
+export function clearToasts(): void {
+  tq.length = 0;
+  tBusy = false;
+  tGen++;
+  app.querySelectorAll(':scope > .toast').forEach(n => n.remove());
 }

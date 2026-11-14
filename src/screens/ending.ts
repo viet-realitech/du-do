@@ -5,9 +5,9 @@ import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
 import { chronLine, epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts } from '../data/endings';
 import { on } from '../ui/actions';
-import { app, esc, layer, sheet, toast, clearLayer } from '../ui/dom';
+import { app, esc, layer, sheet, toast, clearLayer, clearToasts } from '../ui/dom';
 import { icon } from '../ui/icons';
-import { checkBadges } from '../badges';
+import { checkBadges, clearBadgeQueue } from '../badges';
 import { stopTour } from '../tour';
 import { renderMain, invalidateTrack } from '../view';
 import { compass } from './profile';
@@ -113,20 +113,20 @@ export function openEnd(): void {
   // đầu hồ sơ: họ (và quê), dấu kết cục, tên kết cục, lời kết riêng của dòng họ, tỷ lệ hiếm, vì sao; Đọc sử chưa chọn đủ: còn bỏ ngỏ
   const head = end ? `<header class="end-head">
    <div class="end-mast"><span class="mono end-kick">Hồ sơ dòng họ · ${esc(nameChain())}${play ? ' · ' + esc(home()[1]) : ''}</span><span class="stamp">${esc(end.seal)}</span></div>
-   <h1 class="end-title">${esc(title)}</h1>
+   <h1 class="end-title" tabindex="-1">${esc(title)}</h1>
    <p class="end-epi">${esc(epilogue(end.id, f))}</p>
    ${rar ? `<p class="end-rar"><b>${esc(rar.lead)}</b> <span class="muted">${esc(rar.note)}</span></p>` : ''}
    <details class="end-why"><summary>Vì sao là kết cục này?</summary><p>${esc(whyText(end, f))}</p></details>${film}
   </header>` : `<header class="end-head">
    <div class="end-mast"><span class="mono end-kick">Hồ sơ dòng họ · ${esc(familyName())}</span><span class="stamp">Hồ sơ còn mở</span></div>
-   <h1 class="end-title">Con đường còn bỏ ngỏ</h1>
+   <h1 class="end-title" tabindex="-1">Con đường còn bỏ ngỏ</h1>
    <p class="end-epi">Còn ${miss} điểm rẽ chưa chọn. Chọn đủ sáu điểm rẽ để biết kết cục của ${esc(familyName())}; bên dưới là những gì dòng họ đã đi qua.</p>${film}
   </header>`;
   // dòng sổ tóm tắt: các ô ngăn bằng nét dọc, không phải hộp
   const reg = `<dl class="end-sec end-reg">
    <div><dt class="mono">Trùng hướng chiếm ưu thế</dt><dd><b class="n">${ms.m}/${ms.t}</b>${end ? `<span>${esc(matchLine(ms.m))}</span>` : ''}</dd></div>
    <div><dt class="mono">Dòng họ bạn là</dt><dd><b>${a ? esc(a[0]) : '—'}</b></dd></div>
-   ${play ? `<div><dt class="mono">Gia sản</dt><dd><b>${esc(rank()[0])}</b></dd></div>` : ''}</dl>`;
+   ${play && rank()[0] !== title ? `<div><dt class="mono">Gia sản</dt><dd><b>${esc(rank()[0])}</b></dd></div>` : ''}</dl>`; // hạng trùng tên kết cục: không lặp
   layer.innerHTML = `<div class="ov end">
   <div class="row sb"><button class="back" data-a="close" aria-label="Đóng">‹</button><span class="mono muted">Kết luận · 1858 – 2026</span></div>
   ${head}
@@ -141,6 +141,7 @@ export function openEnd(): void {
   <blockquote class="end-q"><span class="mono">Điều đọng lại</span><p>Ở mỗi điểm rẽ, người Việt ở mọi phía đều tin mình đang làm điều đúng cho đất nước. Lịch sử ghi lại bên chiếm ưu thế, còn sử liệu giữ lại tiếng nói của tất cả.</p></blockquote></section>
   <div class="end-acts"><button class="btn" data-a="share">Tạo thẻ chia sẻ</button><button class="btn ghost" data-a="tab" data-t="src">Đọc sử liệu gốc</button></div>
   <button class="lnk" data-a="reset">Chọn lại từ 1858</button></div>`;
+  layer.querySelector<HTMLElement>('.end-title')?.focus({ preventScroll: true }); // như trang sự kiện: tiêu điểm vào hồ sơ vừa mở, trình đọc màn hình đọc từ tên kết cục
   checkBadges();
 }
 
@@ -228,6 +229,7 @@ export async function openShare(): Promise<void> {
 
 export function resetAll(): void {
   stopTour();
+  clearBadgeQueue(); clearToasts(); // thông báo, huy hiệu của dòng họ vừa xoá không theo sang ván mới
   resetState();
   invalidateTrack();
   setTab('map');

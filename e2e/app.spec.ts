@@ -285,7 +285,8 @@ async function bootPlay(page: Page, st: Record<string, unknown>, upTo: string, k
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
   const cards = { ...Object.fromEntries(ids.slice(0, ids.indexOf(upTo)).map(id => [id, 0])), ...(st.cards as object || {}) };
-  const s = { step: 'play', mode: 'play', cardv: {}, xFrom: 2026, narr: false, ...st, cards };
+  // `shown`: bản lưu của bản hiện tại (bản lưu không có nó là bản có trước việc điểm rẽ 5 dời nhà, state.ts movedFrom)
+  const s = { step: 'play', mode: 'play', cardv: {}, xFrom: 2026, narr: false, shown: [], ...st, cards };
   // một lần cho mỗi khoá: tải lại trang không ghi đè bản lưu; khoá khác thì dựng bản lưu mới trong cùng thẻ
   await page.addInitScript(([x, k]) => { if (!sessionStorage.getItem(k)) { localStorage.setItem('dudo-v2-play', x); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem(k, '1'); } }, [JSON.stringify(s), key]);
   await page.goto('/');
@@ -308,6 +309,33 @@ test('play mode: turning point 5 moves the family — a Huế family that picks 
   // the 1954 migration card asks whether the whole household goes (not "where to live" again, not a southern host's card)
   await expect(page.locator('.scrim h2')).toHaveText('Cuộc di cư 1954', { timeout: 8000 });
   await expect(page.locator('.scrim .opt h3')).toHaveText(['Cả nhà cùng ra Bắc', 'Người đi, vợ con ở lại giữ đất']);
+  expect(errors).toEqual([]);
+});
+
+test('play mode: a save from before turning point 5 moved the family keeps its place (no rewind to 1955)', async ({ page }) => {
+  // bản lưu của bản cũ (không có `shown`): nhà Hà Nội chọn Miền Nam, các thẻ cả nước và miền Bắc đã quyết như bản cũ đòi
+  const rows = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '([^']*)'/gm)];
+  const cards = Object.fromEntries(rows.filter(m => m[2] === 'all' || m[2].split(',').includes('B')).map(m => [m[1], 0]));
+  const old = (year: number) => ({ step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year, narr: false, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam', ...(year >= 2026 ? { e6: 'doimoi' } : {}) },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], ...(year >= 2026 ? { e5: [true, true], e6: [true, true] } : {}) }, cards, cardv: {}, xs: {}, xFrom: 1858, names: [],
+    harvests: year >= 2026 ? ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'] : ['e1', 'e2', 'e3', 'e4'], ended: year >= 2026 });
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  await page.addInitScript(([x, y]) => {
+    if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', x); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); }
+    else if (!sessionStorage.getItem('seeded2')) { localStorage.setItem('dudo-v2-play', y); sessionStorage.setItem('seeded2', '1'); }
+  }, [JSON.stringify(old(1966)), JSON.stringify(old(2026))]);
+  await page.goto('/');
+  await expect(page.locator('#yr')).toHaveText('1966');
+  await page.waitForTimeout(1500);
+  await expect(page.locator('#tourb')).toBeHidden(); // không dựng lại tour chương 5 để hỏi thẻ miền Nam năm 1955
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2-play')!).year)).toBe(1966);
+  // bản lưu cũ đã xong: vẫn ở năm 2026, kết luận còn đó
+  await page.reload();
+  await expect(page.locator('#yr')).toHaveText('2026');
+  await expect(page.locator('#card .c[data-a=end]')).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2-play')!).year)).toBe(2026);
   expect(errors).toEqual([]);
 });
 
@@ -338,6 +366,32 @@ test('play mode: 30.4.1975 for a Third Force family that migrated South is not t
   await expect(page.locator('.scrim h2')).toContainText('Sài Gòn', { timeout: 8000 });
   await expect(page.locator('.scrim .opt h3')).toHaveText(['Di tản', 'Ở lại, chờ hoà hợp', 'Đón quân giải phóng']);
   await expect(page.locator('.scrim .opt').nth(1)).toContainText('Hợp đường bạn theo');
+  expect(errors).toEqual([]);
+});
+
+test('play mode: a family that evacuated in April 1975 lives abroad — gate 6 and the cards after speak from there', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'ct', year: 1976, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam' }, cards: { sg75: 0 },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 40, d: 40, b: 40, u: 40 } }, 'tn76');
+  await page.locator('#hv-go').click();
+  if (await page.locator('.cine').count()) await page.goBack();
+  await expect(page.locator('.scrim .pv.mine')).toContainText('lên tàu ra biển', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Gửi quà nuôi người ở quê', 'Về nước làm ăn', 'Bám rễ nơi xứ người']);
+  await page.locator('#lskip').click();
+  await page.locator('.scrim .opt[data-o=radi]').click();
+  await page.locator('#go').click();
+  await expect(page.locator('#layer > .scrim').last()).toContainText('nhập quốc tịch');
+  await expect(page.locator('#layer > .scrim').last()).toContainText('Phạm Duy');
+  await page.locator('[data-a=watch]').click();
+  await page.locator('#tourb [data-t=skip]').click();
+  // 1976: năm đầu ở xứ người, không phải hợp tác xã; thẻ chiến tranh biên giới Tây Nam (Cần Thơ) không còn là việc của nhà
+  await expect(page.locator('.scrim h2')).toHaveText('Cộng hoà XHCN Việt Nam', { timeout: 8000 });
+  await expect(page.locator('.scrim .kick')).toContainText('Cần Thơ → xứ người');
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Ở lại với hội thánh bảo trợ', 'Theo họ hàng sang Pháp', 'Dọn về California']);
+  await page.locator('.scrim .opt').first().click();
+  await page.locator('#cgo').click();
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  await expect(page.locator('.scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3').first()).toHaveText('Bảo lãnh người thân theo diện đoàn tụ');
   expect(errors).toEqual([]);
 });
 
@@ -539,6 +593,54 @@ test('figures lock until their turning point; profile, about and share card', as
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Tạo thẻ chia sẻ' }).click();
   await expect(page.getByAltText('Thẻ kết quả')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('ending: the dossier takes focus; restarting is a small dialog and leaves no notice of the old game behind', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, badges: ['start'] });
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toBeFocused();
+  await expect(page.locator('.toast')).toBeVisible({ timeout: 6000 }); // huy hiệu của ván này ("Khép hồ sơ"…)
+  await page.locator('.ov.end [data-a=reset]').click();
+  const dlg = page.locator('#layer > .scrim.dlg');
+  await expect(dlg).toBeVisible();
+  await expect(dlg).not.toContainText('gia sản'); // Đọc sử không có gia sản
+  await page.locator('[data-a=reset-yes]').click();
+  await expect(page.locator('.toast')).toHaveCount(0);
+  await page.waitForTimeout(3500);
+  await expect(page.locator('.toast')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('a figure with no related events still has a close button reachable with Tab', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Lê', year: 1883, picks: { e1: 'canhtan' }, quiz: {} });
+  await page.locator('#eraR').click();
+  const x = page.locator('#layer > .scrim .sx');
+  await expect(x).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(x).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#layer > .scrim')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('onboarding: a surname typed in all caps is shown as "Họ Nguyễn"', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
+  await page.locator('#nm').fill('NGUYỄN');
+  await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
+  await expect(page.locator('.scrim .kick').first()).toContainText('Họ Nguyễn');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2')!).name)).toBe('Họ Nguyễn');
+  expect(errors).toEqual([]);
+});
+
+test('play mode: Linebacker II speaks to a Nam Định family (not "leave Hà Nội")', async ({ page }) => {
+  const errors = await bootPlay(page, { name: 'Họ Phạm', surname: 'pham', home: 'nd', year: 1972, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac' },
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 50, d: 50, b: 50, u: 50 } }, 'lb72');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('.scrim h2')).toHaveText('Chiến dịch Linebacker II', { timeout: 8000 });
+  await expect(page.locator('.scrim .opt h3')).toHaveText(['Sơ tán khỏi thành phố Nam Định', 'Ở lại trực chiến']);
   expect(errors).toEqual([]);
 });
 
