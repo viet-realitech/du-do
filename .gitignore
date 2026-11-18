@@ -6,3 +6,5 @@ playwright-report
 test-results
 tts-out/
 .claude/worktrees/
+__pycache__/
+*.pyc
