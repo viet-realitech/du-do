@@ -17,7 +17,7 @@ const CSS = `
 #dbg header button { width: 30px; height: 26px; border: 1px solid var(--rule); border-radius: var(--r); color: var(--ink2); font: 500 14px/1 var(--mono) }
 #dbg pre { margin: 0; padding: 8px 10px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; flex: 1; min-height: 0 }
 #dbg textarea { margin: 0 10px 8px; height: 120px; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule) }
-#dbg .go { margin: 0 10px 10px; height: 38px; font-size: 15px }
+#dbg .go { width: auto; flex: none; margin: 0 10px 10px; height: 38px; font-size: 15px }
 #dbg.min pre, #dbg.min .go, #dbg.min textarea { display: none }
 `;
 

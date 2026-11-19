@@ -58,7 +58,7 @@ function tapToHear(play: () => void): void {
   b.addEventListener('click', ev => { ev.stopPropagation(); hideTap(); play(); });
   const tb = document.getElementById('tourb');
   // có thanh tour (và không có màn điện ảnh phủ lên): ngay trên thanh tour, trong khung bản đồ; còn lại giữa chân màn hình
-  if (tb?.parentElement && !document.querySelector('body > .cine')) { b.style.bottom = `${tb.offsetHeight + 22}px`; tb.parentElement.appendChild(b); }
+  if (tb?.parentElement && !document.querySelector('body > .cine')) { b.style.bottom = `${tb.offsetHeight + 14}px`; tb.parentElement.appendChild(b); }
   else document.body.appendChild(b);
 }
 /** Narration is possible for `key`: a recorded clip, or a Vietnamese system voice. */
