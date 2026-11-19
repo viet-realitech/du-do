@@ -1290,9 +1290,25 @@ test.describe('short and wide windows', () => {
     expect(shift).toBe(0);
     await page.locator('.xopts .opt').first().evaluate(b => (b as HTMLElement).click());
     await page.locator('#xgo').evaluate(b => (b as HTMLElement).click());
-    await live(page, '.scrim .btn[data-a="close-card"]').click();
+    // đóng thẻ rồi chạm Hồ sơ trong cùng một lượt trong trang: ~1,8 s sau khi đóng, tour đã bay tới thẻ còn nợ kế tiếp, và
+    // máy bận từng để thẻ ấy che thanh tab trước cú chạm (WebKit). Mỗi nút phải là thứ nằm dưới tâm của chính nó (không bị
+    // che, không inert), như một cú chạm thật; trial click cuộn nút Đóng vào tầm nhìn và kiểm tra nó bấm được
+    const close = live(page, '.scrim .btn[data-a="close-card"]');
+    await close.click({ trial: true });
+    const tapped = await close.evaluate(async c => {
+      const tap = (b: HTMLElement) => {
+        const r = b.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+        const ok = !!hit && b.contains(hit) && !b.closest('[inert]');
+        b.click();
+        return ok;
+      };
+      const closed = tap(c as HTMLElement);
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const gone = !document.querySelector('#layer > .scrim');
+      return { closed, gone, tab: tap(document.querySelector<HTMLElement>('.tab[data-t=me]')!) };
+    });
+    expect(tapped).toEqual({ closed: true, gone: true, tab: true });
     await expect(page.locator('#layer > .scrim')).toHaveCount(0);
-    await page.locator('.tab[data-t=me]').click();
     await expect(page.locator('#layer > .pane')).toBeVisible();
     expect(errors).toEqual([]);
   });
