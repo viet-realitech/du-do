@@ -714,6 +714,8 @@ test('smooth map: static layers apart, ripples rest while moving, nothing rebuil
 });
 
 test('game flow: one continuous loop — choice → tour auto-starts → card pauses it → continue resumes', async ({ page }) => {
+  // chờ thật: lời dẫn điểm rẽ (~12 s), trận Đà Nẵng và lời kể (~30 s); một mình đã 55–60 s, sát mức 60 s mặc định
+  test.setTimeout(120_000);
   const errors = await boot(page);
   await page.getByRole('button', { name: /Vào trò chơi/ }).click();
   await expect(page.getByText('Giữ gia sản một dòng họ qua 168 năm.')).toBeVisible();
