@@ -11,6 +11,7 @@ import { evKey, evSpeech, evSpeechFull } from './speech';
 import { hidePop, zoomTo, zoomK, zoomFit } from './map';
 import { fogTop, playScene, endScene, sceneFrame, sceneHold, sceneLen, sceneLeft, capH, hasScene, voiceAt, stepScene, pauseScene, resumeScene, scenePaused, closeAt, holdable, beforeClose } from './scene';
 import { preloadEra } from './screens/cinema';
+import { warmEra } from './warm';
 import { renderMain, setYear } from './view';
 import { openGate, openQuiz, quizFor } from './screens/gate';
 import { goEnd } from './screens/ending';
@@ -150,6 +151,7 @@ export function startTour(eIn?: Era): void {
   // không còn bước nào: khép chương ngay (tourStep), không tính là đã xem (không đố chương chưa xem)
   tour = { e, L, i: i0 < 0 ? L.length : i0, end, t: undefined, step: 0, back };
   void preloadEra(ERAS[ERAS.indexOf(e) + 1]); // ảnh cho màn mở chương kế tiếp
+  warmEra(e, L.slice(Math.max(0, tour.i)).map(evKey)); // lời kể, nhạc của chương cho lúc mất mạng (warm.ts)
   mood(eraMood(e.id));
   tourBar();
   tourStep();

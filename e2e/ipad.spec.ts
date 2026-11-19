@@ -74,6 +74,67 @@ test.describe('iPad Pro 11 landscape', () => {
   });
 });
 
+test('a narration clip the browser refuses (Safari, no recent tap) keeps its stop; "Chạm để nghe" plays it', async ({ page }) => {
+  // the first narration clip is refused as iOS refuses a clip started from a timer; later calls play normally
+  await page.addInitScript(() => {
+    const play = HTMLMediaElement.prototype.play;
+    const w = window as unknown as { clipPlays: number };
+    w.clipPlays = 0;
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      if (/\/assets\/[^/]+\.m4a/.test(this.src) && !w.clipPlays++) return Promise.reject(new DOMException('not allowed', 'NotAllowedError'));
+      return play.call(this);
+    };
+  });
+  const errors = await boot(page, { ...STATE, year: 1858, narr: true, fx: false });
+  await page.locator('#play').click();
+  const chip = page.locator('#tapvo');
+  await expect(chip).toBeVisible({ timeout: 15000 });
+  await expect(chip).toHaveText('Chạm để nghe');
+  // a refused clip used to end the stop at once (next stop 900 ms later): the stop now keeps its reading time
+  await page.waitForTimeout(2500);
+  await expect(page.locator('#tourb')).toContainText('1/');
+  await chip.click();
+  await expect(chip).toHaveCount(0);
+  expect(await page.evaluate(() => (window as unknown as { clipPlays: number }).clipPlays)).toBe(2);
+  // the next stop's clip plays without asking
+  await page.locator('#tourb [data-t=next]').click();
+  await expect(page.locator('#tourb')).toContainText('2/');
+  await expect.poll(() => page.evaluate(() => (window as unknown as { clipPlays: number }).clipPlays), { timeout: 15000 }).toBeGreaterThanOrEqual(3);
+  await expect(chip).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('debug panel: 5 taps on the version line, build id, error log, copy report', async ({ page }) => {
+  const errors = await boot(page);
+  // an uncaught error is kept in the on-device log (never shown outside the panel)
+  await page.evaluate(() => setTimeout(() => { throw new Error('thử sổ lỗi'); }));
+  await page.waitForTimeout(1300); // the log is written at most once a second
+  expect(await page.evaluate(() => localStorage.getItem('dudo-errlog'))).toContain('thử sổ lỗi');
+  await expect(page.locator('#dbg')).toHaveCount(0);
+  await page.locator('.tab[data-t=me]').click();
+  await page.locator('[data-a=about]').click();
+  const ver = page.locator('[data-a=ver]');
+  await expect(ver).toContainText(/phiên bản \d+\.\d+\.\d+ · \w+ · \d+\.\d+\.\d{4}/);
+  for (let i = 0; i < 5; i++) await ver.click();
+  const dbg = page.locator('#dbg');
+  await expect(dbg).toBeVisible();
+  await expect(dbg).toContainText('bản dựng');
+  await expect(dbg).toContainText('Hiệu ứng: mức 2');
+  await expect(dbg).toContainText('AudioContext');
+  await expect(dbg).toContainText('thử sổ lỗi');
+  await expect(dbg).toContainText(/Khung hình: [1-9]\d* fps/);
+  await dbg.getByRole('button', { name: 'Sao chép báo cáo' }).click();
+  await expect(dbg.locator('.go')).toHaveText(/Đã sao chép|Chọn sẵn/);
+  // remembered for the session (the Home Screen app cannot take ?debug)
+  await page.reload();
+  await expect(page.locator('#dbg')).toBeVisible();
+  await page.locator('#dbg [data-d=x]').click();
+  await page.reload();
+  await page.waitForSelector('#map text[data-city]');
+  await expect(page.locator('#dbg')).toHaveCount(0);
+  expect(errors.filter(e => !e.includes('thử sổ lỗi'))).toEqual([]);
+});
+
 test('an auto effects level stored by the old tuner (flights counted) is reset once to the full look', async ({ page }) => {
   await page.addInitScript(() => { if (!sessionStorage.getItem('seen')) { sessionStorage.setItem('seen', '1'); localStorage.setItem('dudo-q', JSON.stringify({ m: 'auto', q: 0 })); } });
   await boot(page);
