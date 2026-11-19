@@ -9,7 +9,7 @@ import { BADGES, ERAS, FIG, VAL } from '../data';
 import { S, save, optOf, archetype, quizCorrect, values, pct, familyName, Y1 } from '../state';
 import { on } from '../ui/actions';
 import { esc, layer, sheet, ghost } from '../ui/dom';
-import { SND, buzz } from '../audio';
+import { SND, buzz, audioSession } from '../audio';
 import { hasTTS, hasVoice, speak } from '../narration';
 import { openShare, resetAll } from './ending';
 import { qmode, setQMode, type QMode } from '../ui/quality';
@@ -87,6 +87,7 @@ on('set', el => {
   paneMe();
   if (k === 'sound' && S.sound) SND.chime();
   if (k === 'sound' || k === 'music') refreshMusic();
+  if (k === 'sound') audioSession();
   if (k === 'narr' && S.narr) speak('Giọng đọc đã bật.');
   if (k === 'haptic') buzz(20);
   if ((k === 'fx' || k === 'sound') && !S[k]) endScene();

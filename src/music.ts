@@ -61,8 +61,9 @@ export function mood(m: Mood | null): void {
 export const refreshMusic = apply;
 
 export function initMusic(): void {
-  // Browsers only start audio from a user gesture: try again on every tap until it plays.
-  addEventListener('pointerdown', () => { if (want && !cur) apply(); }, true);
+  // Browsers only start audio from a user gesture: try again on every tap until it plays. pointerup / click: một cú chạm
+  // trên màn cảm ứng chỉ được tính là cử chỉ người dùng từ lúc nhấc ngón (pointerdown của cảm ứng không mở khoá âm thanh)
+  for (const t of ['pointerup', 'click']) addEventListener(t, () => { if (want && !cur) apply(); }, true);
   document.addEventListener('visibilitychange', () => {
     if (!cur) return;
     if (document.hidden) cur.el.pause(); else cur.el.play().catch(() => {});

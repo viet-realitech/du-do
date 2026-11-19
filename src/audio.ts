@@ -32,9 +32,31 @@ export function ac(): AudioContext | null {
       for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
     } catch { /* no Web Audio */ }
   }
-  if (AC && AC.state === 'suspended') AC.resume();
+  wake();
   return AC;
 }
+
+/** Nối lại AudioContext khi nó không chạy: 'suspended' (chưa chạm), hay 'interrupted' riêng của Safari (khoá máy, cuộc
+    gọi, Siri), trước đây chỉ 'suspended' được nối lại nên tiếng trận và nhạc câm tới khi tải lại trang. */
+function wake(): void {
+  if (AC && AC.state !== 'running' && AC.state !== 'closed') AC.resume().catch(() => { /* chưa được phép: lần chạm sau */ });
+}
+for (const t of ['pointerup', 'keydown']) addEventListener(t, wake, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+addEventListener('pageshow', wake);
+
+/** Trạng thái AudioContext cho bảng chẩn đoán ('none': chưa tạo). */
+export const acState = (): string => (AC ? AC.state : 'none');
+
+/** iOS / iPadOS 16.4+: Web Audio (tiếng trận, nhạc) mặc định theo nút im lặng, còn lời kể (thẻ audio) thì không. Khi bật
+    Âm thanh, đặt phiên 'playback' để tiếng trận theo cùng một luật với lời kể; tắt Âm thanh thì trả về mặc định. */
+export function audioSession(): void {
+  try {
+    const s = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (s) s.type = S.sound ? 'playback' : 'auto';
+  } catch { /* không hỗ trợ */ }
+}
+audioSession();
 
 /** Output bus for other audio sources (music); null when sound is unavailable. */
 export const bus = (): GainNode | null => (ac() ? FX : null);

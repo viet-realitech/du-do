@@ -2,6 +2,7 @@ import { S } from './state';
 import { duck } from './audio';
 import { recording } from './voice';
 import { toast } from './ui/dom';
+import { icon } from './ui/icons';
 
 /* Documentary-style narration with the device's Vietnamese system voice. */
 export const hasTTS = 'speechSynthesis' in window;
@@ -21,6 +22,45 @@ if (hasTTS) {
 }
 
 export const hasVoice = () => !!VOICE;
+/** Tên giọng hệ thống đang dùng (bảng chẩn đoán). */
+export const voiceName = (): string => VOICE?.name || '';
+/** Bảng chẩn đoán: bản thu bắt đầu phát, bị trình duyệt chặn (cần một cú chạm), lỗi tải / giải mã (mất mạng…). */
+export const vstats = { started: 0, refused: 0, error: 0 };
+
+// iOS chỉ cho giọng hệ thống đọc từ hẹn giờ sau khi đã đọc một lần trong một cú chạm: đọc một câu rỗng, không tiếng,
+// ở cú chạm đầu tiên khi máy có giọng tiếng Việt (một lần)
+if (hasTTS) {
+  const prime = () => {
+    try {
+      if (!VOICE) return;
+      removeEventListener('pointerup', prime, true);
+      removeEventListener('keydown', prime, true);
+      if (speechSynthesis.speaking || speechSynthesis.pending) return;
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      speechSynthesis.speak(u);
+    } catch { /* không có giọng hệ thống */ }
+  };
+  addEventListener('pointerup', prime, true);
+  addEventListener('keydown', prime, true);
+}
+
+/* "Chạm để nghe": chỉ hiện khi trình duyệt chặn bản thu (NotAllowedError: Safari, không có cú chạm gần đây). Phát lại
+   chính bản thu ấy trong cú chạm; bước tour vẫn theo hẹn giờ đọc, không bị rút ngắn. */
+function hideTap(): void { document.getElementById('tapvo')?.remove(); }
+function tapToHear(play: () => void): void {
+  hideTap();
+  const b = document.createElement('button');
+  b.id = 'tapvo';
+  b.type = 'button';
+  b.className = 'chip on tapvo';
+  b.innerHTML = `${icon('listen', 15)}Chạm để nghe`;
+  b.addEventListener('click', ev => { ev.stopPropagation(); hideTap(); play(); });
+  const tb = document.getElementById('tourb');
+  // có thanh tour (và không có màn điện ảnh phủ lên): ngay trên thanh tour, trong khung bản đồ; còn lại giữa chân màn hình
+  if (tb?.parentElement && !document.querySelector('body > .cine')) { b.style.bottom = `${tb.offsetHeight + 22}px`; tb.parentElement.appendChild(b); }
+  else document.body.appendChild(b);
+}
 /** Narration is possible for `key`: a recorded clip, or a Vietnamese system voice. */
 export const canSpeak = (key?: string) => !!recording(key) || (hasTTS && !!VOICE);
 
@@ -32,6 +72,7 @@ let run = 0; // bumps on every new speech / hush so stale queues stop
 
 export function hush(): void {
   run++;
+  hideTap();
   if (clip) { clip.pause(); clip = null; }
   if (hasTTS) speechSynthesis.cancel();
   duck(false);
@@ -67,10 +108,26 @@ export function speak(text: string, onend?: () => void, force = false, key?: str
     let guard = setTimeout(() => end(), Math.max(6000, text.length * 130));
     // khi biết độ dài thật của bản thu, hẹn lại theo đó (bản thu có thể dài hơn câu được truyền vào, và chạy theo tốc độ đọc)
     a.onloadedmetadata = () => { if (isFinite(a.duration) && a.duration > 0) { clearTimeout(guard); guard = setTimeout(() => end(), (a.duration * 1000) / (a.playbackRate || 1) + 2500); } };
-    const end = () => { clearTimeout(guard); if (me === run) { if (clip === a) { a.pause(); clip = null; } done(); } };
-    a.onended = a.onerror = end;
+    const end = () => { clearTimeout(guard); if (me === run) { hideTap(); if (clip === a) { a.pause(); clip = null; } done(); } };
+    // lỗi tải / giải mã (mất mạng, bản thu chưa lưu ngoại tuyến): không rút ngắn bước, chờ hết giờ đọc (guard)
+    let bad = false;
+    const fail = () => { if (!bad && me === run) { bad = true; vstats.error++; } };
+    a.onended = end;
+    a.onerror = fail;
     duck(true);
-    a.play().catch(end);
+    a.play().then(() => { vstats.started++; }, (e: unknown) => {
+      if (me !== run) return; // hush() / lời kể mới đã cắt ngang
+      if ((e as DOMException)?.name !== 'NotAllowedError') { fail(); return; }
+      // trình duyệt chặn (không có cú chạm gần đây): giữ hẹn giờ đọc, mời chạm để nghe lại chính bản thu này
+      vstats.refused++;
+      tapToHear(() => {
+        if (me !== run || clip !== a) return;
+        a.play().then(() => {
+          vstats.started++;
+          if (me === run && isFinite(a.duration) && a.duration > 0) { clearTimeout(guard); guard = setTimeout(() => end(), ((a.duration - a.currentTime) * 1000) / (a.playbackRate || 1) + 2500); }
+        }, () => { /* vẫn bị chặn: hẹn giờ đọc lo bước này */ });
+      });
+    });
     return true;
   }
   if (!hasTTS) { done(); return false; }
