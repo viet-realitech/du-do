@@ -5,7 +5,7 @@ import type { Feature, MultiPolygon, Geometry } from 'geojson';
 import { F, PROVINCES, provGroup, provName, regionName, regime2, type HistEvent, type Region } from './data';
 import { S, save, rt, curPick, optOf, visEv } from './state';
 import { esc } from './ui/dom';
-import { quality, onQuality, watch } from './ui/quality';
+import { quality, onQuality } from './ui/quality';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
@@ -591,7 +591,7 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number, padB
 /** Bay tới phép biến đổi `t`; giảm chuyển động: đặt ngay, không bay. */
 function fly(t: d3.ZoomTransform, ms: number): void {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { G.svg.interrupt().call(G.zoom.transform, t); return; }
-  watch(ms); // đo khung hình lúc bay: máy chậm thì tự bớt hiệu ứng (ui/quality.ts)
+  // không đo khung hình lúc bay (ui/quality.ts): gợn sóng, nét cổ đã tạm tắt trong lúc bay, bớt hiệu ứng không làm bay nhanh hơn
   G.svg.transition().duration(ms).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }
 

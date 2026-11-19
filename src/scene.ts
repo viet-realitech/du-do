@@ -974,7 +974,9 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
   const r: Run = { id: v.id, q: [], qt: 0, skew: 0, marks: [], parts: [], raf: 0, root: null, reel: null, lt: null, len: sceneLen(v), t0: performance.now(), alive: true, onEnd, onStep, onNext, onClose };
   cur = r;
   WAR.open();
-  watch(DRAW_AT + 1300); // đo khung hình lúc bay tới và dựng cảnh (ui/quality.ts): máy chậm thì tự bớt hiệu ứng
+  // đo khung hình lúc dựng cảnh, khi bản đồ đã tới nơi (nét cổ, gợn sóng đã bật lại, khói, vòng sáng đang chạy): máy chậm
+  // thì tự bớt hiệu ứng (ui/quality.ts). Không đo lúc bay: khi ấy không có gì để bớt
+  later(r, DRAW_AT, () => watch(1300, 'scene'));
   if (h) r.root = el('g', { class: 'scene' }, h.g);
   // các mốc nhịp biết trước từ dữ liệu (cảnh vẽ lúc DRAW_AT): "›" khi bản đồ còn đang bay / thẻ tên trận còn hiện thì
   // sang nhịp đầu, không bỏ qua cả trận

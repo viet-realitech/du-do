@@ -73,3 +73,18 @@ test.describe('iPad Pro 11 landscape', () => {
     expect(errors).toEqual([]);
   });
 });
+
+test('an auto effects level stored by the old tuner (flights counted) is reset once to the full look', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seen')) { sessionStorage.setItem('seen', '1'); localStorage.setItem('dudo-q', JSON.stringify({ m: 'auto', q: 0 })); } });
+  await boot(page);
+  await expect(page.locator('html')).toHaveAttribute('data-q', '2');
+  await expect(page.locator('#map > g > g:first-child')).toHaveAttribute('filter', 'url(#rough)');
+  // a level judged by the new tuner is kept
+  await page.evaluate(() => localStorage.setItem('dudo-q', JSON.stringify({ m: 'auto', q: 1, v: 2 })));
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '1');
+  // a fixed choice from Hồ sơ → Cài đặt is kept as it was
+  await page.evaluate(() => localStorage.setItem('dudo-q', JSON.stringify({ m: 'lite', q: 2 })));
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-q', '1');
+});
