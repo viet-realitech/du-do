@@ -18,6 +18,15 @@ async function boot(page: Page, state?: object) {
     .cine không neo vào #layer. `toHaveCount(0)` giữ locator trần: chờ cả bản sao đi hẳn. */
 const live = (page: Page, sel: string) => page.locator(`${sel}:not(.exiting *, .cine.out, .cine.out *)`);
 
+/** Ô của thông báo đang hiện, đo trong trang khi nó đã trượt vào chỗ (`ms` tính từ lúc hiện; thông báo chỉ sống 2,8 s).
+    waitForTimeout rồi boundingBox lỡ mất nó khi máy bận (một lần chờ 500 ms từng kéo thành 3,5 s). */
+const toastBox = (page: Page, ms: number) => page.locator('.toast:visible').evaluate(async (n, ms) => {
+  const an = n.getAnimations()[0];
+  while (an?.playState === 'running' && Number(an.currentTime) < ms) await new Promise(r => requestAnimationFrame(r));
+  const r = n.getBoundingClientRect();
+  return { x: r.x, y: r.y, width: r.width, height: r.height };
+}, ms);
+
 const midGame = { step: 'play', name: 'Họ Lê', year: 1954, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam' }, quiz: { e1: [true, true], e2: [true, false], e3: [true, true], e4: [false, true] } };
 
 test('first run: onboarding → turning point → outcome → chapter tour', async ({ page }) => {
@@ -1149,8 +1158,7 @@ test('toasts come one at a time, above the tab bar on the main screen', async ({
   await expect(page.locator('.toast')).toHaveCount(0, { timeout: 8000 });
   await tap();
   await expect(page.locator('.toast:visible')).toHaveCount(1);
-  await page.waitForTimeout(600); // đã trượt vào chỗ
-  const tb = (await page.locator('.toast:visible').boundingBox())!, yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+  const tb = await toastBox(page, 600), yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
   expect(tb.y).toBeGreaterThan(yr.y + yr.height);
   expect(tb.y + tb.height).toBeLessThanOrEqual(tabs.y);
   expect(errors).toEqual([]);
@@ -1287,8 +1295,7 @@ test.describe('short and wide windows', () => {
       const t = page.locator('.toast:visible');
       await expect(t).toHaveCount(1, { timeout: 4000 }); // màn rộng: trước đây chờ tới khi đóng trang
       await expect(t).toContainText('huy hiệu');
-      await page.waitForTimeout(500); // đã trượt vào chỗ
-      const a = (await t.boundingBox())!, m = (await page.locator('.end-mast').boundingBox())!;
+      const a = await toastBox(page, 500), m = (await page.locator('.end-mast').boundingBox())!;
       expect(a.y + a.height <= m.y || a.y >= m.y + m.height).toBe(true);
       expect(errors).toEqual([]);
     });
