@@ -10,6 +10,8 @@ const baseURL = process.env.PW_BASE_URL || `http://localhost:${port}/`;
 export default defineConfig({
   testDir: 'e2e',
   timeout: 60_000,
+  // tests share no state (each has its own browser context, save and route), so they spread over the workers
+  fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
