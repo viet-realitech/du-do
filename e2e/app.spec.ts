@@ -693,9 +693,18 @@ test('smooth map: static layers apart, ripples rest while moving, nothing rebuil
   await expect(page.locator('#map .rip')).toHaveCount(0);
   await expect(page.locator('#map rect[fill="url(#spotg)"]')).toHaveCSS('display', 'none');
   await expect(page.locator('#map mask')).toHaveCount(0);
-  // the ripples step aside while the map flies and come back once it rests
+  // the ripples step aside while the map flies and come back once it rests. "hidden" is caught in the page on every DOM
+  // change for 5 s from before the click: polled from the runner, a busy machine (or WebKit's slow frames here) can miss
+  // the whole flight (~0.3 s)
+  await page.locator('#mapbg .rip').evaluate(r => {
+    const w = window as unknown as { ripHid?: boolean };
+    w.ripHid = false;
+    const mo = new MutationObserver(() => { if (getComputedStyle(r).visibility === 'hidden') { w.ripHid = true; mo.disconnect(); } });
+    mo.observe(document, { attributes: true, childList: true, subtree: true });
+    setTimeout(() => mo.disconnect(), 5000);
+  });
   await page.locator('#zin').click();
-  await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'hidden');
+  await expect.poll(() => page.evaluate(() => (window as unknown as { ripHid?: boolean }).ripHid)).toBe(true);
   await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'visible', { timeout: 3000 });
   // dragging the timeline inside one chapter keeps the guide's portrait (it used to blink out every frame)
   const guide = await page.locator('#eraR .av').elementHandle();
