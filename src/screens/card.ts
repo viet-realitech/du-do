@@ -9,7 +9,7 @@ import { esc, sheet, toast, ghost, calm, radios, reveal } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { icon } from '../ui/icons';
 import { SND, buzz } from '../audio';
-import { cardOf, locks, payFx, alKey, placeAt, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial, ruler, abroad, barred } from '../play';
+import { cardOf, locks, payFx, alKey, placeAt, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialsFor, specialDecided, decideSpecial, ruler, abroad, barred, causeOf } from '../play';
 import { pauseForCard } from '../tour';
 import { layer } from '../ui/dom';
 import { renderMain, continueFlow } from '../view';
@@ -49,7 +49,8 @@ export const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 export function openCard(v: HistEvent, inTour = false): void {
   const c = cardOf(v);
   if (!c || layer.querySelector(`.scrim[data-card="${v.id}"]`)) return; // thẻ này đang mở: không mở chồng
-  const sp0 = specialFor(v), spPending = !!sp0 && !specialDecided(sp0);
+  // các biến cố của sự kiện (biến cố riêng, hệ quả), quyết lần lượt sau thẻ; `sp0`: biến cố đầu tiên còn chờ
+  const sps = specialsFor(v), sp0 = sps.find(c => !specialDecided(c)), spPending = !!sp0;
   const done = decided(v.id), must = mustDecide(v) || spPending, y = chYear(v), pl = placeAt(y);
   const als = c[2].map((ch, i) => alignment(ch[2], y, alKey(v, i)));
   // Không đủ sức thì khoá, trừ khi thẻ bắt buộc thành ngõ cụt hay chỉ còn lựa chọn trái đường (play.ts locks)
@@ -57,7 +58,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   if (inTour) { buzz(must ? [15, 30, 15] : 10); }
   const near = c[1] !== 'all' && c[1] !== '' && mustDecide(v); // thẻ bị biến cố riêng buộc (tn25 của họ Nguyễn) không phải vì chạm tới quê
   const d = sheet(`<div class="kick${must ? ' must' : ''}"><span class="mono">${must ? icon('seal', 12) : ''}${must ? 'Dòng họ phải quyết định' : 'Dòng họ có thể hành động'} · ${v.y}</span><span class="mono muted">${esc(familyName())} · ${esc(pl.moved ? `${home()[1]} → ${pl.name}` : pl.name)}</span></div>
-  ${spPending ? `<div class="steps" aria-hidden="true"><span class="on">1 · Thẻ sự kiện</span><span>2 · Biến cố riêng</span></div>` : ''}
+  ${spPending ? `<div class="steps" aria-hidden="true">${stepSpans(sps)}</div>` : ''}
   <h2 style="margin:8px 0 6px">${esc(v.t)}</h2>
   <p class="muted" style="margin-bottom:6px">${esc(v.s)}</p>
   ${near ? `<div class="mono near">${icon('home', 14)}${pl.moved ? `Chạm tới nơi dòng họ đang sống (${esc(pl.name)})` : `Chạm tới quê nhà ${esc(pl.name)}`}</div>` : '<div style="height:6px"></div>'}
@@ -74,7 +75,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done && !spPending);
   d.dataset.card = v.id;
   radios(d.querySelector('.sheet > [role=radiogroup]'), d.querySelector('h2'));
-  if (done) { if (sp0 && spPending) { d.querySelector('.btn.ghost[data-a="close-card"]')?.remove(); mountSpecial(d, v, sp0, inTour); } return; }
+  if (done) { if (sp0) { d.querySelector('.btn.ghost[data-a="close-card"]')?.remove(); mountSpecial(d, v, sp0, inTour); } return; }
   // chạm để chọn, bấm "Quyết định" mới chốt (như điểm rẽ và biến cố riêng): một lần chạm nhầm không tiêu mất gia sản
   const cgo = d.querySelector<HTMLButtonElement>('#cgo')!;
   let sel = -1;
@@ -102,10 +103,16 @@ export function openCard(v: HistEvent, inTour = false): void {
     const warn = lowNow(before);
     d.querySelector('.sheet')!.insertAdjacentHTML('beforeend', `<div class="rule"></div><div class="mono muted">Thay đổi</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(ch[2], got) || '<span class="muted">Không đổi</span>'}</div>
       ${warn.length ? `<p style="color:var(--red);margin-top:8px">Cạn ${warn.join(', ')}: mùa màng thế hệ tới sẽ khó khăn.</p>` : ''}`);
-    const sp = specialFor(v);
-    if (sp && !specialDecided(sp)) mountSpecial(d, v, sp, inTour); else finish(d, v, inTour);
+    // các biến cố chốt lại theo lựa chọn vừa rồi (biến cố hệ quả notAfter: nhà vừa theo nghĩa quân không bị hỏi có cho
+    // người nhà theo không): dòng các bước kể đúng những việc còn lại, hay biến mất nếu không còn việc nào
+    const sps1 = specialsFor(v), steps = d.querySelector<HTMLElement>('.steps');
+    if (steps) { if (sps1.length) steps.innerHTML = stepSpans(sps1); else steps.remove(); }
+    const sp = sps1.find(c => !specialDecided(c));
+    if (sp) mountSpecial(d, v, sp, inTour); else finish(d, v, inTour);
   };
 }
+/** Dòng các bước đầu bảng thẻ: "1 · Thẻ sự kiện", rồi mỗi biến cố một bước. */
+const stepSpans = (sps: SpecialCard[]) => `<span class="on">1 · Thẻ sự kiện</span>${sps.map((c, i) => `<span>${i + 2} · ${c.when.after ? 'Hệ quả' : 'Biến cố riêng'}</span>`).join('')}`;
 
 const alTag = (al: number) => (al ? `<span class="al ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : '');
 const resRow = () => RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('');
@@ -134,55 +141,71 @@ function finish(d: HTMLElement, v: HistEvent, inTour: boolean): void {
   checkBadges();
 }
 
-/** Biến cố riêng của dòng họ (họ, phe, quê…) nối tiếp thẻ sự kiện trong cùng một bảng; có thể đổi họ. */
+/** Biến cố của dòng họ (họ, phe, quê…, hay hệ quả một việc đã quyết) nối tiếp thẻ sự kiện trong cùng một bảng; có thể
+    đổi họ. Sự kiện có hai biến cố: quyết xong biến cố đầu, kết cục và phần đổi hiện ra, nút "Sang việc kế tiếp" mới mở biến
+    cố sau (không cuộn mất kết cục vừa đọc). */
 function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boolean): void {
-  const sh = d.querySelector('.sheet')!;
+  const sh = d.querySelector<HTMLElement>('.sheet')!;
+  const all = specialsFor(v), k = all.indexOf(sp), n = all.length;
   const als = sp.choices.map(ch => (ch[4] ? 0 : alignment(ch[2], chYear(v)))); // đổi họ: không hợp, không trái
   const noList = locks(sp.choices.map(ch => ch[2]), als, sp.choices.map(ch => barred(ch[5], chYear(v))));
   const mine = S.surname || surnameKey(S.name);
   const moms = SURNAMES.filter(s => s.key !== mine).slice(0, 8);
-  // vì họ: "của Họ X"; vì đường cha ông theo / phe / quê / gia sản: nói đúng lý do (không ngụ ý vì cái tên)
+  // vì họ: "của Họ X"; vì đường cha ông theo / phe / quê / gia sản: nói đúng lý do (không ngụ ý vì cái tên); hệ quả: năm của
+  // việc đã quyết mà biến cố nhắc lại
   const w = sp.when, pk = w.picks ? ERAS.flatMap(e => e.opts).find(o => w.picks!.includes(o.id) && Object.values(S.picks).includes(o.id)) : undefined;
-  const why = w.surnames ? `riêng của ${familyName()}` : pk ? `của gia đình · vì đã theo ${pk.label}` : w.camps ? 'của gia đình · vì phe đang theo' : w.homes ? `của gia đình · ở ${home()[1]}` : 'của gia đình';
-  sh.querySelector('.steps')?.classList.add('two');
-  sh.insertAdjacentHTML('beforeend', `<div class="xsp"><div class="kick"><span class="mono">${icon('seal', 12)}Biến cố ${esc(why)}</span><span class="mono muted">Bước 2/2</span></div>
+  const cause = w.after ? causeOf(sp, v) : undefined;
+  const why = cause ? `Hệ quả việc năm ${cause.y}` : `Biến cố ${w.surnames ? `riêng của ${familyName()}` : pk ? `của gia đình · vì đã theo ${pk.label}` : w.camps ? 'của gia đình · vì phe đang theo' : w.homes ? `của gia đình · ở ${home()[1]}` : w.abroad ? 'của gia đình · ở xứ người' : 'của gia đình'}`;
+  // bước đang quyết trên dòng "1 · Thẻ sự kiện · 2 · …": một biến cố thì như trước (lớp `two`), hai biến cố thì dời gạch dưới
+  const steps = sh.querySelector('.steps');
+  if (n < 2) steps?.classList.add('two');
+  else steps?.querySelectorAll('span').forEach((x, i) => x.classList.toggle('on', i === k + 1));
+  sh.insertAdjacentHTML('beforeend', `<div class="xsp" data-x="${esc(sp.id)}"><div class="kick"><span class="mono">${icon('seal', 12)}${esc(why)}</span><span class="mono muted">Bước ${k + 2}/${n + 1}</span></div>
   <h3 style="margin:8px 0 4px">${esc(sp.title)}</h3><p class="muted" style="margin-bottom:8px">${esc(sp.s)}</p>
   <div role="radiogroup" class="xopts">${sp.choices.map((ch, i) => `<button class="opt" data-x="${i}" role="radio" aria-checked="false"${noList[i] ? ' disabled' : ''}>
     <h3>${esc(ch[0])}</h3>${noList[i] ? `<div class="alrow"><span class="al bad">${noList[i]}</span></div>` : ch[4] ? '<div class="alrow"><span class="al">Đổi họ</span></div>' : als[i] ? `<div class="alrow">${alTag(als[i])}</div>` : ''}<p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2])}${noList[i] ? '' : swapChip(ch[2])}</div></button>`).join('')}</div>
   <div id="xmom" hidden style="margin-top:10px"><div class="mono muted">Lấy họ mẹ</div><div class="homes" style="margin-top:6px">${moms.map((s, i) => `<button class="chip${i === 0 ? ' on' : ''}" data-m="${esc(s.names[0])}" aria-pressed="${i === 0}">${esc(s.names[0])}</button>`).join('')}</div></div>
   <div style="height:10px"></div><button class="btn" id="xgo" disabled>Quyết định</button></div>`);
-  const xo = sh.querySelector<HTMLElement>('.xopts'), xh = xo?.previousElementSibling?.previousElementSibling as HTMLElement | null;
+  const box = sh.lastElementChild as HTMLElement; // khung của riêng biến cố này (sự kiện có thể có hai)
+  const xo = box.querySelector<HTMLElement>('.xopts'), xh = box.querySelector<HTMLElement>(':scope > h3');
   radios(xo, xh); // tên nhóm: tiêu đề biến cố
   // nút "Quyết định" vừa được gỡ: tiêu điểm tới tiêu đề biến cố (trình đọc màn hình đọc nó), không rơi về <body>; bảng
   // cuộn tới đầu biến cố (trước đây nó nằm ~900 px dưới mép màn hình, không gì báo còn một quyết định)
   if (xh) { xh.tabIndex = -1; xh.focus({ preventScroll: true }); }
-  const top = sh.querySelector<HTMLElement>('.xsp');
   // cuộn chính tờ bảng (không scrollIntoView: lệnh ấy cuộn cả mọi khung chứa, kể cả #app khi phần chính cao hơn màn hình)
-  if (top) requestAnimationFrame(() => sh.scrollTo({ top: sh.scrollTop + top.getBoundingClientRect().top - sh.getBoundingClientRect().top - 10, behavior: calm.matches ? 'auto' : 'smooth' }));
+  requestAnimationFrame(() => sh.scrollTo({ top: sh.scrollTop + box.getBoundingClientRect().top - sh.getBoundingClientRect().top - 10, behavior: calm.matches ? 'auto' : 'smooth' }));
   let sel = -1, mom = moms[0]?.names[0] || 'Nguyễn';
-  const xmom = sh.querySelector<HTMLElement>('#xmom')!, xgo = sh.querySelector<HTMLButtonElement>('#xgo')!;
-  sh.querySelectorAll<HTMLButtonElement>('.xopts .opt').forEach(b => (b.onclick = () => {
+  const xmom = box.querySelector<HTMLElement>('#xmom')!, xgo = box.querySelector<HTMLButtonElement>('#xgo')!;
+  const opts = box.querySelectorAll<HTMLButtonElement>('.xopts .opt');
+  opts.forEach(b => (b.onclick = () => {
     sel = +b.dataset.x!;
-    sh.querySelectorAll('.xopts .opt').forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
+    opts.forEach(x => { x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', String(x === b)); });
     xmom.hidden = sp.choices[sel][4] !== 'mother';
     xgo.disabled = false;
     reveal(xgo);
     SND.tick();
   }));
-  sh.querySelectorAll<HTMLButtonElement>('#xmom .chip').forEach(b => (b.onclick = () => { mom = b.dataset.m!; sh.querySelectorAll('#xmom .chip').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); }); }));
+  box.querySelectorAll<HTMLButtonElement>('#xmom .chip').forEach(b => (b.onclick = () => { mom = b.dataset.m!; box.querySelectorAll('#xmom .chip').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); }); }));
   xgo.onclick = () => {
     if (sel < 0 || specialDecided(sp)) return;
     const ch = sp.choices[sel], before = familyName(), had = { ...S.res };
     const got = decideSpecial(sp, sel, v.y, ch[4] === 'mother' ? mom : ch[4]), warn = lowNow(had);
     SND.stamp();
     buzz([10, 30, 40]);
-    sh.querySelectorAll<HTMLButtonElement>('.xopts .opt').forEach((x, i) => { x.disabled = true; x.classList.toggle('sel', i === sel); x.classList.toggle('skip', i !== sel); });
+    opts.forEach((x, i) => { x.disabled = true; x.classList.toggle('sel', i === sel); x.classList.toggle('skip', i !== sel); });
     xmom.remove(); xgo.remove();
-    sh.querySelector(`.xopts .opt[data-x="${sel}"]`)!.insertAdjacentHTML('beforeend', `<p class="out">${esc(ch[3])}</p>`);
+    box.querySelector(`.xopts .opt[data-x="${sel}"]`)!.insertAdjacentHTML('beforeend', `<p class="out">${esc(ch[3])}</p>`);
     d.querySelector('.resrow')!.innerHTML = resRow();
-    (sh.querySelector('.xsp') || sh).insertAdjacentHTML('beforeend', `<div class="mono muted" style="margin-top:10px">Thay đổi</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(ch[2], got) || '<span class="muted">Không đổi</span>'}</div>${familyName() !== before ? `<p style="margin-top:8px"><b>${esc(before)}</b> từ nay mang tên <b>${esc(familyName())}</b>. Gia phả ghi lại việc đổi họ năm ${v.y}.</p>` : ''}
+    box.insertAdjacentHTML('beforeend', `<div class="mono muted" style="margin-top:10px">Thay đổi</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(ch[2], got) || '<span class="muted">Không đổi</span>'}</div>${familyName() !== before ? `<p style="margin-top:8px"><b>${esc(before)}</b> từ nay mang tên <b>${esc(familyName())}</b>. Gia phả ghi lại việc đổi họ năm ${v.y}.</p>` : ''}
     ${warn.length ? `<p style="color:var(--red);margin-top:8px">Cạn ${warn.join(', ')}: mùa màng thế hệ tới sẽ khó khăn.</p>` : ''}`);
-    finish(d, v, inTour);
+    const next = specialsFor(v).find(c => !specialDecided(c));
+    if (!next) { finish(d, v, inTour); return; }
+    // còn một biến cố: người chơi đọc xong kết cục vừa rồi mới sang (không tự cuộn đi)
+    box.insertAdjacentHTML('beforeend', `<div style="height:12px"></div><button class="btn" id="xnext">Sang việc kế tiếp ›</button>`);
+    const nb = box.querySelector<HTMLButtonElement>('#xnext')!;
+    nb.focus({ preventScroll: true });
+    reveal(nb);
+    nb.onclick = () => { nb.remove(); mountSpecial(d, v, next, inTour); };
   };
 }
 

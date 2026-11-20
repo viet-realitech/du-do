@@ -40,7 +40,7 @@ test('version 0 saves: each field added over time is inferred as the old loader 
     [{}], [{ step: 'play', year: 1954 }], [{ step: 'intro', mode: 'play', home: 'hue' }],
     [null, 'read'],
   ]);
-  expect(SAVE_V).toBe(1);
+  expect(SAVE_V).toBe(2);
   expect(r[0].s.xFrom).toBe(1930);
   expect(r[1].s.xFrom).toBe(1858);
   expect(r.slice(2, 6).map(x => x.s.movedFrom)).toEqual([1966, 2026, 0, 0]);
@@ -50,12 +50,15 @@ test('version 0 saves: each field added over time is inferred as the old loader 
   expect(r[8].s.cardv).toEqual({});
   expect(r.slice(9, 12).map(x => x.s.endSaid)).toEqual([true, false, false]);
   for (const x of r.slice(0, 15)) {
-    expect(x.s.v).toBe(1); // numbered after loading
+    expect(x.s.v).toBe(2); // numbered after loading
     expect(x.fixed).toEqual([]); // nothing reported as repaired
     expect(x.from).toBe(0);
   }
   // no save yet: a fresh game, as before versions
-  expect(r[15].s).toMatchObject({ v: 1, step: 'splash', year: 1858, xFrom: 1858, picks: {} });
+  expect(r[15].s).toMatchObject({ v: 2, step: 'splash', year: 1858, xFrom: 1858, picks: {} });
+  // the ending a finished save has read keeps the wealth tiers of that build (1 → 2); others have none yet
+  expect(r[9].s.endFix).toEqual({ t: [166, 197, 265, 298] });
+  for (const x of [...r.slice(0, 9), ...r.slice(10, 16)]) expect(x.s.endFix).toBeUndefined();
 });
 
 test('the real 6f464aa saves read back unchanged, apart from the version; numbered saves are not migrated again', () => {
@@ -65,13 +68,25 @@ test('the real 6f464aa saves read back unchanged, apart from the version; number
   raws.forEach((raw, i) => {
     expect(r[i].fixed).toEqual([]);
     const { v, ...rest } = r[i].s;
-    expect(v).toBe(1);
+    expect(v).toBe(2);
     expect(JSON.stringify(rest)).toBe(raw); // same keys, same order, same values
   });
   // a numbered save without `shown` or `cvk` is not taken for a save from before those fields: no family moved back to
   // its old region, no decided card read under an older option set
   expect(r[2].s).toMatchObject({ movedFrom: 0, xFrom: 1966, cardv: {} });
   expect(r[2].fixed).toEqual([]);
+});
+
+test('version 1 saves that have read their ending keep the wealth tiers they were read with', () => {
+  const fin = { v: 1, step: 'play', mode: 'play', year: 2026, picks: six, ended: true, endSaid: true, harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'] };
+  const { out: r } = reads([
+    [{ ...fin, home: 'nd' }], [{ ...fin, home: 'hue' }], [{ ...fin, home: 'atlantis' }],
+    [{ ...fin, home: 'nd', endSaid: false, ended: false }],
+    // numbered 2: not migrated again, a kept ending stays as it is
+    [{ ...fin, v: 2, home: 'nd' }], [{ ...fin, v: 2, home: 'nd', endFix: { id: 'xanam', t: [170, 193, 269, 300] } }],
+  ]);
+  expect(r.map(x => x.s.endFix)).toEqual([{ t: [165, 197, 265, 298] }, { t: [170, 203, 265, 294] }, undefined, undefined, undefined, { id: 'xanam', t: [170, 193, 269, 300] }]);
+  for (const x of r) { expect(x.fixed).toEqual([]); expect(x.s.v).toBe(2); }
 });
 
 test('damaged fields are repaired one by one; unknown ids and keys stay', () => {
@@ -98,7 +113,11 @@ test('damaged fields are repaired one by one; unknown ids and keys stay', () => 
     [{ v: 1, step: 7 }, ['step'], { step: 'splash' }],
     [{ ...base, xs: { dn58: 3, nt62: 'x-a' } }, ['xs'], { xs: { nt62: 'x-a' } }],
     [{ ...base, cvk: 'x', cards: { tn80: 1 } }, ['cvk'], { cardv: {} }],
-    [{ ...base, v: 'x' }, ['v'], { v: 1 }],
+    [{ ...base, v: 'x' }, ['v'], { v: 2 }],
+    [{ ...base, v: 2, endFix: 'lytan' }, ['endFix'], { v: 2 }],
+    [{ ...base, v: 2, endFix: { id: 7, t: [1, 2, 3, 4] } }, ['endFix'], { endFix: { t: [1, 2, 3, 4] } }],
+    [{ ...base, v: 2, endFix: { id: 'xanam', t: [1, '2', 3, 4] } }, ['endFix'], { endFix: { id: 'xanam' } }],
+    [{ ...base, v: 2, endFix: { id: 'xanam', t: [165, 197, 265, 298] } }, [], { endFix: { id: 'xanam', t: [165, 197, 265, 298] } }],
     [{ ...base, home: 'atlantis', filt: 'Không còn', extra: { a: 1 } }, [], { home: 'atlantis', filt: 'Không còn', extra: { a: 1 }, picks: base.picks }],
   ];
   const { out } = reads(cases.map(([raw]): Input => [raw, 'read']));
@@ -107,6 +126,7 @@ test('damaged fields are repaired one by one; unknown ids and keys stay', () => 
     expect(out[i].fixed, JSON.stringify(raw)).toEqual(fixed);
     expect(out[i].s, JSON.stringify(raw)).toMatchObject(want);
   });
+  expect('endFix' in out[cases.findIndex(c => (c[0] as { endFix?: unknown }).endFix === 'lytan')].s).toBe(false); // không đọc được: như chưa đọc kết cục
 });
 
 test('a save from a newer app version is read without migrations and keeps its version; an unreadable one is reported', () => {

@@ -82,7 +82,7 @@ const HOT_BY = Object.fromEntries(HOT.map(h => [h.key, h]));
 
 /* ---------- câu mới đánh dấu cần kiểm (đợt F đã gộp; đợt G đang sửa song song, chữ có thể còn đổi khi gộp) ---------- */
 /** `id`: mã dòng (đuôi '*' = mọi mã bắt đầu như thế); `has`: hay một đoạn chữ có trong câu. */
-interface Mark { id?: string; has?: string; wave: 'F' | 'G'; note: string }
+interface Mark { id?: string; has?: string; wave: 'F' | 'G' | 'H'; note: string }
 const MARKS: Mark[] = [
   // đợt F: lối ra đi của cả nhà (thẻ tn80, x-ly79), lời theo miền
   { wave: 'F', id: 'card:tn80{regions=B+T1}:0', note: 'Ghe từ Hải Phòng, Quảng Ninh men bờ biển lên Hồng Kông: tuyến đường và thời gian đi (gần ba tuần).' },
@@ -141,6 +141,39 @@ const MARKS: Mark[] = [
   { wave: 'G', id: 'scene:cd61:0', note: 'Đồn Redoute có phải là đồn Hữu, ở đầu nam phòng tuyến phía chùa Cây Mai không.' },
   { wave: 'G', id: 'scene:cd61:1', note: 'Theo Pallu de la Barrière, ngày 25.2.1861 liên quân vòng lên đánh mặt bắc đại đồn; cánh phải có phải là bộ binh Tây Ban Nha không.' },
   { wave: 'G', id: 'scene:cd61:2', note: 'Cánh trái (công binh, thủy quân lục chiến, khinh binh) đánh vào mặt bắc đại đồn ngày 25.2.1861.' },
+  // đợt H (P03, P06): biến cố riêng theo họ, gia phả những năm 1990, biến cố hệ quả (lựa chọn cũ quay lại)
+  { wave: 'H', id: 'x:x-le93', note: 'Câu "hăm mốt Lê Lai, hăm hai Lê Lợi" và tục cúng Lê Lai trước giỗ Lê Lợi một ngày (22 tháng Tám âm lịch, Lê Lợi mất năm 1433); Lê Lai chết thay chủ tướng những năm đầu khởi nghĩa Lam Sơn. Họ tộc: chỉ nói cùng họ, không nhận dòng dõi.' },
+  { wave: 'H', id: 'hook:le-1893', note: 'Như biến cố x-le93.' },
+  { wave: 'H', id: 'x:x-tran36', note: 'Đức Thánh Trần (Trần Hưng Đạo, mất năm 1300), hội tháng Tám âm lịch (giỗ ngày 20) ở Kiếp Bạc, đền Trần và đền làng; câu "tháng Tám giỗ Cha, tháng Ba giỗ Mẹ". Họ tộc: chỉ nói cùng họ.' },
+  { wave: 'H', id: 'hook:tran-1936', note: 'Như biến cố x-tran36.' },
+  { wave: 'H', id: 'x:x-pham07', note: 'Phạm Ngũ Lão (1255–1320), quê Phù Ủng (Hưng Yên); bài "Thuật hoài / Tỏ lòng" trong sách Ngữ văn lớp 10 (những năm 2000); truyền thuyết ngồi đan sọt. Họ tộc: chỉ nói cùng họ.' },
+  { wave: 'H', id: 'x:x-pham07:1', note: 'Đền Phù Ủng thờ Phạm Ngũ Lão; chuyện đan sọt bị giáo đâm vào đùi là truyền thuyết.' },
+  { wave: 'H', id: 'hook:pham-2007', note: 'Như biến cố x-pham07.' },
+  { wave: 'H', id: 'x:x-mac95', note: 'Hậu duệ nhà Mạc đổi sang họ khác sau 1592; từ cuối thế kỷ XX các chi tìm lại nhau, có chi xin nhận lại họ Mạc (năm, nơi, tổ chức của các chi họ Mạc).' },
+  { wave: 'H', id: 'x:x-mac95:1', note: 'Quê Mạc Đăng Dung là làng Cổ Trai (nay thuộc Hải Phòng); nơi thờ nhà Mạc ở đó, các chi họ Mạc góp tiền tu sửa (thập niên 1990).' },
+  { wave: 'H', id: 'hook:mac-lore', note: 'Lời hứa của họ Mạc nay trỏ tới biến cố x-mac95 (năm 1995).' },
+  { wave: 'H', id: 'x:x-giapha95', note: 'Phong trào tu sửa nhà thờ họ, biên soạn lại gia phả, dịch gia phả chữ Hán từ cuối thập niên 1980, sau Đổi Mới: mốc thời gian và mức độ phổ biến.' },
+  { wave: 'H', id: 'x:x-hoten95', note: 'Thủ tục đổi lại họ trên giấy tờ hộ tịch ở thập niên 1990.' },
+  { wave: 'H', id: 'x:x-giaphaxa95', note: 'Người Việt ở nước ngoài góp tiền dựng nhà thờ họ, gửi tên con cháu về ghi gia phả từ thập niên 1990.' },
+  { wave: 'H', id: 'x:x-gao59', note: 'Pháp chiếm thành Gia Định tháng 2.1859 (năm Kỷ Mùi); quân Pháp mua gạo của dân địa phương.' },
+  { wave: 'H', id: 'x:x-re64', note: 'Nghĩa quân Trương Định (tử trận 20.8.1864) tan về làng; Chiếu Cần Vương (7.1885) có truyền vào Nam Kỳ không; người Nam Kỳ ra Bình Thuận theo nghĩa quân có hợp lý không.' },
+  { wave: 'H', id: 'x:x-re64:0', note: 'Phong trào Cần Vương ở Bình Thuận (1885–1887).' },
+  { wave: 'H', id: 'x:x-thongngon74', note: 'Đề tài nhạy cảm: nghĩa quân Cần Vương nhắm vào người làm việc cho Pháp (và các làng Công giáo); lời giữ ở mức một lá thư đòi bỏ việc, không kể bạo lực. Lời có công bằng không.' },
+  { wave: 'H', id: 'x:x-dongcua85', note: 'Ngôi thứ ở đình do kỳ mục xếp; năm Ất Dậu là 1885.' },
+  { wave: 'H', id: 'x:x-nho74', note: 'Đỗ tú tài thời Tự Đức (trước 1883); phong trào Duy Tân, Đông Kinh Nghĩa Thục cổ động học quốc ngữ, cắt tóc (1905–1908).' },
+  { wave: 'H', id: 'x:x-nho74:1', note: 'Khoa thi Hương cuối cùng ở Bắc Kỳ năm 1915, ở Trung Kỳ năm 1918; Nam Kỳ bỏ thi sớm hơn: câu "các khoa thi chữ Hán bị bãi" có đúng với nhà ở mọi miền không.' },
+  { wave: 'H', id: 'x:x-xiem30', note: 'Người Đông Du bị Nhật trục xuất (1908–1909) sang Xiêm, sống với cộng đồng người Việt vùng đông bắc Xiêm, lập trại làm ruộng.' },
+  { wave: 'H', id: 'x:x-linhtho36', note: 'Lính thợ Đông Dương sang Pháp trong Thế chiến I (khoảng 49.000 người), về nước khoảng 1919–1920; phong trào Đông Dương Đại hội năm 1936 và việc bị cấm.' },
+  { wave: 'H', id: 'x:x-linhtho36:1', note: 'Phong trào Đông Dương Đại hội lập uỷ ban, thảo dân nguyện; năm bị cấm (1936).' },
+  { wave: 'H', id: 'x:x-anxa36', note: 'Ân xá tù chính trị Đông Dương của chính phủ Mặt trận Bình dân năm 1936; người bị bắt sau Xô viết Nghệ Tĩnh.' },
+  { wave: 'H', id: 'x:x-co45', note: 'Tổng khởi nghĩa tháng Tám 1945 (Nhật đầu hàng 15.8; chính quyền các tỉnh về tay Việt Minh khoảng 14 – 28.8). Giọng trung tính.' },
+  { wave: 'H', id: 'x:x-thoc45', note: 'Nạn đói Ất Dậu (cuối 1944 – giữa 1945) ở Bắc Kỳ, bắc Trung Kỳ: số người chết (khoảng 1 – 2 triệu tuỳ nguồn), nguyên nhân thường nêu.' },
+  { wave: 'H', id: 'x:x-hen46', note: 'Lời kêu gọi toàn quốc kháng chiến (đêm 19.12.1946) truyền về các vùng; ở Nam Bộ kháng chiến đã nổ ra từ 23.9.1945: câu "cuối năm 1946, khi lời kêu gọi toàn quốc kháng chiến truyền về" có đúng với nhà ở mọi miền không; cán bộ huyện Việt Minh vận động dân quân, góp thóc.' },
+  { wave: 'H', id: 'x:x-haimam54', note: 'Hiệp định Genève 21.7.1954; tiếp quản Hà Nội 10.10.1954; người đi kháng chiến trở về làng (Bắc Bộ, Nghệ An).' },
+  { wave: 'H', id: 'x:x-thonggia73', note: 'Số người di cư 1954–1955 (khoảng 800.000 – 1 triệu, phần lớn Công giáo); Hiệp định Paris 27.1.1973; đám cưới khác đạo.' },
+  { wave: 'H', id: 'x:x-ho89', note: 'Chương trình H.O. (thoả thuận Mỹ – Việt Nam năm 1989), chuyến đầu đầu năm 1990; cách gọi "học tập cải tạo". Đề tài nhạy cảm: giọng trung tính.' },
+  { wave: 'H', id: 'x:x-doi95', note: 'Đề tài nhạy cảm (nạn đói, người bán thóc giá cao): lời nhẹ, không kể trả thù. Bia, lễ tưởng niệm nạn đói 1945 ở các làng miền Bắc, năm thứ năm mươi (1995).' },
+  { wave: 'H', id: 'x:x-ghion95', note: 'Lễ tưởng niệm nạn đói 1945 ở các làng miền Bắc năm 1995.' },
 ];
 
 /** Mã ngắn từ mấy chữ đầu của câu (bỏ dấu), cho các câu không có khoá riêng trong mã. */

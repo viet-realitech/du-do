@@ -4,7 +4,7 @@ Thư ngắn cho người rà soát sử học. Sinh tự động bằng `npm run
 
 ## Đoạn giới thiệu để gửi
 
-> Chào anh/chị, tôi đang làm **Dư Đồ**, một ứng dụng miễn phí trên điện thoại và máy tính bảng kể lịch sử Việt Nam từ năm 1858 tới nay trên một tấm bản đồ, cho người lớn yêu sử và bà con người Việt ở nước ngoài. Phần chữ được soạn với sự trợ giúp của công cụ AI và mới chỉ đối chiếu với Wikipedia, chưa qua tay nhà sử học nào. Tôi cần một người có chuyên môn đọc khoảng 213 câu rủi ro nhất (số liệu thương vong, lời trích, các đề tài nhạy cảm như các vụ bắt, giết người khác chính kiến năm 1945–1947, cải cách ruộng đất, Mậu Thân và thảm sát Huế, Mỹ Lai, học tập cải tạo, thuyền nhân, chiến tranh 1979, biển đảo, góc nhìn VNCH và hải ngoại, các giả định "Nếu…"), đánh dấu Đúng / Sửa / Bỏ / Thiếu nguồn / Còn tranh luận và ghi nguồn đối chiếu. Ước chừng một đến hai ngày làm việc; tôi sẽ trả thù lao, xin anh/chị cho biết mức phí. Bảng tính kèm theo đã có sẵn cột để điền.
+> Chào anh/chị, tôi đang làm **Dư Đồ**, một ứng dụng miễn phí trên điện thoại và máy tính bảng kể lịch sử Việt Nam từ năm 1858 tới nay trên một tấm bản đồ, cho người lớn yêu sử và bà con người Việt ở nước ngoài. Phần chữ được soạn với sự trợ giúp của công cụ AI và mới chỉ đối chiếu với Wikipedia, chưa qua tay nhà sử học nào. Tôi cần một người có chuyên môn đọc khoảng 245 câu rủi ro nhất (số liệu thương vong, lời trích, các đề tài nhạy cảm như các vụ bắt, giết người khác chính kiến năm 1945–1947, cải cách ruộng đất, Mậu Thân và thảm sát Huế, Mỹ Lai, học tập cải tạo, thuyền nhân, chiến tranh 1979, biển đảo, góc nhìn VNCH và hải ngoại, các giả định "Nếu…"), đánh dấu Đúng / Sửa / Bỏ / Thiếu nguồn / Còn tranh luận và ghi nguồn đối chiếu. Ước chừng một đến hai ngày làm việc; tôi sẽ trả thù lao, xin anh/chị cho biết mức phí. Bảng tính kèm theo đã có sẵn cột để điền.
 
 ## Ứng dụng là gì
 
@@ -15,7 +15,7 @@ Thư ngắn cho người rà soát sử học. Sinh tự động bằng `npm run
 
 ## Việc cần làm (khoảng một đến hai ngày)
 
-1. Mở `bang-a-rui-ro-cao.csv` (213 dòng, xếp theo năm). Mọi dòng trong bảng đều cần xem (cột "Ưu tiên" đều là 1). Trong bảng có 37 dòng có số liệu, 10 lời trích, 96 dòng thuộc đề tài nhạy cảm, 35 góc nhìn VNCH & hải ngoại, 14 giả định "Nếu…", 60 câu mới viết gần đây được đánh dấu cần kiểm (cột "Cần kiểm" ghi điều cụ thể cần đối chiếu). Một dòng có thể thuộc nhiều nhóm.
+1. Mở `bang-a-rui-ro-cao.csv` (245 dòng, xếp theo năm). Mọi dòng trong bảng đều cần xem (cột "Ưu tiên" đều là 1). Trong bảng có 37 dòng có số liệu, 10 lời trích, 96 dòng thuộc đề tài nhạy cảm, 35 góc nhìn VNCH & hải ngoại, 14 giả định "Nếu…", 92 câu mới viết gần đây được đánh dấu cần kiểm (cột "Cần kiểm" ghi điều cụ thể cần đối chiếu). Một dòng có thể thuộc nhiều nhóm.
 2. Với mỗi dòng, điền:
    - **Ý kiến**: Đúng · Sửa · Bỏ · Thiếu nguồn · Còn tranh luận (khi giới sử học còn chia rẽ: ghi các cách đọc, ứng dụng sẽ nêu cả hai thay vì chọn một);
    - **Đề xuất sửa**: nguyên văn câu mới, nếu chọn Sửa;
@@ -28,8 +28,8 @@ Góc nhìn là lời tóm lược, không phải trích dẫn: chỉ cần xét 
 
 ## Các tệp
 
-- `bang-a-rui-ro-cao.csv`: 213 dòng rủi ro cao.
-- `bang-day-du.csv`: mọi câu có nội dung lịch sử, 1533 dòng: hạng A 213, hạng B 807 (phần lịch sử còn lại: sự kiện, điểm rẽ, nhân vật, câu đố, hồ sơ nguồn, cảnh trận, dữ kiện về các họ), hạng C 513 (phần hư cấu của Trò chơi).
+- `bang-a-rui-ro-cao.csv`: 245 dòng rủi ro cao.
+- `bang-day-du.csv`: mọi câu có nội dung lịch sử, 1628 dòng: hạng A 245, hạng B 806 (phần lịch sử còn lại: sự kiện, điểm rẽ, nhân vật, câu đố, hồ sơ nguồn, cảnh trận, dữ kiện về các họ), hạng C 577 (phần hư cấu của Trò chơi).
 - `nhay-cam.md`: các câu chạm đề tài nhạy cảm, xếp theo đề tài, nguyên văn; dành cả cho người rà soát lẫn luật sư.
 
 Mở bằng Google Sheets (Tệp → Nhập → Tải lên) hay Excel (mở thẳng tệp: có BOM UTF-8 nên dấu tiếng Việt hiện đúng). Cột "Có giọng đọc" cho người làm ứng dụng biết câu nào phải thu lại giọng khi sửa; cột cuối "Vị trí trong mã" cũng chỉ dành cho người làm ứng dụng.

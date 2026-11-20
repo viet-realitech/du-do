@@ -1,5 +1,6 @@
 import { ERAS, type HistEvent, type LngLat } from './index';
 import RARITY from './endings-rarity.json';
+import { SPECIAL } from './cards2';
 
 /* Kết cục dòng họ cho cả hai luồng (Đọc sử: 12 kết cục; Trò chơi: 15), lời kết cá nhân hoá, lớp giả định "Nếu…"
    và các con số %. Hàm thuần trên `Facts`: màn kết (play.ts factsFromState) và mô phỏng (scripts/sim-endings.ts) gọi
@@ -237,6 +238,8 @@ export function matchLine(m: number): string {
 const GEN = ['thứ nhất', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm', 'thứ sáu'];
 export const genName = (i: number) => 'đời ' + GEN[i];
 const bare = (n: string) => n.replace(/^Họ /, '');
+/** Tên biến cố "nhận lại họ cũ" (cards2.ts x-hoten95): S.names ghi tên biến cố của mỗi lần đổi họ. */
+const BACK_ORIGIN = SPECIAL.find(c => c.choices.some(ch => ch[4] === 'origin'))?.title;
 const list = (xs: string[]) => (xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' và ' + xs[xs.length - 1]);
 const north = (f: Facts) => f.home?.region === 'B' || f.home?.region === 'T1';
 /** Cụm động từ ngắn cho mỗi hướng ("đời thứ ba …", "những người …"); không có dấu phẩy, vì lời kết xâu chúng thành danh sách. */
@@ -378,6 +381,13 @@ export function epilogue(id: string, f: Facts): string {
     }
     case 'doiho': {
       const n = f.renames[0], last = f.renames[f.renames.length - 1];
+      // lần đổi cuối trở về họ ban đầu: căn cước và bài vị lại cùng một họ. "Làm giấy tờ nhận lại họ cũ" chỉ khi đó là biến cố
+      // gia phả những năm 1990 (cards2.ts 'origin'); trở về vì việc khác (lý lịch theo họ mẹ năm 1978) thì kể đúng việc ấy
+      if (f.renames.length > 1 && bare(last.to) === bare(n.from)) {
+        const ms = [...new Set(f.renames.slice(0, -1).map(r => bare(r.to)))].filter(m => m !== bare(n.from)), mid = list(ms);
+        const back = last.why === BACK_ORIGIN ? 'dòng họ làm giấy tờ nhận lại họ cũ' : `qua biến cố “${last.why}”, dòng họ lại mang họ ${bare(n.from)}`;
+        return `Năm ${n.y}, qua biến cố “${n.why}”, ${n.from} đổi thành ${n.to}. Năm ${last.y}, ${back}. Năm 2026, con cháu khai họ ${bare(n.from)} như tổ tiên, nhưng gia phả${oQue} vẫn chép những năm dòng họ mang họ ${mid}; ngày giỗ tổ, cả ${ms.length > 1 ? NUMW[ms.length + 1].toLowerCase() : 'hai'} cái tên cùng được đọc lên.`;
+      }
       return `Năm ${n.y}, qua biến cố “${n.why}”, ${n.from} đổi thành ${n.to}.${f.renames.length > 1 ? ` Năm ${last.y}, dòng họ đổi thêm một lần nữa, thành ${last.to}.` : ''} Năm 2026, con cháu khai họ ${bare(last.to)} trên căn cước, nhưng bài vị ở từ đường${oQue} vẫn chép họ ${bare(n.from)}; ngày giỗ tổ, cả hai cái tên cùng được đọc lên.`;
     }
     case 'vongtoc':

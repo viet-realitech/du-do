@@ -1,13 +1,15 @@
 /* Chế độ Chơi: thẻ ứng xử của dòng họ cho từng sự kiện lịch sử.
    Mỗi thẻ: [id sự kiện, phạm vi, các lựa chọn]. Phạm vi 'all' = cả nước phải quyết định;
    danh sách vùng (B, T1, T2, QT, NE, NW) = bắt buộc nếu quê ở đó, còn lại là tuỳ chọn; '' = luôn tuỳ chọn.
-   Lựa chọn: [nhãn, mô tả, hiệu ứng, kết cục, cờ?]; cờ (endings.ts) đánh dấu việc lớn mà kết cục dòng họ cần biết. Hiệu ứng: g lúa gạo · d nhân đinh · b bạc · u uy tín;
+   Lựa chọn: [nhãn, mô tả, hiệu ứng, kết cục, cờ?, dấu?]; cờ (endings.ts) đánh dấu việc lớn mà kết cục dòng họ cần biết; dấu
+   là tên cố định của lựa chọn cho biến cố hệ quả về sau (cards2.ts SpecialWhen.after): dấu đi theo lựa chọn, nên dời
+   lựa chọn hay thêm bộ theo vùng không làm hệ quả gắn nhầm. Hiệu ứng: g lúa gạo · d nhân đinh · b bạc · u uy tín;
    quan hệ: tr triều đình · ph Pháp · nh Nhật · vm Việt Minh/VNDCCH · qg Quốc gia/VNCH · my Mỹ · nn Nhà nước sau 1976 · lg làng xóm.
    Số liệu là ước lệ của trò chơi, không phải sử liệu. */
 import { GONE, type Flag } from './endings';
 
 export type Fx = Partial<Record<'g' | 'd' | 'b' | 'u' | 'tr' | 'ph' | 'nh' | 'vm' | 'qg' | 'my' | 'nn' | 'lg', number>>;
-export type Choice = [string, string, Fx, string, Flag?];
+export type Choice = [string, string, Fx, string, Flag?, string?];
 export type Card = [string, string, Choice[]];
 
 export const CARDS: Card[] = [
@@ -18,7 +20,7 @@ export const CARDS: Card[] = [
   ]],
   ['gd59', 'NE', [
     ['Chạy khỏi Gia Định', 'Gom của cải, đưa người về quê ngoại.', { g: -8, b: -5, d: 3 }, 'Thành cháy ba ngày sau lưng. Dòng họ mất kho thóc nhưng còn đủ người.'],
-    ['Bán gạo cho quân Pháp', 'Thuyền Pháp thiếu lương, trả bằng bạc.', { b: 14, u: -10, ph: 10, tr: -12, lg: -8 }, 'Bạc đầy rương, nhưng người làng gọi dòng họ là "kẻ bán gạo cho Tây".'],
+    ['Bán gạo cho quân Pháp', 'Thuyền Pháp thiếu lương, trả bằng bạc.', { b: 14, u: -10, ph: 10, tr: -12, lg: -8 }, 'Bạc đầy rương, nhưng người làng gọi dòng họ là "kẻ bán gạo cho Tây".', undefined, 'banGao59'],
     ['Tiếp tế cho quân triều đình', 'Đưa thóc vào đại đồn đang xây.', { g: -10, u: 4, tr: 10, ph: -6 }, 'Thóc của dòng họ đắp vào luỹ Chí Hoà.'],
   ]],
   ['cd61', 'NE', [
@@ -39,7 +41,7 @@ export const CARDS: Card[] = [
     ['Không quan tâm', 'Chuyện bên kia biên giới.', {}, 'Tin tức đến làng trễ nửa năm.'],
   ]],
   ['td64', 'NE', [
-    ['Che giấu nghĩa quân tan rã', 'Nuôi giấu mấy người lính của Trương Định.', { g: -6, d: 2, u: 6, ph: -10, lg: 5 }, 'Ba người lính sau này thành rể, thành bạn của dòng họ.'],
+    ['Che giấu nghĩa quân tan rã', 'Nuôi giấu mấy người lính của Trương Định.', { g: -6, d: 2, u: 6, ph: -10, lg: 5 }, 'Ba người lính sau này thành rể, thành bạn của dòng họ.', undefined, 'giauNghiaQuan64'],
     ['Giao nộp để yên thân', 'Chỉ chỗ cho quan Pháp.', { b: 6, u: -12, ph: 8, lg: -15 }, 'Pháp thưởng bạc. Làng không ai mời dòng họ đi đám nữa.'],
     ['Đóng cửa, không biết gì', 'Mặc ai hỏi cũng lắc đầu.', { u: -2 }, 'Nghĩa quân tan vào ruộng. Dòng họ sống như chưa có gì.'],
   ]],
@@ -53,8 +55,8 @@ export const CARDS: Card[] = [
     ['Bán hàng cho quân Garnier', 'Lính Pháp cần vải, muối, gạo.', { b: 10, u: -8, ph: 8, tr: -10 }, 'Garnier chết ở Cầu Giấy, Pháp rút. Người mua hàng của bạn không còn, danh tiếng cũng không.'],
   ]],
   ['gt74', 'all', [
-    ['Xin làm việc cho toà sứ', 'Cho con học chữ Pháp để làm thông ngôn.', { b: 8, u: -5, ph: 10, tr: -5 }, 'Con trai thứ thành thông ngôn, lương bằng cả vụ lúa.'],
-    ['Giữ nếp nhà Nho', 'Con vẫn học chữ Hán đi thi.', { u: 3, tr: 5, b: -3 }, 'Hai khoa thi nữa còn mở. Dòng họ có người đỗ tú tài.'],
+    ['Xin làm việc cho toà sứ', 'Cho con học chữ Pháp để làm thông ngôn.', { b: 8, u: -5, ph: 10, tr: -5 }, 'Con trai thứ thành thông ngôn, lương bằng cả vụ lúa.', undefined, 'thongNgon74'],
+    ['Giữ nếp nhà Nho', 'Con vẫn học chữ Hán đi thi.', { u: 3, tr: 5, b: -3 }, 'Hai khoa thi nữa còn mở. Dòng họ có người đỗ tú tài.', undefined, 'nhaNho74'],
   ]],
   ['hd82', 'B', [
     ['Theo Hoàng Diệu giữ thành', 'Người của họ lên thành lần nữa.', { d: -4, tr: 4, ph: -10 }, 'Hoàng Diệu tuẫn tiết. Dòng họ lập bàn thờ ông ở từ đường.'],
@@ -69,9 +71,9 @@ export const CARDS: Card[] = [
     ['Từ quan, về dạy học', 'Không làm việc với người Pháp.', { b: -4, u: 6, tr: 6, ph: -6, lg: 5 }, 'Học trò kéo đến đầy sân. Nhà nghèo đi nhưng được kính.'],
   ]],
   ['cv85', 'all', [
-    ['Hưởng ứng Chiếu Cần Vương', 'Bán ruộng mua gươm, lập đội nghĩa binh.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.'],
+    ['Hưởng ứng Chiếu Cần Vương', 'Bán ruộng mua gươm, lập đội nghĩa binh.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.', undefined, 'theoCV85'],
     ['Góp tiền, không góp người', 'Gửi bạc cho nghĩa quân, giữ con cháu ở nhà.', { b: -10, u: 4, tr: 8, ph: -8 }, 'Quan Pháp nghi ngờ nhưng không có bằng chứng.'],
-    ['Đứng ngoài', 'Chờ xem vua nào thắng.', { u: -5, lg: -5 }, 'Khi nghĩa quân về làng xin lương, dòng họ đóng cửa. Người làng nhớ điều đó.'],
+    ['Đứng ngoài', 'Chờ xem vua nào thắng.', { u: -5, lg: -5 }, 'Khi nghĩa quân về làng xin lương, dòng họ đóng cửa. Người làng nhớ điều đó.', undefined, 'dungNgoai85'],
   ]],
   ['tt85', 'B', [
     ['Bán gạo cho quân Thanh', 'Quân Thanh ở Lạng Sơn thiếu lương.', { b: 8, g: -8, ph: -5 }, 'Bạc nhận bằng nén. Sau hiệp ước, quân Thanh rút, nợ cũng đi theo.'],
@@ -103,7 +105,7 @@ export const CARDS: Card[] = [
     ['Chịu thuế, giữ ruộng', 'Nộp thuế muối, thuế thân như mọi người.', { g: -6, b: -4 }, 'Năm nào cũng thiếu một chút. Dòng họ gầy đi.'],
   ]],
   ['dd05', 'all', [
-    ['Gửi con sang Nhật', 'Bán ruộng lo tiền đường cho một người đi Đông Du.', { g: -8, b: -12, d: -1, u: 7, ph: -12, nh: 8 }, 'Thư từ Tokyo về được hai năm rồi tắt. Năm 1909 cậu bị trục xuất, lưu lạc sang Xiêm.'],
+    ['Gửi con sang Nhật', 'Bán ruộng lo tiền đường cho một người đi Đông Du.', { g: -8, b: -12, d: -1, u: 7, ph: -12, nh: 8 }, 'Thư từ Tokyo về được hai năm rồi tắt. Năm 1909 cậu bị trục xuất, lưu lạc sang Xiêm.', undefined, 'dongDu05'],
     ['Góp tiền quỹ Duy Tân hội', 'Không cho con đi, nhưng góp bạc.', { b: -8, u: 4, ph: -6 }, 'Mật thám lập hồ sơ về dòng họ.'],
     ['Từ chối', 'Chuyện xuất dương quá mạo hiểm.', { u: -2 }, 'Người đến quyên tiền đi tay không.'],
   ]],
@@ -124,7 +126,7 @@ export const CARDS: Card[] = [
     ['Báo đồn', 'Lấy thưởng.', { b: 8, u: -15, ph: 8, lg: -15 }, 'Bạc thưởng đủ mua ba mẫu ruộng. Ba mẫu ruộng ấy không ai chịu cày thuê.'],
   ]],
   ['ww14', 'all', [
-    ['Đi lính thợ sang Pháp', 'Một người con đăng lính thợ để có lương.', { d: -2, b: 10, u: 1, ph: 6 }, 'Năm 1919 về với chiếc đồng hồ và tiếng Pháp. Kể chuyện Marseille cả đời.'],
+    ['Đi lính thợ sang Pháp', 'Một người con đăng lính thợ để có lương.', { d: -2, b: 10, u: 1, ph: 6 }, 'Năm 1919 về với chiếc đồng hồ và tiếng Pháp. Kể chuyện Marseille cả đời.', undefined, 'linhTho16'],
     ['Nộp tiền để khỏi đi', 'Lo lót để không bị bắt lính.', { b: -10 }, 'Người giữ được, bạc mất.'],
   ]],
   ['tn25', '', [
@@ -132,7 +134,7 @@ export const CARDS: Card[] = [
     ['Không biết chuyện này', 'Tin đến làng rất muộn.', {}, 'Một người cháu họ xa đi mà không ai hay.'],
   ]],
   ['cs30', 'all', [
-    ['Có người vào Đảng', 'Một người cháu được kết nạp.', { u: 3, vm: 20, ph: -15, tr: -5 }, 'Cháu đi biệt. Mật thám đến hỏi ba lần.'],
+    ['Có người vào Đảng', 'Một người cháu được kết nạp.', { u: 3, vm: 20, ph: -15, tr: -5 }, 'Cháu đi biệt. Mật thám đến hỏi ba lần.', undefined, 'vaoDang30'],
     ['Giữ khoảng cách', 'Không muốn liên luỵ.', { vm: -5 }, 'Dòng họ không có tên trong hồ sơ Sở Liêm phóng.'],
   ]],
   ['yb30', 'B', [
@@ -150,7 +152,7 @@ export const CARDS: Card[] = [
   ]],
   ['nh40', 'B', [
     ['Bán hàng cho quân Nhật', 'Nhật trả bằng tiền quân phiếu.', { b: 6, g: -6, nh: 10, ph: -5, lg: -4 }, 'Quân phiếu Nhật năm năm sau thành giấy lộn.'],
-    ['Giấu thóc', 'Chôn thóc trong vườn.', { g: 4, nh: -8 }, 'Thóc chôn này cứu được cả họ năm 1945.'],
+    ['Giấu thóc', 'Chôn thóc trong vườn.', { g: 4, nh: -8 }, 'Thóc chôn này cứu được cả họ năm 1945.', undefined, 'giauThoc40'],
   ]],
   ['nk40', 'NE,NW', [
     ['Theo khởi nghĩa', 'Người của họ cầm cờ đỏ sao vàng.', { d: -4, vm: 5, ph: -25 }, 'Pháp xử bắn hàng loạt. Cờ được giấu trong ống tre.'],
@@ -158,8 +160,8 @@ export const CARDS: Card[] = [
     ['Đóng cửa', 'Không ra khỏi làng.', { u: -3 }, 'Cuộc khởi nghĩa đi qua ngoài cửa.'],
   ]],
   ['vm41', 'all', [
-    ['Lập cơ sở Việt Minh trong làng', 'Nhà thành nơi họp bí mật.', { g: -4, u: 4, vm: 20, ph: -12, nh: -8 }, 'Bốn năm sau, chính nhà này treo cờ đầu tiên của làng.'],
-    ['Theo dõi, chưa quyết', 'Chờ xem.', {}, 'Người Việt Minh đến rồi đi, hẹn gặp lại.'],
+    ['Lập cơ sở Việt Minh trong làng', 'Nhà thành nơi họp bí mật.', { g: -4, u: 4, vm: 20, ph: -12, nh: -8 }, 'Bốn năm sau, chính nhà này treo cờ đầu tiên của làng.', undefined, 'coSoVM41'],
+    ['Theo dõi, chưa quyết', 'Chờ xem.', {}, 'Người Việt Minh đến rồi đi, hẹn gặp lại.', undefined, 'choVM41'],
   ]],
   ['ft41', '', [
     ['Đi lính thuỷ cho Pháp', 'Có lương, được đi Koh Chang.', { d: -1, b: 5, ph: 6 }, 'Về kể chuyện trận hải chiến đến cuối đời.'],
@@ -170,9 +172,9 @@ export const CARDS: Card[] = [
     ['Không', 'Rừng xa quá.', {}, 'Nghe chuyện 34 người qua đài, mười năm sau.'],
   ]],
   ['ng45', 'all', [
-    ['Mở kho thóc cứu đói', 'Phát thóc cho làng, không bán.', { g: -20, u: 14, vm: 10, lg: 20 }, 'Không ai trong làng chết đói mùa đó. Tên dòng họ được ghi ở đình.'],
-    ['Bán thóc giá cao', 'Thóc giờ đắt hơn vàng.', { b: 25, g: -15, u: -25, lg: -25, vm: -15 }, 'Rương bạc đầy. Làng chôn người ngoài đồng, có nhà chết cả.'],
-    ['Theo Việt Minh cướp chính quyền', 'Người của họ vào đoàn người kéo về tỉnh lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.'],
+    ['Mở kho thóc cứu đói', 'Phát thóc cho làng, không bán.', { g: -20, u: 14, vm: 10, lg: 20 }, 'Không ai trong làng chết đói mùa đó. Tên dòng họ được ghi ở đình.', undefined, 'khoThoc45'],
+    ['Bán thóc giá cao', 'Thóc giờ đắt hơn vàng.', { b: 25, g: -15, u: -25, lg: -25, vm: -15 }, 'Rương bạc đầy. Làng chôn người ngoài đồng, có nhà chết cả.', undefined, 'banThoc45'],
+    ['Theo Việt Minh cướp chính quyền', 'Người của họ vào đoàn người kéo về tỉnh lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.', undefined, 'cuopCQ45'],
   ]],
   ['tq45', 'B,NE', [
     ['Bán gạo cho quân Trung Hoa', 'Quân Tưởng ở Bắc cần lương, trả bằng tiền quan kim.', { b: 6, g: -8, vm: -5 }, 'Tiền quan kim mất giá, gạo thì mất thật.'],
@@ -181,7 +183,7 @@ export const CARDS: Card[] = [
   ['tk46', 'all', [
     ['Tản cư theo kháng chiến', 'Bỏ nhà ra vùng tự do.', { g: -12, d: -1, u: 7, vm: 20, ph: -20 }, 'Nhà bị đốt. Dòng họ sống bằng ruộng rẫy chín năm.'],
     ['Ở lại vùng tạm chiếm', 'Giữ nhà, giữ ruộng.', { g: 2, b: 4, vm: -12, ph: 8, qg: 5 }, 'Nhà còn, nhưng mỗi đêm nghe tiếng súng mà không biết nên mong ai thắng.'],
-    ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -2, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.', 'chiadoi46'],
+    ['Chia đôi họ', 'Một nhánh đi, một nhánh ở.', { g: -6, b: -2, d: -1, vm: 5, ph: 0 }, 'Hai nhánh gặp lại nhau ở hai phía chiến tuyến.', 'chiadoi46', 'chiaDoi46'],
   ]],
   ['tu46', '', [
     ['Tin vào Tạm ước', 'Mở lại buôn bán với người Pháp.', { b: 6, ph: 5, vm: -3 }, 'Ba tháng sau súng nổ, hàng hoá cháy sạch.'],
@@ -217,7 +219,7 @@ export const CARDS: Card[] = [
     ['Dò tin những người đã vào Nam', 'Hỏi đường xuống Hải Phòng, nơi tàu đón người vào Nam; chờ thư của người quen, chưa quyết.', { b: -2, qg: 8, vm: -8 }, 'Những lá thư đầu tiên từ Sài Gòn đến tay. Ở hay đi, cả nhà còn phải bàn.'],
   ]],
   ['dc54', 'all', [
-    ['Đón người di cư', 'Cho một gia đình Bắc di cư ở nhờ.', { g: -5, u: 4, lg: 5, qg: 5 }, 'Nhà ấy sau thành thông gia.'],
+    ['Đón người di cư', 'Cho một gia đình Bắc di cư ở nhờ.', { g: -5, u: 4, lg: 5, qg: 5 }, 'Nhà ấy sau thành thông gia.', undefined, 'donDiCu54'],
     ['Giữ nhà, không nhận', 'Sợ khác đạo, khác giọng.', { lg: -3 }, 'Hàng xóm mới đến, nhìn nhau xa lạ nhiều năm.'],
   ]],
   ['vc55', 'NE,NW,T2', [
@@ -277,7 +279,7 @@ export const CARDS: Card[] = [
   ['mt68', 'all', [
     ['Trú trong hầm nhà thờ', 'Huế, Sài Gòn: đạn khắp nơi.', { g: -8, b: -5, d: -1 }, 'Hai mươi lăm ngày trong hầm. Ra ngoài, thành phố khác hẳn.'],
     ['Dẫn đường cho quân Giải phóng', 'Người của họ biết đường thành nội.', { u: 6, vm: 15, qg: -20, my: -15, d: -2 }, 'Sau trận, đổi tên, đổi chỗ ở.'],
-    ['Giúp binh sĩ VNCH bị thương', 'Mở cửa nhà làm trạm băng bó.', { g: -5, u: 4, qg: 12, vm: -8 }, 'Có người lính sau này quay lại tạ ơn, năm 1990.'],
+    ['Giúp binh sĩ VNCH bị thương', 'Mở cửa nhà làm trạm băng bó.', { g: -5, u: 4, qg: 12, vm: -8 }, 'Có người lính sau này quay lại tạ ơn, năm 1990.', undefined, 'cuuLinh68'],
   ]],
   ['ks68', 'QT', [
     ['Rời Khe Sanh', 'Dân quanh căn cứ được đưa đi.', { g: -10, b: -3 }, 'Không bao giờ quay lại bản cũ.'],
@@ -629,14 +631,14 @@ export const VARIANT: Record<string, Variant[]> = {
   /* ---- Điểm rẽ vừa chọn không bị hỏi lại: thẻ đầu chương hỏi "làm thế nào" trên đường đã chọn ---- */
   cv85: [
     { picks: ['canvuong'], choices: [
-      ['Bán ruộng mua gươm, lập đội nghĩa binh', 'Cả họ theo nghĩa quân lên núi.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.'],
-      ['Gửi con trai cả theo nghĩa quân, ở nhà nuôi quân', 'Một người đi, cả nhà ở lại làm ra thóc gạo cho nghĩa quân.', { g: -8, d: -2, b: -4, u: 7, tr: 10, ph: -12 }, 'Người con theo nghĩa quân lên núi; ở nhà, mỗi mùa gặt lại có gánh thóc đi đêm.'],
-      ['Giấu lương cho nghĩa quân trong nhà thờ họ', 'Thóc, muối cất dưới bệ thờ, chờ người của nghĩa quân đến lấy.', { g: -6, u: 5, tr: 6, ph: -8, lg: 3 }, 'Thóc nằm dưới bệ thờ, chờ người đến lấy vào những đêm không trăng. Lính đồn khám hai lần, không thấy.'],
+      ['Bán ruộng mua gươm, lập đội nghĩa binh', 'Cả họ theo nghĩa quân lên núi.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.', undefined, 'theoCV85'],
+      ['Gửi con trai cả theo nghĩa quân, ở nhà nuôi quân', 'Một người đi, cả nhà ở lại làm ra thóc gạo cho nghĩa quân.', { g: -8, d: -2, b: -4, u: 7, tr: 10, ph: -12 }, 'Người con theo nghĩa quân lên núi; ở nhà, mỗi mùa gặt lại có gánh thóc đi đêm.', undefined, 'theoCV85'],
+      ['Giấu lương cho nghĩa quân trong nhà thờ họ', 'Thóc, muối cất dưới bệ thờ, chờ người của nghĩa quân đến lấy.', { g: -6, u: 5, tr: 6, ph: -8, lg: 3 }, 'Thóc nằm dưới bệ thờ, chờ người đến lấy vào những đêm không trăng. Lính đồn khám hai lần, không thấy.', undefined, 'theoCV85'],
     ] },
   ],
   dd05: [
     { picks: ['dongdu'], choices: [
-      ['Bán ruộng lo tiền đường cho một người nữa', 'Thêm một người trong họ theo sang Nhật.', { g: -8, b: -12, d: -1, u: 7, ph: -12, nh: 8 }, 'Thư từ Tokyo về được hai năm rồi tắt. Năm 1909 cả hai bị trục xuất, lưu lạc sang Xiêm.'],
+      ['Bán ruộng lo tiền đường cho một người nữa', 'Thêm một người trong họ theo sang Nhật.', { g: -8, b: -12, d: -1, u: 7, ph: -12, nh: 8 }, 'Thư từ Tokyo về được hai năm rồi tắt. Năm 1909 cả hai bị trục xuất, lưu lạc sang Xiêm.', undefined, 'dongDu05'],
       ['Quyên tiền trong họ cho hội', 'Đi từng nhà trong họ, góp bạc gửi sang Nhật.', { b: -8, u: 4, ph: -6 }, 'Bạc đi theo đường dây của hội. Mật thám lập hồ sơ về dòng họ.'],
       ['Ở lại trong nước giữ đường dây', 'Đưa đón người xuất dương qua cửa biển, giấu thư từ.', { b: -3, u: 4, ph: -8, lg: 2 }, 'Ghe đánh cá chở người ra tàu buôn trong đêm. Hai lần suýt bị bắt ở cửa biển.'],
     ] },
@@ -650,7 +652,7 @@ export const VARIANT: Record<string, Variant[]> = {
   cs30: [
     { picks: ['cs'], choices: [
       ['Nhà thành nơi in truyền đơn', 'Máy in xoay tay giấu dưới hầm thóc.', { b: -3, u: 4, vm: 15, ph: -15 }, 'Truyền đơn in đêm, sáng ra đã có ở chợ huyện. Mật thám đến hỏi ba lần.'],
-      ['Đưa em trai vào chi bộ', 'Một người em được kết nạp.', { d: -1, u: 3, vm: 15, ph: -12 }, 'Chi bộ làng có thêm một người trẻ. Từ đó nhà có hai người phải giữ bí mật.'],
+      ['Đưa em trai vào chi bộ', 'Một người em được kết nạp.', { d: -1, u: 3, vm: 15, ph: -12 }, 'Chi bộ làng có thêm một người trẻ. Từ đó nhà có hai người phải giữ bí mật.', undefined, 'vaoDang30'],
     ] },
   ],
   yb30: [
@@ -661,8 +663,8 @@ export const VARIANT: Record<string, Variant[]> = {
   ],
   ng45: [
     { picks: ['vm'], choices: [
-      ['Mở kho thóc cứu đói', 'Phát thóc cho làng, không bán.', { g: -20, u: 14, vm: 10, lg: 20 }, 'Không ai trong làng chết đói mùa đó. Tên dòng họ được ghi ở đình.'],
-      ['Dẫn đoàn người giành chính quyền huyện', 'Người của họ đi đầu đoàn người kéo về huyện lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.'],
+      ['Mở kho thóc cứu đói', 'Phát thóc cho làng, không bán.', { g: -20, u: 14, vm: 10, lg: 20 }, 'Không ai trong làng chết đói mùa đó. Tên dòng họ được ghi ở đình.', undefined, 'khoThoc45'],
+      ['Dẫn đoàn người giành chính quyền huyện', 'Người của họ đi đầu đoàn người kéo về huyện lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.', undefined, 'cuopCQ45'],
       ['Giữ an ninh làng', 'Lập đội tự vệ canh kho thóc những ngày giao thời.', { u: 5, vm: 8, lg: 6 }, 'Làng qua những ngày tháng Tám không mất một hạt thóc, không đổ máu.'],
     ] },
   ],
@@ -691,7 +693,7 @@ export const VARIANT: Record<string, Variant[]> = {
     { regions: ['T1'], choices: [
       ['Đón người tản cư từ thành phố', 'Nhà rộng cho mấy gia đình Hà Nội, Vinh tản cư ở nhờ.', { g: -8, u: 6, vm: 12, lg: 5 }, 'Người thành phố ở nhờ dạy con cháu trong họ đọc báo, hát bài mới. Chín năm sau họ về, để lại một cây đàn.'],
       ['Góp lương cho Liên khu IV', 'Nộp thóc nuôi quân, gửi trai tráng đi dân quân.', { g: -10, d: -1, u: 5, vm: 15, ph: -10 }, 'Thóc nhà đi theo những đoàn dân công vào mặt trận Bình – Trị – Thiên.'],
-      ['Chia đôi họ', 'Một nhánh theo bộ đội đi xa, một nhánh ở lại giữ ruộng.', { g: -6, b: -2, d: -1, vm: 5 }, 'Hai nhánh viết thư cho nhau qua trạm giao liên; chín năm sau mới ngồi chung mâm.', 'chiadoi46'],
+      ['Chia đôi họ', 'Một nhánh theo bộ đội đi xa, một nhánh ở lại giữ ruộng.', { g: -6, b: -2, d: -1, vm: 5 }, 'Hai nhánh viết thư cho nhau qua trạm giao liên; chín năm sau mới ngồi chung mâm.', 'chiadoi46', 'chiaDoi46'],
     ] },
   ],
   // Điện Biên Phủ: dân công đi từ Việt Bắc, Liên khu III, IV. Nghệ An ở vùng tự do; Huế, Quảng Nam, Nam Bộ ở quá xa Tây

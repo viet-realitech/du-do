@@ -12,6 +12,42 @@
     "qt72"
    ],
    "note": "qt72: lựa chọn 1 đổi chữ 'Ở lại vùng giải phóng' → 'Ở lại quê nhà' (bỏ từ mang màu sắc), cùng nghĩa; chỉ số không đổi, bản lưu cũ không cần chuyển"
+  },
+  {
+   "date": "2026-11-20",
+   "ids": [
+    "x:x-anxa36",
+    "x:x-co45",
+    "x:x-doi95",
+    "x:x-dongcua85",
+    "x:x-gao59",
+    "x:x-ghion95",
+    "x:x-giapha95",
+    "x:x-giaphaxa95",
+    "x:x-haimam54",
+    "x:x-hen46",
+    "x:x-ho89",
+    "x:x-hoten95",
+    "x:x-le93",
+    "x:x-linhtho36",
+    "x:x-mac95",
+    "x:x-nho74",
+    "x:x-pham07",
+    "x:x-re64",
+    "x:x-thoc45",
+    "x:x-thonggia73",
+    "x:x-thongngon74",
+    "x:x-tran36",
+    "x:x-xiem30"
+   ],
+   "note": "Đợt H: 23 biến cố mới (x-le93, x-tran36, x-pham07, x-mac95, x-hoten95, x-giapha95, x-giaphaxa95 và 16 biến cố hệ quả x-gao59 … x-ghion95). Không thẻ, bộ theo vùng hay biến cố cũ nào đổi thứ tự: bản lưu cũ đọc các thẻ đã quyết y như trước. Dấu trên lựa chọn (Choice[5]) không đổi chỉ số. S.xs nay có thể chứa hai id cách nhau bằng dấu phẩy; bản lưu cũ (một id hay '') đọc như cũ, không cần bước chuyển đổi."
+  },
+  {
+   "date": "2026-11-20",
+   "ids": [
+    "x:x-mac95"
+   ],
+   "note": "x-mac95 (1995, họ Mạc): lựa chọn 1 'Góp tiền về quê tổ' thành 'Góp tiền về Cổ Trai' (không gán nhà Mạc làm quê tổ của dòng họ người chơi); lựa chọn 2 'Thận trọng, chưa nhận' thành 'Nói thật: cùng họ, chưa chắc cùng dòng' (cùng nghĩa: không nhận chung tổ, cùng hiệu ứng). Thứ tự giữ nguyên; bản lưu đã quyết đọc chỉ số như cũ, chỉ lời đổi."
   }
  ],
  "cards": {
@@ -627,20 +663,90 @@
   ]
  },
  "special": {
+  "x:x-anxa36 @mt36": [
+   "Đón về, cho ở nhà",
+   "Lo cho một chân dạy học, viết báo",
+   "Khuyên ở nhà lấy vợ, làm ăn"
+  ],
   "x:x-canvuong96 @hk96": [
    "Dời cả họ sang phủ khác",
    "Lấy họ mẹ, ở lại làng → họ mother",
    "Ra thú với công sứ"
+  ],
+  "x:x-co45 @ng45": [
+   "Treo cờ trước nhà, mở cửa làm nơi họp",
+   "Mang cờ ra treo ở đình",
+   "Cất cờ, chờ tin chắc"
   ],
   "x:x-diachu53 @cc53": [
    "Chia nhỏ ruộng, bán tháo trước",
    "Ở lại, chịu đấu tố",
    "Vào Nam trước khi đội về ⚑dicu"
   ],
+  "x:x-doi95 @hn95": [
+   "Góp tiền dựng bia, xin lỗi trước làng",
+   "Lặng lẽ thắp hương ở nhà",
+   "Góp tiền, xin giấu tên"
+  ],
+  "x:x-dongcua85 @dm02": [
+   "Góp tiền tu sửa đình",
+   "Chịu ngồi chiếu dưới",
+   "Đứng ra nói rõ trước làng"
+  ],
+  "x:x-gao59 @pt84": [
+   "Mang lễ đến xin lỗi trước bàn thờ nhà gái",
+   "Làm cỗ mời cả làng, góp tiền sửa đình",
+   "Hỏi vợ cho cháu ở nơi khác"
+  ],
+  "x:x-ghion95 @hn95": [
+   "Nhận lời đọc văn tế",
+   "Xin ghi chung là “người làng”",
+   "Góp tiền làm lễ cầu siêu"
+  ],
+  "x:x-giapha95 @hn95": [
+   "Dựng lại nhà thờ họ",
+   "Chép lại gia phả trước",
+   "Để dành tiền cho con cháu đi học"
+  ],
+  "x:x-giaphaxa95 @hn95": [
+   "Gửi tiền về góp xây",
+   "Gửi tên con cháu bên này về",
+   "Chưa góp, chưa trả lời"
+  ],
+  "x:x-haimam54 @gnv": [
+   "Làm giỗ chung, đọc lại gia phả",
+   "Chia lại ruộng hương hoả cho nhánh mới về",
+   "Mỗi nhánh một mâm"
+  ],
+  "x:x-hen46 @tk46": [
+   "Cho một người con theo đi",
+   "Góp thóc, giữ người ở nhà",
+   "Xin cho nhà đứng ngoài"
+  ],
+  "x:x-ho89 @kh89": [
+   "Giữ ông lại ăn cơm, ôn chuyện cũ",
+   "Đưa địa chỉ, hẹn có thư",
+   "Nhận lời cảm ơn, tiễn về"
+  ],
+  "x:x-hoten95 @hn95": [
+   "Nhận lại họ cũ → họ origin",
+   "Giữ họ đang mang, chép cả hai",
+   "Dựng lại từ đường trước"
+  ],
   "x:x-kieuhoi89 @kh89": [
    "Gửi tiền, gửi thùng đồ đều đặn ⚑kieuhoi",
    "Về thăm quê lần đầu ⚑kieuhoi",
    "Chưa gửi, chưa về"
+  ],
+  "x:x-le93 @la93": [
+   "Giữ đủ hai ngày lễ",
+   "Gộp làm một lễ",
+   "Chỉ giỗ tổ nhà mình"
+  ],
+  "x:x-linhtho36 @mt36": [
+   "Mở hiệu sửa xe đạp, máy may",
+   "Giúp thợ viết bản dân nguyện",
+   "Dạy tiếng Pháp cho đám cháu"
   ],
   "x:x-ly79 @bb79": [
    "Đưa gia phả, xin ghi dân tộc Kinh",
@@ -652,6 +758,11 @@
    "Chuyển các cháu sang họ mẹ → họ mother",
    "Tìm đường ra đi ⚑lylichDi"
   ],
+  "x:x-mac95 @hn95": [
+   "Mở gia phả đối chiếu, nhận chung tổ",
+   "Góp tiền về Cổ Trai",
+   "Nói thật: cùng họ, chưa chắc cùng dòng"
+  ],
   "x:x-ngo63 @dc63": [
    "Giữ họ, lên trình diện trả lời",
    "Chuyển các cháu sang họ mẹ → họ mother ⚑lylich",
@@ -662,6 +773,16 @@
    "Đốt mọi giấy tờ có cái tên ấy",
    "Kể cho con cháu nghe về người cùng họ"
   ],
+  "x:x-nho74 @dd05": [
+   "Ông tú cắt tóc, dạy quốc ngữ",
+   "Giữ lối cũ, cho cháu học chữ Hán",
+   "Góp tiền in sách, ông tú ở nhà"
+  ],
+  "x:x-pham07 @wto07": [
+   "Nói thật: cùng họ, không cùng dòng",
+   "Đưa cả nhà đi thăm đền Phù Ủng",
+   "Nhân dịp, chép lại chi họ nhà mình"
+  ],
   "x:x-phan08 @ct08": [
    "Cất giữ sách Tân thư",
    "Khai rõ: cùng họ, khác nhà",
@@ -670,6 +791,11 @@
   "x:x-radi89 @kh89": [
    "Làm đơn đi diện đoàn tụ",
    "Xuống ghe như những người đi trước"
+  ],
+  "x:x-re64 @cv85": [
+   "Để ông ra Trung theo nghĩa quân",
+   "Giữ ông ở nhà, gửi tiền theo người đi",
+   "Khuyên ông ở yên"
   ],
   "x:x-royal45 @ng45": [
    "Khai họ Nguyễn, bỏ chữ Tôn Thất → họ Nguyễn",
@@ -683,6 +809,31 @@
   "x:x-south54-v @dc54": [
    "Ghi là Võ, theo cách người Nam → họ Võ",
    "Giữ họ Vũ như gia phả"
+  ],
+  "x:x-thoc45 @ng45": [
+   "Đào thóc chia cho cả xóm",
+   "Chia cho họ hàng, láng giềng sát vách",
+   "Giữ cho người trong họ"
+  ],
+  "x:x-thonggia73 @pr73": [
+   "Cưới ở nhà thờ, rồi lễ gia tiên",
+   "Đám cưới giản dị, thời chiến",
+   "Xin hoãn đến khi yên"
+  ],
+  "x:x-thongngon74 @cv85": [
+   "Bỏ việc, về quê",
+   "Ở lại, lén báo tin cho nghĩa quân",
+   "Ở lại, xin quan Pháp cho lính canh nhà"
+  ],
+  "x:x-tran36 @mt36": [
+   "Nhận lời đứng ra lo lễ",
+   "Góp phần như mọi nhà",
+   "Cho con cháu vào phường bát âm"
+  ],
+  "x:x-xiem30 @cs30": [
+   "Gửi một đứa cháu sang Xiêm",
+   "Xin ông về quê dưỡng già",
+   "Gửi tiền, giữ thư"
   ]
  }
 }

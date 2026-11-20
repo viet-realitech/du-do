@@ -41,14 +41,16 @@ async function alive(page: Page) {
 }
 /** Bản lưu đã được ghi lại bằng mã mới (có số phiên bản): ứng dụng tự lưu lúc mở (thẻ còn nợ, năm của chương); không thì
     lưu bằng một thao tác vô hại: chọn lại phong cách đang dùng (Hồ sơ). */
+/** Phiên bản bản lưu hiện nay (src/state.ts SAVE_V): 2 từ khi kết cục đã đọc được giữ lại (endFix). */
+const SAVE_V = 2;
 async function savedAgain(page: Page, key: string) {
   const v = async () => JSON.parse((await stored(page, key)) || '{}').v;
-  if ((await v()) !== 1 && !(await page.locator('#main').evaluate(m => (m as HTMLElement).inert))) {
+  if ((await v()) !== SAVE_V && !(await page.locator('#main').evaluate(m => (m as HTMLElement).inert))) {
     await page.locator('.tab[data-t=me]').click();
     await page.locator('.thc.on').first().click();
     await page.locator('.tab[data-t=map]').click();
   }
-  await expect.poll(v).toBe(1);
+  await expect.poll(v).toBe(SAVE_V);
   return JSON.parse((await stored(page, key))!);
 }
 
@@ -108,7 +110,7 @@ test.describe('damaged saves are repaired field by field', () => {
     await page.goto('/?debug');
     await alive(page);
     const dbg = page.locator('#dbg');
-    await expect(dbg.locator('pre')).toContainText('Bản lưu: phiên bản 1 · bản sao hỏng đã cất: 1');
+    await expect(dbg.locator('pre')).toContainText(`Bản lưu: phiên bản ${SAVE_V} · bản sao hỏng đã cất: 1`);
     await expect(dbg.locator('pre')).toContainText('đã sửa picks');
     await dbg.getByRole('button', { name: 'Sao chép bản lưu hỏng' }).click();
     await expect(dbg.getByRole('button', { name: 'Đã sao chép' })).toBeVisible();

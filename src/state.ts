@@ -75,6 +75,10 @@ export interface State {
   ended: boolean;
   /** Đã tự đọc tên kết cục một lần (lần đầu mở màn kết có kết cục; hồ sơ còn bỏ ngỏ không tính). */
   endSaid: boolean;
+  /** Kết cục đã đọc lần đầu: id kết cục và ngưỡng gia sản đời thứ sáu của quê lúc ấy (P5, P25, P60, P92; Trò chơi).
+      Bảng ngưỡng sinh lại sau mỗi đợt nội dung (endings-rarity.json): hồ sơ đã khép không đổi kết cục khi mở lại
+      (play.ts endingNow, rank). Chưa có khoá: chưa đọc kết cục nào. */
+  endFix?: { id?: string; t?: number[] };
   /** Thẻ đã quyết bằng bộ lựa chọn gốc trước khi có lựa chọn theo vùng (VARIANT): chỉ số lưu trong `cards` hiểu theo bộ gốc. */
   cardv: Record<string, 'base'>;
   /** Các thẻ có bộ lựa chọn thay thế (VARIANT) mà bản lưu này đã biết: thẻ có bộ mới thêm sau, đã quyết, giữ bộ gốc. */
@@ -86,6 +90,11 @@ export interface State {
 /* ---------- bản lưu: số phiên bản, các bước nâng cấp, kiểm tra kiểu ---------- */
 type Raw = Record<string, unknown>;
 const isObj = (x: unknown): x is Raw => !!x && typeof x === 'object' && !Array.isArray(x);
+/** Ngưỡng tổng gia sản đời thứ sáu theo quê (P5, P25, P60, P92) trong endings-rarity.json của bản d11afee (MIGRATE 1 → 2). */
+const TIERS_D11: Record<string, number[]> = {
+  hn: [166, 197, 265, 298], nd: [165, 197, 265, 298], na: [175, 214, 260, 293], hue: [170, 203, 265, 294],
+  qn: [172, 205, 265, 294], sg: [165, 197, 261, 289], mt: [164, 194, 259, 288], ct: [168, 204, 271, 291],
+};
 /** MIGRATE[i] nâng bản lưu phiên bản i lên i + 1. Đổi hình dạng bản lưu: thêm một bước vào cuối (SAVE_V tự tăng theo);
     không sửa, không xoá bước cũ, để bản lưu cũ đến mấy cũng đi qua đủ các bước theo đúng thứ tự. */
 const MIGRATE: ((raw: Raw) => void)[] = [
@@ -103,6 +112,13 @@ const MIGRATE: ((raw: Raw) => void)[] = [
     // bản lưu có trước việc tự đọc tên kết cục: ai đã mở kết luận khi đủ sáu điểm rẽ (đã thấy tên kết cục) thì không tự đọc
     // nữa; ai mới chỉ mở hồ sơ còn bỏ ngỏ (Đọc sử) thì chưa thấy kết cục nào, lần đầu có kết cục vẫn được đọc
     if (!('endSaid' in raw)) raw.endSaid = !!raw.ended && ERAS.every(e => !!pk[e.id]);
+  },
+  // 1 → 2: kết cục giữ nguyên sau khi đã đọc (endFix). Bản lưu đã đọc kết cục trước bước này đọc nó với ngưỡng gia sản
+  // của bản d11afee (bản cuối trước đợt H; đợt H sinh lại bảng và nâng ngưỡng 5% thấp nhất vài điểm): giữ ngưỡng ấy, để
+  // nhà sát ngưỡng không mở lại thành "Còn lại tên họ". Id kết cục ghi ở lần mở màn kết tới (ending.ts openEnd).
+  raw => {
+    const h = typeof raw.home === 'string' ? raw.home : 'hn';
+    if (raw.endSaid === true && !('endFix' in raw) && TIERS_D11[h]) raw.endFix = { t: [...TIERS_D11[h]] };
   },
 ];
 /** Phiên bản bản lưu hiện nay (trường `v`). */
@@ -190,6 +206,16 @@ function sanitize(raw: Raw, fixed: string[]): State {
       return [{ ...n, y: y ?? Y0, why: isStr(n.why) ? n.why : '' }];
     });
   } else s.names = [];
+  if (has('endFix')) {
+    // id chuỗi, ngưỡng bốn số; phần hỏng bỏ đi (kết cục tính lại như chưa ghi)
+    const x = raw.endFix, o: Raw = {};
+    if (!isObj(x)) { fix('endFix'); delete s.endFix; }
+    else {
+      if (x.id !== undefined) { if (isStr(x.id)) o.id = x.id; else fix('endFix'); }
+      if (x.t !== undefined) { if (Array.isArray(x.t) && x.t.length === 4 && x.t.every(n => typeof n === 'number' && Number.isFinite(n))) o.t = [...x.t]; else fix('endFix'); }
+      s.endFix = o;
+    }
+  }
   if (has('tourAt') && raw.tourAt !== null) {
     const t = raw.tourAt;
     if (isObj(t) && isStr(t.e) && isStr(t.id)) s.tourAt = { e: t.e, id: t.id };
@@ -388,6 +414,7 @@ export function renameFamily(to: string, y: number, why: string): void {
 export function resetPlay(): void {
   if (S.names.length) { S.name = S.names[0].from; S.surname = surnameKey(S.name); } // chơi lại: họ ban đầu
   S.res = { ...RES0 }; S.rel = { ...REL0 }; S.cards = {}; S.harvests = []; S.snap = {}; S.names = []; S.xs = {}; S.xFrom = 0; S.movedFrom = 0;
+  delete S.endFix;
   save();
 }
 

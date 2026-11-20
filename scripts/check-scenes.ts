@@ -94,6 +94,31 @@ for (const [id, vs] of Object.entries(VARIANT)) {
     if (va.special && !SPECIAL.some(c => c.id === va.special && c.ev === id)) { console.error(`LỖI VARIANT.${id}: special ${va.special} không gắn vào thẻ này`); err++; }
   }
 }
+// dấu trên lựa chọn (cards.ts Choice[5]) và biến cố hệ quả (cards2.ts SpecialWhen.after): mỗi dấu biến cố nhắc tới có trên
+// một lựa chọn của một sự kiện TRƯỚC sự kiện biến cố gắn vào (play.ts markedAt chỉ xét sự kiện trước; nhắc sự kiện sau hay
+// chính nó thì điều kiện tự gọi lại mình); dấu loại trừ (notAfter) nằm trước hay trên chính thẻ của sự kiện (play.ts decide
+// chốt biến cố hệ quả sau khi ghi lựa chọn), không nằm ở sự kiện sau; và dấu nào cũng có biến cố dùng tới
+{
+  const at: Record<string, string[]> = {};
+  for (const [id, c] of Object.entries(CARD)) for (const ch of [...c[2], ...(VARIANT[id] || []).flatMap(va => va.choices)]) if (ch[5]) (at[ch[5]] ||= []).includes(id) || at[ch[5]].push(id);
+  const ix = (id: string) => EV.findIndex(v => v.id === id), used = new Set<string>();
+  for (const c of SPECIAL) {
+    if (!EV.some(v => v.id === c.ev && !v.diary) || !CARD[c.ev]) { console.error(`LỖI biến cố ${c.id}: sự kiện ${c.ev} không có thẻ`); err++; }
+    for (const m of c.when.after || []) {
+      used.add(m);
+      if (!at[m]) { console.error(`LỖI biến cố ${c.id}: after ${m} không lựa chọn nào mang dấu này`); err++; continue; }
+      for (const id of at[m]) if (ix(id) >= ix(c.ev)) { console.error(`LỖI biến cố ${c.id} (${c.ev}): dấu ${m} nằm trên ${id}, không trước sự kiện của biến cố`); err++; }
+    }
+    for (const m of c.when.notAfter || []) {
+      used.add(m);
+      if (!c.also) { console.error(`LỖI biến cố ${c.id}: notAfter chỉ dùng cho biến cố hệ quả (also)`); err++; }
+      if (!at[m]) { console.error(`LỖI biến cố ${c.id}: notAfter ${m} không lựa chọn nào mang dấu này`); err++; continue; }
+      for (const id of at[m]) if (ix(id) > ix(c.ev)) { console.error(`LỖI biến cố ${c.id} (${c.ev}): dấu ${m} nằm trên ${id}, sau sự kiện của biến cố`); err++; }
+    }
+    for (const ch of c.choices) if (ch[4] === 'origin' && c.when.renamed !== true) { console.error(`LỖI biến cố ${c.id}: "nhận lại họ cũ" (origin) cần when.renamed`); err++; }
+  }
+  for (const m of Object.keys(at)) if (!used.has(m)) { console.error(`LỖI dấu ${m} (${at[m].join(', ')}): không biến cố hệ quả nào dùng`); err++; }
+}
 // cờ rời nước (endings.ts GONE): play.ts abroad tính năm theo thẻ mang cờ, lời kết và gia phả theo GONE_AT: hai bên phải
 // cùng năm
 {
