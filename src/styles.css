@@ -757,6 +757,8 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .pl-dot circle { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2 }
 .pl-dot.on circle { fill: var(--red); stroke: var(--paper); stroke-width: 1.4 }
 .pl-dot text { font: 600 10px var(--serif); fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round }
+/* nhãn thành phố bị dấu đè lên thì mờ đi (map.ts labelPass, chạy khi bản đồ đã yên) */
+#map text[data-city] { transition: opacity .3s }
 /* dấu trên tấm bản đồ (ui/plate.ts marks): nhà như dấu nhà trên bản đồ chính, dấu chân người viết nhật ký son, lần dời nhà
    nét đứt son có mũi tên */
 .pl-home path { fill: var(--paper); stroke: var(--acc); stroke-width: 1.6; stroke-linejoin: round }

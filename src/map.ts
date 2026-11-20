@@ -214,7 +214,7 @@ export async function initMap(): Promise<void> {
   // Bảo hiểm: d3 có thể không báo 'end' (phần tử dưới ngón tay bị gỡ giữa cử chỉ): hiện lại sau 300 ms yên.
   {
     let t = 0;
-    const still = () => { clearTimeout(t); if (moving) { moving = false; deco(); } };
+    const still = () => { clearTimeout(t); if (moving) { moving = false; deco(); labelsSoon(); } };
     G.zoom.on('zoom.lite', () => { if (!moving) { moving = true; deco(); } clearTimeout(t); t = window.setTimeout(still, 300); })
       .on('end.lite', still);
   }
@@ -268,6 +268,7 @@ export function mapBusy(on: boolean): void {
   if (busy === on) return;
   busy = on;
   if (ready) deco();
+  if (!on) labelsSoon(); // thả thanh năm: dấu sự kiện của năm mới
 }
 
 function buildPatterns(): void {
@@ -306,6 +307,7 @@ export function themeMap(): void {
   shown(G.grat, S.grat ? 1 : 0);
   shown(G.modern, S.modern ? 1 : 0);
   paintMap(true);
+  labelsSoon(); // đổi giao diện đổi phông: bề ngang nhãn thành phố đổi theo
 }
 
 /** Grow the viewBox around the W × H core to match the map frame's aspect ratio. */
@@ -327,6 +329,7 @@ function fitViewBox(): void {
   G.px = px;
   rescale();
   deco(); // vùng lọc nét cổ theo khung mới
+  labelsSoon();
 }
 
 /** Keep markers, labels and callouts at constant screen size while zoomed. */
@@ -409,6 +412,7 @@ export function paintHome(l: [number, number] | null): void {
   const key = l ? l.join(',') : '';
   if (key === homeAt) return; // vẽ lại theo năm: nhà vẫn ở chỗ cũ, không dựng lại (mỗi lần dựng là một lần vẽ lại vùng ấy)
   homeAt = key;
+  labelsSoon();
   G.homeG.selectAll('*').remove();
   if (!l) return;
   const g = G.homeG.append('g').datum<Pt>({ p: proj(l)! });
@@ -494,6 +498,42 @@ export function paintMap(quiet = false, y = S.year): void {
   });
   highlight();
   rescale();
+  // năm khác hay dấu sự kiện đổi: xét lại nhãn thành phố khi đã yên (không trong lúc kéo thanh năm: mapBusy(false) lo)
+  if ((y !== labelY || !sel.exit().empty() || !ent.empty()) && !busy) labelsSoon();
+  labelY = y;
+}
+
+/* ---------- nhãn thành phố bị che ---------- */
+let labelY = NaN, lpT = 0;
+/** Xét lại bốn nhãn thành phố sau khi bản đồ đã yên (zoom dừng, đổi năm, thả thanh năm, đổi khung): không bao giờ trong
+    lúc bay, kéo hay mỗi khung hình. */
+function labelsSoon(): void {
+  if (!ready) return;
+  clearTimeout(lpT);
+  lpT = window.setTimeout(labelPass, 350);
+}
+/** Nhãn thành phố (Hà Nội, Huế, Đà Nẵng, Sài Gòn) mà một dấu đang thấy đè lên thì mờ hẳn đi: dấu sự kiện, dấu nhà, các nét
+    cỡ dấu của cảnh động và tour trên lớp #mapfx (quân cờ, chấm, đoạn đường đi, đầu mũi tên; không tính nét dài hay khung
+    chú dẫn). So hộp trên màn hình (hai lớp SVG khác nhau, bản đồ có thể đang nghiêng). Chỉ ghi khi độ mờ của nhãn đổi:
+    vẽ lại cùng năm không ghi gì (e2e/perf.spec.ts). */
+function labelPass(): void {
+  if (moving || busy || document.hidden) return; // đang bay / kéo: lần dừng sau sẽ gọi lại
+  if (!G.svg.node()!.getBoundingClientRect().width) return; // bản đồ đang ẩn
+  const bx: DOMRect[] = [];
+  G.mk.node()!.querySelectorAll<SVGGraphicsElement>('g.m > .mk').forEach(n => bx.push(n.getBoundingClientRect()));
+  G.homeG.node()!.querySelectorAll<SVGGraphicsElement>('path').forEach(n => bx.push(n.getBoundingClientRect()));
+  for (const n of G.Zf.node()!.querySelectorAll<SVGGraphicsElement>('circle, rect, path, text, use, image')) {
+    if (n.closest('[opacity="0"]')) continue; // chưa hiện (đầu mũi tên chưa tới, quân cờ chưa đi)
+    const r = n.getBoundingClientRect();
+    if (r.width && r.height && r.width <= 60 && r.height <= 60) bx.push(r);
+  }
+  G.cities.selectAll<SVGTextElement, unknown>('text').each(function () {
+    const r = this.getBoundingClientRect();
+    // đè lên chữ thật sự (chồng nhau quá 4 px mỗi chiều), không phải chỉ chạm mép: dấu đặt đúng chấm thành phố chạm chữ
+    // cuối của nhãn mà chữ vẫn đọc được
+    const hit = bx.some(b => Math.min(r.right, b.right) - Math.max(r.left, b.left) > 4 && Math.min(r.bottom, b.bottom) - Math.max(r.top, b.top) > 4);
+    put(this, 'opacity', hit ? 0 : null);
+  });
 }
 
 /* ---------- tour focus ---------- */
