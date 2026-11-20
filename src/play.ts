@@ -104,13 +104,21 @@ function variantIx(v: HistEvent): number | undefined {
   return VARIANT[v.id].findIndex(x => (!x.regions || x.regions.includes(g)) && (!x.from || x.from.includes(g0)) && (!x.homes || x.homes.includes(S.home)) &&
     (!x.picks || x.picks.some(p => picked.includes(p))) && !x.notPicks?.some(p => picked.includes(p)) &&
     (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })) && (!x.flags || hasFlag(x.flags, v.y)) &&
-    (!x.special || specialFor(v)?.id === x.special));
+    (!x.special || specialsFor(v).some(c => c.id === x.special)));
 }
 /** Sự kiện và biến cố riêng có thể mang mỗi cờ (bộ gốc và mọi bộ thay thế): hasFlag chỉ xét chúng, không dựng lại cả
     trăm thẻ (và các bộ thay thế theo cờ lồng nhau) mỗi lần vẽ. */
 const FLAG_EV: Partial<Record<Flag, HistEvent[]>> = {}, FLAG_SP: Partial<Record<Flag, [SpecialCard, number][]>> = {};
 for (const v of EV) if (!v.diary && CARD[v.id]) for (const ch of [CARD[v.id][2], ...(VARIANT[v.id] || []).map(x => x.choices)].flat()) if (ch[4]) { const l = (FLAG_EV[ch[4]] ||= []); if (!l.includes(v)) l.push(v); }
 for (const c of SPECIAL) { const y = EV.find(x => x.id === c.ev)?.y; if (y != null) for (const ch of c.choices) if (ch[5]) { const l = (FLAG_SP[ch[5]] ||= []); if (!l.some(x => x[0] === c)) l.push([c, y]); } }
+/** Sự kiện có lựa chọn mang mỗi dấu (cards.ts Choice[5]; bộ gốc và mọi bộ thay thế): biến cố hệ quả chỉ xét chúng. */
+const MARK_EV: Record<string, HistEvent[]> = {};
+for (const v of EV) if (!v.diary && CARD[v.id]) for (const ch of [CARD[v.id][2], ...(VARIANT[v.id] || []).map(x => x.choices)].flat()) if (ch[5]) { const l = (MARK_EV[ch[5]] ||= []); if (!l.includes(v)) l.push(v); }
+/** Sự kiện trước `v` mà dòng họ đã chốt một lựa chọn mang dấu `m` (biến cố hệ quả nói "năm ấy"), hay undefined. */
+export function markedAt(m: string, v: HistEvent): HistEvent | undefined {
+  const at = EV.indexOf(v);
+  return (MARK_EV[m] || []).find(e => EV.indexOf(e) < at && decided(e.id) && cardOf(e)?.[2][S.cards[e.id]]?.[5] === m);
+}
 /** Dòng họ đã chốt một lựa chọn mang một trong các cờ này ở sự kiện trước năm y (thẻ thường, biến cố riêng). */
 export function hasFlag(fs: readonly Flag[], y = 9999): boolean {
   for (const f of fs) {
@@ -141,6 +149,8 @@ export function mustDecide(v: HistEvent): boolean {
   return c[1].split(',').some(r => r === g || (g === 'QT' && (r === 'T1' || r === 'T2')));
 }
 export const decided = (id: string) => id in S.cards;
+/** Điểm rẽ cuối (năm 1976): hướng Ra đi. */
+const GATE6_ID = ERAS[ERAS.length - 1].id;
 /** Thẻ dành cho dòng họ này: thẻ bắt buộc (cả nước / chạm quê) hay thẻ tuỳ chọn chung (phạm vi ''); thẻ tuỳ chọn của
     vùng khác (vd. giữ thành Hà Nội 1882 với nhà ở Nghệ An) không mời. Nhà đã ra nước ngoài: thẻ tuỳ chọn viết cho người
     trong nước (góp tiền qua báo Tuổi Trẻ, nhận ruộng tái định cư…) không mời, trừ thẻ có bộ lựa chọn nói từ xứ người. */
@@ -225,7 +235,7 @@ export function barred(flag: Flag | undefined, y: number): string | null {
 
 export function decide(v: HistEvent, i: number): Fx {
   const c = cardOf(v)!, ch = c[2][i];
-  S.xs[v.id] = specialFor(v)?.id || ''; // chốt biến cố riêng theo hoàn cảnh lúc quyết định (trước khi trừ gia sản)
+  S.xs[v.id] = specialsFor(v).map(c => c.id).join(','); // chốt các biến cố theo hoàn cảnh lúc quyết định (trước khi trừ gia sản)
   S.cards[v.id] = i;
   const got = applyFx(payFx(ch[2]).fx);
   save();
@@ -233,9 +243,13 @@ export function decide(v: HistEvent, i: number): Fx {
 }
 
 /* ---------- biến cố riêng của dòng họ (cards2.ts) ---------- */
-function matches(w: SpecialCard['when'], y: number): boolean {
+/** Cả nhà sống ở xứ người năm y: đã ra nước ngoài trên thẻ (abroad), hay chọn Ra đi ở điểm rẽ 6 và đã đi (đêm ra khơi năm
+    1979; người con còn ở mặt trận Campuchia thì cả nhà đi sau năm 1989, biến cố x-radi89). */
+export const livesAbroad = (y: number): boolean => abroad(y) || (isPlay() && S.picks[GATE6_ID] === 'radi' && y > (atFront() ? 1989 : 1979));
+function matches(w: SpecialCard['when'], y: number, v: HistEvent): boolean {
+  if (w.abroad !== undefined) { if (livesAbroad(y) !== w.abroad) return false; }
   // nhà đã ra nước ngoài: biến cố trong nước (khai lý lịch, rà soát người Hoa) không đến; biến cố của người ra đi (kiều hối) vẫn đến
-  if (abroad(y) && !w.picks?.includes('radi')) return false;
+  else if (abroad(y) && !w.picks?.includes('radi')) return false;
   if (w.surnames && !w.surnames.includes(S.surname || surnameKey(S.name))) return false;
   if (w.homes && !w.homes.includes(S.home)) return false;
   if (w.minB != null && S.res.b < w.minB) return false;
@@ -243,16 +257,33 @@ function matches(w: SpecialCard['when'], y: number): boolean {
   if (w.picks && !ERAS.some(e => e.cy <= y && w.picks!.includes(S.picks[e.id]))) return false;
   if (w.camps) { const pk = curPick(y); if (!pk || !w.camps.includes(CAMP[pk.id])) return false; }
   if (w.front && (!atFront() || abroad(y))) return false;
+  if (w.renamed !== undefined && (S.names.length > 0) !== w.renamed) return false;
+  if (w.after && !w.after.some(m => markedAt(m, v))) return false;
   return true;
 }
-/** Biến cố riêng gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản). Điều kiện được xét
-    một lần, lúc dòng họ quyết định thẻ của sự kiện (S.xs); sau đó đổi họ hay đổi gia sản không làm sự kiện cũ
-    "mọc" thêm biến cố và kéo dòng thời gian lùi lại. */
+/** Tối đa bấy nhiêu biến cố trên một sự kiện (biến cố riêng, rồi hệ quả): quá thì bảng thẻ thành một chuỗi dài. */
+const MAX_X = 2;
+/** Các biến cố gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản, việc đã quyết), theo thứ tự
+    quyết: biến cố riêng đầu tiên khớp (không có `also`), rồi các biến cố hệ quả. Điều kiện được xét một lần, lúc dòng
+    họ quyết định thẻ của sự kiện (S.xs, các id cách nhau bằng dấu phẩy); sau đó đổi họ hay đổi gia sản không làm sự kiện
+    cũ "mọc" thêm biến cố và kéo dòng thời gian lùi lại. Bản lưu đã đi qua sự kiện (thẻ đã quyết, hay S.xs đã chốt ''
+    khi mở lại: lockPassed) giữ nguyên như cũ: biến cố mới thêm sau không mọc lại trên sự kiện ấy. */
+export function specialsFor(v: HistEvent): SpecialCard[] {
+  if (!isPlay() || v.diary) return [];
+  if (v.id in S.xs) return S.xs[v.id] ? S.xs[v.id].split(',').map(id => SPECIAL.find(c => c.id === id)).filter((c): c is SpecialCard => !!c) : [];
+  if (decided(v.id) || v.y < S.xFrom) return [];
+  const y = chYear(v), on = SPECIAL.filter(c => c.ev === v.id && matches(c.when, y, v)), own = on.find(c => !c.also);
+  return [...(own ? [own] : []), ...on.filter(c => c.also)].slice(0, MAX_X);
+}
+/** Biến cố của sự kiện v còn chờ quyết (biến cố đầu tiên chưa quyết), hay biến cố đầu tiên nếu đã quyết hết; undefined
+    nếu sự kiện không có biến cố nào. */
 export function specialFor(v: HistEvent): SpecialCard | undefined {
-  if (!isPlay() || v.diary) return undefined;
-  if (v.id in S.xs) return SPECIAL.find(c => c.id === S.xs[v.id]);
-  if (decided(v.id) || v.y < S.xFrom) return undefined;
-  return SPECIAL.find(c => c.ev === v.id && matches(c.when, chYear(v)));
+  const l = specialsFor(v);
+  return l.find(c => !specialDecided(c)) || l[0];
+}
+/** Sự kiện của lựa chọn mà biến cố hệ quả nhắc lại (sự kiện sớm nhất mang dấu `after` đã chốt), cho dòng "hệ quả việc năm…". */
+export function causeOf(c: SpecialCard, v: HistEvent): HistEvent | undefined {
+  return (c.when.after || []).map(m => markedAt(m, v)).filter((e): e is HistEvent => !!e).sort((a, b) => a.y - b.y)[0];
 }
 /** Thẻ không bắt buộc đã đi qua (trước năm y) mà còn bỏ ngỏ: chốt "không có biến cố riêng" (S.xs = ''). Gọi khi đổi
     họ (Khai họ Nguyễn, lý lịch theo họ mẹ: biến cố của họ mới không "mọc" trên sự kiện cũ rồi kéo dòng thời gian lùi
@@ -267,15 +298,16 @@ export const specialDecided = (c: SpecialCard) => 'x:' + c.id in S.cards;
 export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: string): Fx {
   S.cards['x:' + c.id] = i;
   const ch = c.choices[i], got = applyFx(payFx(ch[2]).fx);
-  if (ch[4]) { renameFamily(asFamily(newName || ch[4]), y, c.title); lockPassed(y + 1); } // sự kiện tới năm đổi họ: không mọc biến cố của họ mới
+  // 'origin': nhận lại họ trước lần đổi họ đầu tiên (gia phả, S.names)
+  const to = ch[4] === 'origin' ? S.names[0]?.from : newName || ch[4];
+  if (to) { renameFamily(asFamily(to), y, c.title); lockPassed(y + 1); } // sự kiện tới năm đổi họ: không mọc biến cố của họ mới
   save();
   return got;
 }
-/** Sự kiện còn cần dòng họ quyết định: thẻ thường chưa quyết, hay biến cố riêng chưa quyết. */
+/** Sự kiện còn cần dòng họ quyết định: thẻ thường chưa quyết, hay một biến cố của nó chưa quyết. */
 export function needsDecision(v: HistEvent): boolean {
   if (cardOf(v) && !decided(v.id)) return true;
-  const sp = specialFor(v);
-  return !!sp && !specialDecided(sp);
+  return specialsFor(v).some(c => !specialDecided(c));
 }
 
 /** Điểm rẽ 6 (năm 1976) với nhà đã di tản năm 1975: cùng id (kết cục, quan hệ, nhãn Hợp / Trái đọc như cũ), lời nói từ
@@ -475,7 +507,7 @@ export function bigChoices(e: Era, n = 2): { y: number; label: string; out: stri
   for (const { v, ch } of choicesIn(0, 0, e)) xs.push({ y: v.y, o: EV.indexOf(v), label: ch[0], out: ch[3], w: w0(ch[4], ch[4] ? 1000 : 0) + mag(ch[2]) });
   for (const c of SPECIAL) {
     const i = S.cards['x:' + c.id], v = EV.find(x => x.id === c.ev), ch = i != null ? c.choices[i] : undefined;
-    if (ch && v && evEra(v) === e) xs.push({ y: v.y, o: EV.indexOf(v) + 0.5, label: ch[0], out: ch[3], w: w0(ch[5], 2000) + mag(ch[2]) });
+    if (ch && v && evEra(v) === e) xs.push({ y: v.y, o: EV.indexOf(v) + 0.5, label: ch[0], out: ch[3], w: w0(ch[5], c.minor && !ch[4] ? 0 : 2000) + mag(ch[2]) });
   }
   return xs.sort((a, b) => b.w - a.w).slice(0, n).sort((a, b) => a.y - b.y || a.o - b.o).map(({ y, label, out }) => ({ y, label, out }));
 }

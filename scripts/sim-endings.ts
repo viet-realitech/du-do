@@ -18,7 +18,7 @@ const { ERAS, EV } = await import('../src/data');
 const st = await import('../src/state');
 const P = await import('../src/play');
 const { SPECIAL } = await import('../src/data/cards2');
-const { SURNAMES, loreOf } = await import('../src/data/surnames');
+const { SURNAMES, loreOf, surnameKey } = await import('../src/data/surnames');
 const E = await import('../src/data/endings');
 type Facts = import('../src/data/endings').Facts;
 type Flag = import('../src/data/endings').Flag;
@@ -29,6 +29,9 @@ const outAt = argv.indexOf('--out'), outFile = outAt >= 0 ? argv[outAt + 1] : ''
 const POL = quick ? ['trung', 'ngau'] : ['trung', 'giau', 'nguoi', 'danh', 'ngau'];
 const surnames = quick ? [''] : ['', ...new Set(SPECIAL.flatMap(c => c.when.surnames || []))];
 const weight = (sk: string) => (sk ? 1 : 20);
+/** Họ của nhóm '': một họ gõ tay, không có trong danh sách nên không có biến cố riêng theo họ (họ Lê nay có biến cố riêng). */
+const NO_SK = 'Họ Khúc';
+if (surnameKey(NO_SK)) throw new Error(`${NO_SK} có trong danh sách họ: chọn họ khác cho nhóm ''`);
 
 const paths: string[][] = [];
 const walk = (i: number, acc: string[]) => { if (i === ERAS.length) { paths.push(acc); return; } for (const o of ERAS[i].opts) walk(i + 1, [...acc, o.id]); };
@@ -52,7 +55,7 @@ function choose(pol: string, chs: { fx: Fx; rename?: boolean; key?: string; flag
   return opts.filter(o => !o.no).sort((a, b) => score[pol](b) - score[pol](a) || a.i - b.i)[0].i;
 }
 
-type Run = { f: Facts; pol: string; w: number };
+type Run = { f: Facts; pol: string; w: number; sk: string; path: string[]; calls: number; own: number };
 const runs: Run[] = [];
 const t0 = Date.now();
 for (const [pi, pol] of POL.entries()) {
@@ -61,7 +64,8 @@ for (const [pi, pol] of POL.entries()) {
     st.resetState();
     const S = st.S;
     S.mode = 'play'; S.home = hid; S.step = 'play';
-    S.surname = sk; S.name = sk ? 'Họ ' + loreOf(sk)!.names[0] : 'Họ Lê';
+    S.surname = sk; S.name = sk ? 'Họ ' + loreOf(sk)!.names[0] : NO_SK; // nhóm '': một họ gõ tay, không có biến cố riêng theo họ
+    let calls = 0, own = 0; // biến cố hệ quả (after), biến cố riêng theo họ đã gặp trong lượt này
     ERAS.forEach((e, ei) => {
       const prev = ERAS[ei - 1];
       if (prev) P.harvest(prev, e.cy);
@@ -72,16 +76,18 @@ for (const [pi, pol] of POL.entries()) {
         if (!c || !(P.mustDecide(v) || P.specialFor(v))) continue; // như pendingCard: bắt buộc, hay có biến cố riêng
         const y = st.chYear(v);
         P.decide(v, choose(pol, c[2].map((ch, i) => ({ fx: ch[2], key: P.alKey(v, i), flag: ch[4] })), y));
-        const sp = P.specialFor(v);
-        if (sp && !P.specialDecided(sp)) {
+        // các biến cố của sự kiện, lần lượt như card.ts (biến cố riêng, rồi hệ quả)
+        for (let sp = P.specialFor(v); sp && !P.specialDecided(sp); sp = P.specialFor(v)) {
           const j = choose(pol, sp.choices.map(ch => ({ fx: ch[2], rename: !!ch[4], flag: ch[5] })), y);
           const mom = SURNAMES.find(x => x.key !== (S.surname || ''))?.names[0]; // chip mặc định "Lấy họ mẹ"
           P.decideSpecial(sp, j, v.y, sp.choices[j][4] === 'mother' ? mom : sp.choices[j][4]);
+          if (sp.when.after) calls++;
+          else if (sp.when.surnames) own++;
         }
       }
     });
     P.harvest(ERAS[ERAS.length - 1], 2026);
-    runs.push({ pol, w: weight(sk), f: P.factsFromState() });
+    runs.push({ pol, w: weight(sk), f: P.factsFromState(), sk, path, calls, own });
   }
   console.error(`  ${pol}: ${runs.length} lượt, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }
@@ -145,6 +151,24 @@ if (argv.includes('--samples')) {
     const f = readOf(p), id = E.endingOf(f).id;
     console.log(`\n[Đọc sử · ${id}] ${p.join('>')}\n${E.epilogue(id, f)}`);
   }
+}
+// biến cố hệ quả mỗi lượt (chỉ in ra, không ghi vào bảng hiếm): phân bố theo trọng số, theo cách quyết, theo quê; "đường
+// quen" = con đường tiếp nối (NEXT, như sim-loyal) với cách quyết trung thành
+{
+  const hist = (rs: Run[]) => {
+    const W = rs.reduce((a, r) => a + r.w, 0), h = [0, 0, 0, 0, 0, 0];
+    for (const r of rs) h[Math.min(5, r.calls)] += r.w;
+    const mean = rs.reduce((a, r) => a + r.calls * r.w, 0) / W, ge3 = h.slice(3).reduce((a, b) => a + b, 0);
+    return `TB ${mean.toFixed(2)} · ≥3: ${pc(ge3, W).toFixed(1)}% · ` + h.map((n, k) => `${k}${k === 5 ? '+' : ''}: ${pc(n, W).toFixed(1)}%`).join(' ');
+  };
+  const cont = (p: string[]) => p.every((x, i) => !i || P.continues(p[i - 1], x));
+  console.log('\nBiến cố hệ quả mỗi lượt (lựa chọn cũ quay lại):');
+  console.log(`  mọi lượt      ${hist(runs)}`);
+  for (const pol of POL) console.log(`  ${pol.padEnd(13)} ${hist(runs.filter(r => r.pol === pol))}`);
+  console.log(`  đường quen    ${hist(runs.filter(r => r.pol === 'trung' && cont(r.path)))}`);
+  for (const [hid] of P.HOMES) console.log(`  quê ${hid.padEnd(9)} ${hist(runs.filter(r => r.f.home!.id === hid))}`);
+  const sks = [...new Set(runs.map(r => r.sk))].filter(Boolean);
+  console.log('Lượt gặp biến cố riêng theo họ: ' + sks.map(k => { const rs = runs.filter(r => r.sk === k); return `${k} ${pc(rs.filter(r => r.own > 0).length, rs.length).toFixed(0)}%`; }).join(' · '));
 }
 const r1 = (x: number) => Math.round(x * 10) / 10;
 if (outFile) {

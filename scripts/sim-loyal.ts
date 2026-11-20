@@ -11,6 +11,8 @@ const st = await import('../src/state');
 const P = await import('../src/play');
 const { SPECIAL } = await import('../src/data/cards2');
 const { SURNAMES, loreOf } = await import('../src/data/surnames');
+/** Họ của nhóm '': một họ gõ tay, không có trong danh sách nên không có biến cố riêng theo họ. */
+const NO_SK = 'Họ Khúc';
 type Fx = Parameters<typeof P.canAfford>[0];
 type Flag = import('../src/data/endings').Flag;
 
@@ -46,7 +48,7 @@ for (const sk of surnames) for (const [hid] of P.HOMES) for (const path of paths
   st.resetState();
   const S = st.S;
   S.mode = 'play'; S.home = hid; S.step = 'play';
-  S.surname = sk; S.name = sk ? 'Họ ' + loreOf(sk)!.names[0] : 'Họ Lê';
+  S.surname = sk; S.name = sk ? 'Họ ' + loreOf(sk)!.names[0] : NO_SK; // nhóm '': một họ gõ tay, không có biến cố riêng theo họ
   runs++;
   const who = `${sk || '-'} ${hid} ${path.join('>')}`;
   ERAS.forEach((e, ei) => {
@@ -60,8 +62,8 @@ for (const sk of surnames) for (const [hid] of P.HOMES) for (const path of paths
       if (!c || !(P.mustDecide(v) || P.specialFor(v))) continue; // như pendingCard: bắt buộc, hay có biến cố riêng
       const y = st.chYear(v);
       P.decide(v, choose(`${who} ${v.id} (${v.y})`, c[2].map((ch, i) => ({ fx: ch[2], label: ch[0], key: P.alKey(v, i), flag: ch[4] })), y));
-      const sp = P.specialFor(v);
-      if (sp && !P.specialDecided(sp)) {
+      // các biến cố của sự kiện, lần lượt như card.ts (biến cố riêng, rồi hệ quả)
+      for (let sp = P.specialFor(v); sp && !P.specialDecided(sp); sp = P.specialFor(v)) {
         const i = choose(`${who} ${sp.id} (${v.y})`, sp.choices.map(ch => ({ fx: ch[2], label: ch[0], rename: !!ch[4], flag: ch[5] })), y);
         const mom = SURNAMES.find(x => x.key !== (S.surname || ''))?.names[0]; // chip mặc định "Lấy họ mẹ"
         P.decideSpecial(sp, i, v.y, sp.choices[i][4] === 'mother' ? mom : sp.choices[i][4]);

@@ -378,6 +378,9 @@ export function epilogue(id: string, f: Facts): string {
     }
     case 'doiho': {
       const n = f.renames[0], last = f.renames[f.renames.length - 1];
+      // nhận lại họ cũ (biến cố gia phả những năm 1990, cards2.ts 'origin'): căn cước và bài vị lại cùng một họ
+      if (f.renames.length > 1 && bare(last.to) === bare(n.from))
+        return `Năm ${n.y}, qua biến cố “${n.why}”, ${n.from} đổi thành ${n.to}. Năm ${last.y}, dòng họ làm giấy tờ nhận lại họ cũ. Năm 2026, con cháu khai họ ${bare(n.from)} như tổ tiên, nhưng gia phả${oQue} vẫn chép những năm dòng họ mang họ ${bare(n.to)}; ngày giỗ tổ, cả hai cái tên cùng được đọc lên.`;
       return `Năm ${n.y}, qua biến cố “${n.why}”, ${n.from} đổi thành ${n.to}.${f.renames.length > 1 ? ` Năm ${last.y}, dòng họ đổi thêm một lần nữa, thành ${last.to}.` : ''} Năm 2026, con cháu khai họ ${bare(last.to)} trên căn cước, nhưng bài vị ở từ đường${oQue} vẫn chép họ ${bare(n.from)}; ngày giỗ tổ, cả hai cái tên cùng được đọc lên.`;
     }
     case 'vongtoc':

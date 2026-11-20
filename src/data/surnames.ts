@@ -13,7 +13,7 @@ export interface SurnameLore {
   variant: string;
   /** Nhân vật trong hồ sơ mang họ này (id FIG). */
   kin: string[];
-  /** Biến cố riêng trong trò chơi áp dụng cho họ này: south-spelling · ngo-1963 · royal-1945 · mac-lore · none. */
+  /** Biến cố riêng trong trò chơi áp dụng cho họ này (khoá trong HOOK_TEXT): south-spelling · ngo-1963 · royal-1945 · mac-lore · tran-1936 · le-1893 · pham-2007…; [] = không có. */
   hooks: string[];
 }
 
@@ -21,11 +21,11 @@ export const SURNAMES: SurnameLore[] = [
   { key: "nguyen", names: ["Nguyễn"], lore: "Ước tính khoảng 38% người Việt mang họ Nguyễn (số liệu thường dẫn năm 2005), tỷ lệ hiếm thấy trên thế giới. Sử chép năm 1232 người họ Lý bị buộc đổi sang Nguyễn vì kiêng huý nhà Trần; nhiều dòng họ khác nhập vào qua các biến động về sau.",
     variant: "", kin: ["ntp", "ntt", "ntr", "ndc", "ntht", "nvv", "nth", "ntmk", "nan", "nl", "nb", "nvx", "nck", "nk", "nht", "ntb", "ntd", "nct", "nvl", "nvt", "hcm", "dm"], hooks: ["nguyen-1925"] },
   { key: "tran", names: ["Trần"], lore: "Ước tính khoảng 11% dân số (thống kê 2005), đứng thứ hai. Nhà Trần (1225–1400) ba lần đẩy lui quân Nguyên Mông; khi Hồ Quý Ly đoạt ngôi, tôn thất Trần bị truy sát, riêng vụ mưu sự năm 1399 hơn 370 người bị giết.",
-    variant: "", kin: ["ttk", "tp", "tvg", "tlx", "tvh", "tvk2"], hooks: [] },
+    variant: "", kin: ["ttk", "tp", "tvg", "tlx", "tvh", "tvk2"], hooks: ["tran-1936"] },
   { key: "le", names: ["Lê"], lore: "Ước tính khoảng 9,5% dân số (thống kê 2005), đứng thứ ba. Hai triều đại mang họ này: Tiền Lê (980–1009) và Hậu Lê (1428–1789); Lê Lợi dựng cờ Lam Sơn từ Thanh Hoá, nơi nhiều chi họ Lê lớn vẫn nhận làm quê gốc.",
-    variant: "", kin: ["ld", "lhp", "bv"], hooks: [] },
+    variant: "", kin: ["ld", "lhp", "bv"], hooks: ["le-1893"] },
   { key: "pham", names: ["Phạm"], lore: "Ước tính khoảng 7% dân số, đứng thứ tư. Họ Phạm không lập triều đại nào nhưng có mặt đều khắp ba miền, từ võ tướng Phạm Ngũ Lão thời Trần đến các nhà báo, nhạc sĩ, chính khách thế kỷ XX.",
-    variant: "", kin: ["pq", "pd", "pvd", "pxa", "ph", "nct2", "ttq"], hooks: [] },
+    variant: "", kin: ["pq", "pd", "pvd", "pxa", "ph", "nct2", "ttq"], hooks: ["pham-2007"] },
   { key: "hoang", names: ["Hoàng", "Huỳnh"], lore: "Ước tính khoảng 5% dân số, đứng thứ năm. Chữ Hoàng (黃) nghĩa là màu vàng; họ này phổ biến ở người Kinh lẫn người Tày, Nùng vùng Đông Bắc, và ở Nam Kỳ xuất hiện dưới dạng Huỳnh.",
     variant: "Từ Huế trở vào, Hoàng đọc và viết thành Huỳnh để kiêng huý chúa Nguyễn Hoàng (1525–1613); cùng một họ, hai cách viết Bắc – Nam.", kin: ["hht", "hd", "htk", "hps"], hooks: ["south-spelling"] },
   { key: "phan", names: ["Phan"], lore: "Ước tính khoảng 4,5% dân số (thống kê 2005), đứng thứ sáu. Cuối thế kỷ XIX – đầu XX, người họ Phan đứng ở nhiều ngả: Phan Thanh Giản (Bến Tre) chủ hoà, Phan Đình Phùng (Hà Tĩnh) Cần Vương, Phan Châu Trinh (Quảng Nam) duy tân.",
@@ -157,7 +157,10 @@ export const HOOK_TEXT: Record<string, string> = {
   'south-spelling': 'Nếu di cư vào Nam năm 1954, dòng họ sẽ đứng trước cách viết họ của người miền Nam.',
   'ngo-1963': 'Sau đảo chính tháng 11.1963, một gia đình họ Ngô sẽ bị dò hỏi có bà con với nhà Ngô Đình hay không.',
   'royal-1945': 'Mùa thu 1945, dòng dõi hoàng tộc phải chọn giữ hay bỏ tên dòng.',
-  'mac-lore': 'Tổ tiên họ Mạc từng đổi họ để tránh truy bức sau năm 1592; dòng họ bạn mang ký ức ấy.',
+  'mac-lore': 'Tổ tiên họ Mạc từng đổi họ để tránh truy bức sau năm 1592. Những năm 1990, khi các chi họ Mạc tìm lại nhau, dòng họ bạn sẽ phải quyết có nhận chung tổ với một chi đã mang họ khác hay không.',
+  'tran-1936': 'Mùa hội tháng Tám năm 1936, làng sẽ mời nhà họ Trần đứng ra lo lễ giỗ Đức Thánh Trần, vì cùng họ.',
+  'le-1893': 'Năm 1893, gần ngày giỗ tháng Tám, các cụ họ Lê sẽ bàn có giữ lệ “hăm mốt Lê Lai, hăm hai Lê Lợi” giữa năm mất mùa hay không.',
+  'pham-2007': 'Năm 2007, đứa cháu học bài thơ “Tỏ lòng” của Phạm Ngũ Lão sẽ về hỏi nhà mình có phải con cháu ông không.',
   'phan-1908': 'Năm 1908, khi Phan Châu Trinh bị bắt sau phong trào chống thuế Trung Kỳ, một gia đình họ Phan ở Huế, Quảng Nam sẽ phải chọn cách đứng.',
   'nguyen-1925': 'Khi cái tên Nguyễn Ái Quốc lan về làng (1919–1925), dòng họ Nguyễn sẽ phải chọn giữ hay đốt những tờ giấy mang tên ấy.',
 };
