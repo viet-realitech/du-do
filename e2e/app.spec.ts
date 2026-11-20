@@ -1,10 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { navCut } from './fixtures/errors';
 
 /* Wikipedia/Commons are blocked so runs are deterministic and the offline fallbacks get exercised. */
 async function boot(page: Page, state?: object) {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
   await page.addInitScript(() => document.addEventListener('securitypolicyviolation', e => console.error('CSP: ' + e.violatedDirective + ' ' + e.blockedURI)));
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
@@ -143,7 +144,7 @@ test('turning points mark which options continue the family path (every path has
 
 test('play mode: a family diary page says what the family at home decided', async ({ page }) => {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const st = { step: 'play', mode: 'play', name: 'Họ Phan', surname: 'phan', home: 'na', year: 1861, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2 }, cardv: {}, res: { g: 40, d: 30, b: 25, u: 30 } };
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
@@ -289,7 +290,7 @@ test('keyboard: the side card keeps focus across ‹ ›, an event page focuses 
 
 test('play mode: another region\'s optional card is not offered (Hà Nội 1882 for a Nghệ An family)', async ({ page }) => {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const st = { step: 'play', mode: 'play', name: 'Họ Phan', surname: 'phan', home: 'na', year: 1883, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2, gt74: 1 }, cardv: {}, res: { g: 40, d: 30, b: 25, u: 30 } };
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
@@ -303,7 +304,7 @@ test('play mode: another region\'s optional card is not offered (Hà Nội 1882 
 
 test('play mode: Điện Biên Phủ and Genève, still owed at 1954, are played before turning point 5 (after a reload too)', async ({ page }) => {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   // every card decided except the two 1954 events that close chapter 4
   const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]).filter(id => id !== 'dbp' && id !== 'gnv');
@@ -320,7 +321,7 @@ test('play mode: Điện Biên Phủ and Genève, still owed at 1954, are played
 /** Trò chơi, bản lưu dựng sẵn: mọi thẻ trước thẻ `upTo` (theo thứ tự trong cards.ts, cũng là thứ tự thời gian) đã quyết. */
 async function bootPlay(page: Page, st: Record<string, unknown>, upTo: string, key = 'seeded') {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
   const cards = { ...Object.fromEntries(ids.slice(0, ids.indexOf(upTo)).map(id => [id, 0])), ...(st.cards as object || {}) };
@@ -359,7 +360,7 @@ test('play mode: a save from before turning point 5 moved the family keeps its p
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], ...(year >= 2026 ? { e5: [true, true], e6: [true, true] } : {}) }, cards, cardv: {}, xs: {}, xFrom: 1858, names: [],
     harvests: year >= 2026 ? ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'] : ['e1', 'e2', 'e3', 'e4'], ended: year >= 2026 });
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   await page.addInitScript(([x, y]) => {
     if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', x); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); }
@@ -516,6 +517,7 @@ test('play mode: a Lý household that left on the 1979 paid route is abroad in 1
   await expect(page.locator('#layer > .scrim .sheet > [role=radiogroup] .opt h3')).toHaveText(['Khai tên con theo lệnh tổng động viên', 'Nghe tin qua đài']);
   await page.locator('#layer > .scrim .opt').nth(1).click();
   await page.locator('#cgo').click();
+  await live(page, '.scrim #xnext').click(); // the family event waits until the card's outcome has been read
   await expect(live(page, '.scrim .xsp > h3')).toBeVisible();
   await page.locator('.xopts .opt').nth(1).click();
   await page.locator('#xgo').click();
@@ -552,6 +554,7 @@ test('play mode: a Lý household in Cần Thơ whose son went to the Cambodian f
   // brother, not "the son" still waiting for call-up; that son still bars "cả nhà đi"
   await expect(page.locator('#layer > .scrim .opt.sel')).toContainText('một người con đã ở mặt trận Campuchia');
   await expect(page.locator('#layer > .scrim .opt.sel .out')).toContainText('Tên người em vào danh sách chờ gọi');
+  await live(page, '.scrim #xnext').click(); // the family event waits until the card's outcome has been read
   await expect(live(page, '.scrim .xsp > h3')).toHaveText('Họ Lý, năm 1979');
   const x = page.locator('.xopts .opt');
   await expect(x.nth(1)).toBeDisabled();
@@ -583,6 +586,7 @@ test('play mode: a Cần Thơ household that chose Ra đi is warned before sendi
   await expect(live(page, '.scrim h2')).toHaveText('Việt Nam rút quân khỏi Campuchia', { timeout: 8000 });
   await live(page, '.scrim .sheet > [role=radiogroup] .opt').first().click();
   await page.locator('#cgo').click();
+  await live(page, '.scrim #xnext').click(); // the family event waits until the card's outcome has been read
   const xsp = live(page, '.scrim .xsp');
   await expect(xsp.locator('> h3')).toHaveText('Người con về, cả nhà lên đường');
   await expect(xsp).not.toContainText('ở xứ người;');
@@ -640,6 +644,7 @@ test('play mode: a rich northern family answers land reform before the team come
   const out = live(page, '.scrim .opt.sel .out');
   await expect(out).toContainText('phải chờ đội về mới xét');
   await expect(out).not.toContainText('Ruộng thì mất');
+  await live(page, '.scrim #xnext').click(); // the family event waits until the card's outcome has been read
   await expect(live(page, '.scrim .xsp > h3')).toHaveText('Đội cải cách sắp về làng');
   await expect(live(page, '.scrim .xsp')).toContainText('vốn có nhiều ruộng');
   expect(errors).toEqual([]);
@@ -865,7 +870,7 @@ test('map sheet: new players open on Lưu trữ (a saved theme stays), the popul
 test('play mode, tablet: resource icons are drawn (not clipped to a hairline) and relations get their own legend row', async ({ page }) => {
   await page.setViewportSize({ width: 820, height: 1180 });
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const st = { step: 'play', mode: 'play', name: 'Họ Phan', surname: 'phan', home: 'na', year: 1861, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2 }, cardv: {}, res: { g: 40, d: 30, b: 25, u: 30 } };
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2-play', s); localStorage.setItem('dudo-mode', 'play'); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(st));
@@ -1291,7 +1296,7 @@ test('play mode: "Điểm rẽ ›" still flies to each decision the family owes
 
 test('play mode: reloading mid-chapter resumes the tour at the owed card instead of stacking cards', async ({ page }) => {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   const st = { step: 'play', mode: 'play', name: 'Họ Lê', surname: 'le', home: 'hn', year: 1874, picks: { e1: 'chien' }, quiz: {}, cards: { nt62: 2 },
     res: { g: 40, d: 30, b: 25, u: 30 } };
@@ -1408,7 +1413,7 @@ test('share card carries the public address of the game', async ({ page }) => {
 
 test('ending (play mode): home, card decisions and harvest snapshots shape the ending, tier and gia phả', async ({ page }) => {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   // every card decided (the first choice), except those that would send a branch away or split the family in 1954
   const ids = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
@@ -1456,7 +1461,7 @@ test('reading mode: skipping chapter 6 leads to the conclusion, not to a bare 20
   expect(errors).toEqual([]);
 });
 
-test('play mode: after a card decision the family event comes into view, the unpicked options fold, values read as a ledger', async ({ page }) => {
+test('play mode: after a card decision its outcome stays in view, then the family event comes into view; the unpicked options fold, values read as a ledger', async ({ page }) => {
   const errors = await bootPlay(page, { name: 'Họ Tôn Thất', surname: 'tonthat', home: 'hn', year: 1945, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
     // vm41 = 1 (chưa theo Việt Minh năm 1941): chỉ một biến cố sau thẻ, không có hệ quả "lá cờ đầu tiên" (e2e/callbacks.spec.ts)
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0, cards: { vm41: 1 } }, 'ng45');
@@ -1471,6 +1476,13 @@ test('play mode: after a card decision the family event comes into view, the unp
   await live(page, '.scrim .opt').first().click();
   await page.locator('#cgo').click();
   await expect(live(page, '.scrim .sheet > [role=radiogroup] .opt.skip')).toHaveCount(2);
+  // the card's own outcome is not scrolled away: the family event waits for "Sang việc kế tiếp ›"
+  const next = live(page, '.scrim #xnext');
+  await expect(next).toBeFocused();
+  await page.waitForTimeout(700);
+  await expect(live(page, '.scrim .sheet > [role=radiogroup] .opt.sel .out')).toBeInViewport({ ratio: 1 });
+  await expect(live(page, '.scrim .xsp')).toHaveCount(0);
+  await next.click();
   await expect(live(page, '.scrim .xsp > h3')).toBeInViewport(); // not ~900 px below the fold
   await expect(live(page, '.scrim .steps')).toHaveClass(/two/);
   expect(errors).toEqual([]);
@@ -1630,12 +1642,13 @@ test.describe('short and wide windows', () => {
     expect(map.height).toBeGreaterThan(200); // trước đây 12 px
     expect(card.x).toBeGreaterThan(map.x + map.width - 1);
     expect(tabs.y + tabs.height).toBeLessThanOrEqual(391);
-    // a card decision scrolls its sheet to the family event; the app frame itself never stays scrolled
+    // moving on to the family event scrolls the sheet to it; the app frame itself never stays scrolled
     await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
     await page.locator('#tourb [data-t=skip]').click();
     await expect(live(page, '.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
     await live(page, '.scrim .opt').first().evaluate(b => (b as HTMLElement).click());
     await page.locator('#cgo').evaluate(b => (b as HTMLElement).click());
+    await live(page, '.scrim #xnext').evaluate(b => (b as HTMLElement).click());
     await expect(live(page, '.scrim .xsp > h3')).toBeVisible();
     expect(await page.locator('#app').evaluate(a => a.scrollTop)).toBe(0);
     const shift = await page.evaluate(async () => { const a = document.getElementById('app')!, d = document.createElement('div'); d.style.cssText = 'position:absolute;top:1500px;width:4px;height:4px'; a.appendChild(d); d.scrollIntoView(); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); const t = a.scrollTop; d.remove(); return t; });

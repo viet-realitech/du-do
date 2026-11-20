@@ -12,7 +12,7 @@ import { esc, layer, sheet, ghost } from '../ui/dom';
 import { SND, buzz, audioSession } from '../audio';
 import { hasVoice, missedVoice, speak } from '../narration';
 import { UI_LINES } from '../speech';
-import { openShare, resetAll } from './ending';
+import { openShare, resetAll, closeLive } from './ending';
 import { ledger, keepLine } from './ledger';
 import { qmode, setQMode, type QMode } from '../ui/quality';
 import './about';
@@ -45,12 +45,13 @@ export function compass(): string {
 const RATES: [number, string][] = [[0.8, 'Chậm'], [0.95, 'Vừa'], [1.15, 'Nhanh']];
 
 export function paneMe(): void {
+  closeLive(); // kết cục đã đọc ở bản trước: vào Sổ kết cục ngay (không đợi mở lại màn kết)
   const done = ERAS.filter(e => S.picks[e.id]).length, a = archetype();
   const sw = (key: string, label: string, onState: boolean) =>
     `<button class="row set" data-a="set" data-k="${key}" role="switch" aria-checked="${onState}"><span>${label}</span><span class="sw${onState ? ' on' : ''}"></span></button>`;
   const keep = layer.querySelector('.pane')?.scrollTop || 0;
   const seg = (a: string, cur: string, opts: [string, string][]) =>
-    `<div class="seg" style="width:180px;flex:none">${opts.map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" style="font-size:calc(14px*var(--ts))" data-a="${a}" data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
+    `<div class="seg" style="width:180px;flex:none;margin-left:auto">${opts.map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" style="font-size:calc(14px*var(--ts))" data-a="${a}" data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
   const sample = (['dainam', 'phap', 'vndcch', 'vnch'] as Faction[]).map(flag).join('');
   layer.innerHTML = `<div class="pane"><div class="mono muted">Hồ sơ dòng họ</div><h1 style="margin:6px 0 2px">${esc(familyName())}</h1>
   <p class="muted" style="font-style:italic">${a ? a[0] + ' · ' + a[1] : 'Chưa có lựa chọn nào.'}</p>
@@ -81,7 +82,7 @@ export function paneMe(): void {
   <h3 style="margin:22px 0 10px">Giao diện</h3>
   ${themeCards()}
   <button class="row set" data-a="bigtext" role="switch" aria-checked="${bigText()}" style="margin-top:8px"><span>Chữ lớn <span class="muted small">· chữ to hơn, dễ đọc hơn</span></span><span class="sw${bigText() ? ' on' : ''}"></span></button>
-  <div class="row sb" style="padding:12px 0 6px"><span class="row" style="white-space:nowrap"><span class="muted">Màu các phe</span><span class="swl" aria-hidden="true">${sample}</span></span>${seg('pal', S.pal, [['flag', 'Theo cờ'], ['sepia', 'Mực nâu']])}</div>
+  <div class="row sb" style="padding:12px 0 6px;flex-wrap:wrap;row-gap:6px"><span class="row" style="white-space:nowrap"><span class="muted">Màu các phe</span><span class="swl" aria-hidden="true">${sample}</span></span>${seg('pal', S.pal, [['flag', 'Theo cờ'], ['sepia', 'Mực nâu']])}</div>
   <div class="row sb" style="padding:6px 0"><span class="muted">Nét bản đồ${S.theme === 'archive' ? '' : ' <span class="small">· với Lưu trữ</span>'}</span>${seg('mstyle', S.mstyle, [['co', 'Cổ điển'], ['flat', 'Phẳng']])}</div>
   ${sw('grain', 'Vân giấy', S.grain)}
   ${sw('modern', 'Đường biên hiện nay', S.modern)}
@@ -97,7 +98,7 @@ export function paneMe(): void {
   <p class="muted small" style="margin:0 0 4px">Tự động: máy chạy chậm thì tự bớt gợn sóng, khói và rung để bản đồ mượt hơn.</p>
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
-  ${done === 6 || (!isPlay() && S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
+  ${(isPlay() ? done === 6 && S.year >= Y1 : done === 6 || S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
   <button class="btn ghost" data-a="about">Giới thiệu & nguồn dữ liệu</button>
   <button class="lnk" data-a="reset">Chơi lại từ đầu</button></div>`;
   layer.querySelector('.pane')!.scrollTop = keep;

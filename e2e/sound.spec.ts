@@ -270,6 +270,65 @@ test('the ending plays the elegiac finale for a family that lost its homeland, a
   expect(errors).toEqual([]);
 });
 
+test('music asked for while the page is hidden waits for the page to be shown: a track that finishes loading behind it does not start', async ({ page }) => {
+  // tệp nhạc tới chậm 3 s: trang ẩn đi (khoá máy, sang ứng dụng khác) ngay sau cú chạm, trong lúc tải
+  await page.route(/\/music\//, async r => { await new Promise(f => setTimeout(f, 3000)); await r.continue(); });
+  const errors = await boot(page, { ...midGame, year: 1885 });
+  const flip = (h: boolean) => page.evaluate(h => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => h }); document.dispatchEvent(new Event('visibilitychange')); }, h);
+  await flip(true);
+  await page.waitForTimeout(6000); // tải xong, giải mã xong
+  expect(await page.evaluate(() => (window as unknown as W).passes.length)).toBe(0);
+  expect(await musicLine(page)).not.toMatch(/^Nhạc: calm \d/);
+  await flip(false);
+  await expect.poll(() => musicLine(page), { timeout: 8000 }).toMatch(/^Nhạc: calm \d/);
+  expect(errors).toEqual([]);
+});
+
+test('a chapter tour paused under Hồ sơ keeps its music through an archived dossier: closing the dossier brings the chapter music back where it was, and the tour resumes on it', async ({ page }) => {
+  test.setTimeout(120_000);
+  // Sổ kết cục có một hồ sơ Đọc sử (kết cục không mất mát: nhạc khép Heroic Age)
+  const save = { v: 2, step: 'play', name: 'Họ Phan', year: 2026, picks: { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba', e6: 'doimoi' }, quiz: { e6: [true, true] }, ended: true, endSaid: true };
+  const book = { v: 1, runs: [{ id: 'r1', at: '2026-11-02T09:00:00.000Z', mode: 'read', end: 'canhtan', title: 'Bốn đời canh tân', name: 'Họ Phan', home: '', save }], gone: {}, live: {} };
+  await page.addInitScript(b => { if (!sessionStorage.getItem('arc')) { localStorage.setItem('dudo-archive', b); sessionStorage.setItem('arc', '1'); } }, JSON.stringify(book));
+  const errors = await boot(page, { ...midGame, year: 1945, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm' }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true] } });
+  await expect.poll(() => musicLine(page), { timeout: 15_000 }).toMatch(/^Nhạc: calm \d/);
+  const pos = async (m: string) => Number((await musicLine(page)).match(new RegExp(`^Nhạc: ${m} ([\\d.]+) s`))?.[1] ?? NaN);
+  // chương 4 chạy: nhạc chiến tranh
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toBeVisible();
+  await expect.poll(() => musicLine(page), { timeout: 20_000 }).toMatch(/^Nhạc: war \d/);
+  await page.waitForTimeout(3000);
+  // Hồ sơ: tour dừng, nhạc của chương vẫn chơi
+  await page.locator('.tab[data-t=me]').click();
+  await expect(page.locator('#tourb')).toContainText('tạm dừng');
+  await page.waitForTimeout(1000);
+  expect(await musicLine(page)).toMatch(/^Nhạc: war \d/);
+  const opened = async () => {
+    await page.locator('.ledg .arc-runs [data-a=arc-open][data-id=r1]').click();
+    await expect(live(page, '.ov.end[data-ro=r1]')).toBeVisible();
+    await expect.poll(() => musicLine(page), { timeout: 15_000 }).toMatch(/^Nhạc: finale \d/);
+  };
+  const p1 = await pos('war');
+  await opened();
+  // ‹ Về Sổ kết cục: nhạc của chương trở lại, chơi tiếp từ chỗ đã rời (không lại từ khúc dạo đầu)
+  await live(page, '.ov.end .end-back [data-a=close]').click();
+  await expect.poll(() => musicLine(page), { timeout: 8000 }).toMatch(/^Nhạc: war \d/);
+  expect(await pos('war')).toBeGreaterThanOrEqual(p1);
+  const back = await page.evaluate(() => (window as unknown as W).passes.at(-1)!.off);
+  expect(back).toBeGreaterThan(p1 - 0.5);
+  // mở lại lần nữa, đóng bằng phím Esc, rồi về Bản đồ: tour chạy tiếp, trên nhạc của chương
+  await opened();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.ov.end')).toHaveCount(0);
+  await expect.poll(() => musicLine(page), { timeout: 8000 }).toMatch(/^Nhạc: war \d/);
+  await page.locator('.tab[data-t=map]').click();
+  await expect(page.locator('#tourb')).not.toContainText('tạm dừng');
+  await expect.poll(() => musicLine(page), { timeout: 8000 }).toMatch(/^Nhạc: war \d/);
+  await page.waitForTimeout(4000);
+  expect(await musicLine(page)).toMatch(/^Nhạc: war \d/);
+  expect(errors).toEqual([]);
+});
+
 test.describe('on an iPad in landscape', () => {
   test.use({ viewport: { width: 1194, height: 834 } });
 

@@ -46,6 +46,11 @@ let master: GainNode | null = null;
 /** Invalidates a decode that ends after the mood has changed. */
 let gen = 0;
 const cache = new Map<Mood, Promise<AudioBuffer>>();
+/** Where each mood was left (s into the track) and when (ms): coming back soon after (an archived dossier closed, a
+    chapter tour resumed), the mood goes on from there instead of from its intro. */
+const left = new Map<Mood, { at: number; t: number }>();
+/** Coming back later than this starts the mood over, from its intro. */
+const LEFT_MS = 5 * 60_000;
 /** Bảng chẩn đoán / e2e: số lần đã nối vòng, thời gian tải + giải mã bản gần nhất (ms), số lần tải hỏng. */
 const stat = { loops: 0, decode: 0, failed: 0 };
 
@@ -126,7 +131,9 @@ function start(a: AudioContext, m: Mood, buf: AudioBuffer): Play {
   g.gain.linearRampToValueAtTime(VOL[m], t + FADE);
   g.connect(master!);
   const p: Play = { m, a, buf, g, passes: [], t: 0, at: null };
-  pass(p, t + 0.05, 0, false); // tệp mới: phát từ đầu
+  // vừa rời mood này chưa lâu: phát tiếp từ chỗ đã rời (vẫn lên dần), không lại từ khúc dạo đầu
+  const l = left.get(m), off = l && performance.now() - l.t < LEFT_MS ? l.at : 0;
+  pass(p, t + 0.05, off, false);
   return p;
 }
 
@@ -152,13 +159,14 @@ function apply(): void {
   if (a.state !== 'running') { a.resume().then(() => { if (a.state === 'running') apply(); }, () => {}); return; }
   if (!master) { master = a.createGain(); master.connect(out); }
   const n = ++gen;
-  if (cur) stop(cur);
+  if (cur) { left.set(cur.m, { at: where(cur), t: performance.now() }); stop(cur); }
   cur = null;
   loading = m;
   if (!m) return;
   load(a, m).then(buf => {
     if (gen !== n) return;
     loading = null;
+    if (document.hidden) return; // trang ẩn đi lúc đang tải / giải mã: chưa phát; hiện lại thì apply() phát từ bản đã giải mã
     cur = start(a, m, buf);
   }, () => {
     if (gen !== n) return;
@@ -166,6 +174,9 @@ function apply(): void {
     stat.failed++;
   });
 }
+
+/** The mood asked for last ('finale' already read as the ending's track), to give it back after a screen that changes it. */
+export const moodNow = (): Mood | null => want;
 
 /** Ask for a mood (null = silence). Starts as soon as the browser allows audio. 'finale': the ending's track (finaleFor). */
 export function mood(m: Mood | null): void {

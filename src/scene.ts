@@ -674,6 +674,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     }, start, () => {
       head.setAttribute('opacity', '1');
       arrived.add(i);
+      labelsSoon(); // mũi tên vẽ xong sau lúc bản đồ bay tới: nhãn thành phố đầu mũi tên, quân cờ, khói đè lên thì mờ đi
       // tên nơi mũi tên tới (Him Lam, Quang Hòa…): chữ sáng viền tối, đứng thẳng, phía trên đầu mũi tên
       const at = arw[4]?.at;
       if (at) {
@@ -708,6 +709,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
         // tới mục tiêu: chớp lửa, khói, tiếng nổ
         const big = type === 'siege' ? 1.25 : type === 'uprising' ? 0.6 : 1;
         for (let j = 0; j < (type === 'uprising' ? 1 : 3); j++) explode(r, root, [b[0] + (Math.random() - 0.5) * 14 / k, b[1] + (Math.random() - 0.5) * 10 / k], k, j * 260, big * (1 - j * 0.2));
+        if (!calm.matches) later(r, 2 * 260 + 3900, labelsSoon); // khói tan, cụm nổ đã gỡ: nhãn chỉ còn bị đầu mũi tên, quân cờ che
         if (sounds++ < 6) {
           if (type === 'air') WAR.bomb(0, pan(b)); else WAR.boom(0, i ? 0.25 : 0, pan(b));
           if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2, old, pan(b));

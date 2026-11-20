@@ -20,7 +20,7 @@ function badgeState(): Record<string, boolean> {
 type B = { ic: string; name: string; d: string };
 const queue: B[] = [];
 let draining = false;
-const deciding = () => !!document.querySelector('#layer #go, #layer #cgo, #layer #xgo');
+const deciding = () => !!document.querySelector('#layer #go, #layer #cgo, #layer #xgo, #layer #xnext'); // #xnext: còn biến cố chờ quyết
 function drain(): void {
   whenClear(() => {
     if (deciding()) { setTimeout(drain, 600); return; }

@@ -155,11 +155,17 @@ const GATE6_ID = ERAS[ERAS.length - 1].id;
     vùng khác (vd. giữ thành Hà Nội 1882 với nhà ở Nghệ An) không mời. Nhà đã ra nước ngoài: thẻ tuỳ chọn viết cho người
     trong nước (góp tiền qua báo Tuổi Trẻ, nhận ruộng tái định cư…) không mời, trừ thẻ có bộ lựa chọn nói từ xứ người. */
 export const localCard = (v: HistEvent): boolean => {
+  if (closed() && !decided(v.id)) return false;
   const c = cardOf(v), k = variantIx(v);
   return !!c && ((c[1] === '' && (!abroad(chYear(v)) || (k !== undefined && abroadSet(k, v.id)))) || mustDecide(v));
 };
-/** Thẻ hiện cho dòng họ này (nút ◆ / ✓): thẻ của mình, thẻ đã quyết từ trước, hay có biến cố riêng gắn vào. */
-export const ownCard = (v: HistEvent): boolean => isPlay() && !!cardOf(v) && (localCard(v) || decided(v.id) || !!specialFor(v));
+/** Hồ sơ dòng họ đã khép (Trò chơi, kết cục đã giữ ở S.endFix): không mời quyết thêm thẻ nào, kể cả thẻ tuỳ chọn còn bỏ
+    ngỏ của những năm đã qua. Kết cục đã khép không đổi nữa, nên một quyết định muộn chỉ làm gia sản, hạng và lời "vì sao"
+    trong hồ sơ nói khác kết cục. */
+const closed = (): boolean => isPlay() && !!S.endFix?.id;
+/** Thẻ hiện cho dòng họ này (nút ◆ / ✓): thẻ của mình, thẻ đã quyết từ trước, hay có biến cố riêng gắn vào. Hồ sơ đã
+    khép: chỉ thẻ đã quyết. */
+export const ownCard = (v: HistEvent): boolean => isPlay() && !!cardOf(v) && (decided(v.id) || (!closed() && (localCard(v) || !!specialFor(v))));
 /** Trang nhật ký (người viết đi xa) và việc cả họ ở nhà vừa quyết gần nhất trong cùng chương: lựa chọn, và nó hợp (1) /
     trái (-1) / không liên quan (0) với hướng thế hệ này theo. Trò chơi; null nếu chưa quyết thẻ nào. */
 export function homeChoice(v: HistEvent): { v: HistEvent; ch: Choice; al: -1 | 0 | 1 } | null {
@@ -322,6 +328,7 @@ export function decideSpecial(c: SpecialCard, i: number, y: number, newName?: st
 }
 /** Sự kiện còn cần dòng họ quyết định: thẻ thường chưa quyết, hay một biến cố của nó chưa quyết. */
 export function needsDecision(v: HistEvent): boolean {
+  if (closed()) return false; // hồ sơ đã khép: không còn gì phải quyết
   if (cardOf(v) && !decided(v.id)) return true;
   return specialsFor(v).some(c => !specialDecided(c));
 }
@@ -490,8 +497,6 @@ export function rank(): [string, string] {
   return ['Còn lại tên họ', `Nhóm 5% sa sút nhất cùng quê trong mô phỏng: ${lowT}${d >= 40 ? `, dù trong họ vẫn còn ${d} nhân đinh` : d >= 25 ? '' : ', người cũng còn ít'}; tên họ thì vẫn giữ được.`];
 }
 
-/** Hàng ngưỡng [P5, P25, P60, P92] mà rank() dùng: của quê, sau đời vừa gặt gần nhất. Hồ sơ mở lại từ Sổ kết cục: hàng
-    đã ghi lúc khép (bảng hôm nay có thể đã dời). */
 /** Bậc gia sản để xếp hạng lúc này: hồ sơ mở lại từ Sổ kết cục dùng bậc đã đóng dấu; hồ sơ đã khép (S.endFix) dùng
     ngưỡng đời thứ sáu như lúc kết cục được đọc lần đầu; còn lại theo bảng hôm nay. */
 export const tiersNow = (): number[] | undefined => {

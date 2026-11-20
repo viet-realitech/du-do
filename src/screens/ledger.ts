@@ -3,7 +3,7 @@ import { SURNAMES, surnameKey } from '../data/surnames';
 import { SPECIAL } from '../data/cards2';
 import { HOMES } from '../play';
 import { S, archive, liveRun, clearArchive, familyName, ARC_MAX, type Archive, type ArcRun } from '../state';
-import { mood } from '../music';
+import { mood, finaleFor, type Mood } from '../music';
 import { on } from '../ui/actions';
 import { esc, layer, sheet, ghost, toast } from '../ui/dom';
 import { openPast } from './ending';
@@ -101,14 +101,16 @@ on('arc-seal', el => {
 /** Mở lại hồ sơ một dòng họ đã khép (từ danh sách hay từ một dấu). */
 on('arc-open', el => { if (el.dataset.id) openPast(el.dataset.id); });
 
-/** Hồ sơ mở lại vừa đóng (về Hồ sơ hay sang tab khác): nhạc của màn kết thôi, tiêu điểm về đúng dòng đã mở. */
-export function backToLedger(id: string): void {
+/** Hồ sơ mở lại vừa đóng (về Hồ sơ hay sang tab khác): nhạc của màn kết thôi, nhạc lúc mở (`was`: tour chương đang dừng
+    thì nhạc của chương ấy, không phải nhạc Hồ sơ) trở lại; tiêu điểm về đúng dòng đã mở. */
+export function backToLedger(id: string, was: Mood | null): void {
   const ov = layer.querySelector<HTMLElement>(':scope > .ov.end[data-ro]');
   if (!ov) return;
   const mo = new MutationObserver(() => {
     if (layer.contains(ov)) return;
     mo.disconnect();
-    if (!layer.querySelector(':scope > .ov.end')) mood('calm');
+    // 'finale' lúc mở là nhạc khép thường (hồ sơ vừa xem có thể đã đổi nó sang khúc trầm buồn: music.ts finaleFor)
+    if (!layer.querySelector(':scope > .ov.end')) mood(was === 'finale' ? finaleFor() : was ?? 'calm');
     const row = layer.querySelector<HTMLElement>(`:scope > .pane .arc-runs [data-a="arc-open"][data-id="${CSS.escape(id)}"]`);
     if (row) { row.scrollIntoView({ block: 'center' }); row.focus({ preventScroll: true }); }
   });

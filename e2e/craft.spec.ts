@@ -341,3 +341,69 @@ test('the header Chọn hướng button answers a tap anywhere in a 44 px band',
   expect(hits).toEqual([true, true, true, true, true]);
   expect(errors).toEqual([]);
 });
+
+test('ending home plate and diary plate: a family that chose Ra đi without an exit card lives abroad from 1979 (1989 with a son at the Cambodian front)', async ({ page }) => {
+  const radi = { ...PICKS, e6: 'radi' }, rows = page.locator('.ov.end .end-plate .mp-l li'), res = { g: 60, d: 50, b: 50, u: 50 }; // không sa sút
+  const again = async (s: object) => {
+    await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ sound: false, music: false, narr: false, ...s }));
+    await page.reload();
+    await page.waitForSelector('#map text[data-city]');
+    await act(page, 'end');
+  };
+  // Hà Nội, moved South in 1954, left in 1979: the plate says so, as the ending does
+  const errors = await boot(page, { ...donePlay('hn', radi), res }, true);
+  await act(page, 'end');
+  await expect(page.locator('.ov.end .end-title')).toHaveText('Bên kia đại dương');
+  await expect(rows).toHaveText([/1858\s*Quê nhà: Hà Nội/, /1954\s*Di cư vào miền Nam/, /1979\s*Cả nhà ra đi; từ đó sống ở xứ người/]);
+  // the 1995 diary page ("Chuyến bay về"): not "from home in the South", but from the home the family left
+  await page.locator('.ov.end .back').click();
+  await expect(page.locator('#layer > .ov')).toHaveCount(0);
+  await act(page, 'ev', { id: 'd-radi1' });
+  await expect(page.locator('.ov.diary .dplate figcaption')).toHaveText(/^Dấu chân người viết · cách quê gốc ở Hà Nội ~.+ km$/);
+  await expect(page.locator('.ov.diary .dplate svg text.pl-mk')).toHaveText(['Hà Nội', 'Dấu chân']);
+  // Sài Gòn: its one move is abroad
+  await again({ ...donePlay('sg', radi), res });
+  await expect(rows).toHaveText([/1858\s*Quê nhà: Sài Gòn – Gia Định/, /1979\s*Cả nhà ra đi; từ đó sống ở xứ người/]);
+  await expect(page.locator('.ov.end .end-plate .mp-l li.none')).toHaveCount(0);
+  // Cần Thơ, a son sent to Cambodia in 1979 (cp79 = 0): the household leaves only in 1989
+  await again({ ...donePlay('ct', radi), res, cards: { cp79: 0 } });
+  await expect(rows.last()).toHaveText(/1989\s*Cả nhà ra đi; từ đó sống ở xứ người/);
+  expect(errors).toEqual([]);
+});
+
+test('Áp phích on a phone: the Hồ sơ settings fit 390 px, the faction colour switch wraps under its label', async ({ page }) => {
+  const errors = await boot(page, { ...donePlay('hn', PICKS), theme: 'poster' }, true);
+  await page.locator('.tab[data-t=me]').click();
+  const pane = page.locator('.pane');
+  await expect(pane.locator('[data-a=pal]').first()).toBeVisible();
+  const over = () => pane.evaluate(p => {
+    const out: string[] = [], r = p.getBoundingClientRect();
+    if (p.scrollWidth > p.clientWidth + 1) out.push(`pane ${p.scrollWidth} > ${p.clientWidth}`);
+    for (const s of p.querySelectorAll<HTMLElement>('.seg')) { const b = s.getBoundingClientRect(); if (b.right > r.right + 0.5) out.push(`.seg ${s.textContent} ra tới ${Math.round(b.right)} > ${Math.round(r.right)}`); }
+    return out;
+  });
+  expect(await over()).toEqual([]);
+  await page.locator('[data-a=bigtext]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-text', 'big');
+  expect(await over()).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('iPad landscape, Đà Nẵng 1858 replay: battle ink drawn after the fly-in fades the label it covers; Đóng brings it back', async ({ browser }, info) => {
+  // mũi tên, đầu mũi tên của trận vẽ sau khi bản đồ bay tới xong: lần xét nhãn lúc bay tới chưa thấy chúng
+  const { defaultBrowserType: _, ...d } = devices['iPad Pro 11 landscape'];
+  const ctx = await browser.newContext({ ...d, baseURL: info.project.use.baseURL, serviceWorkers: 'block' });
+  try {
+    const page = await ctx.newPage();
+    const errors = await boot(page, { ...read54, year: 2026, picks: { ...PICKS, e5: 'bac' }, quiz: {} });
+    await page.waitForTimeout(800);
+    await act(page, 'replay', { id: 'dn58' });
+    await expect(page.locator('#replb')).toBeVisible();
+    await expect.poll(async () => (await cityOps(page))['Đà Nẵng'], { timeout: 20_000 }).toBe('0');
+    await page.locator('#replb [data-t=rclose]').click();
+    await expect.poll(async () => (await cityOps(page))['Đà Nẵng'], { timeout: 4000 }).toBeNull();
+    expect(errors).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

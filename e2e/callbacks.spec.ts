@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, devices, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
@@ -38,6 +38,13 @@ test('1995: a typed surname gets the gia phả event, then the 1945 granary come
   await expect(live(page, '.scrim .steps span')).toHaveText(['1 · Thẻ sự kiện', '2 · Biến cố riêng', '3 · Hệ quả']);
   await live(page, '.scrim .opt').first().click();
   await page.locator('#cgo').click();
+  // the card's own outcome first: nothing scrolls it away until "next" is tapped
+  const next0 = live(page, '.scrim #xnext');
+  await expect(next0).toBeFocused();
+  await page.waitForTimeout(700);
+  await expect(live(page, '.scrim .sheet > [role=radiogroup] .opt.sel .out')).toBeInViewport({ ratio: 1 });
+  await expect(live(page, '.scrim .xsp')).toHaveCount(0);
+  await next0.click();
   const first = live(page, '.scrim .xsp').first();
   await expect(first.locator('> h3')).toHaveText('Lập lại gia phả');
   await expect(first).toContainText('Bước 2/3');
@@ -77,6 +84,7 @@ test('1995: a family that changed its surname can take the old one back', async 
   await expect(live(page, '.scrim .steps span')).toHaveText(['1 · Thẻ sự kiện', '2 · Biến cố riêng']);
   await live(page, '.scrim .opt').first().click();
   await page.locator('#cgo').click();
+  await live(page, '.scrim #xnext').click();
   const x = live(page, '.scrim .xsp');
   await expect(x.locator('> h3')).toHaveText('Lập lại gia phả: hai cái tên');
   await expect(live(page, '.scrim .steps')).toHaveClass(/two/);
@@ -98,6 +106,7 @@ test('1995: a Mạc family meets the clan branches instead of the common gia ph�
   await expect(live(page, '.scrim h2')).toContainText('Bình thường hoá với Mỹ', { timeout: 8000 });
   await live(page, '.scrim .opt').first().click();
   await page.locator('#cgo').click();
+  await live(page, '.scrim #xnext').click();
   await expect(live(page, '.scrim .xsp > h3')).toHaveText('Các chi họ Mạc tìm lại nhau');
   await expect(live(page, '.scrim .xsp .kick')).toContainText('Biến cố riêng của Họ Mạc');
   expect(errors).toEqual([]);
@@ -198,6 +207,7 @@ test('1885: joining the Cần Vương call drops the follow-ups the card had ann
   await expect(live(page, '.scrim .opt.sel .out')).toContainText('Cả họ lên rừng');
   await expect(live(page, '.scrim .btn[data-a="close-card"]')).toBeVisible();
   await expect(live(page, '.scrim .xsp')).toHaveCount(0);
+  await expect(live(page, '.scrim #xnext')).toHaveCount(0);
   await expect(live(page, '.scrim .steps')).toHaveCount(0);
   const s = await stored(page);
   expect(s.xs.cv85).toBe('');
@@ -228,4 +238,27 @@ test('an ending once read keeps its name when the wealth table is regenerated', 
   await page.locator('#card [data-a=end].c').click();
   await expect(page.locator('.end-title')).toHaveText('Còn lại tên họ');
   expect(errors).toEqual([]);
+});
+
+test.describe('on an iPad in landscape', () => {
+  const { defaultBrowserType: _, ...ipadL } = devices['iPad Pro 11 landscape'];
+  test.use(ipadL);
+
+  test('1995: the card outcome stays in view after Quyết định; the family event waits for Sang việc kế tiếp', async ({ page }) => {
+    const errors = await seed(page, { ...y95, name: 'Họ Khúc', surname: '', cards: { tn80: 1 } }, 'hn95');
+    await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+    await page.locator('#tourb [data-t=skip]').click();
+    await expect(live(page, '.scrim h2')).toContainText('Bình thường hoá với Mỹ', { timeout: 8000 });
+    await live(page, '.scrim .opt').first().click();
+    await page.locator('#cgo').click();
+    const next = live(page, '.scrim #xnext');
+    await expect(next).toBeFocused();
+    // trước đây ~300 ms sau khi quyết, bảng tự cuộn tới biến cố: kết cục của thẻ trôi lên khỏi mép bảng
+    await page.waitForTimeout(700);
+    await expect(live(page, '.scrim .sheet > [role=radiogroup] .opt.sel .out')).toBeInViewport({ ratio: 1 });
+    await expect(live(page, '.scrim .xsp')).toHaveCount(0);
+    await next.click();
+    await expect(live(page, '.scrim .xsp > h3').first()).toBeInViewport();
+    expect(errors).toEqual([]);
+  });
 });

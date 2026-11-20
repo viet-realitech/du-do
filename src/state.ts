@@ -336,7 +336,7 @@ export interface ArcRun {
   home: string;
   /** Trò chơi: ngưỡng gia sản lúc khép (endings.ts Facts.th, và hàng P5/P25/P60/P92 mà play.ts rank() dùng). Bảng
       endings-rarity.json tính lại thì ngưỡng dời; mở lại hồ sơ vẫn dùng ngưỡng này, để hồ sơ giữ đúng dấu đã đóng.
-      Hồ sơ ghi trước khi có hai trường này: dùng bảng hôm nay. */
+      Hồ sơ không có hai trường này: dùng ngưỡng đã ghi trong bản lưu (S.endFix.t) nếu có, không thì bảng hôm nay. */
   th?: { lo: number; hi: number };
   tiers?: number[];
   /** Cả bản lưu lúc khép. */
@@ -371,7 +371,7 @@ function readArc(): { a: Archive; raw: string | null; bad: boolean } {
   for (const r of runs) {
     if (!okRun(r)) { bad = true; continue; }
     if (a.runs.some(x => x.id === r.id)) continue;
-    // khoá lạ (bản ứng dụng mới hơn ghi) giữ nguyên; ngưỡng hỏng thì bỏ riêng ngưỡng ấy (mở lại dùng bảng hôm nay)
+    // khoá lạ (bản ứng dụng mới hơn ghi) giữ nguyên; ngưỡng hỏng thì bỏ riêng ngưỡng ấy (mở lại như hồ sơ không ghi ngưỡng)
     const run: ArcRun = { ...r, id: r.id as string, mode: r.mode as 'read' | 'play', end: r.end as string, save: r.save as Raw, at: str(r.at), title: str(r.title), name: str(r.name), home: str(r.home) };
     if (r.th !== undefined) { if (isObj(r.th) && fin(r.th.lo) && fin(r.th.hi)) run.th = { lo: r.th.lo, hi: r.th.hi }; else { delete run.th; bad = true; } }
     if (r.tiers !== undefined) { if (Array.isArray(r.tiers) && r.tiers.length === 4 && r.tiers.every(fin)) run.tiers = r.tiers.slice(); else { delete run.tiers; bad = true; } }
