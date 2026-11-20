@@ -2,7 +2,7 @@
 
 59 nhân vật thêm vào mục **Nhân vật** (tháng 10.2026), bên cạnh 22 nhân vật ban đầu. Mỗi tiểu sử 2–3 câu, giọng trung tính, chỉ nêu mốc kiểm chứng được; đã đối chiếu toàn văn bài Wikipedia tiếng Việt và tiếng Anh, ghi chú đối chiếu kèm theo từng người.
 
-Phiếu này dành cho người rà soát (TS Bùi Trân Phượng, TS Dương Trung Quốc hoặc cộng sự) đánh dấu chỗ cần sửa. Dữ liệu nguồn: `src/data/data2.js` (khối `FIG`), phe: `src/data/index.ts` (`FIGSIDE`).
+Phiếu này dành cho người rà soát sử học đánh dấu chỗ cần sửa (bảng tính có cột để điền: `docs/review/`, tạo bằng `npm run review:export`). Dữ liệu nguồn: `src/data/data2.js` (khối `FIG`), phe: `src/data/index.ts` (`FIGSIDE`).
 
 Quy ước phe: triều đình · Pháp · phong trào & lực lượng khác · Việt Minh / VNDCCH · Mặt trận Giải phóng · Quốc gia / VNCH · Mỹ · Nhà nước sau 1976 · tôn giáo · văn hoá.
 

@@ -1,8 +1,9 @@
-import { EV, SRC, FIG } from '../data';
+import { EV, SRC, FIG, type HistEvent } from '../data';
 import { S, save, figOpen } from '../state';
 import { isPlay } from '../play';
 import { esc, layer, sheet } from '../ui/dom';
 import { checkBadges } from '../badges';
+import { FEEDBACK_URL, feedbackRow } from '../ui/feedback';
 
 export function openSrc(id: string): void {
   const s = SRC.find(x => x.id === id);
@@ -17,6 +18,10 @@ export function openSrc(id: string): void {
     evs.map(v => `<button class="src" data-a="goev" data-id="${v.id}"><div class="tt"><h3 style="font-size:16.5px">${esc(v.t)}</h3><span class="mono muted">${v.y}</span></div></button>`).join('') : ''}`, true);
   checkBadges();
 }
+
+/** Cuối thẻ Nguồn của trang sự kiện: dòng Góp ý / Báo sai về chính sự kiện ấy (không hiện khi chưa có địa chỉ góp ý). */
+export const srcFoot = (v: HistEvent): string =>
+  FEEDBACK_URL ? `<div style="margin-top:18px">${feedbackRow(`sự kiện ${v.id} · ${v.t} (${v.y})`, 'về sự kiện này')}</div>` : '';
 
 /** Chuẩn hoá để tìm không dấu: "hiep uoc" khớp "Hiệp ước", "geneve" khớp "Genève", "dien bien" khớp "Điện Biên". */
 export const fold = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();

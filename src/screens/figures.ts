@@ -7,6 +7,7 @@ import { icon } from '../ui/icons';
 import { buzz } from '../audio';
 import { checkBadges } from '../badges';
 import { FIGIMG, figFocus, figImgPage } from '../wiki';
+import { FEEDBACK_URL, feedbackRow } from '../ui/feedback';
 
 export function openFig(id: string): void {
   const f = FIG[id];
@@ -27,7 +28,8 @@ export function openFig(id: string): void {
   <p style="margin-top:16px">${f[3]}</p>
   ${figEvents(id).length ? `<div class="rule"></div><div class="mono muted">Sự kiện liên quan</div>${figEvents(id).map(v => `<button class="row evl" data-a="ev" data-id="${v.id}"><span class="mono muted">${v.y}</span><span style="flex:1">${esc(v.t)}</span><span class="muted">${icon('next', 16)}</span></button>`).join('')}` : ''}
   ${chose.length ? `<div class="rule"></div><div class="mono muted">Đồng hành khi bạn chọn</div>${chose.map(([e, o]) => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${e.cy}</span> · ${o.label}${S.picks[e.id] === o.id ? ' <span class="mono" style="color:var(--acc)">· đã chọn</span>' : ''}</div>`).join('')}` : ''}
-  <p class="muted" style="font-size:13px;margin-top:16px">Tiểu sử tóm lược từ sử liệu công khai.${FIGIMG[id] ? ` Ảnh: <a href="${esc(figImgPage(id))}" target="_blank" rel="noopener">Wikimedia Commons</a>.` : ''}</p>`, true).dataset.fig = id; // trang sự kiện mở từ đây thì đóng xong mở lại thẻ này
+  <p class="muted" style="font-size:13px;margin-top:16px">Tiểu sử tóm lược từ sử liệu công khai.${FIGIMG[id] ? ` Ảnh: <a href="${esc(figImgPage(id))}" target="_blank" rel="noopener">Wikimedia Commons</a>.` : ''}</p>
+  ${FEEDBACK_URL ? `<div style="margin-top:12px">${feedbackRow(`nhân vật ${id} · ${f[0]}`, 'về nhân vật này')}</div>` : ''}`, true).dataset.fig = id; // trang sự kiện mở từ đây thì đóng xong mở lại thẻ này
   checkBadges();
 }
 
