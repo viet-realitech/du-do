@@ -1,6 +1,7 @@
 import { S } from '../state';
 import { qstats } from './quality';
-import { acState } from '../audio';
+import { acState, warStats, warNew, setWarNew } from '../audio';
+import { musicStats, musicToSeam } from '../music';
 import { vstats, voiceName } from '../narration';
 import { swStats } from '../pwa';
 import { errlog } from '../errlog';
@@ -18,8 +19,8 @@ const CSS = `
 #dbg header button { width: 30px; height: 26px; border: 1px solid var(--rule); border-radius: var(--r); color: var(--ink2); font: 500 14px/1 var(--mono) }
 #dbg pre { margin: 0; padding: 8px 10px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; flex: 1; min-height: 0 }
 #dbg textarea { margin: 0 10px 8px; height: 120px; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule) }
-#dbg .go { width: auto; flex: none; margin: 0 10px 10px; height: 38px; font-size: 15px }
-#dbg.min pre, #dbg.min .go, #dbg.min textarea { display: none }
+#dbg .go, #dbg .ab, #dbg .seam { width: auto; flex: none; margin: 0 10px 10px; height: 38px; font-size: 15px }
+#dbg.min pre, #dbg.min .go, #dbg.min .ab, #dbg.min .seam, #dbg.min textarea { display: none }
 `;
 
 let fps = 0, worst = 0, panel: HTMLElement | null = null, store = '', timer = 0;
@@ -60,6 +61,8 @@ function report(): string {
     ...(q && q.log.length ? ['Các lần chấm (đoạn · số khung · p75 ms · tỉ lệ khung chậm · kết luận · mức):', ...q.log.map(j => `  ${(j.at / 1000).toFixed(0)}s ${j.tag || '-'} · ${j.n} · ${j.p75} · ${j.slow} · ${j.v} · ${j.q}`)] : ['Các lần chấm: chưa có']),
     `Giao diện: ${S.theme} · nét ${S.mstyle} · âm thanh ${S.sound ? 'bật' : 'tắt'} · nhạc ${S.music ? 'bật' : 'tắt'} · giọng đọc ${S.narr ? 'bật' : 'tắt'} · cảnh động ${S.fx ? 'bật' : 'tắt'}`,
     `AudioContext: ${safe(acState, '?')} · audioSession: ${safe(() => (navigator as Navigator & { audioSession?: { type: string } }).audioSession?.type || 'không có', '?')}`,
+    safe(() => { const w = warStats(); return `Tiếng trận: kiểu ${w.kind} · nút sống ${w.live} (vị trí trái/phải ${w.pans}, nhiều nhất ${w.peakPans}) · tiếng vang ${w.verb ? 'có' : 'chưa'} · ${w.scenes} cảnh · nhạc ×${w.music}${w.dip ? ' (đang lùi)' : ''}`; }, 'Tiếng trận: ?'),
+    `Nhạc: ${safe(musicStats, '?')}`,
     `Lời kể (bản thu): ${vstats.started} phát · ${vstats.refused} bị chặn · ${vstats.error} lỗi · giọng máy: ${safe(voiceName, '') || 'không có giọng tiếng Việt'}`,
     `Ứng dụng: ${sa ? 'màn hình chính (standalone)' : 'trình duyệt'} · ${navigator.onLine ? 'có mạng' : 'mất mạng'} · ${store || '…'}`,
     sw ? `Service worker: ${sw.supported ? `${sw.controlled ? 'đang phục vụ' : 'chưa phục vụ trang này'} · ${sw.active || 'không có'}${sw.waiting ? ' · bản mới đang chờ' : ''}${sw.installing ? ' · đang cài' : ''}${sw.pending ? ' · chờ lúc an toàn' : ''}${sw.lastCheck ? ` · kiểm tra ${sw.lastCheck}` : ''}` : 'không hỗ trợ'}` : 'Service worker: ?',
@@ -119,12 +122,22 @@ export function openDebug(): void {
   const p = panel = document.createElement('section');
   p.id = 'dbg';
   p.setAttribute('aria-label', 'Chẩn đoán');
-  p.innerHTML = `<header><b>Chẩn đoán</b><button type="button" data-d="min" aria-label="Thu gọn">–</button><button type="button" data-d="x" aria-label="Đóng">×</button></header><pre></pre><button type="button" class="btn go">Sao chép báo cáo</button>${keptSaves().length ? '<button type="button" class="btn go kept">Sao chép bản lưu hỏng</button>' : ''}`;
+  p.innerHTML = `<header><b>Chẩn đoán</b><button type="button" data-d="min" aria-label="Thu gọn">–</button><button type="button" data-d="x" aria-label="Đóng">×</button></header><pre></pre><button type="button" class="btn go">Sao chép báo cáo</button>${keptSaves().length ? '<button type="button" class="btn go kept">Sao chép bản lưu hỏng</button>' : ''}<button type="button" class="btn ab"></button><button type="button" class="btn seam">Nghe thử chỗ nhạc nối vòng</button>`;
+  // nghe so sánh tiếng trận cũ / mới trên máy thật (nhớ trên máy này, không vào bản lưu)
+  const ab = p.querySelector<HTMLButtonElement>('.ab')!, abShow = () => { ab.textContent = warNew() ? 'Nghe tiếng trận kiểu cũ' : 'Nghe tiếng trận kiểu mới'; };
+  abShow();
   p.addEventListener('click', ev => {
     ev.stopPropagation();
     const d = (ev.target as HTMLElement).closest<HTMLElement>('[data-d]')?.dataset.d;
     if (d === 'min') { p.classList.toggle('min'); paint(); }
     else if (d === 'x') { closeDebug(); }
+    else if ((ev.target as HTMLElement).closest('.ab')) { setWarNew(!warNew()); abShow(); paint(); }
+    // nghe trên máy thật chỗ nối vòng của bản đang phát (nhảy tới 4 s trước điểm vòng), không phải đợi vài phút
+    else if ((ev.target as HTMLElement).closest('.seam')) {
+      const b = p.querySelector<HTMLButtonElement>('.seam')!;
+      if (!musicToSeam()) { b.textContent = 'Nhạc chưa phát'; setTimeout(() => { b.textContent = 'Nghe thử chỗ nhạc nối vòng'; }, 2000); }
+      paint();
+    }
     else if ((ev.target as HTMLElement).closest('.kept')) void copy(p.querySelector<HTMLButtonElement>('.kept')!, keptText(), 'Sao chép bản lưu hỏng');
     else if ((ev.target as HTMLElement).closest('.go')) void copy(p.querySelector<HTMLButtonElement>('.go')!);
   });

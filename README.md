@@ -89,8 +89,19 @@ All numbers are game abstractions, not historical data.
 
 ### Sound
 
-- **Music**: six tracks by Kevin MacLeod (incompetech.com, CC BY 4.0, credited in the About sheet), one per mood
-  (`src/music.ts`). `npm run music` downloads and re-encodes them into `public/music/` (needs ffmpeg).
+- **Music**: seven tracks by Kevin MacLeod (incompetech.com, CC BY 4.0, credited in the About sheet), one per mood
+  (`src/music.ts`), and for the ending either "Heroic Age" or, for the endings of ruin, separation and exile (lytan,
+  chiadoi, xanam, xabac, xagiua: `ELEGY` in `src/music.ts`), "The Parting". `npm run music` downloads them, trims the
+  leading silence and writes loudness-matched AAC to `public/music/<mood>-<hash>.m4a` with no fade-out; it finds each
+  track's loop points (`src/music.json`) by matching the music around them, then renders the loop seam from the encoded
+  file and fails if its level dips more than 3 dB below the same stretch played straight (needs ffmpeg; `-- --src
+  <folder>` reuses downloaded mp3s). `src/music.ts` fetches and decodes each track once (the last two stay decoded,
+  ~45–65 MB each) and plays it with Web Audio buffer sources started on the audio clock: the intro once, then each loop
+  pass starts at the loop start exactly when the pass before reaches the loop point, with an equal-power crossfade, in
+  step to the sample (two `<audio>` elements aligned by `currentTime` were up to a beat apart in WebKit). The debug
+  panel shows the track's position on the audio clock and has a button that jumps to 4 s before the loop point, to
+  hear the seam on a real device. Music and narration have separate offline caches (`vite.config.ts`, room checked by
+  `npm run voice:check`).
 - **Voice-over**: every narration line ships as a pre-rendered clip in `src/voice/` (played instead of the device's
   speech synthesis; that remains the fallback for a missing clip). `npm run voice:script` writes the script to
   `docs/voice/kich-ban.md` / `.csv` (file name, context, exact text). Two sources, merged by `npm run voice`
@@ -112,7 +123,13 @@ All numbers are game abstractions, not historical data.
     when the game can show a personalised line that has no variant (every home × every flag and pair of flags), when
     `docs/voice/kich-ban.csv` is out of date, or when a clip reads an older line than the current text; add
     `-- --durations` to flag clips whose length does not fit their text (needs ffprobe).
-- **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects.
+- **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects. Battle sounds go
+  through the scene chain: a stereo position per sound from the arrow's place on screen, the scene bus, the narration
+  low-pass, one shared generated reverb; booms and drums carry a "punch" layer of harmonics that small speakers can
+  play; the music dips about 7 dB while a battle sounds. A recorded sample can join the same chain with
+  `WAR.port(pan)`. The debug panel (`?debug`, or 5 taps on the version line in Giới thiệu) counts the chain's live
+  nodes and has an A/B switch to the old sound. `PORT=… npm run audio:measure` renders the sounds offline, old vs new
+  (energy above 150 Hz, peak, level, reverb tail, left/right) in Playwright's Chromium.
 
 ### Checks
 

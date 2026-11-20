@@ -201,6 +201,7 @@ export async function initMap(): Promise<void> {
   // K_MIN < 1: cảnh hải trình dài thu cả bản đồ nhỏ lại; người dùng chụm / cuộn cũng đi được tới đó (không nhảy về 1)
   G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([K_MIN, 8]).on('zoom', ev => {
     if (ev.sourceEvent && isTouring()) pauseTour('map'); // kéo / chụm: tạm dừng, yên 5 s thì chạy tiếp (cả Đọc sử)
+    zgen++;
     G.k = ev.transform.k;
     const t = String(ev.transform);
     Z.attr('transform', t); Zb.attr('transform', t); Zf.attr('transform', t);
@@ -549,6 +550,10 @@ function highlight(): void {
   g.append('path').attr('d', 'M-5,-16 L0,-10 L5,-16Z').style('fill', 'var(--acc)');
   g.style('opacity', 0).transition().delay(500).duration(400).style('opacity', 1);
 }
+
+/** Số lần khung nhìn của bản đồ đã đổi (bay, kéo, chụm): scene.ts đọc lại vị trí trên màn hình của cảnh khi số này đổi. */
+let zgen = 0;
+export const zoomGen = (): number => zgen;
 
 /** Lớp hiệu ứng cho cảnh động (scene.ts): nhóm SVG trong lớp zoom, phép chiếu, hệ số zoom hiện tại, defs. */
 export function fxHost(): { g: SVGGElement; defs: SVGDefsElement; proj: (l: [number, number]) => [number, number]; k: () => number; ppu: () => number } | null {

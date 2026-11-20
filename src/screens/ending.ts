@@ -1,6 +1,6 @@
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices, keepEnding } from '../play';
-import { mood } from '../music';
+import { mood, finaleFor } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
 import { chronLine, epilogue, whyText, rarityLine, firstDivergence, cfOf, exitNote, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
@@ -114,7 +114,7 @@ export function openEnd(): void {
   // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
   const fresh = !!end && !S.endSaid;
   if (!S.ended || fresh || (end && !S.endFix?.id)) { S.ended = true; if (end) { S.endSaid = true; keepEnding(end); } save(); }
-  mood('finale');
+  mood(finaleFor(end?.id)); // kết cục mất mát: nhạc khép trầm buồn (music.ts ELEGY), còn lại Heroic Age
   ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;
   const film = `<button class="btn end-film" data-a="film">${icon('play')}Xem phim hành trình</button>`;

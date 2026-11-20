@@ -21,6 +21,7 @@
     "geo": "node scripts/build-geo.mjs",
     "icons": "node scripts/build-icons.mjs",
     "music": "node scripts/build-music.mjs",
+    "audio:measure": "node scripts/measure-war.mjs",
     "voice": "node scripts/build-voice.mjs && tsx scripts/voice-script.ts && tsx scripts/check-voice.ts",
     "voice:script": "tsx scripts/voice-script.ts",
     "voice:tts": "python3 scripts/tts/generate.py",

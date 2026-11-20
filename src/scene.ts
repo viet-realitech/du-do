@@ -1,7 +1,7 @@
 import type { HistEvent } from './data';
 import { SCENES, MOVES, SIDE_COLOR, sideName, actOf, type Scene, type Move, type Kind } from './data/scenes';
 import { kindOf, drawPiece } from './units';
-import { fxHost } from './map';
+import { fxHost, zoomGen } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
@@ -39,6 +39,8 @@ interface Run {
   geo?: [number, number][][]; pcs?: Element[];
   /** Khoảng cách (px) từ đáy bản đồ tới phụ đề, đo một lần mỗi cảnh. */
   capB?: number;
+  /** Trận đánh còn tiếng: nhạc đang lùi (WAR.dip); ❚❚ trả nhạc về, ▶ lùi lại. */
+  dip?: boolean;
 }
 /** Bố cục hai cột (bản đồ trái, cột truyện phải): như @media trong styles.css. */
 const wide = matchMedia('(min-width: 1000px) and (min-aspect-ratio: 1/1) and (min-height: 760px)'); // thấp hơn: cột bên không còn chỗ cho danh sách
@@ -346,6 +348,7 @@ export function pauseScene(): boolean {
   clearTimeout(r.qt);
   if (r.raf) { cancelAnimationFrame(r.raf); r.raf = 0; }
   WAR.close(); // tiếng đã hẹn trên đồng hồ âm thanh: cắt; chạy tiếp thì phát lại phần nền còn lại
+  if (r.dip) WAR.dip(false); // giữ cảnh để chỉ bản đồ: không còn tiếng trận, nhạc lên lại
   r.reel?.querySelector('video')?.pause();
   return true;
 }
@@ -356,6 +359,7 @@ export function resumeScene(): boolean {
   const d = performance.now() - r.paused;
   r.paused = 0;
   r.t0 += d;
+  if (r.dip) WAR.dip(true);
   for (const p of r.parts) p.t0 += d;
   WAR.open();
   const left = r.bed ? (r.bed.end - vnow(r)) / 1000 : 0;
@@ -415,6 +419,27 @@ function ensureDefs(defs: SVGDefsElement): void {
   }
 }
 
+/* ---------- tiếng của trận: vị trí trái / phải, nhạc lùi ---------- */
+/** Vị trí trái / phải (−0,7 … 0,7) của một điểm của cảnh theo chỗ nó đứng trên màn hình (iPad ngang phát hai bên). Ma trận
+    màn hình của nhóm cảnh được đọc lúc tiếng đầu tiên cần tới (không lúc vẽ: bản đồ có thể còn đang bay tới, WebKit hay
+    trễ vài khung hình, khi ấy mọi tiếng của trận lệch hẳn về một bên), rồi giữ cho cả trận; đọc lại chỉ khi bản đồ đã đi
+    (bay, kéo, chụm: zoomGen đổi). */
+function panOf(root: SVGGElement): (p: [number, number]) => number {
+  let m: DOMMatrix | null = null, at = -1;
+  return p => {
+    if (at !== zoomGen()) {
+      at = zoomGen();
+      try { m = root.getScreenCTM(); } catch { m = null; /* chưa gắn vào trang */ }
+    }
+    return m ? Math.max(-0.7, Math.min(0.7, ((2 * (m.a * p[0] + m.c * p[1] + m.e)) / (innerWidth || 1) - 1) * 0.7)) : 0;
+  };
+}
+const mid = (a: [number, number], b: [number, number]): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+/** Tiếng trận đã tắt (khép trận, hay cảnh dừng): nhạc lên lại êm. */
+function undip(r: Run): void {
+  r.dip = false;
+  WAR.dip(false);
+}
 /* ---------- trận đánh ---------- */
 function curve(a: [number, number], b: [number, number], bend: number): { d: string; at: (t: number) => [number, number]; ang: number } {
   const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
@@ -457,9 +482,9 @@ function dust(r: Run, root: SVGGElement, p: [number, number], k: number): void {
 }
 
 /** Hai mũi tên giáp nhau (cặp `meet` có nguồn trong dữ liệu): loạt đạn vạch chéo giữa hai đầu mũi, hay khói súng hoả mai. */
-function contact(r: Run, root: SVGGElement, pA: [number, number], pB: [number, number], k: number, cA: string, cB: string, old: boolean): void {
+function contact(r: Run, root: SVGGElement, pA: [number, number], pB: [number, number], k: number, cA: string, cB: string, old: boolean, pan?: number): void {
   root.dataset.contacts = String(+(root.dataset.contacts || 0) + 1);
-  WAR.crackle(1.2, 10, 0, old);
+  WAR.crackle(1.2, 10, 0, old, pan);
   if (calm.matches) return;
   for (let j = 0; j < 4; j++) {
     const [p, q, c] = j % 2 ? [pB, pA, cB] : [pA, pB, cA];
@@ -546,6 +571,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const PZ = piece(), FS = innerWidth >= 700 ? 1.2 : 1, q2 = quality() >= 2; // đọc một lần mỗi trận (xem piece)
   // Trận gọn trong vài km: phóng sơ đồ quanh tâm khung cho tới khi chiếm phần lớn chỗ trống (minh hoạ, không phải tỉ lệ thật)
   const P = fitScale(h, [v.l, ...(sc?.arrows || []).flatMap(a => [a[0], a[1]]), ...(sc?.hold || []).map(x => [x[0], x[1]] as [number, number])], 0.8, true);
+  const pan = panOf(root); // trái / phải của từng tiếng theo chỗ trên màn hình (đọc ma trận khi tiếng đầu tiên cần tới)
   const arrows = sc?.arrows.length ? sc.arrows : [];
   const T0 = 120; // gọi sau khi bản đồ đã bay tới (playScene hẹn 1,25 s), để hệ số zoom k đã đúng
   // nhịp kể: mũi tên thứ i vẽ khi nhịp i bắt đầu, phụ đề đọc ghi chú của nó
@@ -605,7 +631,7 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
     const pc = act === 'doubt' ? null : drawPiece(kind, col, root, sy), airborne = kind === 'plane' || kind === 'para';
     if (pc) parts[i].push(pc.g);
     // tiếng động cơ theo nhịp, hẹn trên đồng hồ của cảnh (bước nhịp thì tiếng tới cùng mũi tên, không trễ)
-    if (pc) later(r, start, () => { if (airborne) WAR.plane(0); else if (kind === 'armour') WAR.tank(sdur / 1000, 0); else if (kind === 'heli') WAR.heli(sdur / 1000, 0); });
+    if (pc) later(r, start, () => { if (airborne) WAR.plane(0, [pan(a), pan(b)]); else if (kind === 'armour') WAR.tank(sdur / 1000, 0, [pan(a), pan(b)]); else if (kind === 'heli') WAR.heli(sdur / 1000, 0, [pan(a), pan(b)]); });
     // quân cờ đi sau đầu mũi tên và dừng ở khoảng 3/4 đường (không đè đầu mũi tên, vị trí giữ, khói)
     const put = (e: number, s = 1) => {
       if (!pc) return;
@@ -676,8 +702,8 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
         const big = type === 'siege' ? 1.25 : type === 'uprising' ? 0.6 : 1;
         for (let j = 0; j < (type === 'uprising' ? 1 : 3); j++) explode(r, root, [b[0] + (Math.random() - 0.5) * 14 / k, b[1] + (Math.random() - 0.5) * 10 / k], k, j * 260, big * (1 - j * 0.2));
         if (sounds++ < 6) {
-          if (type === 'air') WAR.bomb(0); else WAR.boom(0, i ? 0.25 : 0);
-          if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2, old);
+          if (type === 'air') WAR.bomb(0, pan(b)); else WAR.boom(0, i ? 0.25 : 0, pan(b));
+          if (type === 'land' || type === 'siege' || type === 'uprising') WAR.crackle(2.2, type === 'uprising' ? 8 : 14, 0.2, old, pan(b));
           if (i === 0) { shake(r); buzz(HAPTIC[type] || [25, 40, 60]); } else if (type === 'air' && i < 3) buzz(18);
         }
       } else if (act === 'move') ripple(r, b, k, 0, col);
@@ -688,17 +714,19 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
         parts[i].push(qg);
       }
       // giáp chiến: khi cả hai mũi tên của một cặp đã tới
-      for (const [x, y] of meets) if ((x === i || y === i) && arrived.has(x) && arrived.has(y)) contact(r, root, P(arrows[x][1]), P(arrows[y][1]), k, SIDE_COLOR[arrows[x][2]] || '#fff', SIDE_COLOR[arrows[y][2]] || '#fff', old);
+      for (const [x, y] of meets) if ((x === i || y === i) && arrived.has(x) && arrived.has(y)) contact(r, root, P(arrows[x][1]), P(arrows[y][1]), k, SIDE_COLOR[arrows[x][2]] || '#fff', SIDE_COLOR[arrows[y][2]] || '#fff', old, pan(mid(P(arrows[x][1]), P(arrows[y][1]))));
     });
   });
   if (arrows.length && sc) {
     later(r, L0 + total + OUTRO_AT, () => outcome(r, v, sc, hs, parts, k));
+    later(r, L0 + total + OUTRO_AT + 1800, () => undip(r)); // khép trận: tiếng nổ cuối đã tắt, nhạc lên lại (lời kể bắt đầu thì tự hạ)
     r.len = 1250 + L0 + total + OUTRO;
   }
   if (!arrows.length) { // chưa có dữ liệu mũi tên: vài chớp lửa tại chỗ
     const p = h.proj(v.l);
     for (let j = 0; j < 4; j++) explode(r, root, [p[0] + (Math.random() - 0.5) * 18 / k, p[1] + (Math.random() - 0.5) * 12 / k], k, T0 + j * 420, 0.9);
-    later(r, T0, () => { WAR.boom(0); WAR.crackle(2.4, 12, 0.2); shake(r); buzz(HAPTIC[type] || [25, 40, 60]); });
+    later(r, T0, () => { WAR.boom(0, 0, pan(p)); WAR.crackle(2.4, 12, 0.2, false, pan(p)); shake(r); buzz(HAPTIC[type] || [25, 40, 60]); });
+    later(r, T0 + 3500, () => undip(r));
     void v;
   }
 }
@@ -997,6 +1025,8 @@ export function playScene(v: HistEvent, hold = Infinity, onEnd?: () => void, onS
   if (!sc && MOVES[v.id]) document.getElementById('mapwrap')?.classList.add('scn'); // cảnh di chuyển: nền lùi, nhãn dân số / tên sự kiện nhường chỗ
   if (sc) {
     titleCard(r, v, sc);
+    r.dip = true;
+    WAR.dip(true); // nhạc lùi xuống trong lúc trận có tiếng (lên lại khi khép trận, khi cảnh dừng hay đóng)
     later(r, 120, () => { if (!speaking()) WAR.sting(sc.type); }); // một tiếng mở trận, xong trước lời kể (voiceAt)
   }
   // vẽ khi bản đồ đã bay tới nơi (zoomTo 1,2 s): kích thước chớp lửa, đầu mũi tên tính theo zoom lúc đó
@@ -1014,6 +1044,7 @@ export function endScene(instant = false): void {
   const r = cur;
   cur = null;
   WAR.close();
+  WAR.dip(false);
   const m = document.getElementById('mapstage'), wrap = document.getElementById('mapwrap');
   if (instant && m && wrap?.classList.contains('tilt')) { m.style.transition = 'none'; wrap.classList.remove('tilt'); void m.getBoundingClientRect(); m.style.transition = ''; }
   wrap?.classList.remove('tilt', 'lift');
