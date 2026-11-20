@@ -30,7 +30,7 @@ function tally(a: Archive): Record<string, number> {
 
 /* Gợi ý cho dấu chưa gặp: luật "vì sao" của kết cục (endings.ts), viết lại chỗ đọc không xuôi khi đứng một mình. */
 const HINT: Record<string, string> = {
-  doiho: 'Dòng họ đổi họ ít nhất một lần qua một biến cố riêng. Chỉ một số họ, trong một số hoàn cảnh, gặp biến cố như vậy.',
+  doiho: 'Dòng họ đổi họ ít nhất một lần qua một biến cố riêng. Biến cố như vậy chỉ đến trong một số hoàn cảnh: theo một số hướng, ở một số quê, hay với một số họ.',
   doimoi: 'Đời thứ năm theo miền Bắc, đời thứ sáu theo Đổi Mới, và con đường không khớp dấu nào xếp trước trong sổ.',
 };
 /** Đọc sử không có thẻ sự kiện: rời nước chỉ có một đường, đời thứ sáu chọn Ra đi. */
