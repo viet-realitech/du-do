@@ -1224,7 +1224,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 /* thân hồ sơ */
 .end-body { display: flex; flex-direction: column }
 .end-main, .end-side { display: contents }
-.end-reg { order: 1 } .end-gp { order: 2 } .end-body .cf-card { order: 3 } .end-res { order: 4 } .end-cmp { order: 5 } .end-path { order: 6 }
+.end-reg { order: 1 } .end-gp { order: 2 } .end-body .cf-card { order: 3 } .end-res, .end-plate { order: 4 } .end-cmp { order: 5 } .end-path { order: 6 }
 .end-sec { margin-top: 32px }
 .end-sh { border-top: 3px double var(--ink); padding-top: 12px; margin-bottom: 16px }
 .end-sh .mono { color: var(--ink3) }
@@ -1289,6 +1289,16 @@ details.cf .cf-tag { margin-right: 6px; font-style: normal }
 .gens li.worst { box-shadow: inset 0 -2px var(--red) }
 .gens li.worst b { color: var(--red) }
 .gens-n { font-size: 14px; line-height: 1.4; color: var(--ink2); margin-top: 8px }
+/* bản đồ dòng họ (Trò chơi): tấm bản đồ quê và những lần dời nhà bên một danh sách năm */
+.mp { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start }
+.mp .plate-svg { height: 200px; outline-offset: 2px }
+.mp-l { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink) }
+.mp-l li { display: grid; grid-template-columns: 42px minmax(0, 1fr); column-gap: 8px; padding: 8px 0 9px; border-bottom: 1px solid var(--rule); font-size: 15px; line-height: 1.35 }
+.mp-l .y { font: 700 17px/1.2 var(--disp); font-variant-numeric: lining-nums tabular-nums; color: var(--ink2) }
+.mp-l li.none { color: var(--ink2); font-style: italic }
+[data-theme=poster] .mp-l li.none { font-style: normal }
+.mp-n { margin-top: 10px; font-size: 13.5px; line-height: 1.4; color: var(--ink2) }
+@media (min-width: 700px) { .mp .plate-svg { height: 250px } }
 /* con đường của bạn và lịch sử: mỗi điểm rẽ một dòng sổ, cột năm bên trái như mục lục chương */
 .path { list-style: none; margin: 0; padding: 0; border-bottom: .75px solid var(--rule) }
 .path-h { display: none }

@@ -82,6 +82,6 @@ export function plate(dots: [string, number, number, string][] = [], on = '', cl
   <text class="pl-lab" x="${f1(hx)}" y="${f1(hy)}" text-anchor="middle">Q.đ. Hoàng Sa</text><text class="pl-lab" x="${f1(tx)}" y="${f1(ty)}" text-anchor="end">Q.đ. Trường Sa</text>
   <text class="pl-sea" x="${f1(bx)}" y="${f1(by)}" text-anchor="middle">Biển Đông</text>
   ${dots.map(([id, a, b, n]) => { const [x, y] = plateXY(a, b); return `<g class="pl-dot${id === on ? ' on' : ''}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${id === on ? 3.4 : 2.2}"/>${id === on ? `<text x="${f1(x + 7)}" y="${f1(y + 3.5)}">${esc(n)}</text>` : ''}</g>`; }).join('')}
-  ${(ex.moves || []).map((m, i) => moveArc(m[0], m[1], i % 2 ? 0.1 : 0.22)).join('')}${ex.marks ? marks(ex.marks) : ''}
+  ${(ex.moves || []).map((m, i) => moveArc(m[0], m[1], i % 2 ? 0.24 : 0.36)).join('')}${ex.marks ? marks(ex.marks) : ''}
 </svg>`;
 }
