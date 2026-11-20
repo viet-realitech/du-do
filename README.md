@@ -95,9 +95,12 @@ All numbers are game abstractions, not historical data.
   leading silence and writes loudness-matched AAC to `public/music/<mood>-<hash>.m4a` with no fade-out; it finds each
   track's loop points (`src/music.json`) by matching the music around them, then renders the loop seam from the encoded
   file and fails if its level dips more than 3 dB below the same stretch played straight (needs ffmpeg; `-- --src
-  <folder>` reuses downloaded mp3s). `src/music.ts` plays the intro once, then loops with an equal-power crossfade
-  between two `<audio>` decks (unlocked by the first taps for iOS); every fade is a Web Audio gain (iOS ignores an
-  element's volume). Music and narration have separate offline caches (`vite.config.ts`, room checked by
+  <folder>` reuses downloaded mp3s). `src/music.ts` fetches and decodes each track once (the last two stay decoded,
+  ~45–65 MB each) and plays it with Web Audio buffer sources started on the audio clock: the intro once, then each loop
+  pass starts at the loop start exactly when the pass before reaches the loop point, with an equal-power crossfade, in
+  step to the sample (two `<audio>` elements aligned by `currentTime` were up to a beat apart in WebKit). The debug
+  panel shows the track's position on the audio clock and has a button that jumps to 4 s before the loop point, to
+  hear the seam on a real device. Music and narration have separate offline caches (`vite.config.ts`, room checked by
   `npm run voice:check`).
 - **Voice-over**: every narration line ships as a pre-rendered clip in `src/voice/` (played instead of the device's
   speech synthesis; that remains the fallback for a missing clip). `npm run voice:script` writes the script to

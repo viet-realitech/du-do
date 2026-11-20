@@ -6,10 +6,10 @@ import { eraMood, trackUrl, type Mood } from './music';
 import { outFor } from './regional';
 import { outVoiceKey } from './voiced';
 
-/* Lời kể và nhạc cho lúc mất mạng (người đi đường, máy bay). Thẻ <audio> chỉ xin từng đoạn byte (206), service worker
-   không lưu đoạn: khi một chương bắt đầu, tải trọn (200) các bản thu của chương ấy, lần lượt từng tệp, ưu tiên thấp, để
-   service worker lưu vào 'voice-music' (lời kể) và 'music' (nhạc; vite.config.ts); lần sau thẻ <audio> được cắt đoạn từ
-   bản đã lưu. Bỏ qua khi mất mạng, khi máy bật tiết kiệm dữ liệu, hay khi chưa có service worker (tải về mà không lưu được thì vô ích). */
+/* Lời kể và nhạc cho lúc mất mạng (người đi đường, máy bay). Thẻ <audio> của lời kể chỉ xin từng đoạn byte (206), service
+   worker không lưu đoạn: khi một chương bắt đầu, tải trọn (200) các bản thu của chương ấy, lần lượt từng tệp, ưu tiên
+   thấp, để service worker lưu vào 'voice-music' (lời kể) và 'music' (nhạc; vite.config.ts); lần sau thẻ <audio> được cắt
+   đoạn từ bản đã lưu. Nhạc (music.ts tải trọn rồi giải mã) có sẵn trước khi tới chương cần nó. Bỏ qua khi mất mạng, khi máy bật tiết kiệm dữ liệu, hay khi chưa có service worker (tải về mà không lưu được thì vô ích). */
 const asked = new Set<string>();
 let queue: Promise<void> = Promise.resolve();
 

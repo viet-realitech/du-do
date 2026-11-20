@@ -225,6 +225,32 @@ test('music loops: each pass starts on the audio clock at the loop point of the 
   expect(errors).toEqual([]);
 });
 
+test('hiding the page pauses the music where it is, and showing it plays on from there', async ({ page }) => {
+  const errors = await boot(page, { ...midGame, year: 1885 });
+  await expect.poll(() => musicLine(page), { timeout: 20_000 }).toMatch(/^Nhạc: calm \d/);
+  await page.waitForTimeout(1500);
+  // trang ẩn / hiện (khoá máy, sang ứng dụng khác): document.hidden giả lập, rồi sự kiện visibilitychange
+  const flip = (h: boolean) => page.evaluate(h => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => h }); document.dispatchEvent(new Event('visibilitychange')); }, h);
+  const pos = async () => Number((await musicLine(page)).match(/calm ([\d.]+) s/)?.[1] ?? NaN);
+  const started = () => page.evaluate(() => (window as unknown as W).passes.length);
+  await flip(true);
+  await expect.poll(() => musicLine(page)).toMatch(/tạm dừng/);
+  const p0 = await pos(), n0 = await started();
+  await page.waitForTimeout(1500);
+  expect(await pos()).toBe(p0);
+  expect(await started()).toBe(n0); // không có lượt nào bắt đầu trong lúc ẩn
+  await flip(false);
+  await expect.poll(() => musicLine(page)).not.toMatch(/tạm dừng/);
+  // một lượt mới bắt đầu đúng từ chỗ đã dừng
+  const resumed = await page.evaluate(n0 => (window as unknown as W).passes.slice(n0).map(p => p.off), n0);
+  expect(resumed.length).toBeGreaterThan(0);
+  expect(Math.abs(resumed[0] - p0)).toBeLessThan(0.06);
+  await page.waitForTimeout(1200);
+  expect(await pos()).toBeGreaterThan(p0);
+  expect(await pos()).toBeLessThan(p0 + 4);
+  expect(errors).toEqual([]);
+});
+
 test('the ending plays the elegiac finale for a family that lost its homeland, and Heroic Age for the others', async ({ page }) => {
   const st = { step: 'play', name: 'Họ Trần', year: 2026, picks: { e1: 'chien', e2: 'canvuong', e3: 'qdd', e4: 'qg', e5: 'nam', e6: 'radi' }, quiz: { e6: [true, true] }, narr: false, sound: true, music: true };
   const errors = await boot(page, st);

@@ -3,7 +3,7 @@
 //
 // No fade at either end: each file opens on its first sound (leading silence cut) and runs a little past its loop point.
 // src/music.ts plays the intro once, then loops [loop[0], loop[1]] with an equal-power crossfade of `xf` seconds between
-// its two decks (deck A from loop[1] fades out while deck B from loop[0] fades in). The loop points are found here by
+// two passes started on the audio clock (deck A from loop[1] fades out while deck B from loop[0] fades in, in step). The loop points are found here by
 // matching the music around them (harmony, timbre, onsets, level), so the crossfade joins like with like; the seam is then
 // rendered offline from the encoded file at the same timing and its level checked (a dip deeper than MAX_DIP dB below the
 // same stretch played straight through fails the build).
@@ -29,7 +29,7 @@ const TRACKS = {
   // kết cục mất mát (src/music.ts ELEGY)
   elegy: { title: 'The Parting', from: [3, 100], to: [120, 170] },
 };
-/** Crossfade between the decks (s), also in src/music.json for src/music.ts. */
+/** Crossfade between two passes of the loop (s), also in src/music.json for src/music.ts. */
 const XF = 4;
 /** Seam check: the quietest 0.4 s of the crossfade may sit at most this many dB below the same stretch played straight. */
 const MAX_DIP = 3;
