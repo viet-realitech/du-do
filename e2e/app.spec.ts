@@ -656,7 +656,11 @@ test('play mode: a household that followed its 1978 branch through ODP lives abr
   const gp = page.locator('.end-gp');
   await expect(gp).toContainText('cả nhà theo diện đoàn tụ của Chương trình Ra đi có trật tự, bay sang với nhánh đã xuống ghe năm 1978');
   await expect(gp).not.toContainText('mở một xưởng nhỏ sau năm 1986');
-  await expect(gp).toContainText('Về thăm quê lần đầu.');
+  // generation 6's two rows: the branch that left in 1978 and the household's own departure (the exit outranks the 1995
+  // visit); never "Nhận tiền từ thân nhân", which is for a household that stayed
+  await expect(gp).toContainText('Tìm đường ra đi.');
+  await expect(gp).toContainText('Cả nhà làm đơn đi diện đoàn tụ.');
+  await expect(gp).not.toContainText('Nhận tiền từ thân nhân');
   expect(await shareText(page)).toEqual(expect.arrayContaining([', cả nhà đi diện đoàn tụ (ODP)']));
   expect(done).toEqual([]);
 });
