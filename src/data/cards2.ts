@@ -111,7 +111,7 @@ export const SPECIAL: SpecialCard[] = [
   {
     id: "x-diachu53", ev: "cc53", when: {"homes": ["hn", "nd", "na"], "picks": ["bac"], "minB": 45},
     title: "Đội cải cách sắp về làng",
-    s: "Dòng họ bạn có nhiều ruộng và bạc hơn cả làng; đội cải cách sắp về, và ai cũng đoán được nhà nào sẽ bị quy địa chủ.",
+    s: "Dòng họ bạn vốn có nhiều ruộng và bạc hơn cả làng; đội cải cách sắp về, và ai cũng đoán được nhà nào sẽ bị quy địa chủ.",
     choices: [
       ["Chia nhỏ ruộng, bán tháo trước", "Sang tên cho con cháu, họ hàng; bán trâu, bán thóc.", {"u": -3, "g": -8, "b": -10, "vm": -8}, "Đội vẫn quy địa chủ, ghi thêm 'phân tán tài sản'. Mức xử: tịch thu và quản chế tại làng; không ai trong họ bị đưa ra toà án nhân dân đặc biệt."],
       ["Ở lại, chịu đấu tố", "Có người con đi bộ đội; mong được xếp 'địa chủ kháng chiến'.", {"u": -10, "g": -15, "b": -15, "d": -3, "vm": 5, "lg": -8}, "Được xếp 'địa chủ kháng chiến' nhờ người con ở Điện Biên, nhưng nhà, ruộng, trâu vẫn bị tịch thu và một người già mất khi bị quản chế. Sửa sai 1956 trả danh dự, không trả ruộng."],
@@ -124,7 +124,7 @@ export const SPECIAL: SpecialCard[] = [
     title: "Tờ khai lý lịch",
     s: "Phường yêu cầu khai lại lý lịch ba đời; dòng họ bạn có người từng làm việc cho chế độ cũ, và con cháu sắp đến tuổi thi đại học.",
     choices: [
-      ["Khai đầy đủ, đúng sự thật", "Không giấu gì; chấp nhận bị xếp diện.", {"u": 5, "b": -6, "nn": -10}, "Hồ sơ ghi 'gia đình có người đi cải tạo'. Đứa cháu thi đủ điểm vẫn không được gọi nhập học; đến đầu thập niên 1990 mới có đứa thứ hai vào đại học.", undefined, "lylich"],
+      ["Khai đầy đủ, đúng sự thật", "Không giấu gì; chấp nhận bị xếp diện.", {"u": 5, "b": -6, "nn": -10}, "Hồ sơ ghi 'gia đình có người đi cải tạo'. Đứa cháu thi đủ điểm vẫn không được gọi nhập học; phải nhiều năm sau mới có đứa thứ hai vào đại học.", undefined, "lylich"],
       ["Chuyển các cháu sang họ mẹ", "Nhập khẩu về bên ngoại, khai cha 'mất tích'.", {"u": -8, "b": -4, "nn": 5, "lg": -5}, "Mấy đứa trẻ mang họ mẹ, hộ khẩu ở nhà ngoại, và một đứa đỗ đại học. Về quê giỗ họ, nó không biết xưng tên nào trước bàn thờ.", "mother"],
       ["Tìm đường ra đi", "Bán nốt vàng, bán cả ruộng, mua chỗ trên ghe.", {"g": -8, "b": -8, "d": -3, "nn": -20, "my": 10}, "Ghe rời Rạch Giá một đêm tháng 5; ba người tới trại Songkhla, hai người không. Thư đầu tiên về năm 1980, kèm một tờ 20 đô la gấp tư.", undefined, "lylichDi"],
     ],
@@ -139,8 +139,8 @@ export const SPECIAL: SpecialCard[] = [
     s: "Đã mười năm ở xứ người; thư từ quê kể ruộng khoán được mùa nhưng mộ tổ sụt, và người ta bắt đầu nghe chuyện Việt kiều được về thăm.",
     choices: [
       ["Gửi tiền, gửi thùng đồ đều đặn", "Qua đường bưu điện và người quen mang tay.", {"u": 5, "b": -6, "lg": 6, "nn": 5}, "Vải, thuốc tây, radio về trước; đô la gấp trong thư về sau. Nhà ở quê lợp lại mái, mua được xe đạp Nhật; hàng xóm gọi là 'nhà có Việt kiều'.", undefined, "kieuhoi"],
-      ["Về thăm quê lần đầu", "Bay qua Bangkok, xuống Tân Sơn Nhất.", {"u": 6, "b": -10, "lg": 8, "nn": 5}, "Hải quan lục từng thùng quà. Mộ tổ xây lại bằng đô la, cả họ chụp tấm ảnh chung đầu tiên sau 1975; bên kia, vài người quen trong cộng đồng không bắt tay nữa.", undefined, "kieuhoi"],
-      ["Chưa gửi, chưa về", "Để dành mua nhà, chờ thời thế đổi.", {"u": -8, "b": 5, "lg": -10}, "Tiền để dành mua được căn nhà ở San Jose. Ở quê, giỗ họ vắng một nhánh; hai mươi năm sau, con cháu bên này không đủ tiếng Việt để hỏi đường về làng."],
+      ["Về thăm quê lần đầu", "Bay qua Bangkok rồi về nước.", {"u": 6, "b": -10, "lg": 8, "nn": 5}, "Hải quan lục từng thùng quà. Mộ tổ xây lại bằng đô la, cả họ chụp tấm ảnh chung đầu tiên sau 1975; bên kia, vài người quen trong cộng đồng không bắt tay nữa.", undefined, "kieuhoi"],
+      ["Chưa gửi, chưa về", "Để dành mua nhà, chờ thời thế đổi.", {"u": -8, "b": 5, "lg": -10}, "Tiền để dành mua được căn nhà ở xứ người. Ở quê, giỗ họ vắng một nhánh; hai mươi năm sau, con cháu bên này không đủ tiếng Việt để hỏi đường về làng."],
     ],
     note: "Từ cuối thập niên 1980, Nhà nước nới lỏng việc nhận kiều hối và cho Việt kiều về thăm thân nhân; năm 1989 Việt Nam rút quân khỏi Campuchia và bắt đầu thoát thế cô lập. Trong cộng đồng hải ngoại, việc gửi tiền hay về nước khi đó vẫn gây tranh cãi gay gắt.",
   },
@@ -150,7 +150,7 @@ export const SPECIAL: SpecialCard[] = [
     s: "Sau tiếng súng biên giới, phường rà soát người gốc Hoa; họ Lý của bạn bị gọi lên hỏi gốc gác, dù gia phả chép tổ tiên là người Việt đã nhiều đời.",
     choices: [
       ["Đưa gia phả, xin ghi dân tộc Kinh", "Nhờ người biết chữ Hán dịch gia phả; chờ xác minh.", {"u": 3, "b": -5, "nn": 5, "lg": -5}, "Hộ khẩu ghi 'Kinh'. Người Hoa cùng phố đi gần hết, cửa hàng bên cạnh đóng cửa; dòng họ ở lại trong một dãy phố bỗng vắng."],
-      ["Cả nhà đi 'bán chính thức' như người Hoa", "Nộp vàng theo chuyến cho cả nhà, bán nhà, xuống ghe ra Hồng Kông.", {"g": -8, "b": -5, "d": -3, "nn": -15, "my": 5}, "Mỗi đầu người gần mười lượng vàng. Ghe tới Hồng Kông sau chín ngày; hơn một năm ở trại, cả nhà được nhận sang Toronto. Năm 1990, thùng quà đầu tiên gửi về cho họ hàng còn ở quê.", undefined, "ly79Di"],
+      ["Cả nhà đi 'bán chính thức' như người Hoa", "Nộp vàng theo chuyến cho cả nhà, bán nhà, xuống ghe ra Hồng Kông.", {"g": -8, "b": -5, "d": -3, "nn": -15, "my": 5}, "Mỗi đầu người gần mười lượng vàng. Ghe tới Hồng Kông sau chín ngày; cả nhà vào trại, chờ phái đoàn các nước gọi tên.", undefined, "ly79Di"],
       ["Ở lại, chịu bị để ý", "Không đi, không chứng minh; sống qua ngày.", {"u": -4, "g": -5, "nn": -8}, "Hai người bị cho thôi việc ở cơ quan 'vì lý do an ninh'. Sau 1986 mới có người được nhận lại; cửa hàng mở lại nhờ Đổi Mới."],
     ],
     note: "Năm 1978–1979, quan hệ Việt – Trung xấu đi kéo theo 'nạn kiều': khoảng 250.000 người Hoa ở miền Bắc sang Trung Quốc bằng đường bộ, hàng trăm nghìn người ở miền Nam ra đi bằng ghe, phần lớn theo đường 'bán chính thức' có nộp vàng, và người gốc Hoa bị đưa ra khỏi các vị trí nhạy cảm. Họ Lý (李) ở Việt Nam có người Kinh, người Tày, Nùng, Dao ở miền núi phía Bắc và người Hoa cùng mang, nên khi rà soát gốc gác dễ bị đánh đồng.",

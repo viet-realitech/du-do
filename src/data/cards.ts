@@ -420,7 +420,7 @@ export const CARD = Object.fromEntries(CARDS.map(c => [c[0], c])) as Record<stri
 /** Năm 1995 với một nhà đã ở xứ người (Ra đi ở điểm rẽ 6, hay cả nhà đã ra đi trên thẻ: di tản 1975, "bán chính thức"
     1979, vượt biển, đi diện đoàn tụ 1980): về thăm quê, về làm ăn. Không nói nhà ở nước nào. */
 const VISIT95: Choice[] = [
-  ['Về thăm quê lần đầu', 'Việt Nam vừa bình thường hoá quan hệ với Mỹ và vào ASEAN; mua vé bay về Tân Sơn Nhất.', { b: -8, u: 4, my: 5, lg: 6, nn: 3 }, 'Hải quan lục từng thùng quà. Mộ tổ xây lại; cả họ chụp tấm ảnh chung đầu tiên sau ngần ấy năm xa cách.', 'kieuhoi'],
+  ['Về thăm quê lần đầu', 'Việt Nam vừa bình thường hoá quan hệ với Mỹ và vào ASEAN; mua vé máy bay về thăm quê.', { b: -8, u: 4, my: 5, lg: 6, nn: 3 }, 'Hải quan lục từng thùng quà. Mộ tổ xây lại; cả họ chụp tấm ảnh chung đầu tiên sau ngần ấy năm xa cách.', 'kieuhoi'],
   ['Về nước làm ăn', 'Lệnh cấm vận vừa bỏ; mở văn phòng đại diện ở quê nhà.', { b: 12, g: -2, nn: 5, my: 5 }, 'Giấy phép mất hai năm, đối tác đổi ba lần. Container đầu tiên đi Mỹ năm 2001.'],
 ];
 /** `special`: chỉ dùng khi biến cố riêng ấy gắn vào chính sự kiện này (play.ts specialFor: điều kiện xét lúc thẻ còn bỏ
@@ -508,11 +508,15 @@ export const VARIANT: Record<string, Variant[]> = {
   // nông trường quốc doanh mới lập; con em họ học ở các trường học sinh miền Nam (từ 1954).
   cc53: [
     // nhà giàu nhất làng, mà biến cố "Đội cải cách sắp về làng" (cards2.ts x-diachu53) sẽ gọi tên (cùng điều kiện: quê
-    // miền Bắc, theo Miền Bắc, nhiều bạc; chốt lúc quyết định): không thể khai là bần nông được chia ruộng. Lựa chọn thứ ba
-    // thành việc nhà có ruộng cho cấy rẽ phải làm trong đợt phát động giảm tô (1953 – 1954); hai lựa chọn đầu như thẻ gốc.
+    // miền Bắc, theo Miền Bắc, nhiều bạc; chốt lúc quyết định): không thể khai là bần nông được chia ruộng. Cả ba lựa chọn
+    // là việc nhà làm TRƯỚC khi đội về (giữ ruộng chờ xét, hiến ruộng, giảm tô): quy thành phần, mất ruộng, sửa sai là
+    // chuyện của biến cố ngay sau, nên kết cục ở đây không nói trước. Cùng thứ tự nghĩa với thẻ gốc (bản lưu cũ đọc theo bộ
+    // này): chịu để đội xét / tự giao ruộng / phần của nông dân. Đợt giảm tô ở vùng tự do là 1953 – 1954; Hà Nội, phần lớn
+    // Nam Định giảm tô sau khi tiếp quản 1954, nên lời không đề năm.
     { special: 'x-diachu53', choices: [
-      CARD.cc53[2][0], CARD.cc53[2][1],
-      ['Giảm tô, thoái tô cho người cấy rẽ', 'Đợt giảm tô 1953 – 1954: nhà có ruộng cho cấy rẽ phải hạ tô và trả lại phần tô đã thu quá mức.', { g: -8, b: -6, vm: 6, lg: 4 }, 'Tá điền nhận lại thóc, nông hội ghi tên nhà vào sổ. Nhưng nhà vẫn nhiều ruộng nhất làng, và đội cải cách sắp về.'],
+      ['Giữ ruộng, chờ đội về', 'Ruộng do mấy đời tậu được; không bán, không hiến, chờ đội về xét thành phần.', { u: -2, vm: -8, lg: -6 }, 'Mùa ấy nhà vẫn cày cấy như mọi năm, nhưng tá điền không còn đến chào, và nông hội bắt đầu ghi từng sào ruộng, từng con trâu của nhà.'],
+      ['Hiến ruộng trước khi đội về', 'Tự nguyện giao phần lớn ruộng cho nông hội, mong được xét nhẹ.', CARD.cc53[2][1][2], 'Nông hội nhận ruộng, ghi tên nhà vào sổ hiến điền. Còn nhà thuộc thành phần nào thì phải chờ đội về mới xét.'],
+      ['Giảm tô, thoái tô cho người cấy rẽ', 'Trước khi đội cải cách về, nông hội phát động giảm tô: nhà có ruộng cho cấy rẽ phải hạ tô và trả lại phần tô đã thu quá mức.', { g: -8, b: -6, vm: 6, lg: 4 }, 'Tá điền nhận lại thóc, nông hội ghi tên nhà vào sổ. Nhưng nhà vẫn nhiều ruộng nhất làng, và đội cải cách sắp về.'],
     ] },
     { from: ['T2', 'NE', 'NW'], regions: ['B'], choices: [
       ['Về nông trường khai hoang', 'Người tập kết được đưa về các nông trường quốc doanh mới lập.', { g: 4, b: -2, u: 2, vm: 8 }, 'Đất đồi cằn hơn ruộng quê. Mỗi mùa gặt, cả đội lại nói chuyện về Nam.'],
@@ -571,7 +575,7 @@ export const VARIANT: Record<string, Variant[]> = {
       ['Gửi một người đi, giữ phần còn lại', 'Dồn tiền cho một người con.', CARD.tn80[2][2][2], 'Người ấy tới Hồng Kông, rồi được nhận sang Anh. Thùng đồ đầu tiên về năm 1983.', 'guiDi'],
     ] },
     { regions: ['NE', 'NW'], choices: [
-      ['Cả nhà vượt biên', 'Bán hết nhà cửa, mua chỗ cho cả nhà trên một chiếc ghe ra từ cửa biển miền Tây.', CARD.tn80[2][0][2], 'Ghe lênh đênh năm ngày mới tạt vào một hòn đảo của Indonesia, rồi cả nhà được đưa về trại Galang; có người trong nhà không tới bờ. Gần một năm ở trại, cả nhà được nhận đi định cư; lá thư đầu tiên gửi về cho họ hàng ở quê kèm tấm ảnh chụp trước căn nhà thuê.', 'vuotbien'],
+      ['Cả nhà vượt biên', 'Bán hết nhà cửa, mua chỗ cho cả nhà trên một chiếc ghe ra từ cửa biển miền Tây.', CARD.tn80[2][0][2], 'Ghe lênh đênh năm ngày mới dạt vào một hòn đảo của Indonesia, rồi cả nhà được đưa về trại Galang; có người trong nhà không tới bờ. Gần một năm ở trại, cả nhà được nhận đi định cư; lá thư đầu tiên gửi về cho họ hàng ở quê kèm tấm ảnh chụp trước căn nhà thuê.', 'vuotbien'],
       CARD.tn80[2][1], CARD.tn80[2][2],
     ] },
   ],
@@ -758,7 +762,9 @@ export const VARIANT: Record<string, Variant[]> = {
   // viên, cùng ngày Trung Quốc tuyên bố rút quân; thanh niên trong Nam nhập ngũ, nhiều người sang mặt trận Campuchia.
   bb79: [
     { regions: ['T2', 'NE', 'NW'], choices: [
-      ['Tiễn con đi bộ đội', 'Lệnh tổng động viên ngày 5.3.1979; thanh niên trong tuổi lính nhập ngũ.', { d: -2, u: 4, nn: 10 }, 'Người con được đưa sang mặt trận Campuchia chứ không lên biên giới phía Bắc. Thư về thưa dần; ở nhà, mẹ đếm ngày bằng những lá thư.'],
+      // không ai rời nhà: biến cố họ Lý ngay sau có lựa chọn "cả nhà đi" (nỗi lo bị gọi sang Campuchia cũng là một lý do
+      // nhiều nhà ra đi)
+      ['Khai tên con theo lệnh tổng động viên', 'Lệnh tổng động viên ngày 5.3.1979; phường, xã lập danh sách thanh niên trong tuổi lính.', { u: 4, nn: 10 }, 'Tên người con vào danh sách chờ gọi. Cùng ngày ấy, Trung Quốc tuyên bố rút quân; giấy gọi chưa về, nhưng nhà nào có con trai lớn cũng thấp thỏm.'],
       ['Nghe tin qua đài', 'Chiến sự ở tận biên giới phía Bắc; trong này giá gạo lên, phường rà soát người gốc Hoa.', { g: -3 }, 'Đầu tháng Ba, Trung Quốc tuyên bố rút quân. Ở phố, mấy nhà người Hoa quen đã bán nhà, lặng lẽ ra đi.'],
     ] },
   ],

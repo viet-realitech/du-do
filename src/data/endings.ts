@@ -279,7 +279,8 @@ const GONE_TAIL: Record<string, (f: Facts) => string> = {
 const GEN6_GONE: Record<string, (when: string, tail: string) => string> = {
   baocap: (when, tail) => `Thế hệ 6 sống bằng sổ gạo, tem phiếu những năm đầu sau thống nhất; ${when}, ${tail}.`,
   doimoi: (when, tail) => `Thế hệ 6 chờ ngày được làm ăn tự do, nhưng Đổi Mới còn xa; ${when}, ${tail}.`,
-  radi: (when, tail) => `Thế hệ 6 chọn ra đi: ${when}, ${tail}; sau năm 1995 mới có người về thăm quê.`,
+  // không nói năm về thăm quê: biến cố năm 1989 (cards2.ts x-kieuhoi89) và thẻ năm 1995 đã kể nhà về lúc nào
+  radi: (when, tail) => `Thế hệ 6 chọn ra đi: ${when}, ${tail}.`,
 };
 /** Dòng gia phả của hướng `id` (gia phả ở kết cục, phim hành trình). Trò chơi biết quê nên nói đúng người miền nào làm gì
     sau Genève: điểm rẽ 5 dời nhà (play.ts regionAt), nhà miền Bắc theo Miền Nam / Thành phần thứ ba thì di cư, nhà miền
