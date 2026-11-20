@@ -111,6 +111,30 @@ test('a chapter tour saves its narration for offline; offline, a clip is served 
   expect(appErrors(errors)).toEqual([]);
 });
 
+test('a chapter tour saves its music in a cache of its own (never crowded out by narration); old untracked music is swept from the narration cache', async ({ page, context }) => {
+  const errors = await boot(page, context, { ...STATE, year: 1858, narr: false, sound: true, music: true, fx: false });
+  // a track saved by an older build (music/<mood>.m4a) in the narration cache, which nothing reads any more
+  await page.evaluate(async () => (await caches.open('voice-music')).put(new URL('music/war.m4a', location.href).href, new Response('old', { headers: { 'content-type': 'audio/mp4' } })));
+  await page.locator('#play').click();
+  await expect(page.locator('#tourb')).toBeVisible();
+  const keys = (name: string) => page.evaluate(async n => (await (await caches.open(n)).keys()).map(r => new URL(r.url).pathname.split('/').slice(-2).join('/')), name);
+  // the chapter's track and the turning point / calm tracks, fetched whole a few seconds after the tour starts
+  await expect.poll(async () => (await keys('music')).length, { timeout: 45_000 }).toBeGreaterThanOrEqual(3);
+  const music = await keys('music');
+  expect(music.every(k => /^music\/[a-z]+-[0-9a-f]{8}\.m4a$/.test(k))).toBe(true);
+  expect((await keys('voice-music')).filter(k => k.startsWith('music/'))).toEqual([]);
+  await page.locator('#tourb [data-t=stop]').click();
+  // offline, a cached track is served whole and in ranges
+  await context.setOffline(true);
+  const r = await page.evaluate(async u => {
+    const a = await fetch(u), b = await fetch(u, { headers: { Range: 'bytes=0-99' } });
+    return { s: a.status, n: (await a.arrayBuffer()).byteLength, s2: b.status, n2: (await b.arrayBuffer()).byteLength };
+  }, music[0]);
+  expect(r).toMatchObject({ s: 200, s2: 206, n2: 100 });
+  expect(r.n).toBeGreaterThan(100_000);
+  expect(appErrors(errors)).toEqual([]);
+});
+
 test('a new build waits for a safe moment: applied on return to the idle map, offered by a toast during a tour', async ({ page, context }) => {
   test.skip(!existsSync(join(DIST, 'sw.js')), 'needs the production build in dist/');
   const srv = await serveDist();

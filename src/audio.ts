@@ -89,8 +89,6 @@ export function audioSession(): void {
 }
 audioSession();
 
-/** Output bus for other audio sources; null when sound is unavailable. */
-export const bus = (): GainNode | null => (ac() ? FX : null);
 /** Bus for the soundtrack (music.ts): the effects bus behind a gain that battles lower (WAR.dip). */
 export const musicBus = (): GainNode | null => (ac() ? MUS : null);
 

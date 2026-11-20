@@ -419,6 +419,21 @@ function ensureDefs(defs: SVGDefsElement): void {
   }
 }
 
+/* ---------- tiếng của trận: vị trí trái / phải, nhạc lùi ---------- */
+/** Vị trí trái / phải (−0,7 … 0,7) của một điểm của cảnh theo chỗ nó đứng trên màn hình (iPad ngang phát hai bên): đọc
+    ma trận màn hình của nhóm cảnh một lần mỗi trận, ngay sau các lần đo bố cục của fitScale (không ép dàn trang thêm). */
+function panOf(root: SVGGElement): (p: [number, number]) => number {
+  let m: DOMMatrix | null = null;
+  try { m = root.getScreenCTM(); } catch { /* chưa gắn vào trang */ }
+  const w = innerWidth || 1;
+  return p => (m ? Math.max(-0.7, Math.min(0.7, ((2 * (m.a * p[0] + m.c * p[1] + m.e)) / w - 1) * 0.7)) : 0);
+}
+const mid = (a: [number, number], b: [number, number]): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+/** Tiếng trận đã tắt (khép trận, hay cảnh dừng): nhạc lên lại êm. */
+function undip(r: Run): void {
+  r.dip = false;
+  WAR.dip(false);
+}
 /* ---------- trận đánh ---------- */
 function curve(a: [number, number], b: [number, number], bend: number): { d: string; at: (t: number) => [number, number]; ang: number } {
   const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
@@ -541,21 +556,6 @@ function labelSpot(placed: Box[], p: [number, number], k: number, sy: number, t:
   const pick = tries.find(c => !hit(rect(c))) || tries[0];
   placed.push(rect(pick));
   return { dx: pick[0], dy: pick[1], anchor: pick[2] };
-}
-/* ---------- tiếng của trận: vị trí trái / phải, nhạc lùi ---------- */
-/** Vị trí trái / phải (−0,7 … 0,7) của một điểm của cảnh theo chỗ nó đứng trên màn hình (iPad ngang phát hai bên): đọc
-    ma trận màn hình của nhóm cảnh một lần mỗi trận, ngay sau các lần đo bố cục của fitScale (không ép dàn trang thêm). */
-function panOf(root: SVGGElement): (p: [number, number]) => number {
-  let m: DOMMatrix | null = null;
-  try { m = root.getScreenCTM(); } catch { /* chưa gắn vào trang */ }
-  const w = innerWidth || 1;
-  return p => (m ? Math.max(-0.7, Math.min(0.7, ((2 * (m.a * p[0] + m.c * p[1] + m.e)) / w - 1) * 0.7)) : 0);
-}
-const mid = (a: [number, number], b: [number, number]): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-/** Tiếng trận đã tắt (khép trận, hay cảnh dừng): nhạc lên lại êm. */
-function undip(r: Run): void {
-  r.dip = false;
-  WAR.dip(false);
 }
 function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const h = fxHost();

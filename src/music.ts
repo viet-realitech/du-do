@@ -17,7 +17,9 @@ const TRACKS = LOOPS.tracks as Record<Mood, Track>;
 const XF = LOOPS.xf;
 const VOL: Record<Mood, number> = { calm: 0.28, gate: 0.4, colony: 0.45, war: 0.5, rebuild: 0.45, finale: 0.6, elegy: 0.55 };
 const FADE = 1.8;
-/** The deck that takes over starts this long before the loop point, silent, so it is running in step when the crossfade begins. */
+/** The deck that takes over starts this long before the loop point, silent, so it is running in step when the crossfade
+    begins. (Not nudged by seeking: WebKit's currentTime of a playing element is too coarse to align by, a seek made it
+    worse in tests; the lag at the start is shown in the debug panel instead.) */
 const PRE = 1.2;
 
 /** Kết cục mất mát (sa sút, chia lìa, rời quê hương), theo số phận của dòng họ chứ không theo phía nào thắng: nhạc khép
@@ -37,7 +39,7 @@ const decks: Deck[] = [];
 let cur: Deck | null = null;
 let want: Mood | null = null;
 let master: GainNode | null = null;
-/** Bảng chẩn đoán / e2e: số lần đã nối vòng, độ lệch giữa hai deck lúc nối (ms), lần nối bị chặn. */
+/** Bảng chẩn đoán / e2e: số lần đã nối vòng, độ lệch giữa hai deck lúc deck mới vừa chạy (ms), lần nối bị chặn. */
 const stat = { loops: 0, lag: 0, refused: 0 };
 
 /** Mood for a chapter tour (era ids e1…e6). */
@@ -57,6 +59,12 @@ function hold(p: AudioParam, t: number): void {
 function ramp(p: AudioParam, t0: number, vol: number, d: number, up: boolean): void {
   p.setValueAtTime(up ? 0 : vol, t0);
   for (let i = 1; i <= 12; i++) { const u = i / 12; p.linearRampToValueAtTime(vol * (up ? Math.sin((u * Math.PI) / 2) : Math.cos((u * Math.PI) / 2)), t0 + u * d); }
+}
+/** Tua tới `t` giây; khi tệp chưa có siêu dữ liệu, tua lúc nó vừa có (Safari cũ không nhận currentTime trước lúc ấy). */
+function seek(el: HTMLMediaElement, t: number): void {
+  const src = el.src;
+  if (el.readyState < 1) el.addEventListener('loadedmetadata', () => { if (el.src === src && Math.abs(el.currentTime - t) > 0.25) el.currentTime = t; }, { once: true });
+  try { el.currentTime = t; } catch { /* chờ siêu dữ liệu */ }
 }
 const audible = (d: Deck, a: AudioContext) => !!d.m || d === cur || a.currentTime < d.busy;
 
@@ -81,7 +89,7 @@ function deck(a: AudioContext, out: AudioNode): Deck {
   const d: Deck = { el, g, m: null, busy: 0, t: 0, n: 0, blessed: false };
   el.addEventListener('timeupdate', () => near(d));
   // nối vòng không được (deck kia bị chặn): bài chạy tới cuối thì quay về điểm bắt đầu vòng, có một khoảng ngắt
-  el.addEventListener('ended', () => { if (cur === d && d.m) { d.el.currentTime = TRACKS[d.m].loop[0]; void d.el.play().catch(() => {}); } });
+  el.addEventListener('ended', () => { if (cur === d && d.m) { d.t = 0; seek(d.el, TRACKS[d.m].loop[0]); void d.el.play().catch(() => {}); } });
   return d;
 }
 
@@ -118,12 +126,13 @@ function takeover(d: Deck): void {
   hold(b.g.gain, a.currentTime);
   b.g.gain.linearRampToValueAtTime(0, a.currentTime + 0.03); // vẫn còn tắt dần bài trước (hiếm): im trước khi đổi tệp
   if (!b.el.src.endsWith(src.replace(/^\.\//, ''))) b.el.src = src;
-  b.el.currentTime = Math.max(0, L + (d.el.currentTime - C));
+  seek(b.el, Math.max(0, L + (d.el.currentTime - C)));
   b.el.play().then(() => {
     b.blessed = true;
     if (b.n !== n || cur !== d || d.m !== m) return;
-    // hai deck đang chạy: nối khi deck này tới điểm vòng; ghi độ lệch giữa hai deck (bảng chẩn đoán)
+    // hai deck đang chạy: nối khi deck này tới điểm vòng
     const wait = Math.max(0, C - d.el.currentTime), t0 = a.currentTime + wait;
+    // độ lệch giữa hai deck theo currentTime, lúc deck mới vừa chạy (bảng chẩn đoán: đo trên máy thật)
     stat.lag = Math.round((b.el.currentTime - L - (d.el.currentTime - C)) * 1000);
     hold(d.g.gain, a.currentTime);
     ramp(d.g.gain, t0, VOL[m], XF, false);
@@ -138,7 +147,8 @@ function takeover(d: Deck): void {
   }, () => {
     if (b.n !== n) return;
     stat.refused++;
-    b.m = null; // bị chặn: deck này chạy tiếp tới cuối rồi quay về điểm vòng ('ended')
+    b.m = null; // bị chặn: deck này chạy tiếp tới cuối rồi quay về điểm vòng ('ended'); không thử lại trong vòng này
+    if (cur === d && !d.t) d.t = -1;
   });
 }
 
@@ -165,8 +175,7 @@ function apply(): void {
   cur = d;
   const start = () => {
     if (d.n !== n) return;
-    d.el.src = trackUrl(m);
-    d.el.currentTime = 0;
+    d.el.src = trackUrl(m); // tệp mới: phát từ đầu
     d.el.play().then(() => {
       d.blessed = true;
       if (d.n !== n || cur !== d) return;

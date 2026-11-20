@@ -66,7 +66,31 @@ for (const r of rows) {
 const f0: Facts = { mode: 'read', name: 'Họ Nguyễn', picks: [], renames: [], flags: new Set() }, e0 = ENDINGS.find(e => endVoiceKey(e, f0));
 if (e0 && endVoiceKey({ ...e0, line: e0.line.replace(/\.$/, ' nữa.') }, f0)) errors.push('src/said.ts: ứng dụng vẫn phát bản thu kết cục khi câu tóm đã đổi');
 
-// 5. (tuỳ chọn) độ dài: bản thu quá ngắn hay quá dài so với số chữ thì có thể đọc sai, đọc sót hay lặp
+// 5. chỗ trong bộ nhớ đệm ngoại tuyến (vite.config.ts runtimeCaching): lời kể (/assets/*.m4a) và nhạc (/music/*.m4a) mỗi
+// thứ một bộ nhớ đệm, đủ chỗ cho mọi tệp (đầy thì service worker lặng lẽ bỏ tệp cũ nhất: lời kể, nhạc câm khi mất mạng);
+// hai luật không bắt nhầm tệp của nhau; mỗi bài nhạc trong src/music.json có tệp, không có tệp nhạc thừa
+{
+  const cfg = readFileSync('vite.config.ts', 'utf8');
+  const rules = [...cfg.matchAll(/urlPattern:\s*\/(.*)\/([a-z]*),\s*\n[\s\S]*?cacheName:\s*'([^']+)'[\s\S]*?maxEntries:\s*(\d+)/g)].map(m => ({ re: new RegExp(m[1], m[2]), name: m[3], max: +m[4] }));
+  const clips = readdirSync('src/voice').filter(f => f.endsWith('.m4a')).length;
+  const music = JSON.parse(readFileSync('src/music.json', 'utf8')) as { tracks: Record<string, { file: string }> };
+  const files = Object.values(music.tracks).map(t => t.file), onDisk = readdirSync('public/music').filter(f => f.endsWith('.m4a'));
+  for (const f of files) if (!onDisk.includes(f)) errors.push(`src/music.json: thiếu public/music/${f} (npm run music)`);
+  for (const f of onDisk) if (!files.includes(f)) errors.push(`public/music/${f} không bài nào dùng (npm run music xoá tệp cũ)`);
+  const room = (kind: string, sample: string, other: string, n: number) => {
+    const r = rules.filter(x => x.re.test(sample));
+    if (r.length !== 1) { errors.push(`vite.config.ts: ${r.length} luật bộ nhớ đệm cho ${kind} (${sample}), cần đúng 1`); return; }
+    if (r[0].re.test(other)) errors.push(`vite.config.ts: luật '${r[0].name}' của ${kind} bắt cả ${other}`);
+    if (n > r[0].max) errors.push(`bộ nhớ đệm '${r[0].name}' chỉ giữ ${r[0].max} tệp mà có ${n} ${kind}: tăng maxEntries trong vite.config.ts`);
+    else if (n > r[0].max * 0.9) warns.push(`bộ nhớ đệm '${r[0].name}': ${n} ${kind} / ${r[0].max} chỗ, sắp đầy`);
+    return r[0];
+  };
+  const v = room('bản thu lời kể', '/assets/ui-rate-AbCd1234.m4a', '/music/calm-0a1b2c3d.m4a', clips);
+  const m = room('bài nhạc', '/music/calm-0a1b2c3d.m4a', '/assets/ui-rate-AbCd1234.m4a', files.length);
+  if (v && m && v.name === m.name) errors.push(`vite.config.ts: lời kể và nhạc chung bộ nhớ đệm '${v.name}'`);
+}
+
+// 6. (tuỳ chọn) độ dài: bản thu quá ngắn hay quá dài so với số chữ thì có thể đọc sai, đọc sót hay lặp
 if (process.argv.includes('--durations')) {
   for (const r of rows) {
     if (!existsSync(clip(r.key))) continue;
