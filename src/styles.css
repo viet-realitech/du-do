@@ -439,7 +439,8 @@ p { font-size: 17px; line-height: 1.4; text-wrap: pretty }
 .pv { border: 1px solid var(--rule); border-radius: var(--r); padding: 12px 14px; background: var(--paper2) }
 .pv + .pv { margin-top: 10px }
 .pv.mine { background: var(--paper); border: 1.5px solid var(--acc) }
-.pv q { display: block; font-size: 17px; line-height: 1.35; margin-top: 6px; quotes: "“" "”" }
+.pv .pvt { font-size: 17px; line-height: 1.35; margin-top: 6px }
+.pv-sum { margin: 0 0 8px }
 .quote { padding: 16px 0 4px; margin-top: 16px; border-top: 1px solid var(--rule); cursor: pointer; display: block; width: 100%; text-align: left }
 .quote blockquote { font: 500 italic 22px/1.3 var(--disp); text-wrap: pretty }
 .quote blockquote::before { content: "“"; font-size: 44px; line-height: 0; vertical-align: -.35em; margin-right: 3px; color: var(--acc) }
