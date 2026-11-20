@@ -124,11 +124,12 @@ function place(e: HTMLElement): { top: number; left: number; bottom: number; rig
 /* Thông báo xếp hàng: mỗi lúc một cái, cái sau chờ cái trước tắt (trước đây huy hiệu cách nhau 1,4 s mà mỗi cái sống
    2,8 s ở cùng một chỗ: hai cái chồng lên nhau). `onShow`: tiếng kèn, rung đúng lúc thông báo hiện. `wait`: chờ tới khi
    có chỗ không đè lên tờ đang mở (huy hiệu); không có thì hiện ngay (trả lời một thao tác). */
-type Toast = { html: string; onShow?: () => void; wait?: boolean };
+type Toast = { html: string; onShow?: () => void; wait?: boolean; ms?: number };
 const tq: Toast[] = [];
 let tBusy = false, tGen = 0;
-export function toast(html: string, onShow?: () => void, wait = false): void {
-  tq.push({ html, onShow, wait });
+/** `ms`: thời gian hiện (mặc định 2,8 s; thông báo có nút bấm được hiện lâu hơn). */
+export function toast(html: string, onShow?: () => void, wait = false, ms = 2800): void {
+  tq.push({ html, onShow, wait, ms });
   if (!tBusy) nextToast();
 }
 function nextToast(): void {
@@ -148,8 +149,10 @@ function nextToast(): void {
     const [t] = tq.splice(i, 1);
     if (i) { n.innerHTML = t.html; toastSpot(n); }
     n.style.visibility = '';
+    const ms = t.ms || 2800;
+    if (ms !== 2800) n.style.animationDuration = ms + 'ms';
     t.onShow?.();
-    setTimeout(() => { n.remove(); setTimeout(nextToast, 300); }, 2800);
+    setTimeout(() => { n.remove(); setTimeout(nextToast, 300); }, ms);
   });
 }
 

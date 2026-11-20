@@ -5,7 +5,7 @@ import type { Feature, MultiPolygon, Geometry } from 'geojson';
 import { F, PROVINCES, provGroup, provName, regionName, regime2, type HistEvent, type Region } from './data';
 import { S, save, rt, curPick, optOf, visEv } from './state';
 import { esc } from './ui/dom';
-import { quality, onQuality, watch } from './ui/quality';
+import { quality, onQuality } from './ui/quality';
 import { fill, flag, pal, land as landC, sea as seaC } from './ui/bits';
 import { SND, buzz } from './audio';
 import { checkBadges } from './badges';
@@ -101,7 +101,7 @@ export async function initMap(): Promise<void> {
   const vg = defs.append('radialGradient').attr('id', 'vig');
   vg.append('stop').attr('offset', '55%').attr('stop-color', '#5f4c36').attr('stop-opacity', 0);
   vg.append('stop').attr('offset', '100%').attr('stop-color', '#5f4c36').attr('stop-opacity', 0.28);
-  // vùng lọc tính theo đơn vị bản đồ quanh phần nhìn thấy được (fitViewBox), không theo khung bao của cả nhóm đất
+  // vùng lọc tính theo đơn vị bản đồ quanh phần đang thấy (fitRough), không theo khung bao của cả nhóm đất
   // (đất vẽ tràn ±PAD: ~2600 đơn vị vuông, Safari lọc cả vùng ấy bằng CPU mỗi lần vẽ lại)
   const rf = G.rough = defs.append('filter').attr('id', 'rough').attr('filterUnits', 'userSpaceOnUse');
   rf.append('feTurbulence').attr('type', 'fractalNoise').attr('baseFrequency', 0.045).attr('numOctaves', 2).attr('seed', 7).attr('result', 't');
@@ -242,8 +242,26 @@ const roughOn = () => S.theme === 'archive' && S.mstyle !== 'flat' && quality() 
 function deco(): void {
   if (!G.rip) return;
   putS(G.rip.node()!, 'visibility', moving ? 'hidden' : '');
-  const f = roughOn() && !moving && !busy ? 'url(#rough)' : null;
-  if (G.r0.attr('filter') !== f) G.r0.attr('filter', f);
+  // lúc yên: vùng lọc theo phần đang thấy (gợn sóng ẩn khi bay, giữ vùng cũ tới lúc dừng)
+  const co = roughOn() && (moving || fitRough());
+  put(G.rip.node()!, 'filter', co ? 'url(#rough)' : null);
+  put(G.r0.node()!, 'filter', co && !moving && !busy ? 'url(#rough)' : null);
+}
+/** Vùng lọc nét cổ = phần bản đồ đang thấy cộng một lề, đặt lại mỗi khi bản đồ dừng (deco) và khi đổi cỡ khung.
+    Vùng cố định cỡ toàn cảnh nhỏ nhất lớn theo k²: Safari bỏ hẳn bộ lọc quá ~16,8 triệu điểm ảnh thiết bị, nên từ k ≈ 2
+    (iPad ngang) cả lớp đất biến mất khi dừng. Vùng vẫn quá 12 triệu điểm ảnh (màn rất lớn): false, không dùng nét cổ.
+    Lề, độ rung (độ dời, cỡ hạt nhiễu tính theo đơn vị bản đồ) chia theo k: cùng cỡ trên màn hình ở mọi mức zoom, nên vùng
+    lọc luôn xấp xỉ khung nhìn (lề cố định 12 đơn vị lớn theo k: màn máy tính lớn quá ngưỡng ngay khi phóng to). */
+function fitRough(): boolean {
+  const n = G.svg.node()!, vb = n.viewBox.baseVal, t = d3.zoomTransform(n), k = t.k, m = 12 / k;
+  if (!vb || !vb.width) return false;
+  const w = vb.width / k + 2 * m, h = vb.height / k + 2 * m, d = k * G.px * (window.devicePixelRatio || 1);
+  if (w * d * h * d > 12e6) return false;
+  const r = G.rough.node()!, f = (v: number) => Math.round(v * 100) / 100;
+  put(r, 'x', f((vb.x - t.x) / k - m)); put(r, 'y', f((vb.y - t.y) / k - m)); put(r, 'width', f(w)); put(r, 'height', f(h));
+  put(r.firstElementChild!, 'baseFrequency', Math.round(450 * k) / 1e4);
+  put(r.lastElementChild!, 'scale', Math.round(350 / k) / 100);
+  return true;
 }
 /** Kéo thanh năm (view.ts): mỗi năm vẽ lại đất; bỏ bộ lọc nét cổ trong lúc kéo (Safari lọc lại cả vùng bằng CPU). */
 export function mapBusy(on: boolean): void {
@@ -273,11 +291,11 @@ function buildPatterns(): void {
 export function themeMap(): void {
   if (!G.defs) return;
   buildPatterns();
-  const th = S.theme, co = roughOn(), q = quality();
+  const th = S.theme, q = quality();
   G.sea.attr('fill', th === 'poster' ? 'url(#p-sea)' : seaC());
   G.rip.selectAll('.seaS').attr('stroke', seaC());
   // ẩn / hiện bằng lớp CSS (cảnh trận tắt hẳn); mức hiệu ứng thấp: không gợn sóng
-  G.rip.classed('off', !((th === 'archive' && S.mstyle !== 'flat') || th === 'night') || q < 2).attr('filter', co ? 'url(#rough)' : null);
+  G.rip.classed('off', !((th === 'archive' && S.mstyle !== 'flat') || th === 'night') || q < 2); // nét cổ: deco()
   G.others.attr('fill', landC()).attr('stroke-width', th === 'poster' ? 1.2 : 0.6);
   G.base.attr('fill', landC());
   document.getElementById('mapwrap')?.style.setProperty('--seac', seaC()); // nền khung = màu biển: bản đồ nghiêng không để lộ dải đen phía trên
@@ -301,9 +319,6 @@ function fitViewBox(): void {
   const box: [[number, number], [number, number]] = [[(W - vw) / 2, (H - vh) / 2], [(W + vw) / 2, (H + vh) / 2]];
   const vb = `${box[0][0]} ${box[0][1]} ${vw} ${vh}`;
   for (const s of [G.svg, G.bg, G.fxs]) s.attr('viewBox', vb).attr('preserveAspectRatio', 'xMidYMid meet');
-  // bộ lọc nét cổ: chỉ phần có thể thấy khi thu nhỏ nhất (K_MIN), cộng một lề
-  const fw = vw / K_MIN + 60, fh = vh / K_MIN + 60;
-  G.rough.attr('x', W / 2 - fw / 2).attr('y', H / 2 - fh / 2).attr('width', fw).attr('height', fh);
   G.vig.attr('x', box[0][0]).attr('y', box[0][1]).attr('width', vw).attr('height', vh);
   const px = r.width / vw; // screen px per SVG unit
   // cho kéo bản đồ lên khỏi thanh tour (~90 px dưới) và xuống khỏi nhãn trên cùng (~44 px): mũi Cà Mau không bị che
@@ -311,6 +326,7 @@ function fitViewBox(): void {
   G.f = Math.min(1, 1.3 / px);
   G.px = px;
   rescale();
+  deco(); // vùng lọc nét cổ theo khung mới
 }
 
 /** Keep markers, labels and callouts at constant screen size while zoomed. */
@@ -576,7 +592,7 @@ export function zoomFit(pts: [number, number][], kMax: number, ms?: number, padB
 /** Bay tới phép biến đổi `t`; giảm chuyển động: đặt ngay, không bay. */
 function fly(t: d3.ZoomTransform, ms: number): void {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { G.svg.interrupt().call(G.zoom.transform, t); return; }
-  watch(ms); // đo khung hình lúc bay: máy chậm thì tự bớt hiệu ứng (ui/quality.ts)
+  // không đo khung hình lúc bay (ui/quality.ts): gợn sóng, nét cổ đã tạm tắt trong lúc bay, bớt hiệu ứng không làm bay nhanh hơn
   G.svg.transition().duration(ms).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }
 

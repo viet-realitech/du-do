@@ -1,6 +1,18 @@
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'node:child_process';
 import pkg from './package.json' with { type: 'json' };
+
+/* Build id shown in Giới thiệu and in the debug report: short commit + build date (UTC), so a report names the build. */
+function buildId(): string {
+  const e = process.env;
+  let sha = (e.VERCEL_GIT_COMMIT_SHA || e.GITHUB_SHA || e.COMMIT_REF || '').slice(0, 7);
+  if (!sha) {
+    try { sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch { sha = 'dev'; }
+  }
+  const d = new Date();
+  return `${sha} · ${d.getUTCDate()}.${d.getUTCMonth() + 1}.${d.getUTCFullYear()}`;
+}
 
 /* Absolute public URL of the deployment (e.g. https://dudo.example.vn/). Used for canonical/Open Graph
    tags, which crawlers require to be absolute. Set SITE_URL when building for production.
@@ -64,11 +76,12 @@ function seo(): Plugin {
 export default defineConfig({
   base: './',
   build: { target: 'es2022' },
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: { __APP_VERSION__: JSON.stringify(pkg.version), __APP_BUILD__: JSON.stringify(buildId()) },
   plugins: [
     seo(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // bản mới chờ tới lúc an toàn (src/pwa.ts), không tự tải lại giữa tour / cảnh trận như autoUpdate
+      registerType: 'prompt',
       includeAssets: ['icon.svg', 'apple-touch-icon.png', 'og.png'],
       manifest: {
         id: './',
@@ -97,12 +110,16 @@ export default defineConfig({
         globIgnores: ['og.png', '**/be-vietnam-pro-*'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
+        // lần cài đầu: trang đang mở dùng ngay service worker (lưu lời kể ngay từ chương đầu); bản cập nhật vẫn chờ
+        clientsClaim: true,
         runtimeCaching: [
           {
-            // Narration clips and music, hashed or not: keep what was played for offline replays.
+            // Narration clips and music, hashed or not: keep what was played for offline replays. Audio elements ask for
+            // byte ranges (206, never cached): the cache is filled by plain fetches (src/warm.ts) and ranges are cut from
+            // the cached file. Room for every clip (195) and track (6), with headroom for new clips.
             urlPattern: /\.m4a$/,
             handler: 'CacheFirst',
-            options: { cacheName: 'voice-music', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
+            options: { cacheName: 'voice-music', rangeRequests: true, expiration: { maxEntries: 320, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
           },
           {
             urlPattern: /\/assets\/be-vietnam-pro-[^/]+\.woff2?$/,

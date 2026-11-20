@@ -13,7 +13,8 @@ const CREDITS: [string, string, string][] = [
 ];
 
 export function openAbout(): void {
-  sheet(`<div class="mono muted">Giới thiệu · phiên bản ${__APP_VERSION__}</div>
+  // mã bản dựng trên dòng riêng, đúng chữ như trong báo cáo chẩn đoán và git (không viết hoa, không xuống dòng giữa chừng)
+  sheet(`<div class="mono muted" data-a="ver">Giới thiệu · phiên bản ${__APP_VERSION__} <span class="bid">${__APP_BUILD__}</span></div>
   <h2 style="margin:6px 0 10px">Dư Đồ</h2>
   <p>Một trò chơi lịch sử về bản đồ Việt Nam từ năm 1858 tới nay. Bạn dẫn một dòng họ hư cấu qua sáu điểm rẽ, rồi so con đường của mình với hướng đã chiếm ưu thế trong lịch sử.</p>
   <div class="pv" style="margin-top:14px"><div class="mono muted">Cách đọc</div>
@@ -25,3 +26,11 @@ export function openAbout(): void {
 }
 
 on('about', openAbout);
+// chạm 5 lần vào dòng phiên bản: bảng chẩn đoán (ui/debug.ts; ứng dụng trên màn hình chính không thêm được ?debug)
+let taps = 0, tapAt = 0;
+on('ver', () => {
+  const t = Date.now();
+  taps = t - tapAt < 1500 ? taps + 1 : 1;
+  tapAt = t;
+  if (taps >= 5) { taps = 0; void import('../ui/debug').then(m => m.openDebug()); }
+});

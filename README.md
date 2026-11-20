@@ -52,6 +52,8 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 | `e2e/` | Playwright tests |
 | `scripts/` | Geodata trimming, icon / share-image generation, music and voice-over builds |
 | `src/music.ts`, `src/audio.ts`, `src/narration.ts` | Soundtrack moods, synthesised effects, narration (recordings or system voice) |
+| `src/pwa.ts`, `src/warm.ts` | Service worker updates (prompt mode: applied only at a safe moment, else a "Có bản mới · Tải lại" toast); a chapter's narration and music fetched whole for offline use |
+| `src/errlog.ts`, `src/ui/debug.ts` | On-device error log (`localStorage` `dudo-errlog`, never sent) and the lazy debug panel: `?debug`, or tap the version line in Hồ sơ → Giới thiệu 5 times; "Sao chép báo cáo" copies a report |
 
 ### Play mode (Chế độ Chơi)
 

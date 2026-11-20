@@ -2,3 +2,5 @@
 declare module '@fontsource/*';
 
 declare const __APP_VERSION__: string;
+/** Commit ngắn · ngày dựng (vite.config.ts). */
+declare const __APP_BUILD__: string;

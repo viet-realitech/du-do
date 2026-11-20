@@ -1,3 +1,5 @@
+// sổ lỗi trên máy trước mọi mô-đun khác: bắt cả lỗi lúc chúng chạy (bảng chẩn đoán, ui/debug.ts)
+import './errlog';
 // Only the latin + vietnamese subsets: everything the UI writes, without precaching cyrillic/greek/latin-ext.
 import '@fontsource/eb-garamond/latin-400';
 import '@fontsource/eb-garamond/vietnamese-400';
@@ -44,7 +46,7 @@ import '@fontsource/ibm-plex-mono/latin-500';
 import '@fontsource/ibm-plex-mono/vietnamese-500';
 import './styles.css';
 import './ui/image-slot';
-import { registerSW } from 'virtual:pwa-register';
+import { initPwa } from './pwa';
 import { S, setFocus } from './state';
 import { initMap } from './map';
 import { initMainControls, renderMain } from './view';
@@ -79,4 +81,6 @@ if (S.step === 'splash') splash();
 else if (S.step === 'intro') (S.mode === 'play' ? gameIntro : intro)();
 else resumePlace(mapReady); // thẻ còn nợ / điểm rẽ (Trò chơi), hay ▶ nhấp nháy mời chạy tiếp chương
 
-registerSW({ immediate: true });
+initPwa(); // bản mới: kiểm tra khi quay lại app, chỉ tải lại lúc an toàn (pwa.ts)
+// bảng chẩn đoán (?debug, hay chạm 5 lần vào dòng phiên bản ở Giới thiệu): chỉ tải khi được mở
+try { if (/[?&]debug\b/.test(location.search) || sessionStorage.getItem('dudo-debug')) void import('./ui/debug').then(m => m.openDebug()); } catch { /* riêng tư */ }
