@@ -37,12 +37,13 @@ if (!existsSync(FILE)) { console.error(`thiếu ${FILE}: npm run size:update`); 
 const base = JSON.parse(readFileSync(FILE, 'utf8')) as Sizes;
 let bad = 0;
 for (const k of Object.keys(LABEL) as (keyof Sizes)[]) {
-  const lim = Math.round(base[k] * (1 + HEAD)), d = ((now[k] / base[k] - 1) * 100).toFixed(1);
+  const lim = Math.round(base[k] * (1 + HEAD)), d = Math.round((now[k] / base[k] - 1) * 1000) / 10;
   const over = now[k] > lim;
   if (over) bad++;
-  console[over ? 'error' : 'log'](`${over ? '✗' : '·'} ${LABEL[k].padEnd(26)} ${kb(now[k]).padStart(10)}  mốc ${kb(base[k])} (${+d >= 0 ? '+' : ''}${d}%)${over ? `, quá ${kb(lim)}` : ''}`);
+  console[over ? 'error' : 'log'](`${over ? '✗' : '·'} ${LABEL[k].padEnd(26)} ${kb(now[k]).padStart(10)}  mốc ${kb(base[k])} (${d > 0 ? '+' : ''}${d ? d.toFixed(1) : '0.0'}%)${over ? `, quá ${kb(lim)}` : ''}`);
 }
 if (bad) {
   console.error(`\nGói lớn hơn mốc quá ${HEAD * 100}%. Tìm xem cái gì vừa vào gói (npx vite build in cỡ từng tệp); nếu cố ý, ghi lại mốc: npm run build && npm run size:update`);
   process.exit(1);
 }
+console.log(`cỡ gói trong mốc ${FILE} + ${HEAD * 100}%`);
