@@ -244,7 +244,7 @@ test('ending: "Còn lại tên họ" of a family still 45 strong is read with th
     snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(20, 45, 10, 20), e6: r(4, 45, 4, 4) }, res: r(4, 45, 4, 4) }, '');
   await page.locator('#card [data-a=end].c').click();
   await expect(page.locator('.end-title')).toHaveText('Còn lại tên họ');
-  await expect(page.locator('.end-line')).toContainText('nhà sa sút, nhưng gia phả vẫn giữ được cái tên');
+  await expect(page.locator('.end-line')).toContainText('Nhà sa sút, nhưng gia phả vẫn giữ được cái tên');
   await expect.poll(() => clips(page), { timeout: 6000 }).toContain('end-lytan');
   expect(errors).toEqual([]);
 });

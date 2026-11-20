@@ -239,7 +239,7 @@ Cần sử gia xem: ba lần đổi tiền ở miền Nam (9.1975, 5.1978, 9.198
 
 Luật và lời kết ở `src/data/endings.ts`; tỷ lệ hiếm do `npm run endings` sinh vào `src/data/endings-rarity.json` (mô phỏng, không phải thống kê người chơi thật). Xét theo thứ tự, kết cục đầu tiên thoả điều kiện được chọn; Đọc sử bỏ các kết cục chỉ có ở Trò chơi. Lời kết ghép theo hướng đã chọn, quê, thẻ đã quyết và các lần đổi họ; người rà soát xem cả `epilogue()` trong tệp ấy.
 
-- **Còn lại tên họ** (`lytan`, chỉ Trò chơi; Đọc sử –, Trò chơi 5,1%): Gia sản cuối cùng thuộc nhóm 5% thấp nhất của các dòng họ cùng quê trong mô phỏng, hoặc dòng họ còn dưới 25 nhân đinh. Câu tóm: “Gia sản gần cạn, người còn ít, nhưng gia phả vẫn giữ được cái tên.”
+- **Còn lại tên họ** (`lytan`, chỉ Trò chơi; Đọc sử –, Trò chơi 5,1%): Gia sản cuối cùng thuộc nhóm 5% thấp nhất của các dòng họ cùng quê trong mô phỏng, hoặc dòng họ còn dưới 25 nhân đinh. Câu tóm: “Nhà sa sút, nhưng gia phả vẫn giữ được cái tên.”
 - **Bên kia đại dương** (`xanam`; Đọc sử 11,1%, Trò chơi 11%): Đời thứ năm theo miền Nam; đời thứ sáu (hoặc một lựa chọn trên thẻ sự kiện) đưa dòng họ ra nước ngoài. Câu tóm: “Từ miền Nam sau năm 1975, dòng họ dựng lại đời sống ở bên kia đại dương.”
 - **Người đi từ phía Bắc** (`xabac`; Đọc sử 11,1%, Trò chơi 10,8%): Đời thứ năm theo miền Bắc; đời thứ sáu (hoặc một lựa chọn trên thẻ sự kiện) đưa dòng họ ra nước ngoài. Câu tóm: “Đời thứ năm theo miền Bắc; sau chiến tranh, dòng họ có người ra đi, có người ở lại giữ từ đường.”
 - **Tiếng nói từ xa** (`xagiua`; Đọc sử 11,1%, Trò chơi 10,9%): Đời thứ năm theo thành phần thứ ba; đời thứ sáu (hoặc một lựa chọn trên thẻ sự kiện) đưa dòng họ ra nước ngoài. Câu tóm: “Bị cả hai phía nghi ngờ, rồi ra đi; con cháu thành người bắc cầu.”
