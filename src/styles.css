@@ -561,6 +561,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 @media (max-width: 440px) { #replb [data-t=again] { width: 34px; padding: 0; justify-content: center; flex: none } #replb [data-t=again] span { display: none } }
 .mapwrap.replaying #tourb { display: none }
 .hzoom { position: absolute; right: 8px; top: 8px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r); background: var(--paper); color: var(--ink); border: 1px solid var(--neat) }
+.hzoom[hidden] { display: none } /* chưa có ảnh: không có gì để phóng to */
 .ph { background: repeating-linear-gradient(45deg, var(--paper3) 0 6px, var(--paper2) 6px 12px) !important; position: relative; pointer-events: none }
 .ph::after { content: "ẢNH TƯ LIỆU"; position: absolute; inset: 0; display: grid; place-items: center; font: 500 10px var(--serif); letter-spacing: .14em; color: var(--ink3) }
 .mstrip { display: flex; gap: 6px; overflow-x: auto; margin: 16px -20px 0; padding: 0 20px; scrollbar-width: none }

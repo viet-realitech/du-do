@@ -110,6 +110,7 @@ test('event photos: a page opened offline says the photos could not load, retrie
   net.mode = 'down';
   const id = await openFocused(page);
   await expect(hero(page)).toHaveAttribute('placeholder', 'Chưa tải được ảnh · thử lại sau', { timeout: 15_000 });
+  await expect(page.locator('#hzoom')).toBeHidden(); // nothing to enlarge
   await page.locator('#et').getByRole('tab', { name: 'Ảnh, phim' }).click();
   await expect(page.getByText(/Chưa tải được bài Wikipedia và ảnh tư liệu/)).toBeVisible();
   await expect(page.getByText('Chưa tìm thấy bài Wikipedia phù hợp.')).toHaveCount(0);

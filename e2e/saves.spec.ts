@@ -194,6 +194,19 @@ test.describe('the recovery screen', () => {
     await expect(page.locator('#yr')).toHaveText('1954');
   });
 
+  test('on a first visit with no save, the recovery screen speaks of no copy and offers nothing to wipe', async ({ page }) => {
+    await seed(page, {});
+    await page.route(/\/assets\/index-[\w-]+\.js$/, r => r.abort());
+    await page.goto('/');
+    const box = page.locator('#rescue');
+    await expect(box).toBeVisible({ timeout: 10_000 });
+    await expect(box.locator('#rescue-p')).toHaveText('Lần mở này gặp trục trặc. Hãy thử lại sau giây lát.');
+    await expect(box.getByRole('button', { name: 'Bắt đầu lại' })).toHaveCount(0);
+    await box.getByRole('button', { name: 'Sao chép báo cáo lỗi' }).click();
+    expect(await page.evaluate(() => (window as unknown as { copied: string }).copied)).toContain('mã ứng dụng chưa chạy');
+    expect(await kept(page)).toEqual([]);
+  });
+
   test('a main map that never draws brings up the recovery screen after a while, and it goes away if the map draws after all', async ({ page }) => {
     test.setTimeout(90_000);
     await seed(page, { 'dudo-v2': JSON.stringify({ ...midGame, v: 1 }) });

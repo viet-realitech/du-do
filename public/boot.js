@@ -104,6 +104,8 @@ try {
     why = w; slot = key || slotKey();
     if (msg) errs.push(String(msg).slice(0, 300));
     keep(slot, w === 'save' ? 'không đọc được' : 'ứng dụng không mở được' + (msg ? ': ' + String(msg).slice(0, 120) : ''));
+    // chưa có ván nào trên máy (lần mở đầu tiên): không nói tới bản sao, không có gì để xoá
+    var has = get(slot) !== null;
     note('Màn khôi phục: ' + (w === 'save' ? 'bản lưu ' + slot + ' không đọc được' : 'ứng dụng không mở được') + (msg ? ' (' + String(msg).slice(0, 160) + ')' : ''));
     var st = el('style', { id: 'rescue-css' }); st.textContent = CSS; document.head.appendChild(st);
     box = el('div', { id: 'rescue', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': 'rescue-h', 'aria-describedby': 'rescue-p' });
@@ -112,14 +114,17 @@ try {
     c.appendChild(el('h1', { id: 'rescue-h', tabindex: '-1' }, w === 'save' ? 'Bản lưu bị hỏng' : 'Dư Đồ chưa mở được'));
     c.appendChild(el('p', { id: 'rescue-p' }, w === 'save'
       ? 'Bản lưu trên máy này không đọc được nên ván của bạn chưa mở ra được. Dư Đồ đã cất riêng một bản sao của nó, chưa xoá gì cả.'
-      : 'Lần mở này gặp trục trặc. Ván đang chơi vẫn nằm trên máy, và Dư Đồ đã cất thêm một bản sao để phòng.'));
+      : has ? 'Lần mở này gặp trục trặc. Ván đang chơi vẫn nằm trên máy, và Dư Đồ đã cất thêm một bản sao để phòng.'
+        : 'Lần mở này gặp trục trặc. Hãy thử lại sau giây lát.'));
     var row = el('div', { class: 'row' });
     var retry = el('button', { type: 'button', class: 'go', 'data-r': 'retry' }, 'Thử lại');
-    var copy = el('button', { type: 'button', 'data-r': 'copy' }, 'Sao chép bản lưu hỏng');
+    var copy = el('button', { type: 'button', 'data-r': 'copy' }, has ? 'Sao chép bản lưu hỏng' : 'Sao chép báo cáo lỗi');
     var reset = el('button', { type: 'button', 'data-r': 'reset' }, 'Bắt đầu lại');
-    row.appendChild(retry); row.appendChild(copy); row.appendChild(reset);
+    row.appendChild(retry); row.appendChild(copy); if (has) row.appendChild(reset);
     c.appendChild(row);
-    c.appendChild(el('p', { class: 'note' }, 'Thử lại vẫn không được thì chép bản lưu hỏng, gửi kèm khi báo lỗi để có thể khôi phục ván. Bắt đầu lại sẽ xoá ván đang lưu; bản sao đã cất vẫn còn.'));
+    c.appendChild(el('p', { class: 'note' }, has
+      ? 'Thử lại vẫn không được thì chép bản lưu hỏng, gửi kèm khi báo lỗi để có thể khôi phục ván. Bắt đầu lại sẽ xoá ván đang lưu; bản sao đã cất vẫn còn.'
+      : 'Thử lại vẫn không được thì chép báo cáo này, gửi kèm khi báo lỗi.'));
     box.appendChild(c);
     document.body.appendChild(box);
     var app = document.getElementById('app');
@@ -186,7 +191,7 @@ try {
       location.reload();
     };
     no.onclick = function () { a.remove(); reset.disabled = false; reset.focus(); };
-    yes.focus();
+    no.focus(); // như hộp xoá ván của Hồ sơ: tiêu điểm vào nút an toàn
   }
 
   B.started = function () { started = true; };
