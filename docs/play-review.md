@@ -178,7 +178,7 @@ Nội dung mới (11.2026) cho chế độ Chơi: gia phả mở đầu của 26
 - Điều kiện: {"picks":["radi"],"front":true} (nhà Cần Thơ chọn Ra đi mà người con đã đi bộ đội tình nguyện sang Campuchia năm 1979, nên không đi được "cả nhà" trước năm 1989)
 - Tình huống: Mười năm trước cả nhà đã định ra đi, nhưng người con sang mặt trận Campuchia; nay quân tình nguyện về nước, người con đã về, và không còn gì giữ chân cả nhà ở lại.
   - **Làm đơn đi diện đoàn tụ**: Hồ sơ đi qua nhiều văn phòng và mấy năm chờ phỏng vấn. Đầu thập niên 1990, cả nhà, cả người con từng ở Campuchia, mới lên máy bay ra đi; từ đường để lại cho họ hàng trông nom.
-  - **Xuống ghe như những người đi trước**: Ghe tới trại tị nạn đúng năm các nước bắt đầu thanh lọc người tới sau. Gần hai năm ở trại, cả nhà mới được công nhận là người tị nạn và nhận đi định cư.
+  - **Xuống ghe như những người đi trước**: Ghe tới trại đúng năm các nước bắt đầu thanh lọc người tới sau. Gần hai năm chờ xét hồ sơ, cả nhà được công nhận là người tị nạn và nhận đi định cư; nhiều gia đình cùng ghe thì phải hồi hương.
 - Ghi chú sử liệu: Quân tình nguyện Việt Nam rút hết khỏi Campuchia tháng 9.1989. Chương trình Ra đi có trật tự (ODP, thoả thuận UNHCR – Việt Nam tháng 5.1979) cho người có thân nhân ở nước ngoài bảo lãnh xuất cảnh hợp pháp. Kế hoạch Hành động Toàn diện (CPA), thông qua ở Hội nghị Genève tháng 6.1989, bắt đầu thanh lọc thuyền nhân tới sau ngày hạn: chỉ người được công nhận tị nạn mới được nhận đi định cư, nhiều người khác phải hồi hương.
 
 ### Thùng đồ và chuyến bay về · 1989, Việt Nam rút quân khỏi Campuchia
