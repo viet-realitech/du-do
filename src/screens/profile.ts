@@ -16,10 +16,29 @@ import { openShare, resetAll } from './ending';
 import { qmode, setQMode, type QMode } from '../ui/quality';
 import './about';
 
-/** Value compass: cumulative points per value (max ≈ 18). */
+/** La bàn giá trị: một hoa gió bốn hướng (Độc lập bắc, Sinh mạng đông, Tự do nam, Đoàn kết tây), điểm cộng dồn của mỗi
+    giá trị (thang 18, như thước ở đầu màn chính) là một đỉnh. Hình bốn trục khó đọc chính xác, nên con số đúng ghi ngay
+    cạnh tên từng hướng (chữ HTML: không bị cắt ở màn 390 px, theo cỡ chữ của người dùng). Giá trị 0 vẫn cách tâm một
+    khoảng: một trục bằng 0 không làm hình xẹp thành một vạch. Vẽ bằng màu của giao diện (mọi giao diện). */
 export function compass(): string {
-  const v = values();
-  return VAL.map(([k, n]) => `<div class="vrow"><span>${n}</span><div class="bar"><i style="width:${Math.min(100, (v[k] / 18) * 100)}%"></i></div><b>${v[k]}</b></div>`).join('');
+  const v = values(), R = 78, R0 = 13, MAX = 18, f = (n: number) => n.toFixed(1);
+  const at = (deg: number, r: number) => { const a = (deg * Math.PI) / 180; return [r * Math.cos(a), r * Math.sin(a)]; };
+  const P = (deg: number, r: number) => at(deg, r).map(f).join(',');
+  // vành chia độ mỗi 10°, vạch dài ở tám hướng
+  const ticks = Array.from({ length: 36 }, (_, i) => { const d = i * 10, L = d % 45 ? 3.5 : 7; return `M${P(d, R)}L${P(d, R + L)}`; }).join('');
+  // sao tám cánh mờ phía sau: mỗi cánh hai nửa, nửa tô mực, nửa để trắng như hoa gió trên hải đồ
+  const star = [0, 45, 90, 135, 180, 225, 270, 315].map(d => {
+    const main = d % 90 === 0, tip = P(d - 90, main ? R + 15 : R * 0.6), w = main ? 8 : 5;
+    return `<path class="d" d="M0,0L${P(d - 180, w)}L${tip}Z"/><path class="l" d="M0,0L${P(d, w)}L${tip}Z"/>`;
+  }).join('');
+  const ax = VAL.map(([k], i) => ({ k, deg: -90 + i * 90, r: R0 + (R - R0) * Math.min(1, v[k] / MAX) }));
+  const svg = `<svg class="vr-svg" viewBox="-100 -100 200 200" aria-hidden="true" focusable="false">
+   <g class="vr-star">${star}</g>
+   ${[6, 12].map(n => `<circle class="vr-ring" r="${f(R0 + ((R - R0) * n) / MAX)}"/>`).join('')}<circle class="vr-rim" r="${R}"/><path class="vr-tick" d="${ticks}"/>
+   <polygon class="vr-poly" points="${ax.map(a => P(a.deg, a.r)).join(' ')}"/>
+   ${ax.map(a => { const [x, y] = at(a.deg, a.r); return `<circle class="vr-pt" cx="${f(x)}" cy="${f(y)}" r="3.6"/>`; }).join('')}<circle class="vr-c" r="2.4"/></svg>`;
+  const side = ['n', 'e', 's', 'w'];
+  return `<figure class="vrose">${svg}<dl>${VAL.map(([k, n], i) => `<div class="vr-${side[i]}"><dt class="mono">${n}</dt><dd>${v[k]}</dd></div>`).join('')}</dl></figure>`;
 }
 
 const RATES: [number, string][] = [[0.8, 'Chậm'], [0.95, 'Vừa'], [1.15, 'Nhanh']];
