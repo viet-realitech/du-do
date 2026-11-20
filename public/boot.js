@@ -141,9 +141,9 @@ try {
     try { retry.focus(); } catch (e) { /* bỏ qua */ }
   }
 
-  /** Thử lại: có bản ứng dụng mới (service worker) thì cho nó nắm quyền trước, rồi tải lại trang. Bản mới đang cài dở
-      (bản sửa vừa lên máy chủ khi màn này đang mở: update() xong lúc bản mới mới bắt đầu cài) thì chờ nó cài xong; tải lại
-      ngay thì trang vẫn chạy bản cũ đang hỏng, phải bấm lần nữa. */
+  /** Thử lại: có bản ứng dụng mới (service worker) thì cho nó nắm quyền trước, rồi tải lại trang. Bản mới còn đang cài
+      (bản sửa lên máy chủ khi màn này đang mở; update() trả về ngay khi bản mới vừa bắt đầu cài) thì chờ nó cài xong: tải
+      lại ngay thì trang vẫn chạy bản cũ đang hỏng, phải bấm lần nữa. */
   function again(btn) {
     btn.disabled = true; btn.textContent = 'Đang mở lại…';
     var gone = false, t = 0, seen = null;
