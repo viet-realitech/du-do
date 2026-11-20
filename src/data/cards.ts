@@ -57,7 +57,7 @@ export const CARDS: Card[] = [
     ['Giữ nếp nhà Nho', 'Con vẫn học chữ Hán đi thi.', { u: 3, tr: 5, b: -3 }, 'Hai khoa thi nữa còn mở. Dòng họ có người đỗ tú tài.'],
   ]],
   ['hd82', 'B', [
-    ['Theo Hoàng Diệu giữ thành', 'Người của họ lên thành lần nữa.', { d: -4, u: 7, tr: 10, ph: -10 }, 'Hoàng Diệu tuẫn tiết. Dòng họ lập bàn thờ ông ở từ đường.'],
+    ['Theo Hoàng Diệu giữ thành', 'Người của họ lên thành lần nữa.', { d: -4, tr: 4, ph: -10 }, 'Hoàng Diệu tuẫn tiết. Dòng họ lập bàn thờ ông ở từ đường.'],
     ['Chạy về quê gốc', 'Rời Hà Nội trước khi thành mất.', { b: -5, g: -3 }, 'Phố phường tan hoang, nhưng dòng họ lại đông đủ ở quê.'],
   ]],
   ['ta83', 'T2', [
@@ -586,19 +586,19 @@ export const VARIANT: Record<string, Variant[]> = {
     // nhà miền Nam tập kết ra Bắc: về lại quê
     { from: ['T2', 'NE', 'NW'], regions: ['B'], choices: [
       ['Về quê tìm người thân', 'Lên xe về Nam sau hai mươi mốt năm tập kết.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Làng cũ còn đó, người cũ còn một nửa. Có người mừng, có người ngượng ngùng, có người không nhận ra nhau.', 'seek75'],
-      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
     // nhà miền Bắc đã tiễn một nhánh di cư năm 1954 (thẻ di cư, bộ "ở lại" chỉ số 0): vào Nam tìm nhánh ấy
     { regions: ['B', 'T1'], after: ['dc54=0'], choices: [
       ['Vào Nam tìm người thân', 'Lên xe vào Nam tìm nhánh họ di cư từ năm 1954.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Hai nhánh họ gặp lại sau hai mươi mốt năm. Có người mừng, có người ngượng ngùng.', 'seek75'],
-      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
     // không nhánh nào di cư: vào Nam là đi tìm tin những người đã đi chiến trường ("đi B")
     { regions: ['B', 'T1'], choices: [
       ['Vào Nam tìm tin người đi B', 'Lên xe vào Nam hỏi tin những người con, người cháu đã đi chiến trường.', { b: -6, u: 3, lg: 3, nn: 3 }, 'Có người tìm được đơn vị cũ, có người chỉ tìm thấy một cái tên trên bia. Cả nhà thắp hương ở từng hàng mộ không tên.'],
-      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
     // nhà theo thành phần thứ ba (luôn ở miền Nam sau 1954): không làm cho chính quyền cũ, nên "ở lại" là chờ cái hội
@@ -655,7 +655,7 @@ export const VARIANT: Record<string, Variant[]> = {
   ],
   yb30: [
     { picks: ['qdd'], choices: [
-      ['Theo anh em đánh đồn Yên Bái', 'Người trong họ nhận phần việc trong đêm khởi nghĩa.', { d: -2, u: 6, ph: -20, vm: 3 }, 'Khởi nghĩa tan sau vài giờ. Người ấy bị bắt; dòng họ giữ tấm ảnh trong hộp gỗ.'],
+      ['Theo anh em đánh đồn Yên Bái', 'Người trong họ nhận phần việc trong đêm khởi nghĩa.', { d: -2, ph: -20 }, 'Khởi nghĩa tan sau vài giờ. Người ấy bị bắt; dòng họ giữ tấm ảnh trong hộp gỗ.'],
       ['Giấu người, đốt sổ sách', 'Sau khi khởi nghĩa vỡ, nhà thành chỗ trốn của đồng chí.', { g: -4, u: 4, ph: -10 }, 'Danh sách đảng viên cháy trong bếp. Hai người trốn trên gác thóc đến khi lên được biên giới.'],
     ] },
   ],

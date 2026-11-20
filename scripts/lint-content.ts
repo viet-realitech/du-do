@@ -30,7 +30,17 @@ for (const e of EV) {
 }
 
 // kết cục kể mất mát của chính dòng họ (hay việc giết người): phải là cái giá, không phải phần thưởng
-const LOSS = /chết|không về|không tới (bờ|nơi)|hai người không|bị chém|xử bắn|bỏ mạng|lấy đi (một|hai|ba) người|mất (một|hai|ba) người|mất người|người sống sót|bắn rơi|một chân|vết sẹo|mất khi bị/i;
+const LOSS = new RegExp([
+  'chết', 'không về', 'không tới (bờ|nơi)', 'hai người không', 'bị chém', 'xử bắn', 'bỏ mạng', 'lấy đi (một|hai|ba) người',
+  'mất (một|hai|ba) người', 'mất người', 'người sống sót', 'bắn rơi', 'một chân', 'vết sẹo', 'mất khi bị',
+  'tuẫn tiết', 'báo tử', 'tấm ảnh trong hộp gỗ', 'hy sinh', 'hi sinh', 'tử trận', 'tử nạn', 'thiệt mạng', 'mất tích',
+  'giết', 'tàn tật', 'cụt (một |hai )?(chân|tay)',
+].join('|'), 'i');
+// tự kiểm: những cách nói thường gặp phải bị bắt, câu không kể mất mát thì không
+for (const t of ['Đồn vỡ. Người con cả giết hai lính Pháp rồi thiệt mạng.', 'Hai người con hy sinh trên luỹ.', 'Hai người con mất tích.',
+  'Hai người con tử trận.', 'Hai người con không về.', 'Hoàng Diệu tuẫn tiết.', 'Có nhà chỉ nhận giấy báo tử.', 'Về làng, cụt một chân.'])
+  if (!LOSS.test(t)) bad(`LOSS không bắt được câu mẫu "${t}"`);
+for (const t of ['Cả xóm ăn mừng.', 'Đường vào làng thành ngõ cụt.']) if (LOSS.test(t)) bad(`LOSS bắt nhầm câu mẫu "${t}"`);
 /** Đã xét: chữ khớp nhưng phần được không trả cho mất mát. Khoá như S.cards ('thẻ:chỉ số', bộ VARIANT 'thẻ@k:chỉ số',
     biến cố riêng 'x:id:chỉ số'). */
 const OK: Record<string, string> = {
