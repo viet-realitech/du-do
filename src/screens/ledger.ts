@@ -51,8 +51,9 @@ const stamp = (t: string, off = false) => `<span class="sl${off ? ' off' : ''}">
 /** Một dòng họ đã khép trong sổ: dấu, tên họ, kết cục, quê, luồng, ngày; chạm để mở lại hồ sơ. `bare`: trong hộp của
     một dấu (dấu đã ở trên đầu hộp, không lặp ở từng dòng). */
 function runRow(r: ArcRun, mine: boolean, bare = false): string {
-  const e = ENDINGS.find(x => x.id === r.end), sub = [r.title || e?.title || '', r.home, MODE[r.mode], arcDate(r.at)].filter(Boolean).join(' · ');
-  return `<li><button class="arc-run${bare ? ' bare' : ''}" data-a="arc-open" data-id="${esc(r.id)}">${bare ? '' : stamp(e?.seal || '—')}<span class="t"><b>${esc(r.name)}${mine ? ' <i>· ván này</i>' : ''}</b><span class="d">${esc(sub)}</span></span><span class="go" aria-hidden="true">›</span></button></li>`;
+  // luồng và ngày không gãy dòng giữa chừng ("Trò / chơi")
+  const e = ENDINGS.find(x => x.id === r.end), sub = [r.title || e?.title || '', r.home].filter(Boolean).map(esc).concat(`<span class="nw">${[MODE[r.mode], arcDate(r.at)].filter(Boolean).join(' · ')}</span>`).join(' · ');
+  return `<li><button class="arc-run${bare ? ' bare' : ''}" data-a="arc-open" data-id="${esc(r.id)}">${bare ? '' : stamp(e?.seal || '—')}<span class="t"><b>${esc(r.name)}${mine ? ' <i>· ván này</i>' : ''}</b><span class="d">${sub}</span></span><span class="go" aria-hidden="true">›</span></button></li>`;
 }
 
 /** Trình duyệt trên iPhone, iPad, không mở từ màn hình chính: Safari có thể xoá dữ liệu của trang lâu ngày không mở. */
