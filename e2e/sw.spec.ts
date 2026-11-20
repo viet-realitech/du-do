@@ -24,7 +24,8 @@ async function serveDist() {
       const f = normalize(join(DIST, p.endsWith('/') ? p + 'index.html' : p));
       if (!f.startsWith(DIST)) throw new Error('outside dist');
       let body = await readFile(f);
-      if (p === '/sw.js' && tail) body = Buffer.concat([body, Buffer.from(`\n// build ${tail}\n`)]);
+      // each build's worker answers "build?" with its name (a MessageChannel port), so a test can tell which one is active
+      if (p === '/sw.js' && tail) body = Buffer.concat([body, Buffer.from(`\n// build ${tail}\nself.addEventListener('message', e => { if (e.data === 'build?') e.ports[0]?.postMessage(${JSON.stringify(tail)}); });\n`)]);
       res.writeHead(200, { 'content-type': TYPES[extname(f)] || 'application/octet-stream', 'cache-control': 'no-cache' });
       res.end(body);
     } catch { res.writeHead(404); res.end(); }
@@ -47,6 +48,17 @@ async function boot(page: Page, context: BrowserContext, state: object = STATE, 
 }
 
 const clipCount = (page: Page) => page.evaluate(async () => (await (await caches.open('voice-music')).keys()).length);
+/** The build of the active / waiting worker (serveDist), 'base' for the unmodified dist/sw.js, null when there is none. */
+const swBuild = (page: Page, which: 'active' | 'waiting') => page.evaluate(async w => {
+  const sw = (await navigator.serviceWorker.getRegistration())?.[w];
+  if (!sw) return null;
+  return new Promise<string>(res => {
+    const c = new MessageChannel();
+    c.port1.onmessage = e => res(String(e.data));
+    sw.postMessage('build?', [c.port2]);
+    setTimeout(() => res('base'), 1500);
+  });
+}, which);
 
 test('service worker installs, controls the page, and an offline reload boots', async ({ page, context }) => {
   const errors = await boot(page, context);
@@ -87,7 +99,9 @@ test('a chapter tour saves its narration for offline; offline, a clip is served 
     a.load();
   }), url!);
   expect(ok).toBe(true);
-  expect(errors).toEqual([]);
+  // WebKit reports the worker's "no-response" for a Wikipedia lookup (blocked here) made while offline as page errors;
+  // the app is unaffected (nothing reaches window.onerror or the on-device error log)
+  expect(errors.filter(e => !/no-response/.test(e))).toEqual([]);
 });
 
 test('a new build waits for a safe moment: applied on return to the idle map, offered by a toast during a tour', async ({ page, context }) => {
@@ -112,7 +126,8 @@ test('a new build waits for a safe moment: applied on return to the idle map, of
     await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
     const toast = page.locator('.toast', { hasText: 'Có bản mới' });
     await expect(toast).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(1500);
+    // offered, not applied: same page, the tour still running. Tap at once: the toast lives 9 s, a loaded machine can
+    // spend most of that on checks
     expect(await page.evaluate(() => (window as unknown as { build?: string }).build)).toBe('B');
     await expect(page.locator('#tourb')).toBeVisible();
     const reload2 = page.waitForEvent('load', { timeout: 30_000 });
@@ -120,5 +135,43 @@ test('a new build waits for a safe moment: applied on return to the idle map, of
     await reload2;
     await page.waitForSelector('#map text[data-city]');
     expect(await page.evaluate(() => (window as unknown as { build?: string }).build)).toBeUndefined();
+  } finally { await srv.close(); }
+});
+
+test('an update that waited through a tour gives way to a newer one on return: one reload, straight into the newest', async ({ page, context }) => {
+  test.skip(!existsSync(join(DIST, 'sw.js')), 'needs the production build in dist/');
+  const srv = await serveDist();
+  try {
+    // every "Có bản mới" toast this page ever shows, across reloads
+    await page.addInitScript(() => {
+      new MutationObserver(() => {
+        if ([...document.querySelectorAll('.toast')].some(t => /Có bản mới/.test(t.textContent || ''))) sessionStorage.setItem('offered', '1');
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await boot(page, context, STATE, srv.url);
+    // build B arrives during a tour: offered, and left waiting
+    await page.locator('#play').click();
+    await expect(page.locator('#tourb')).toBeVisible();
+    srv.build('B');
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await expect(page.locator('.toast', { hasText: 'Có bản mới' })).toBeVisible({ timeout: 30_000 });
+    await page.locator('#tourb [data-t=stop]').click();
+    await expect.poll(() => swBuild(page, 'waiting'), { timeout: 15_000 }).toBe('B');
+    await page.waitForTimeout(9500); // the toast goes
+    await page.evaluate(() => { sessionStorage.removeItem('offered'); (window as unknown as { build: string }).build = 'A'; });
+    // build C lands while the app is in the background; back on the idle, untouched map: it reloads once, into C
+    srv.build('C');
+    let loads = 0;
+    page.on('load', () => { loads++; });
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await expect.poll(() => loads, { timeout: 30_000 }).toBe(1);
+    await page.waitForSelector('#map text[data-city]');
+    expect(await page.evaluate(() => (window as unknown as { build?: string }).build)).toBeUndefined();
+    expect(await swBuild(page, 'active')).toBe('C');
+    // and it does not ask again (it used to reload into B, then offer C a second later)
+    await page.waitForTimeout(4000);
+    expect(await swBuild(page, 'waiting')).toBeNull();
+    expect(await page.evaluate(() => sessionStorage.getItem('offered'))).toBeNull();
+    expect(loads).toBe(1);
   } finally { await srv.close(); }
 });

@@ -56,10 +56,22 @@ function decide(): void {
 
 on('sw-reload', reload);
 
-function check(): void {
-  if (!reg || !navigator.onLine) return;
+function check(): Promise<void> {
+  if (!reg || !navigator.onLine) return Promise.resolve();
   checked = Date.now();
-  reg.update().catch(() => { /* mất mạng / máy chủ: lần sau */ });
+  return reg.update().then(() => undefined, () => { /* mất mạng / máy chủ: lần sau */ });
+}
+
+/** Chờ bản đang cài (nếu có) cài xong hay hỏng, tối đa 30 s. */
+function settled(): Promise<void> {
+  const w = reg?.installing;
+  if (!w) return Promise.resolve();
+  return new Promise(res => {
+    const done = () => { clearTimeout(t); w.removeEventListener('statechange', f); res(); };
+    const f = () => { if (w.state !== 'installing') done(); };
+    const t = setTimeout(done, 30_000);
+    w.addEventListener('statechange', f);
+  });
 }
 
 export function initPwa(): void {
@@ -69,7 +81,7 @@ export function initPwa(): void {
     immediate: true,
     onRegisteredSW(_url, r) {
       reg = r;
-      setInterval(() => { if (!document.hidden) check(); }, 60 * 60 * 1000);
+      setInterval(() => { if (!document.hidden) void check(); }, 60 * 60 * 1000);
     },
     onNeedRefresh() { pending = true; decide(); },
     onNeedReload() { /* tải lại ở controllerchange dưới đây */ },
@@ -77,10 +89,19 @@ export function initPwa(): void {
   // tự tải lại khi bản mới đã nắm quyền theo yêu cầu của trang này; virtual:pwa-register chỉ làm thế khi trang đã có
   // service worker lúc mở (lần cài đầu thì không: bản mới chiếm trang mà mã cũ vẫn chạy)
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (applying) location.reload(); });
+  // quay lại app: kiểm tra trước, quyết sau. Bản đang chờ có thể đã cũ (một bản mới hơn ra lúc app ở nền): áp dụng nó thì
+  // trang tải lại vào bản cũ rồi lập tức hỏi lại. Chờ bản mới nhất cài xong, rồi áp dụng một lần (workbox-window chỉ báo
+  // bản mới đầu tiên từ nơi khác, nên tự xem có bản đang chờ không)
+  let shown = 0;
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     shownAt = performance.now();
-    if (pending) decide(); else check();
+    const me = ++shown;
+    void check().then(settled).then(() => {
+      if (me !== shown || document.hidden) return;
+      if (reg?.waiting) pending = true;
+      decide();
+    });
   });
 }
 
