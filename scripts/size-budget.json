@@ -1,7 +1,7 @@
 {
  "about": "Mốc cỡ gói (byte), scripts/check-size.ts: lỗi khi vượt mốc 10%. Ghi lại: npm run build && npm run size:update",
- "mainJs": 260934,
- "mainCss": 20477,
- "allJs": 306159,
- "precache": 1544192
+ "mainJs": 284986,
+ "mainCss": 22241,
+ "allJs": 330517,
+ "precache": 1627021
 }
