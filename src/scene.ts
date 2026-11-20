@@ -1,7 +1,7 @@
 import type { HistEvent } from './data';
 import { SCENES, MOVES, SIDE_COLOR, sideName, actOf, type Scene, type Move, type Kind } from './data/scenes';
 import { kindOf, drawPiece } from './units';
-import { fxHost } from './map';
+import { fxHost, labelsSoon } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
@@ -1040,7 +1040,7 @@ export function endScene(instant = false): void {
     const g = r.root;
     g.style.transition = 'opacity .5s';
     g.style.opacity = '0';
-    setTimeout(() => g.remove(), 520);
+    setTimeout(() => { g.remove(); labelsSoon(); }, 520); // hết cảnh (cả khi Đóng phần xem lại): nhãn thành phố hiện lại
   }
   if (r.lt) { const b = r.lt; b.classList.add('out'); setTimeout(() => b.remove(), 320); }
   r.ttl?.remove();

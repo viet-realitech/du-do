@@ -504,34 +504,98 @@ export function paintMap(quiet = false, y = S.year): void {
 }
 
 /* ---------- nhãn thành phố bị che ---------- */
+type Bx = [number, number, number, number];
 let labelY = NaN, lpT = 0;
-/** Xét lại bốn nhãn thành phố sau khi bản đồ đã yên (zoom dừng, đổi năm, thả thanh năm, đổi khung): không bao giờ trong
-    lúc bay, kéo hay mỗi khung hình. */
-function labelsSoon(): void {
+/** Xét lại bốn nhãn thành phố sau khi bản đồ đã yên (zoom dừng, đổi năm, thả thanh năm, đổi khung, cảnh động hay phần
+    xem lại vừa gỡ): không bao giờ trong lúc bay, kéo hay mỗi khung hình. */
+export function labelsSoon(): void {
   if (!ready) return;
   clearTimeout(lpT);
   lpT = window.setTimeout(labelPass, 350);
 }
-/** Nhãn thành phố (Hà Nội, Huế, Đà Nẵng, Sài Gòn) mà một dấu đang thấy đè lên thì mờ hẳn đi: dấu sự kiện, dấu nhà, các nét
-    cỡ dấu của cảnh động và tour trên lớp #mapfx (quân cờ, chấm, đoạn đường đi, đầu mũi tên; không tính nét dài hay khung
-    chú dẫn). So hộp trên màn hình (hai lớp SVG khác nhau, bản đồ có thể đang nghiêng). Chỉ ghi khi độ mờ của nhãn đổi:
-    vẽ lại cùng năm không ghi gì (e2e/perf.spec.ts). */
+/** Hộp bao của phần tử, đổi ra px trong khung SVG (trước phép nghiêng). #map và #mapfx cùng khung, cùng viewBox, cùng
+    nghiêng, nên so trong khung này là so đúng chỗ trên màn hình, kể cả khi bản đồ đang nghiêng. */
+function boxIn(n: SVGGraphicsElement, m: DOMMatrix): Bx {
+  const b = n.getBBox();
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const x of [b.x, b.x + b.width]) for (const y of [b.y, b.y + b.height]) {
+    const X = m.a * x + m.c * y + m.e, Y = m.b * x + m.d * y + m.f;
+    x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+  }
+  return [x0, y0, x1, y1];
+}
+/** Các quãng [đầu, cuối] (đo dọc nét) đang có mực của một nét có stroke-dasharray, stroke-dashoffset: đoạn đường đi giấu
+    phần chưa tới bằng một khoảng trống dài hơn nó (scene.ts), nét đứt chỉ có mực ở các vạch. */
+export function dashOn(da: number[], off: number, len: number): [number, number][] {
+  if (!da.some(x => x > 0)) return [[0, len]];
+  const pat = da.length % 2 ? da.concat(da) : da, per = pat.reduce((a, x) => a + x, 0), out: [number, number][] = [];
+  let s = -(((off % per) + per) % per);
+  for (let i = 0; s < len && out.length < 400 && i < 4000; i++) {
+    const d = pat[i % pat.length], a = Math.max(0, s), b = Math.min(len, s + d);
+    if (!(i % 2) && b - a > len * 1e-4) out.push([a, b]); // vạch còn lại vài phần tỉ do làm tròn số: chưa có mực
+    s += d;
+  }
+  return out;
+}
+/** Điểm mực dọc một nét không tô (đoạn đường đi, vòng sóng, đường ranh nét đứt), cách nhau ~3 px, kèm nửa bề dày nét:
+    hộp bao của một nét chéo, nét cong hay nét đứt phủ cả chỗ không có mực, và đoạn đường chưa vẽ tới vẫn có hộp. */
+function inkAlong(n: SVGGeometryElement, m: DOMMatrix, cs: CSSStyleDeclaration, out: [number, number, number][]): void {
+  let len = 0;
+  try { len = n.getTotalLength(); } catch { return; }
+  if (!(len > 0)) return;
+  const num = (v: string) => v.split(/[\s,]+/).map(parseFloat).filter(x => x >= 0);
+  const sc = Math.hypot(m.a, m.b) || 1, hw = ((parseFloat(cs.strokeWidth) || 1) * sc) / 2;
+  for (const [a, b] of dashOn(cs.strokeDasharray === 'none' ? [] : num(cs.strokeDasharray), parseFloat(cs.strokeDashoffset) || 0, len)) {
+    const c = Math.min(120, Math.ceil(((b - a) * sc) / 3));
+    for (let i = 0; i <= c; i++) {
+      const p = n.getPointAtLength(a + ((b - a) * i) / (c || 1));
+      out.push([m.a * p.x + m.c * p.y + m.e, m.b * p.x + m.d * p.y + m.f, hw]);
+    }
+  }
+}
+/** Phần tử hay nhóm chứa nó (tới lớp `top`) đang trong suốt: chưa hiện (đầu mũi tên chưa tới, quân cờ chưa đi), hay đang
+    mờ dần để gỡ (endScene). */
+function unseen(n: Element, top: Element): boolean {
+  for (let e: Element | null = n; e && e !== top; e = e.parentElement) {
+    if (e.getAttribute('opacity') === '0' || (e as SVGElement).style.opacity === '0') return true;
+  }
+  return false;
+}
+/** Nhãn thành phố (Hà Nội, Huế, Đà Nẵng, Sài Gòn) mà một dấu đang thấy thật sự đè lên thì mờ hẳn đi: dấu sự kiện, dấu
+    nhà, và những gì cỡ dấu của cảnh động và tour trên lớp #mapfx (quân cờ, chấm, đầu mũi tên, đoạn đường đi; không tính
+    nét dài hay khung chú dẫn). Hình tô đặc so bằng hộp bao; nét không tô so bằng các điểm mực dọc phần nét đang hiện (đoạn
+    đường chưa vẽ tới, khoảng trống của nét đứt không che chữ nào). Chỉ ghi khi độ mờ của nhãn đổi: vẽ lại cùng năm không
+    ghi gì (e2e/perf.spec.ts). */
 function labelPass(): void {
   if (moving || busy || document.hidden) return; // đang bay / kéo: lần dừng sau sẽ gọi lại
   if (!G.svg.node()!.getBoundingClientRect().width) return; // bản đồ đang ẩn
-  const bx: DOMRect[] = [];
-  G.mk.node()!.querySelectorAll<SVGGraphicsElement>('g.m > .mk').forEach(n => bx.push(n.getBoundingClientRect()));
-  G.homeG.node()!.querySelectorAll<SVGGraphicsElement>('path').forEach(n => bx.push(n.getBoundingClientRect()));
-  for (const n of G.Zf.node()!.querySelectorAll<SVGGraphicsElement>('circle, rect, path, text, use, image')) {
-    if (n.closest('[opacity="0"]')) continue; // chưa hiện (đầu mũi tên chưa tới, quân cờ chưa đi)
-    const r = n.getBoundingClientRect();
-    if (r.width && r.height && r.width <= 60 && r.height <= 60) bx.push(r);
+  const bx: Bx[] = [], ink: [number, number, number][] = [];
+  const glyph = (n: SVGGraphicsElement) => { const m = n.getCTM(); if (m) bx.push(boxIn(n, m)); };
+  G.mk.node()!.querySelectorAll<SVGGraphicsElement>('g.m > .mk').forEach(glyph);
+  G.homeG.node()!.querySelectorAll<SVGGraphicsElement>('path').forEach(glyph);
+  const top = G.Zf.node()!;
+  for (const n of top.querySelectorAll<SVGGraphicsElement>('circle, rect, path, text, use, image')) {
+    if (unseen(n, top)) continue;
+    const m = n.getCTM();
+    if (!m) continue;
+    const b = boxIn(n, m), w = b[2] - b[0], h = b[3] - b[1];
+    if ((!w && !h) || w > 60 || h > 60) continue;
+    const cs = getComputedStyle(n);
+    if (n instanceof SVGGeometryElement && cs.fill === 'none') { if (cs.stroke !== 'none') inkAlong(n, m, cs, ink); }
+    else if (w && h) bx.push(b);
   }
   G.cities.selectAll<SVGTextElement, unknown>('text').each(function () {
-    const r = this.getBoundingClientRect();
-    // đè lên chữ thật sự (chồng nhau quá 4 px mỗi chiều), không phải chỉ chạm mép: dấu đặt đúng chấm thành phố chạm chữ
-    // cuối của nhãn mà chữ vẫn đọc được
-    const hit = bx.some(b => Math.min(r.right, b.right) - Math.max(r.left, b.left) > 4 && Math.min(r.bottom, b.bottom) - Math.max(r.top, b.top) > 4);
+    const m = this.getCTM();
+    if (!m) return;
+    // u: px cho một đơn vị chữ của nhãn (dấu sự kiện cùng cỡ): mọi ngưỡng tính theo cỡ nhãn, như nhau trên điện thoại và
+    // máy tính bảng. Khung chữ bỏ dải 3 đơn vị phía chấm thành phố và khoảng trống trên, dưới: dấu đặt đúng chấm thành phố
+    // chạm vào khung chữ mà không che chữ nào
+    const t = boxIn(this, m), u = Math.hypot(m.a, m.b) || 1, e = 3 * u;
+    if (this.getAttribute('text-anchor') === 'end') t[2] -= e; else t[0] += e;
+    t[1] += 1.5 * u; t[3] -= 1.5 * u;
+    // hình tô đặc: chồng lên chữ quá 3 đơn vị mỗi chiều (không phải chỉ chạm mép); nét: có điểm mực nằm trong khung chữ
+    const hit = bx.some(b => Math.min(t[2], b[2]) - Math.max(t[0], b[0]) > e && Math.min(t[3], b[3]) - Math.max(t[1], b[1]) > e)
+      || ink.some(([x, y, w]) => x > t[0] - w + u && x < t[2] + w - u && y > t[1] - w + u && y < t[3] + w - u);
     put(this, 'opacity', hit ? 0 : null);
   });
 }
@@ -554,6 +618,7 @@ function highlight(): void {
       // vùng sáng mờ dần rồi tắt hẳn (không còn lớp phủ vô hình phải vẽ)
       G.spot.interrupt().transition().duration(calm.matches ? 0 : 600).attr('opacity', 0).on('end', () => { if (hlId === null) G.spot.style('display', 'none'); });
       G.hl.attr('d', null); G.call.selectAll('*').remove(); hlId = null;
+      labelsSoon(); // mũi chỉ của khung tên sự kiện đã gỡ
     }
     return;
   }

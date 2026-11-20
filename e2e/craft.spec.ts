@@ -175,6 +175,59 @@ test('a city label that an event marker overprints fades; it comes back when the
   expect(errors).toEqual([]);
 });
 
+/** Độ mờ đang đặt trên bốn nhãn thành phố: { 'Hà Nội': null | '0', … }. */
+const cityOps = (page: Page) => page.evaluate(() => Object.fromEntries([...document.querySelectorAll<SVGTextElement>('#map text[data-city]')].map(t => [t.dataset.city!, t.getAttribute('opacity')])));
+
+test('the 1955 chapter tour: route segments not drawn yet do not fade Huế, Đà Nẵng or Sài Gòn', async ({ page }) => {
+  // tour chương 5 vẽ dần các đường di cư (đoạn chưa tới giấu bằng stroke-dashoffset) qua Huế, Đà Nẵng, Sài Gòn: chưa có mực
+  // thì không che chữ nào. Dấu trận đánh đè lên chữ "Hà Nội" thì nhãn ấy mờ (lần xét nhãn đã chạy).
+  const errors = await boot(page, { ...read54, year: 1955, picks: { ...read54.picks, e5: 'bac' }, quiz: { ...read54.quiz, e5: [true, true] } });
+  await page.waitForTimeout(800);
+  await page.locator('#play').click();
+  await expect.poll(async () => (await cityOps(page))['Hà Nội'], { timeout: 8000 }).toBe('0');
+  const seen = new Set<string>();
+  for (let i = 0; i < 24; i++) {
+    const o = await cityOps(page);
+    for (const c of ['Huế', 'Đà Nẵng', 'Sài Gòn']) if (o[c] !== null) seen.add(c);
+    await page.waitForTimeout(250);
+  }
+  expect([...seen]).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('a city label a battle piece faded comes back after Đóng closes the replay', async ({ page }) => {
+  // Chí Hoà 1861: quân giữ đồn đứng trên chữ "Sài Gòn" (mờ thật); Đóng gỡ cảnh, bản đồ đứng yên chỗ cũ: nhãn hiện lại
+  const errors = await boot(page, { ...read54, year: 2026, picks: { ...PICKS, e5: 'bac' }, quiz: {} });
+  await page.waitForTimeout(800);
+  await act(page, 'replay', { id: 'cd61' });
+  await expect.poll(async () => (await cityOps(page))['Sài Gòn'], { timeout: 15000 }).toBe('0');
+  await page.locator('#replb [data-t=rclose]').click();
+  await expect.poll(async () => (await cityOps(page))['Sài Gòn'], { timeout: 4000 }).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('iPad landscape, Phản công Kinh thành replay: a dashed boundary near Huế does not fade the label', async ({ browser }, info) => {
+  // hộp bao của nét ranh giới nét đứt (43 × 34 px) chồng lên khung chữ "Huế" mà nét không đi qua chữ: chỉ điểm mực mới tính
+  const { defaultBrowserType: _, ...d } = devices['iPad Pro 11 landscape'];
+  const ctx = await browser.newContext({ ...d, baseURL: info.project.use.baseURL, serviceWorkers: 'block' });
+  try {
+    const page = await ctx.newPage();
+    const errors = await boot(page, { ...read54, year: 2026, picks: { ...PICKS, e5: 'bac' }, quiz: {} });
+    await page.waitForTimeout(800);
+    await act(page, 'replay', { id: 'cv85' });
+    await expect(page.locator('#replb')).toBeVisible();
+    const seen: string[] = [];
+    for (let i = 0; i < 32; i++) {
+      if ((await cityOps(page))['Huế'] !== null) seen.push(`${i * 250} ms`);
+      await page.waitForTimeout(250);
+    }
+    expect(seen).toEqual([]);
+    expect(errors).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
 test('Chữ lớn: the setting scales the reading text, persists after a reload and causes no sideways scroll at 390 px', async ({ page }) => {
   const errors = await boot(page, read54);
   const size = () => page.locator('#lbl').evaluate(e => parseFloat(getComputedStyle(e).fontSize));
