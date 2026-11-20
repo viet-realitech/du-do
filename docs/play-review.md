@@ -201,6 +201,7 @@ Nội dung mới (11.2026) cho chế độ Chơi: gia phả mở đầu của 26
 - `cs`: Thế hệ 3 theo Đảng Cộng sản, hoạt động bí mật qua Xô viết Nghệ Tĩnh và nhà tù Côn Đảo, rồi về Pác Bó dựng Việt Minh.
 - `qdd`: Thế hệ 3 theo Quốc dân đảng, sống sót sau Yên Bái rồi lưu vong sang Vân Nam; phong trào phân tán nơi đất khách.
 - `laphien`: Thế hệ 3 theo đường lập hiến, viết báo và vận động Hội đồng Quản hạt; Pháp nhượng bộ rất ít.
+  - *Cần sử gia xem:* Hội đồng Quản hạt là hội đồng của xứ Nam Kỳ (Đảng Lập hiến của Bùi Quang Chiêu); Bắc Kỳ và Trung Kỳ có Viện Dân biểu (lập năm 1926), còn người đồng hành của hướng này là Phạm Quỳnh ở Hà Nội, rồi Huế. Câu này (và kết cục ở điểm rẽ 3, trang nhật ký "Bài báo bị kiểm duyệt") hiện cho nhà ở mọi miền. Nên tách theo miền (Viện Dân biểu Bắc Kỳ / Trung Kỳ cho nhà ngoài Nam Kỳ) hay giữ một câu chung?
 - `vm`: Thế hệ 4 theo Việt Minh lên chiến khu Việt Bắc; chín năm kháng chiến, từ du kích đến những chiến dịch lớn.
 - `qg`: Thế hệ 4 làm việc cho Quốc gia Việt Nam từ năm 1949, giữa hai lằn đạn và một nền độc lập còn hạn chế.
 - `tl`: Thế hệ 4 không theo phe nào, ở lại vùng xôi đậu: ban ngày một chính quyền, ban đêm một chính quyền khác.
@@ -210,6 +211,29 @@ Nội dung mới (11.2026) cho chế độ Chơi: gia phả mở đầu của 26
 - `baocap`: Thế hệ 6 ở lại trong hợp tác xã và biên chế, xếp hàng mua gạo bằng tem phiếu qua những năm lạm phát ba con số.
 - `doimoi`: Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, rồi ASEAN, rồi WTO.
 - `radi`: Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.
+
+### Theo quê (Trò chơi)
+
+Dòng biên niên của Trò chơi theo quê của dòng họ (`chronLine` trong `src/data/endings.ts`); mỗi biến thể có bản thu riêng (`src/voiced.ts`).
+
+- `duytan`, nhà ở Huế, Quảng Nam: Thế hệ 2 theo phong trào Duy Tân ở Trung Kỳ: mở lớp dạy chữ Quốc ngữ, lập hội buôn, cắt tóc ngắn; năm 1908 phong trào chống thuế bị đàn áp, Phan Châu Trinh bị đày ra Côn Đảo.
+- `duytan`, nhà ở Sài Gòn – Gia Định, Mỹ Tho, Cần Thơ: Thế hệ 2 theo phong trào Minh Tân, nhánh duy tân ở Nam Kỳ: góp vốn lập hội buôn, mở khách sạn làm nơi gặp gỡ, đọc Lục tỉnh tân văn; năm 1908 Trần Chánh Chiếu bị bắt, phong trào tan rã.
+- "Gia đình bạn" ở điểm rẽ 3 sau Duy Tân (`ctxFor` trong `src/screens/gate.ts`), nhà ở Huế, Quảng Nam: Cha bạn từng dạy ở Đông Kinh Nghĩa Thục; trường bị đóng, ông về quê mở lớp dạy chữ Quốc ngữ theo phong trào Duy Tân ở Trung Kỳ. Nhà còn cả tủ sách mới.
+- Như trên, nhà ở Nam Kỳ cũ: Cha bạn từng ra Hà Nội dạy ở Đông Kinh Nghĩa Thục; trường bị đóng, ông về Nam Kỳ góp vốn vào một hội buôn của phong trào Minh Tân. Nhà còn cả tủ sách mới.
+- Nhà ở Nghệ An giữ câu chung (Đông Kinh Nghĩa Thục), như lời kết vẫn làm.
+
+### Trang nhật ký đời thường theo miền (Trò chơi)
+
+Ba trang ở nhà của điểm rẽ 6 (`DIARY_R` trong `src/data/data2.js`) có bản miền Trung (Nghệ An, Huế, Quảng Nam) và miền Nam (kể cả nhà miền Bắc đã di cư năm 1954), theo nơi dòng họ sống năm ấy, đặt ở chính nơi ấy trên bản đồ. Trang gốc (Hà Nội, Nam Định) giữ cho miền Bắc. Trang của người viết nhật ký đi xa không đổi.
+
+- Sổ gạo 1980, miền Trung, "Thóc chia theo công điểm": Hợp tác xã chia thóc theo công điểm; phần chia không đủ ăn tới mùa giáp hạt. Nhà bạn độn khoai lang, sắn lát vào nồi cơm.
+- Sổ gạo 1980, miền Nam, "Bo bo thay gạo": Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, trạm kiểm soát trên đường thu từng bao gạo người ta chở từ miền Tây lên.
+- Đổi tiền 1985, miền Trung, "Đổi tiền": Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Mấy tháng sau, giá muối, giá vải ở chợ huyện đã đổi từng tuần; nhà bạn giữ thóc trong bồ chứ không giữ tiền.
+- Đổi tiền 1985, miền Nam, "Đổi tiền lần thứ ba": Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Ở miền Nam, đây là lần đổi tiền thứ ba kể từ năm 1975; ai còn chút vàng thì giữ vàng, không ai muốn giữ tiền.
+- Ruộng khoán 1988, miền Trung: Theo Khoán 10, hợp tác xã giao ruộng cho từng hộ. Ruộng ít, lại là đất cát bạc màu, nhưng vụ đầu tiên tự làm, nhà bạn đủ ăn tới vụ sau.
+- Ruộng khoán 1988, miền Nam: Khoán 10 giao ruộng về cho từng hộ. Nhiều nhà trong xóm làm đơn xin lại phần đất cũ đã đưa vào tập đoàn sản xuất; nhà bạn nhận lại mấy công ruộng, vụ đầu đã có lúa bán.
+
+Cần sử gia xem: ba lần đổi tiền ở miền Nam (9.1975, 5.1978, 9.1985); "ngăn sông cấm chợ" và bo bo năm 1980; việc nông dân đồng bằng sông Cửu Long đòi lại đất cũ sau Khoán 10 (1988); phong trào Minh Tân (Trần Chánh Chiếu bị bắt cuối năm 1908).
 
 ## Kết cục dòng họ
 

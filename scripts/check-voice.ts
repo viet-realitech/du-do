@@ -58,7 +58,7 @@ if (process.argv.includes('--durations')) {
     if (!existsSync(clip(r.key))) continue;
     const sec = +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', clip(r.key)]).toString().trim();
     const cps = r.text.length / sec;
-    if (cps < 9 || cps > 21) warns.push(`độ dài lạ: ${r.key} ${sec.toFixed(1)} s cho ${r.text.length} ký tự (${cps.toFixed(1)} ký tự/giây)`);
+    if (cps < 8.5 || cps > 23) errors.push(`độ dài lạ: ${r.key} ${sec.toFixed(1)} s cho ${r.text.length} ký tự (${cps.toFixed(1)} ký tự/giây)`);
   }
 }
 

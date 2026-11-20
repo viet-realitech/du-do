@@ -81,13 +81,13 @@ test('ending: the narrator reads the ending once on the first open, "Nghe" repla
 });
 
 test('ending: with narration off the dossier stays silent until "Nghe" is pressed', async ({ page }) => {
-  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: { ...reformPath, e1: 'chien', e3: 'cs', e5: 'nam', e6: 'baocap' }, quiz: { e6: [true, true] }, narr: false, sound: false, music: false });
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'baocap' }, quiz: { e6: [true, true] }, narr: false, sound: false, music: false });
   await page.locator('#card [data-a=end].c').click();
-  await expect(page.locator('.end-title')).toHaveText('Ở lại sau ngày 30 tháng Tư');
+  await expect(page.locator('.end-title')).toHaveText('Sổ gạo và công điểm');
   await page.waitForTimeout(2800);
   expect(await clips(page)).toEqual([]);
   await page.locator('[data-a=listen-end]').click();
-  await expect.poll(() => clips(page)).toEqual(['end-olainam']);
+  await expect.poll(() => clips(page)).toEqual(['end-baocap']);
   expect(errors).toEqual([]);
 });
 

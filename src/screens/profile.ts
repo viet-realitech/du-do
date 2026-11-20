@@ -68,7 +68,7 @@ export function paneMe(): void {
   ${sw('sound', 'Âm thanh', S.sound)}
   ${sw('music', 'Nhạc nền', S.music)}
   ${sw('narr', `Giọng đọc${missedVoice() && !hasVoice() ? ' <span class="muted small">· vài đoạn chưa thu, máy không đọc thay được</span>' : ''}`, S.narr)}
-  <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
+  <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}">${l}</button>`).join('')}</div></div>
   ${sw('haptic', 'Rung <span class="muted small">· máy và khung bản đồ khi pháo nổ</span>', S.haptic)}
   ${sw('fx', 'Cảnh động <span class="muted small">· trận đánh 3D, phim tư liệu</span>', S.fx)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Hiệu ứng</span><div class="seg" style="width:240px;flex:none">${([['auto', 'Tự động'], ['full', 'Đầy đủ'], ['lite', 'Nhẹ']] as [QMode, string][]).map(([v, l]) => `<button class="${qmode() === v ? 'on' : ''}" style="height:30px;font-size:14px" data-a="qmode" data-v="${v}" aria-pressed="${qmode() === v}">${l}</button>`).join('')}</div></div>

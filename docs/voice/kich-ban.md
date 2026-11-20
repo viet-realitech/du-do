@@ -1,6 +1,6 @@
 # Dư Đồ · Kịch bản thu giọng thuyết minh
 
-262 đoạn, tổng khoảng 50 phút đọc. Người thật đã thu: 0/262; giọng máy VieNeu: 195.
+262 đoạn, tổng khoảng 50 phút đọc. Người thật đã thu: 0/262; giọng máy VieNeu: 262.
 
 ## Hướng dẫn thu
 
@@ -560,109 +560,109 @@
 
 > Con đường của bạn. Bạn xuống đường đòi hoà bình ở Sài Gòn. Cả hai phía đều nghi ngờ bạn.
 
-### `out-bac-hn`
+### `out-bac-hn` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Hà Nội · ~10 giây*
 
 > Con đường của bạn. Bạn ở lại Hà Nội, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.
 
-### `out-bac-nd`
+### `out-bac-nd` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Nam Định · ~10 giây*
 
 > Con đường của bạn. Bạn ở lại Nam Định, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.
 
-### `out-bac-na`
+### `out-bac-na` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Nghệ An · ~10 giây*
 
 > Con đường của bạn. Bạn ở lại Nghệ An, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.
 
-### `out-bac-hue`
+### `out-bac-hue` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Huế · ~11 giây*
 
 > Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Huế một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
 
-### `out-bac-qn`
+### `out-bac-qn` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Quảng Nam · ~11 giây*
 
 > Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Quảng Nam một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
 
-### `out-bac-sg`
+### `out-bac-sg` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Sài Gòn – Gia Định · ~12 giây*
 
 > Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Sài Gòn – Gia Định một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
 
-### `out-bac-mt`
+### `out-bac-mt` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Mỹ Tho · ~11 giây*
 
 > Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Mỹ Tho một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
 
-### `out-bac-ct`
+### `out-bac-ct` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Cần Thơ · ~11 giây*
 
 > Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Cần Thơ một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
 
-### `out-nam-hn`
+### `out-nam-hn` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Hà Nội · ~13 giây*
 
 > Con đường của bạn. Bạn rời Hà Nội trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-nd`
+### `out-nam-nd` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Nam Định · ~13 giây*
 
 > Con đường của bạn. Bạn rời Nam Định trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-na`
+### `out-nam-na` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Nghệ An · ~13 giây*
 
 > Con đường của bạn. Bạn rời Nghệ An trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-hue`
+### `out-nam-hue` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Huế · ~10 giây*
 
 > Con đường của bạn. Bạn ở lại Huế, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-qn`
+### `out-nam-qn` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Quảng Nam · ~11 giây*
 
 > Con đường của bạn. Bạn ở lại Quảng Nam, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-sg`
+### `out-nam-sg` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Sài Gòn – Gia Định · ~11 giây*
 
 > Con đường của bạn. Bạn ở lại Sài Gòn – Gia Định, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-mt`
+### `out-nam-mt` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Mỹ Tho · ~10 giây*
 
 > Con đường của bạn. Bạn ở lại Mỹ Tho, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-nam-ct`
+### `out-nam-ct` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Cần Thơ · ~10 giây*
 
 > Con đường của bạn. Bạn ở lại Cần Thơ, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
 
-### `out-thuba-n`
+### `out-thuba-n` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Thành phần thứ ba" cho nhà ở miền Bắc · ~11 giây*
 
 > Con đường của bạn. Bạn theo dòng người di cư vào Nam năm 1954; ở Sài Gòn, bạn đứng cùng những người đòi hoà bình. Cả hai phía đều nghi ngờ bạn.
 
-### `out-thuba-t`
+### `out-thuba-t` · giọng máy
 
 *Điểm rẽ 5 · kết cục của hướng "Thành phần thứ ba" cho nhà ở miền Trung · ~8 giây*
 
@@ -905,19 +905,19 @@
 
 > Con đường của bạn. Bạn vượt biển, qua trại tị nạn, định cư ở Mỹ, Pháp, Úc. Sau 1995, bạn có thể quay về thăm quê.
 
-### `out-xbaocap`
+### `out-xbaocap` · giọng máy
 
 *Điểm rẽ 6 · kết cục của hướng "Gửi quà nuôi người ở quê", nhà đã di tản tháng 4.1975 · ~13 giây*
 
 > Con đường của bạn. Bạn lớn lên giữa những thùng quà đóng dở trong phòng khách. Ở quê, họ hàng bán dần từng lọ thuốc, từng xấp vải để đong gạo qua những năm tem phiếu.
 
-### `out-xdoimoi`
+### `out-xdoimoi` · giọng máy
 
 *Điểm rẽ 6 · kết cục của hướng "Về nước làm ăn", nhà đã di tản tháng 4.1975 · ~15 giây*
 
 > Con đường của bạn. Bạn học nghề, đi làm ở xứ người. Tháng 2.1994 Mỹ bỏ cấm vận, và bạn ở trong những chuyến bay đầu tiên về làm ăn: giấy phép mất hai năm, đối tác đổi ba lần, nhưng xưởng vẫn đứng.
 
-### `out-xradi`
+### `out-xradi` · giọng máy
 
 *Điểm rẽ 6 · kết cục của hướng "Bám rễ nơi xứ người", nhà đã di tản tháng 4.1975 · ~12 giây*
 
@@ -1031,13 +1031,13 @@
 
 > Nhật ký dòng họ, năm 1980. Sổ gạo. Mỗi tháng 13 cân gạo, độn bo bo. Bạn xếp gạch giữ chỗ ở cửa hàng mậu dịch từ 4 giờ sáng.
 
-### `d-baocap0-t`
+### `d-baocap0-t` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Trung · 1980 · ~13 giây*
 
 > Nhật ký dòng họ, năm 1980. Thóc chia theo công điểm. Hợp tác xã chia thóc theo công điểm; phần chia không đủ ăn tới mùa giáp hạt. Nhà bạn độn khoai lang, sắn lát vào nồi cơm.
 
-### `d-baocap0-n`
+### `d-baocap0-n` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Nam · 1980 · ~18 giây*
 
@@ -1049,13 +1049,13 @@
 
 > Nhật ký dòng họ, năm 1985. Đổi tiền. Lương tháng của bạn chỉ còn đủ mua vài cân thịt. Giá cả đổi từng tuần.
 
-### `d-baocap1-t`
+### `d-baocap1-t` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Trung · 1985 · ~15 giây*
 
 > Nhật ký dòng họ, năm 1985. Đổi tiền. Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Mấy tháng sau, giá muối, giá vải ở chợ huyện đã đổi từng tuần; nhà bạn giữ thóc trong bồ chứ không giữ tiền.
 
-### `d-baocap1-n`
+### `d-baocap1-n` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Nam · 1985 · ~16 giây*
 
@@ -1067,13 +1067,13 @@
 
 > Nhật ký dòng họ, năm 1988. Ruộng khoán. Hợp tác xã giao ruộng cho từng hộ. Vụ đầu tiên, nhà bạn thừa thóc.
 
-### `d-doimoi0-t`
+### `d-doimoi0-t` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Đổi Mới", nhà ở miền Trung · 1988 · ~13 giây*
 
 > Nhật ký dòng họ, năm 1988. Ruộng khoán. Theo Khoán 10, hợp tác xã giao ruộng cho từng hộ. Ruộng ít, lại là đất cát bạc màu, nhưng vụ đầu tiên tự làm, nhà bạn đủ ăn tới vụ sau.
 
-### `d-doimoi0-n`
+### `d-doimoi0-n` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Đổi Mới", nhà ở miền Nam · 1988 · ~16 giây*
 
@@ -1097,13 +1097,13 @@
 
 > Nhật ký dòng họ, năm 1995. Về Tân Sơn Nhất. Hai mươi năm sau, bạn quay lại với hộ chiếu nước khác, tóc đã điểm bạc.
 
-### `d-xbaocap0`
+### `d-xbaocap0` · giọng máy
 
 *Nhật ký dòng họ, nhà đã di tản, nếu chọn "Gửi quà nuôi người ở quê" · 1981 · ~15 giây*
 
 > Nhật ký dòng họ, năm 1981. Thùng quà về tới quê. Thùng quà gửi từ California về tới Bưu điện Thành phố sau ba tháng. Họ hàng xếp hàng nhận, đóng thuế, rồi bán dần thuốc tây, vải vóc để đong gạo.
 
-### `d-xdoimoi0`
+### `d-xdoimoi0` · giọng máy
 
 *Nhật ký dòng họ, nhà đã di tản, nếu chọn "Về nước làm ăn" · 1994 · ~15 giây*
 
@@ -1220,121 +1220,121 @@ Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, r�
 
 Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.
 
-### `chr-bac-n`
+### `chr-bac-n` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Hà Nội · ~7 giây*
 
 Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.
 
-### `chr-bac-n-dicu`
+### `chr-bac-n-dicu` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Hà Nội · dicu · ~7 giây*
 
 Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.
 
-### `chr-bac-s-hue`
+### `chr-bac-s-hue` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Huế · ~4 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Huế.
 
-### `chr-bac-s-hue-hen`
+### `chr-bac-s-hue-hen` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Huế · nguoiDi54 · ~8 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Huế.
 
-### `chr-bac-s-qn`
+### `chr-bac-s-qn` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Quảng Nam · ~5 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Quảng Nam.
 
-### `chr-bac-s-qn-hen`
+### `chr-bac-s-qn-hen` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Quảng Nam · nguoiDi54 · ~8 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Quảng Nam.
 
-### `chr-bac-s-sg`
+### `chr-bac-s-sg` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Sài Gòn – Gia Định · ~6 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Sài Gòn – Gia Định.
 
-### `chr-bac-s-sg-hen`
+### `chr-bac-s-sg-hen` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Sài Gòn – Gia Định · nguoiDi54 · ~9 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Sài Gòn – Gia Định.
 
-### `chr-bac-s-mt`
+### `chr-bac-s-mt` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Mỹ Tho · ~5 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Mỹ Tho.
 
-### `chr-bac-s-mt-hen`
+### `chr-bac-s-mt-hen` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Mỹ Tho · nguoiDi54 · ~8 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Mỹ Tho.
 
-### `chr-bac-s-ct`
+### `chr-bac-s-ct` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Cần Thơ · ~5 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Cần Thơ.
 
-### `chr-bac-s-ct-hen`
+### `chr-bac-s-ct-hen` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Cần Thơ · nguoiDi54 · ~8 giây*
 
 Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Cần Thơ.
 
-### `chr-nam-n`
+### `chr-nam-n` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Nam — VNCH", quê Hà Nội · ~7 giây*
 
 Thế hệ 5 di cư vào Nam năm 1954, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.
 
-### `chr-nam-s`
+### `chr-nam-s` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Miền Nam — VNCH", quê Sài Gòn – Gia Định · ~6 giây*
 
 Thế hệ 5 sống ở miền Nam, qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.
 
-### `chr-thuba-n`
+### `chr-thuba-n` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Thành phần thứ ba", quê Hà Nội · ~9 giây*
 
 Thế hệ 5 di cư vào Nam năm 1954, rồi xuống đường đòi hoà bình cùng thành phần thứ ba ở Sài Gòn; cả hai phía đều nghi ngờ.
 
-### `chr-duytan-t`
+### `chr-duytan-t` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Duy Tân", quê Huế · ~13 giây*
 
 Thế hệ 2 theo phong trào Duy Tân ở Trung Kỳ: mở lớp dạy chữ Quốc ngữ, lập hội buôn, cắt tóc ngắn; năm 1908 phong trào chống thuế bị đàn áp, Phan Châu Trinh bị đày ra Côn Đảo.
 
-### `chr-duytan-s`
+### `chr-duytan-s` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Duy Tân", quê Sài Gòn – Gia Định · ~14 giây*
 
 Thế hệ 2 theo phong trào Minh Tân, nhánh duy tân ở Nam Kỳ: góp vốn lập hội buôn, mở khách sạn làm nơi gặp gỡ, đọc Lục tỉnh tân văn; năm 1908 Trần Chánh Chiếu bị bắt, phong trào tan rã.
 
-### `chr-xbaocap`
+### `chr-xbaocap` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Giữ kế hoạch hoá", nhà đã di tản · ~10 giây*
 
 Thế hệ 6 lớn lên ở xứ người; lương làm hai ca thành những thùng quà gửi về nuôi họ hàng qua những năm tem phiếu, lạm phát ba con số.
 
-### `chr-xdoimoi`
+### `chr-xdoimoi` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Đổi Mới", nhà đã di tản · ~9 giây*
 
 Thế hệ 6 lớn lên ở xứ người; sau khi Mỹ bỏ cấm vận năm 1994, về nước mở xưởng, nối đường làm ăn giữa hai bờ đại dương.
 
-### `chr-xradi`
+### `chr-xradi` · giọng máy
 
 *Phim hành trình · dòng gia phả của hướng "Ra đi", nhà đã di tản · ~10 giây*
 
@@ -1496,97 +1496,97 @@ Tạ là họ của Tạ Quang Bửu (1910–1986); Giải thưởng Tạ Quang 
 
 Thái là một họ nhỏ; nghệ sĩ dương cầm Thái Thị Liên (1918–2023), người đồng sáng lập Trường Âm nhạc Việt Nam, là mẹ của Đặng Thái Sơn.
 
-### `end-lytan`
+### `end-lytan` · giọng máy
 
 *Kết cục "Còn lại tên họ" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
 
 Còn lại tên họ. Gia sản gần cạn, người còn ít, nhưng gia phả vẫn giữ được cái tên.
 
-### `end-xanam`
+### `end-xanam` · giọng máy
 
 *Kết cục "Bên kia đại dương" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
 
 Bên kia đại dương. Từ miền Nam sau năm 1975, dòng họ dựng lại đời sống ở bên kia đại dương.
 
-### `end-xabac`
+### `end-xabac` · giọng máy
 
 *Kết cục "Người đi từ phía Bắc" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~9 giây*
 
 Người đi từ phía Bắc. Đời thứ năm theo miền Bắc; sau chiến tranh, dòng họ có người ra đi, có người ở lại giữ từ đường.
 
-### `end-xagiua`
+### `end-xagiua` · giọng máy
 
 *Kết cục "Tiếng nói từ xa" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
 
 Tiếng nói từ xa. Bị cả hai phía nghi ngờ, rồi ra đi; con cháu thành người bắc cầu.
 
-### `end-thuandong`
+### `end-thuandong` · giọng máy
 
 *Kết cục "Cùng nhịp với lịch sử" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
 
 Cùng nhịp với lịch sử. Ở hầu hết các điểm rẽ, dòng họ đứng về hướng sau này chiếm ưu thế.
 
-### `end-doiho`
+### `end-doiho` · giọng máy
 
 *Kết cục "Hai cái tên, một từ đường" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
 
 Hai cái tên, một từ đường. Dòng họ đổi họ để qua một cơn biến, rồi giữ cả hai tên trong gia phả.
 
-### `end-vongtoc`
+### `end-vongtoc` · giọng máy
 
 *Kết cục "Vọng tộc" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~5 giây*
 
 Vọng tộc. Sau sáu đời, một nhà có của, có người, có tiếng ở quê mình.
 
-### `end-chiadoi`
+### `end-chiadoi` · giọng máy
 
 *Kết cục "Hai mươi mốt năm chờ nhau" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~8 giây*
 
 Hai mươi mốt năm chờ nhau. Năm 1954 dòng họ chia hai nhánh ở hai miền; hai mươi mốt năm sau mới gặp lại.
 
-### `end-canhtan`
+### `end-canhtan` · giọng máy
 
 *Kết cục "Ba đời canh tân" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~8 giây*
 
 Ba đời canh tân. Nhiều đời chọn học hỏi và cải cách; phần lớn đề xuất bị gác lại khi người đề xướng còn sống.
 
-### `end-canhtan-4`
+### `end-canhtan-4` · giọng máy
 
 *Kết cục "Ba đời canh tân" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~8 giây*
 
 Bốn đời canh tân. Nhiều đời chọn học hỏi và cải cách; phần lớn đề xuất bị gác lại khi người đề xướng còn sống.
 
-### `end-nhieunga`
+### `end-nhieunga` · giọng máy
 
 *Kết cục "Rẽ nhiều ngả" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
 
 Rẽ nhiều ngả. Mỗi đời đi một ngả khác đời trước; gia phả giống một tấm bản đồ.
 
-### `end-nguocdong`
+### `end-nguocdong` · giọng máy
 
 *Kết cục "Năm lần rẽ khác" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
 
 Năm lần rẽ khác. Ở cả năm điểm rẽ có hướng chiếm ưu thế, dòng họ đều chọn ngả khác.
 
-### `end-dunggiua`
+### `end-dunggiua` · giọng máy
 
 *Kết cục "Người đứng giữa" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
 
 Người đứng giữa. Dòng họ thường chọn thương thuyết, cải cách hay đứng ngoài hơn là cầm súng.
 
-### `end-olainam`
+### `end-olainam` · giọng máy
 
 *Kết cục "Ở lại sau ngày 30 tháng Tư" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
 
 Ở lại sau ngày 30 tháng Tư. Đời thứ năm theo miền Nam, và dòng họ ở lại sau ngày 30.4.1975.
 
-### `end-baocap`
+### `end-baocap` · giọng máy
 
 *Kết cục "Sổ gạo và công điểm" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
 
 Sổ gạo và công điểm. Đời thứ sáu giữ sổ gạo, công điểm qua những năm bao cấp.
 
-### `end-doimoi`
+### `end-doimoi` · giọng máy
 
 *Kết cục "Từ tem phiếu đến xưởng nhỏ" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~9 giây*
 
@@ -1595,13 +1595,13 @@ Từ tem phiếu đến xưởng nhỏ. Đi qua chiến tranh và tem phiếu, r
 
 ## Cài đặt
 
-### `ui-narr-on`
+### `ui-narr-on` · giọng máy
 
 *Cài đặt · bật giọng đọc · ~1 giây*
 
 Giọng đọc đã bật.
 
-### `ui-rate`
+### `ui-rate` · giọng máy
 
 *Cài đặt · nghe thử tốc độ đọc · ~5 giây*
 

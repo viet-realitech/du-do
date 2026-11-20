@@ -89,6 +89,12 @@ All numbers are game abstractions, not historical data.
     clips are re-rendered only when their text or voice changed.
   - **A narrator's recordings** named after their key (e.g. `recordings/dn58.wav`) always take precedence, so lines
     can be re-recorded one by one.
+  - Lines personalised by home or by a family abroad (chronicle lines, gate outcomes) and the 15 endings get one clip
+    per variant: `src/voiced.ts` rebuilds every variant with the functions the game uses and finds a line's clip by its
+    exact text, so a clip always reads what is on screen and a new, unrecorded variant stays silent instead of reading
+    the wrong clip. `npm run voice:check` (also the last step of `npm run voice`, and in CI) fails when a narratable line
+    has no clip, when the game can show a personalised line that has no variant, or when `docs/voice/kich-ban.csv` is
+    out of date; add `-- --durations` to flag clips whose length does not fit their text (needs ffprobe).
 - **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects.
 
 The prototype's Tweaks became player settings: theme (Lưu trữ / Chiến lược / Áp phích, also offered during onboarding),
