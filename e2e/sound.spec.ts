@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 
 /* Tiếng trận và nhạc với Âm thanh bật (src/audio.ts, src/music.ts). Trình duyệt thử chạy Web Audio thật (không có loa):
    sổ của chuỗi cảnh và nhạc đọc từ bảng chẩn đoán (?debug); các lượt nhạc (nguồn đệm dài) được ghi lại khi bắt đầu (init
-   script bắt AudioBufferSourceNode.start / connect), rồi tiếng của chúng thu bằng ScriptProcessor gắn thêm, không đổi gì
+   script bắt AudioBufferSourceNode.start / connect), rồi tiếng của chúng thu bằng một AudioWorklet gắn thêm, không đổi gì
    của ứng dụng. */
 const LOOPS = JSON.parse(readFileSync('src/music.json', 'utf8')) as { xf: number; tracks: Record<string, { file: string; loop: [number, number] }> };
 const midGame = { step: 'play', name: 'Họ Lê', year: 1954, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam' }, quiz: { e1: [true, true], e2: [true, false], e3: [true, true], e4: [false, true] }, narr: false, sound: true, music: true, fx: true };
@@ -13,6 +13,19 @@ const live = (page: Page, sel: string) => page.locator(`${sel}:not(.exiting *, .
 type Pass = { when: number; off: number; src: AudioBufferSourceNode; g: AudioNode | null };
 type Rec = { t: number[]; d: Float32Array[] };
 type W = Window & { passes: Pass[]; onpass?: (p: Pass, i: number) => void; recs?: Rec[]; pans: { set: [string, number][] }[] };
+/** Máy thu trong luồng âm thanh: mỗi khối 128 mẫu (trung bình hai kênh) ghi đúng lúc được dựng (currentTime), gom 4096
+    mẫu một lần gửi về trang. */
+const REC_JS = `registerProcessor('du-do-rec', class extends AudioWorkletProcessor {
+  constructor() { super(); this.n = 0; this.t = 0; this.m = new Float32Array(4096); }
+  process(ins) {
+    const i = ins[0], a = i && i[0], b = i && (i[1] || i[0]);
+    if (!this.n) this.t = currentTime;
+    for (let k = 0; k < 128; k++) this.m[this.n + k] = a ? (a[k] + b[k]) / 2 : 0;
+    this.n += 128;
+    if (this.n === 4096) { this.port.postMessage({ t: this.t, d: this.m }, [this.m.buffer]); this.m = new Float32Array(4096); this.n = 0; }
+    return true;
+  }
+});`;
 
 async function boot(page: Page, state: object) {
   const errors: string[] = [];
@@ -132,97 +145,105 @@ test('the A/B switch in the debug panel plays the old combat sound: no panners, 
   expect(errors).toEqual([]);
 });
 
-test('music loops: each pass starts on the audio clock at the loop point of the one before and plays in step with it through the crossfade, with no dip in level', async ({ page }) => {
-  test.setTimeout(90_000);
-  const errors = await boot(page, { ...midGame, year: 1885 });
-  const [L, C] = LOOPS.tracks.calm.loop, XF = LOOPS.xf;
-  await expect.poll(() => musicLine(page), { timeout: 20_000 }).toMatch(/^Nhạc: calm \d/);
-  // ba máy thu: tiếng thô của các lượt chẵn / lẻ (trước gain của chúng), và tổng các lượt sau gain (cái tới bus nhạc)
-  await page.evaluate(() => {
-    const w = window as unknown as W, ctx = w.passes[0].src.context as AudioContext, z = ctx.createGain();
-    z.gain.value = 0;
-    z.connect(ctx.destination);
-    const recs: Rec[] = (w.recs = []), sps = [0, 1, 2].map(() => {
-      const sp = ctx.createScriptProcessor(4096, 2, 1), r: Rec = { t: [], d: [] };
-      recs.push(r);
-      sp.onaudioprocess = e => {
-        const a = e.inputBuffer.getChannelData(0), b = e.inputBuffer.getChannelData(1), m = new Float32Array(a.length);
-        for (let k = 0; k < a.length; k++) m[k] = (a[k] + b[k]) / 2;
-        r.t.push(e.playbackTime);
-        r.d.push(m);
-      };
-      sp.connect(z);
-      return sp;
-    });
-    const tap = (p: Pass, i: number) => { p.src.connect(sps[i % 2]); p.g?.connect(sps[2]); };
-    w.passes.forEach(tap);
-    w.onpass = tap;
-  });
-  // nút của bảng chẩn đoán: tới 4 s trước điểm vòng (để nghe thử trên máy thật), rồi qua mối nối
-  await page.locator('#dbg .seam').dispatchEvent('click');
-  await page.waitForTimeout((4 + XF + 1.5) * 1000);
-  await expect.poll(() => musicLine(page), { timeout: 4000 }).toMatch(/nối vòng 1/);
-  const r = await page.evaluate(([L, C, XF]) => {
-    const w = window as unknown as W, P = w.passes, ia = P.map(p => Math.abs(p.off - (C - 4)) < 1e-3).lastIndexOf(true);
-    const A = P[ia], B = P[ia + 1], N = P[ia + 2], sched = [A, B, N].map(p => p && { when: p.when, off: p.off });
-    if (!B) return { sched, rows: [], lv: null };
-    const buf = A.src.buffer!, sr = buf.sampleRate, D = 8;
-    // bản nhạc, một kênh, giảm mẫu D lần (trung bình)
-    const c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : c0, ref = new Float32Array(Math.floor(c0.length / D));
-    for (let i = 0; i < ref.length; i++) { let s = 0; for (let k = 0; k < D; k++) s += c0[i * D + k] + c1[i * D + k]; ref[i] = s / (2 * D); }
-    // `n` mẫu (đã giảm) một máy thu ghi được từ lúc `T` (đồng hồ âm thanh)
-    const grab = (r: Rec, T: number, n: number): Float32Array | null => {
-      const i = r.t.findIndex((t, j) => t <= T && (r.t[j + 1] ?? Infinity) > T);
-      if (i < 0) return null;
-      const raw: number[] = [];
-      for (let j = i, o = Math.round((T - r.t[i]) * sr); j < r.d.length && raw.length < n * D; j++, o = 0) raw.push(...r.d[j].subarray(o));
-      if (raw.length < n * D) return null;
-      return Float32Array.from({ length: n }, (_, k) => { let s = 0; for (let q = 0; q < D; q++) s += raw[k * D + q]; return s / D; });
-    };
-    // vị trí thật trong bản (s) của đoạn `q`: tương quan chuẩn hoá quanh `guess` ± 0,6 s
-    const find = (q: Float32Array | null, guess: number) => {
-      if (!q) return null;
-      const n = q.length, k0 = Math.max(0, Math.round(((guess - 0.6) * sr) / D)), k1 = Math.min(ref.length - n, Math.round(((guess + 0.6) * sr) / D));
-      let qq = 0;
-      for (const x of q) qq += x * x;
-      if (qq < 1e-8 * n) return null;
-      let best = -2, at = 0;
-      for (let k = k0; k <= k1; k++) {
-        let s = 0, e = 0;
-        for (let i = 0; i < n; i++) { const v = ref[k + i]; s += q[i] * v; e += v * v; }
-        const c = s / Math.sqrt(qq * e + 1e-12);
-        if (c > best) { best = c; at = k; }
+test.describe(() => {
+  test.use({ bypassCSP: true }); // máy thu AudioWorklet nạp từ blob:
+  test('music loops: each pass starts on the audio clock at the loop point of the one before and plays in step with it through the crossfade, with no dip in level', async ({ page }) => {
+    test.setTimeout(90_000);
+    const errors = await boot(page, { ...midGame, year: 1885 });
+    const [L, C] = LOOPS.tracks.calm.loop, XF = LOOPS.xf;
+    await expect.poll(() => musicLine(page), { timeout: 20_000 }).toMatch(/^Nhạc: calm \d/);
+    // ba máy thu: tiếng thô của các lượt chẵn / lẻ (trước gain của chúng), và tổng các lượt sau gain (cái tới bus nhạc).
+    // Thu trong luồng âm thanh (AudioWorklet, REC_JS): không mất khối nào khi máy bận. ScriptProcessor chạy ở luồng chính:
+    // máy CI bận thì tiếng thu được đứt quãng và phép tương quan bên dưới không tìm ra vị trí. Mô-đun: WebKit nạp từ một
+    // đường dẫn cùng nguồn do bài thử trả lời (không nạp worklet từ blob:); Chromium không cho bắt yêu cầu tải mô-đun
+    // worklet nên nạp từ blob: (bài này bỏ qua CSP của ứng dụng: bypassCSP ở trên).
+    await page.context().route('**/__du-do-rec.js', r => r.fulfill({ contentType: 'text/javascript', body: REC_JS }));
+    await page.evaluate(async js => {
+      const w = window as unknown as W, ctx = w.passes[0].src.context as AudioContext, z = ctx.createGain();
+      z.gain.value = 0;
+      z.connect(ctx.destination);
+      try { await ctx.audioWorklet.addModule('/__du-do-rec.js'); } catch {
+        const url = URL.createObjectURL(new Blob([js], { type: 'text/javascript' }));
+        await ctx.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
       }
-      return { pos: (at * D) / sr, r: best };
-    };
-    const [ra, rb] = ia % 2 ? [w.recs![1], w.recs![0]] : [w.recs![0], w.recs![1]], n = Math.round((0.25 * sr) / D);
-    const rows = [0.5, 1.5, 2.5, 3.5].map(dt => {
-      const a = find(grab(ra, B.when + dt, n), C + dt), b = find(grab(rb, B.when + dt, n), L + dt);
-      return { dt, a, b, d: a && b ? b.pos - L - (a.pos - C) : null };
-    });
-    // mức tổng sau gain, cửa sổ 0,4 s: trước mối nối (trung vị) và qua mối nối (thấp nhất)
-    const m = w.recs![2], all = new Float32Array(m.d.reduce((s, x) => s + x.length, 0));
-    m.d.reduce((o, x) => { all.set(x, o); return o + x.length; }, 0);
-    const db = (T: number) => { const i = Math.round((T - m.t[0]) * sr), k = Math.round(0.4 * sr); let e = 0; for (let j = i; j < i + k; j++) e += all[j] * all[j]; return 10 * Math.log10(e / k + 1e-12); };
-    const before = Array.from({ length: 20 }, (_, k) => db(B.when - 3 + k * 0.1)).sort((p, q) => p - q);
-    const seam = Array.from({ length: Math.round((XF + 0.8) / 0.1) }, (_, k) => db(B.when - 0.2 + k * 0.1));
-    return { sched, rows, lv: { ref: before[10], low: Math.min(...seam) } };
-  }, [L, C, XF]);
-  // trên đồng hồ âm thanh: lượt sau bắt đầu từ điểm bắt đầu vòng đúng lúc lượt trước tới điểm vòng; lượt sau nữa đã hẹn
-  const [A, B, N] = r.sched;
-  expect(B).toBeTruthy();
-  expect(Math.abs(B!.when - (A!.when + C - A!.off))).toBeLessThan(1e-6);
-  expect(B!.off).toBeCloseTo(L, 6);
-  expect(N).toBeTruthy();
-  expect(Math.abs(N!.when - (B!.when + C - L))).toBeLessThan(1e-6);
-  expect(N!.off).toBeCloseTo(L, 6);
-  // tiếng thật của hai lượt suốt lần chuyển: cùng nhịp (kiểu cũ, hai thẻ <audio>: WebKit lệch 0,7–0,9 s)
-  const good = r.rows.filter(x => x.a && x.b && x.a.r > 0.9 && x.b.r > 0.9);
-  expect(good.length, JSON.stringify(r.rows)).toBeGreaterThanOrEqual(2);
-  for (const x of good) expect(Math.abs(x.d!), JSON.stringify(r.rows)).toBeLessThan(0.015);
-  // mức qua mối nối: không hụt quá 6 dB so với trước (kiểu mờ về im lặng rồi phát lại từ đầu bài hụt −40…−90 dB)
-  expect(r.lv!.low - r.lv!.ref).toBeGreaterThan(-6);
-  expect(errors).toEqual([]);
+      const recs: Rec[] = (w.recs = []), sps = [0, 1, 2].map(() => {
+        const sp = new AudioWorkletNode(ctx, 'du-do-rec', { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 2, channelCountMode: 'explicit' }), r: Rec = { t: [], d: [] };
+        recs.push(r);
+        sp.port.onmessage = e => { r.t.push(e.data.t); r.d.push(e.data.d); };
+        sp.connect(z);
+        return sp;
+      });
+      const tap = (p: Pass, i: number) => { p.src.connect(sps[i % 2]); p.g?.connect(sps[2]); };
+      w.passes.forEach(tap);
+      w.onpass = tap;
+    }, REC_JS);
+    // nút của bảng chẩn đoán: tới 4 s trước điểm vòng (để nghe thử trên máy thật), rồi qua mối nối
+    await page.locator('#dbg .seam').dispatchEvent('click');
+    await page.waitForTimeout((4 + XF + 1.5) * 1000);
+    await expect.poll(() => musicLine(page), { timeout: 4000 }).toMatch(/nối vòng 1/);
+    const r = await page.evaluate(([L, C, XF]) => {
+      const w = window as unknown as W, P = w.passes, ia = P.map(p => Math.abs(p.off - (C - 4)) < 1e-3).lastIndexOf(true);
+      const A = P[ia], B = P[ia + 1], N = P[ia + 2], sched = [A, B, N].map(p => p && { when: p.when, off: p.off });
+      if (!B) return { sched, rows: [], lv: null };
+      const buf = A.src.buffer!, sr = buf.sampleRate, D = 8;
+      // bản nhạc, một kênh, giảm mẫu D lần (trung bình)
+      const c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : c0, ref = new Float32Array(Math.floor(c0.length / D));
+      for (let i = 0; i < ref.length; i++) { let s = 0; for (let k = 0; k < D; k++) s += c0[i * D + k] + c1[i * D + k]; ref[i] = s / (2 * D); }
+      // `n` mẫu (đã giảm) một máy thu ghi được từ lúc `T` (đồng hồ âm thanh)
+      const grab = (r: Rec, T: number, n: number): Float32Array | null => {
+        const i = r.t.findIndex((t, j) => t <= T && (r.t[j + 1] ?? Infinity) > T);
+        if (i < 0) return null;
+        const raw: number[] = [];
+        for (let j = i, o = Math.round((T - r.t[i]) * sr); j < r.d.length && raw.length < n * D; j++, o = 0) raw.push(...r.d[j].subarray(o));
+        if (raw.length < n * D) return null;
+        return Float32Array.from({ length: n }, (_, k) => { let s = 0; for (let q = 0; q < D; q++) s += raw[k * D + q]; return s / D; });
+      };
+      // vị trí thật trong bản (s) của đoạn `q`: tương quan chuẩn hoá quanh `guess` ± 0,6 s
+      const find = (q: Float32Array | null, guess: number) => {
+        if (!q) return null;
+        const n = q.length, k0 = Math.max(0, Math.round(((guess - 0.6) * sr) / D)), k1 = Math.min(ref.length - n, Math.round(((guess + 0.6) * sr) / D));
+        let qq = 0;
+        for (const x of q) qq += x * x;
+        if (qq < 1e-8 * n) return null;
+        let best = -2, at = 0;
+        for (let k = k0; k <= k1; k++) {
+          let s = 0, e = 0;
+          for (let i = 0; i < n; i++) { const v = ref[k + i]; s += q[i] * v; e += v * v; }
+          const c = s / Math.sqrt(qq * e + 1e-12);
+          if (c > best) { best = c; at = k; }
+        }
+        return { pos: (at * D) / sr, r: best };
+      };
+      const [ra, rb] = ia % 2 ? [w.recs![1], w.recs![0]] : [w.recs![0], w.recs![1]], n = Math.round((0.25 * sr) / D);
+      const rows = [0.5, 1.5, 2.5, 3.5].map(dt => {
+        const a = find(grab(ra, B.when + dt, n), C + dt), b = find(grab(rb, B.when + dt, n), L + dt);
+        return { dt, a, b, d: a && b ? b.pos - L - (a.pos - C) : null };
+      });
+      // mức tổng sau gain, cửa sổ 0,4 s: trước mối nối (trung vị) và qua mối nối (thấp nhất)
+      const m = w.recs![2], all = new Float32Array(m.d.reduce((s, x) => s + x.length, 0));
+      m.d.reduce((o, x) => { all.set(x, o); return o + x.length; }, 0);
+      const db = (T: number) => { const i = Math.round((T - m.t[0]) * sr), k = Math.round(0.4 * sr); let e = 0; for (let j = i; j < i + k; j++) e += all[j] * all[j]; return 10 * Math.log10(e / k + 1e-12); };
+      const before = Array.from({ length: 20 }, (_, k) => db(B.when - 3 + k * 0.1)).sort((p, q) => p - q);
+      const seam = Array.from({ length: Math.round((XF + 0.8) / 0.1) }, (_, k) => db(B.when - 0.2 + k * 0.1));
+      return { sched, rows, lv: { ref: before[10], low: Math.min(...seam) } };
+    }, [L, C, XF]);
+    // trên đồng hồ âm thanh: lượt sau bắt đầu từ điểm bắt đầu vòng đúng lúc lượt trước tới điểm vòng; lượt sau nữa đã hẹn
+    const [A, B, N] = r.sched;
+    expect(B).toBeTruthy();
+    expect(Math.abs(B!.when - (A!.when + C - A!.off))).toBeLessThan(1e-6);
+    expect(B!.off).toBeCloseTo(L, 6);
+    expect(N).toBeTruthy();
+    expect(Math.abs(N!.when - (B!.when + C - L))).toBeLessThan(1e-6);
+    expect(N!.off).toBeCloseTo(L, 6);
+    // tiếng thật của hai lượt suốt lần chuyển: cùng nhịp (kiểu cũ, hai thẻ <audio>: WebKit lệch 0,7–0,9 s)
+    const good = r.rows.filter(x => x.a && x.b && x.a.r > 0.9 && x.b.r > 0.9);
+    expect(good.length, JSON.stringify(r.rows)).toBeGreaterThanOrEqual(2);
+    for (const x of good) expect(Math.abs(x.d!), JSON.stringify(r.rows)).toBeLessThan(0.015);
+    // mức qua mối nối: không hụt quá 6 dB so với trước (kiểu mờ về im lặng rồi phát lại từ đầu bài hụt −40…−90 dB)
+    expect(r.lv!.low - r.lv!.ref).toBeGreaterThan(-6);
+    expect(errors).toEqual([]);
+  });
 });
 
 test('hiding the page pauses the music where it is, and showing it plays on from there', async ({ page }) => {
