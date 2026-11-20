@@ -25,7 +25,8 @@ for (const f of readdirSync('src/voice').filter(f => f.endsWith('.m4a'))) if (!b
 // 2. câu đã cá nhân hoá: mỗi câu trò chơi có thể hiện phải tra ra một bản thu đọc đúng nguyên văn
 const voiced = (key: string | undefined, text: string) => !!key && byKey.get(key)?.text === text;
 const OPTS = ERAS.flatMap(e => e.opts);
-const flagSets: Flag[][] = [[], ...FLAGS.map(f => [f])];
+// không cờ, từng cờ, và mọi cặp cờ: một câu có thể đọc hai cờ một lúc (nhà đã gửi một nhánh đi rồi cả nhà mới đi)
+const flagSets: Flag[][] = [[], ...FLAGS.flatMap((f, i) => [[f], ...FLAGS.slice(i + 1).map(g => [f, g])])];
 const miss = new Map<string, string>();
 for (const o of OPTS) for (const h of [...HOMES, null]) for (const fl of flagSets) {
   const f: Facts = h ? repFacts(h, fl) : { mode: 'read', name: 'Họ Nguyễn', picks: [], renames: [], flags: new Set(fl) };
