@@ -1,5 +1,5 @@
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
-import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices } from '../play';
+import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices, tiersNow } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1, archive, archiveRun, viewRun, type ArcRun } from '../state';
@@ -119,7 +119,8 @@ export function openEnd(ro?: ArcRun): void {
   // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
   const fresh = !ro && !!end && !S.endSaid;
   if (!ro && (!S.ended || fresh)) { S.ended = true; if (end) S.endSaid = true; save(); }
-  const meta = end && !ro ? { end: end.id, title, name: nameChain(), home: play ? home()[1] : '' } : null;
+  // Trò chơi: cất cả ngưỡng gia sản lúc khép, mở lại hồ sơ thì giữ đúng dấu này dù bảng mô phỏng tính lại (state.ts viewing)
+  const meta = end && !ro ? { end: end.id, title, name: nameChain(), home: play ? home()[1] : '', ...(play ? { th: f.th, tiers: tiersNow() } : {}) } : null;
   if (meta) archiveRun(meta); // trước khi dựng: gợi ý "Ván sau, thử…" tính cả dòng họ này
   mood('finale');
   if (!ro) ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình

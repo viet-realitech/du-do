@@ -8,7 +8,9 @@ import { readFileSync } from 'node:fs';
      đổi một byte, không phim, không chia sẻ, không nút chọn lại; bản lưu cũ chưa đánh số trong sổ đi qua các bước nâng cấp;
    - sổ hỏng không bao giờ làm chết ứng dụng (không màn khôi phục): hỏng cả thì coi như trống và cất một bản sao trước khi
      ghi đè, hỏng một hồ sơ thì bỏ riêng hồ sơ ấy;
-   - "Xoá sổ kết cục" hỏi lại trước và không đụng ván đang chơi. */
+   - "Xoá sổ kết cục" hỏi lại trước và không đụng ván đang chơi;
+   - hồ sơ mở lại giữ đúng kết cục và ngưỡng gia sản đã ghi lúc khép, dù bảng mô phỏng (endings-rarity.json) đã tính lại;
+   - "Bắt đầu lại" của màn khôi phục, như chọn lại từ 1858, làm ván mới thành một hồ sơ mới trong sổ. */
 
 const { defaultBrowserType: _webkit, ...ipad } = devices['iPad Pro 11'];
 test.use(ipad);
@@ -26,7 +28,9 @@ const finished = (name: string, home: string, picks: Record<string, string>) => 
 const midRead = { v: 1, step: 'play', name: 'Họ Lê', year: 1954, narr: false, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam' }, quiz: { e1: [true, true], e2: [true, false], e3: [true, true], e4: [false, true] } };
 const reformPath = { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba', e6: 'doimoi' };
 const oldPath = { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam', e6: 'doimoi' };
-type Run = { id: string; at: string; mode: 'read' | 'play'; end: string; title: string; name: string; home: string; save: Record<string, unknown> };
+type Run = { id: string; at: string; mode: 'read' | 'play'; end: string; title: string; name: string; home: string; save: Record<string, unknown>; th?: unknown; tiers?: unknown };
+/** Hàng ngưỡng gia sản [P5, P25, P60, P92] của quê sau đời thứ sáu, theo bảng mô phỏng hôm nay. */
+const tiers6 = (home: string): number[] => JSON.parse(readFileSync('src/data/endings-rarity.json', 'utf8')).tiers[home][5];
 const run = (id: string, save: Record<string, unknown>, end: string, title: string, home: string): Run => ({ id, at: '2026-11-02T09:00:00.000Z', mode: 'play', end, title, name: save.name as string, home, save });
 
 /** Đặt bộ nhớ một lần (tải lại trang không đặt lại), chặn Wikipedia, gom lỗi trang. */
@@ -62,7 +66,8 @@ test('a family that reaches its ending goes into Sổ kết cục and stays ther
   expect(title).not.toBe('');
   await expect.poll(async () => (await arc(page))?.runs.length).toBe(1);
   const a = (await arc(page))!, r0 = a.runs[0];
-  expect(r0).toMatchObject({ mode: 'play', name: 'Họ Phan', home: 'Quảng Nam', title });
+  const t6 = tiers6('qn');
+  expect(r0).toMatchObject({ mode: 'play', name: 'Họ Phan', home: 'Quảng Nam', title, th: { lo: t6[0], hi: t6[3] }, tiers: t6 }); // the wealth lines it was stamped with
   expect(r0.save).toMatchObject({ name: 'Họ Phan', home: 'qn', picks: reformPath, ended: true });
   expect(a.live).toEqual({ play: r0.id });
   // two leads for the next game, and the note that this family is now in the book
@@ -172,11 +177,16 @@ test('a damaged book never stops the app: unreadable is treated as empty and cop
   await page.locator('.seal[data-id=vongtoc]').click();
   await expect(live(page, '.scrim .arc-hint')).toContainText('Chỉ có ở Trò chơi.');
   await expect(live(page, '.scrim')).toContainText('Đi theo gợi ý vẫn có thể gặp một dấu xếp trước.');
+  // two rename events come to any surname, typed ones too: the hint names paths and homes as well as surnames
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#layer .scrim')).toHaveCount(0);
+  await page.locator('.seal[data-id=doiho]').click();
+  await expect(live(page, '.scrim .arc-hint')).toContainText('Biến cố như vậy chỉ đến trong một số hoàn cảnh: theo một số hướng, ở một số quê, hay với một số họ.');
   expect(errors).toEqual([]);
 });
 
 test('one bad entry in the book is dropped on its own; its neighbours and the counts of dropped-out runs still show', async ({ page }) => {
-  const good = run('ok1', { ...finished('Họ Đinh', 'ct', oldPath), ended: true }, 'olainam', 'Ở lại sau ngày 30 tháng Tư', 'Cần Thơ');
+  const good = { ...run('ok1', { ...finished('Họ Đinh', 'ct', oldPath), ended: true }, 'olainam', 'Ở lại sau ngày 30 tháng Tư', 'Cần Thơ'), th: { lo: 'x' }, tiers: [1, 2] }; // bad thresholds: dropped, today's table used
   const book = { v: 1, runs: [{ id: 5 }, good, { id: 'x', mode: 'play', end: 'xanam', save: 'oops' }, null], gone: { chiadoi: 2, xabac: 'two' }, live: { play: 'nope' } };
   const errors = await seed(page, { 'dudo-v2': JSON.stringify(midRead), 'dudo-archive': JSON.stringify(book) });
   await page.goto('/');
@@ -214,5 +224,77 @@ test('Xoá sổ kết cục asks first, with Huỷ chosen, and leaves the game, 
   expect(after['dudo-archive']).toBeUndefined();
   const { 'dudo-archive': _gone, ...rest } = before;
   expect(after).toEqual(rest);
+  expect(errors).toEqual([]);
+});
+
+test('a reopened family keeps the ending and wealth lines it was stamped with, even after the simulation table has moved', async ({ page }) => {
+  // two families stamped with thresholds that today's table (endings-rarity.json) no longer has: worked out again today,
+  // "up" would fall to Còn lại tên họ and "down" would climb out of it
+  const t = tiers6('ct'), d = 45, at = (s: number) => { const x = Math.floor((s - d) / 3); return r(s - d - 2 * x, d, x, x); };
+  const up = t[0] - 3, down = t[0] + 20;
+  expect(down).toBeLessThan(t[3]);
+  const runUp = { ...run('up', { ...finished('Họ Đinh', 'ct', oldPath), res: at(up), ended: true, endSaid: true }, 'olainam', 'Ở lại sau ngày 30 tháng Tư', 'Cần Thơ'),
+    th: { lo: up - 15, hi: up + 120 }, tiers: [up - 15, up + 20, up + 80, up + 120] };
+  const runDown = { ...run('down', { ...finished('Họ Đoàn', 'ct', oldPath), res: at(down), ended: true, endSaid: true }, 'lytan', 'Còn lại tên họ', 'Cần Thơ'),
+    th: { lo: down + 10, hi: down + 100 }, tiers: [down + 10, down + 30, down + 60, down + 100] };
+  const book = { v: 1, runs: [runUp, runDown], gone: {}, live: {} };
+  const errors = await seed(page, { 'dudo-v2': JSON.stringify(midRead), 'dudo-mode': 'read', 'dudo-archive': JSON.stringify(book) });
+  await page.goto('/');
+  await alive(page);
+  await openLedger(page);
+  for (const id of ['olainam', 'lytan']) await expect(page.locator(`.seal[data-id=${id}] .n`)).toHaveText('Đã gặp');
+  const before = await storage(page);
+
+  await page.locator('.ledg .arc-runs [data-a=arc-open][data-id=up]').click();
+  let ov = live(page, '.ov.end[data-ro=up]');
+  await expect(ov.locator('.end-mast .stamp')).toHaveText('Ở lại');
+  await expect(ov.locator('.end-title')).toHaveText('Ở lại sau ngày 30 tháng Tư');
+  await expect(ov.locator('.end-rank b')).toHaveText('Nhà sa sút'); // its own lines: above P5, below P25
+  await ov.locator('[data-a=listen-end]').click();
+  await ov.locator('[data-a=listen-end]').click();
+  await ov.locator('.end-back [data-a=close]').click();
+  await expect(page.locator('.ov.end')).toHaveCount(0);
+
+  await page.locator('.ledg .arc-runs [data-a=arc-open][data-id=down]').click();
+  ov = live(page, '.ov.end[data-ro=down]');
+  await expect(ov.locator('.end-mast .stamp')).toHaveText('Giữ được tên');
+  await expect(ov.locator('.end-title')).toHaveText('Còn lại tên họ');
+  await expect(ov.locator('.end-why p')).toHaveText(new RegExp(`Tổng gia sản ${down}; ngưỡng 5% thấp nhất ở Cần Thơ là ${down + 10}\\.$`));
+  await expect(ov.locator('.end-rank b')).toHaveText('Còn lại tên họ');
+  await ov.locator('.end-back [data-a=close]').click();
+  await expect(page.locator('.ov.end')).toHaveCount(0);
+  expect(await storage(page)).toEqual(before);
+  expect(errors).toEqual([]);
+});
+
+test("after the recovery screen's Bắt đầu lại, the same path played again is a new family in the book, not the archived one overwritten", async ({ page }) => {
+  const old = { ...finished('Họ Phan', 'qn', reformPath), ended: true, endSaid: true };
+  const book = { v: 1, runs: [run('famX', old, 'canhtan', 'Ba đời canh tân', 'Quảng Nam')], gone: {}, live: { play: 'famX' } };
+  await seed(page, { 'dudo-v2-play': '{"step":"play","mode":"play",', 'dudo-mode': 'play', 'dudo-archive': JSON.stringify(book) });
+  await page.goto('/');
+  const box = page.locator('#rescue');
+  await expect(box).toBeVisible();
+  await box.getByRole('button', { name: 'Bắt đầu lại' }).click();
+  const fresh = page.waitForEvent('load');
+  await box.getByRole('button', { name: 'Xoá và bắt đầu lại' }).click();
+  await fresh;
+  await expect(page.locator('#rescue')).toHaveCount(0);
+  const a = (await arc(page))!;
+  expect(a.live).toEqual({}); // the wiped game is no longer the archived family
+  expect(a.runs).toEqual(book.runs);
+  // a new family on the same surname, home and six turning points, with another journey (other wealth)
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...finished('Họ Phan', 'qn', reformPath), res: r(70, 70, 70, 70) }));
+  await page.reload();
+  await alive(page);
+  await page.locator('#card [data-a=end].c').click();
+  await expect(live(page, '.end-title')).not.toHaveText('');
+  await expect.poll(async () => (await arc(page))?.runs.length).toBe(2);
+  const b = (await arc(page))!;
+  expect(b.runs[0]).toEqual(book.runs[0]); // the earlier family's dossier is untouched
+  expect(b.runs[1].id).not.toBe('famX');
+  expect(b.runs[1].save).toMatchObject({ res: r(70, 70, 70, 70) });
+  expect(b.live).toEqual({ play: b.runs[1].id });
   expect(errors).toEqual([]);
 });

@@ -277,6 +277,9 @@ export let S: State = load();
 /** Đang mở lại hồ sơ một dòng họ đã khép (viewRun): S là bản lưu trong Sổ kết cục, không được ghi đè lên ván đang chơi. */
 let frozen = 0;
 export const readOnly = (): boolean => frozen > 0;
+/** Hồ sơ đang mở lại (viewRun): play.ts lấy kết cục và ngưỡng gia sản đã ghi lúc khép, không xét lại theo bảng hôm nay. */
+let viewed: ArcRun | undefined;
+export const viewing = (): ArcRun | undefined => viewed;
 
 export function save(): void {
   if (frozen) return;
@@ -305,6 +308,11 @@ export interface ArcRun {
   /** Tên họ qua các lần đổi; quê (Trò chơi, '' ở Đọc sử). */
   name: string;
   home: string;
+  /** Trò chơi: ngưỡng gia sản lúc khép (endings.ts Facts.th, và hàng P5/P25/P60/P92 mà play.ts rank() dùng). Bảng
+      endings-rarity.json tính lại thì ngưỡng dời; mở lại hồ sơ vẫn dùng ngưỡng này, để hồ sơ giữ đúng dấu đã đóng.
+      Hồ sơ ghi trước khi có hai trường này: dùng bảng hôm nay. */
+  th?: { lo: number; hi: number };
+  tiers?: number[];
   /** Cả bản lưu lúc khép. */
   save: Raw;
 }
@@ -321,6 +329,7 @@ export interface Archive {
 }
 const okRun = (r: unknown): r is Raw => isObj(r) && typeof r.id === 'string' && !!r.id && (r.mode === 'read' || r.mode === 'play') && typeof r.end === 'string' && isObj(r.save);
 const str = (x: unknown) => (typeof x === 'string' ? x : '');
+const fin = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 /** Đọc sổ: hồ sơ hỏng thì bỏ riêng hồ sơ ấy; cả sổ không đọc được thì coi như trống (`bad`: chưa ghi đè thì cất bản sao). */
 function readArc(): { a: Archive; raw: string | null; bad: boolean } {
   const a: Archive = { v: 1, runs: [], gone: {}, live: {} };
@@ -336,8 +345,11 @@ function readArc(): { a: Archive; raw: string | null; bad: boolean } {
   for (const r of runs) {
     if (!okRun(r)) { bad = true; continue; }
     if (a.runs.some(x => x.id === r.id)) continue;
-    // khoá lạ (bản ứng dụng mới hơn ghi) giữ nguyên
-    a.runs.push({ ...r, id: r.id as string, mode: r.mode as 'read' | 'play', end: r.end as string, save: r.save as Raw, at: str(r.at), title: str(r.title), name: str(r.name), home: str(r.home) });
+    // khoá lạ (bản ứng dụng mới hơn ghi) giữ nguyên; ngưỡng hỏng thì bỏ riêng ngưỡng ấy (mở lại dùng bảng hôm nay)
+    const run: ArcRun = { ...r, id: r.id as string, mode: r.mode as 'read' | 'play', end: r.end as string, save: r.save as Raw, at: str(r.at), title: str(r.title), name: str(r.name), home: str(r.home) };
+    if (r.th !== undefined) { if (isObj(r.th) && fin(r.th.lo) && fin(r.th.hi)) run.th = { lo: r.th.lo, hi: r.th.hi }; else { delete run.th; bad = true; } }
+    if (r.tiers !== undefined) { if (Array.isArray(r.tiers) && r.tiers.length === 4 && r.tiers.every(fin)) run.tiers = r.tiers.slice(); else { delete run.tiers; bad = true; } }
+    a.runs.push(run);
   }
   if (isObj(o.gone)) for (const [k, n] of Object.entries(o.gone)) { if (typeof n === 'number' && Number.isInteger(n) && n > 0) a.gone[k] = n; else bad = true; }
   if (isObj(o.live)) for (const m of ['read', 'play'] as const) { const id = o.live[m]; if (typeof id === 'string' && a.runs.some(r => r.id === id)) a.live[m] = id; }
@@ -381,7 +393,7 @@ export function liveRun(a = archive()): ArcRun | undefined {
 }
 /** Dòng họ đang chơi vừa đi tới kết cục: cất cả bản lưu vào Sổ kết cục (mở lại màn kết thì cập nhật hồ sơ ấy). Lần ghi
     đầu tiên xin trình duyệt giữ bộ nhớ lâu dài, nếu trình duyệt có cách ấy (không hứa gì: trình duyệt vẫn có thể xoá). */
-export function archiveRun(meta: { end: string; title: string; name: string; home: string }): ArcRun | null {
+export function archiveRun(meta: { end: string; title: string; name: string; home: string; th?: ArcRun['th']; tiers?: ArcRun['tiers'] }): ArcRun | null {
   if (frozen) return null;
   const prev = readArc(), a = prev.a, snap = JSON.parse(JSON.stringify(S)) as Raw;
   let r = liveRun(a);
@@ -410,16 +422,18 @@ function forgetLive(mode: 'read' | 'play'): void {
   writeArc(prev.a, prev);
 }
 /** Chạy `fn` với S là bản lưu của hồ sơ `run` (đọc qua readSave như một bản lưu thật; thiết lập thiết bị lấy của ván đang
-    chơi), rồi trả lại S như cũ. Trong lúc ấy save() không ghi gì, checkBadges() không trao gì. undefined khi bản lưu của
+    chơi), rồi trả lại S như cũ. Trong lúc ấy save() không ghi gì, checkBadges() không trao gì, viewing() là hồ sơ ấy. undefined khi bản lưu của
     hồ sơ không đọc được. Chỉ cho việc đồng bộ (dựng màn, đọc lời): đừng để việc chạy sau (setTimeout, await) đọc S. */
 export function viewRun<T>(run: ArcRun, fn: () => T): T | undefined {
   const r = readSave(JSON.stringify(run.save), run.mode);
   if (r.unreadable) return undefined;
   const live = S, t = r.s as unknown as Raw;
   for (const k of PREFS) t[k] = live[k];
+  const was = viewed;
   S = r.s;
+  viewed = run;
   frozen++;
-  try { return fn(); } finally { S = live; frozen--; }
+  try { return fn(); } finally { S = live; viewed = was; frozen--; }
 }
 
 /** Start over, keeping device preferences. */
