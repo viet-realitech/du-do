@@ -266,7 +266,9 @@ function load(mode = activeMode()): State {
     return r.s; // không có lưới khởi động (công cụ chạy bằng node): bắt đầu mới
   }
   if (r.fixed.length) { noteSave(`Bản lưu ${key}: đã sửa ${r.fixed.join(', ')}`); b?.keep(key, 'đã sửa ' + r.fixed.join(', ')); }
-  if (r.newer) { noteSave(`Bản lưu ${key} của bản ứng dụng mới hơn (phiên bản ${r.from})`); b?.keep(key, `phiên bản ${r.from}, mới hơn bản ứng dụng này`); }
+  // bản lưu của bản ứng dụng mới hơn: cất một bản sao lần đầu gặp phiên bản ấy (bản này ghi lại thì không cất thêm)
+  const newer = `phiên bản ${r.from}, mới hơn bản ứng dụng này`;
+  if (r.newer && b && !b.kept().some(k => k.key === key && k.why === newer)) { noteSave(`Bản lưu ${key} của bản ứng dụng mới hơn (phiên bản ${r.from})`); b.keep(key, newer); }
   return r.s;
 }
 

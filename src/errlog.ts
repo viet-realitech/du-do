@@ -41,8 +41,12 @@ function add(m: string, at?: string): void {
   } catch { /* không bao giờ ném lỗi từ đây */ }
 }
 
-/** Ghi một dòng (không phải lỗi chưa bắt): bản lưu đã sửa, màn khôi phục đã hiện… */
-export function note(m: string): void { add(m); }
+/** Ghi một dòng (không phải lỗi chưa bắt): bản lưu đã sửa, màn khôi phục đã hiện… Ghi ngay (hiếm khi có): màn khôi phục
+    có thể tải lại trang trước khi lần ghi gộp kịp chạy. */
+export function note(m: string): void {
+  add(m);
+  try { clearTimeout(tw); tw = 0; localStorage.setItem(KEY, JSON.stringify(errlog())); } catch { /* đầy / riêng tư */ }
+}
 // lưới an toàn lúc khởi động (public/boot.js) ghi vào sổ qua đây khi sổ đã nạp: một nơi ghi, không ghi đè lên nhau
 try { const b = (globalThis as unknown as { dudoBoot?: { sink?: (m: string) => void } }).dudoBoot; if (b) b.sink = note; } catch { /* bỏ qua */ }
 
