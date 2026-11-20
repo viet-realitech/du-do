@@ -92,7 +92,9 @@ flow, is kept as a whole-save snapshot in `localStorage` `dudo-archive` (20 at m
 counted), which "Chọn lại từ 1858" never clears. Hồ sơ shows the 15 seals (met: stamped and counted; unmet: a
 "chưa gặp" hint from the ending's rule) and the closed families; one can be reopened read-only: `viewRun()` swaps the
 snapshot in as `S` through `readSave()` (so old snapshots go through every `MIGRATE` step), `save()` and
-`checkBadges()` do nothing meanwhile, and the film, sharing and restart are hidden. The book is read only when Hồ sơ or
+`checkBadges()` do nothing meanwhile, and the film, sharing and restart are hidden. A reopened family shows the ending
+and title it was stamped with, judged against the wealth lines stored with it (`th`, `tiers`), not against a later
+`endings-rarity.json`. The recovery screen's wipe (`public/boot.js`) forgets the live entry as a restart does. The book is read only when Hồ sơ or
 the ending opens, never at start-up, and a damaged one is repaired entry by entry or treated as empty (the unreadable
 text is kept once as `dudo-archive-broken`), so it can never bring up the recovery screen. The ending adds two
 "Ván sau, thử…" leads (an unmet ending, a home in a region not yet played, a surname with its own event, or play mode).
