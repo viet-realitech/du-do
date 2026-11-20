@@ -5,6 +5,13 @@
    "date": "2026-11-20",
    "ids": [],
    "note": "Khoá đầu tiên."
+  },
+  {
+   "date": "2026-11-20",
+   "ids": [
+    "qt72"
+   ],
+   "note": "qt72: lựa chọn 1 đổi chữ 'Ở lại vùng giải phóng' → 'Ở lại quê nhà' (bỏ từ mang màu sắc), cùng nghĩa; chỉ số không đổi, bản lưu cũ không cần chuyển"
   }
  ],
  "cards": {
@@ -425,7 +432,7 @@
   ],
   "qt72": [
    "Chạy trên \"Đại lộ Kinh hoàng\"",
-   "Ở lại vùng giải phóng"
+   "Ở lại quê nhà"
   ],
   "qt72 @0 regions=T2 homes=hue,qn": [
    "Đón người chạy từ Quảng Trị vào",

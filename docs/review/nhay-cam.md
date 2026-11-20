@@ -4,8 +4,8 @@ Sinh tự động bằng `npm run review:export` từ mã nguồn (chạy lại 
 
 ## Ngoài chữ: màu cờ, nhãn bản đồ
 
-- Màu phe mặc định là màu cờ lịch sử (`pal: 'flag'`, src/state.ts:58): vùng của Quốc gia Việt Nam / VNCH tô nền vàng ba sọc đỏ (src/ui/bits.ts:30). Người chơi đổi được sang "mực nâu" trong Hồ sơ → Giao diện.
-- Nhãn chủ quyền trên bản đồ chính: Biển Đông, Vịnh Bắc Bộ, Q.đ. Hoàng Sa, Q.đ. Trường Sa (src/map.ts:174); trên tấm bản đồ nhỏ ở màn chào (src/ui/plate.ts:23).
+- Màu phe mặc định là màu cờ lịch sử (`pal: 'flag'`, src/state.ts:61): vùng của Quốc gia Việt Nam / VNCH tô nền vàng ba sọc đỏ (src/ui/bits.ts:30). Người chơi đổi được sang "mực nâu" trong Hồ sơ → Giao diện.
+- Nhãn chủ quyền trên bản đồ chính: Biển Đông, Vịnh Bắc Bộ, Q.đ. Hoàng Sa, Q.đ. Trường Sa (src/map.ts:174); trên tấm bản đồ nhỏ ở màn chào (src/ui/plate.ts:25).
 - Đường biên hiện nay lấy từ Natural Earth 1:50m (src/data/region-50m.json); không đa giác quốc gia nào của Natural Earth phủ lên Hoàng Sa hay Trường Sa.
 
 ## Cách mạng tháng Tám và việc bắt, giết người khác chính kiến (1945–1947) · 21 câu
@@ -126,7 +126,7 @@ Cần để ý: Quy mô (số người, số năm), cách gọi; không giảm n
 | `x:x-ngo63:0` | C | Trò chơi · biến cố riêng "Họ Ngô sau ngày 1 tháng 11" · lựa chọn 1 | Giữ họ, lên trình diện trả lời: Không có gì phải giấu; chịu xét hỏi vài lần. → Hai người bị gọi lên Tổng nha Cảnh sát, hỏi về Cần Lao và Phủ Cam. Không tìm ra gì, nhưng hồ sơ đã mở thì theo mãi đến hết thời Đệ nhị Cộng hoà. |
 | `x:x-lylich78:0` | C | Trò chơi · biến cố riêng "Tờ khai lý lịch" · lựa chọn 1 | Khai đầy đủ, đúng sự thật: Không giấu gì; chấp nhận bị xếp diện. → Hồ sơ ghi 'gia đình có người đi cải tạo'. Đứa cháu thi đủ điểm vẫn không được gọi nhập học; phải nhiều năm sau mới có đứa thứ hai vào đại học. |
 
-## Nhân Văn – Giai Phẩm · 6 câu
+## Nhân Văn – Giai Phẩm · 7 câu
 
 Cần để ý: Ai bị kỷ luật, mức nào; cách gọi vụ việc.
 
@@ -136,6 +136,7 @@ Cần để ý: Ai bị kỷ luật, mức nào; cách gọi vụ việc.
 | `ev:nv56:s` | A | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Một nhóm văn nghệ sĩ ra báo đòi tự do sáng tác và phê phán bộ máy. |
 | `ev:nv56:x` | A | Chương 5 · trang sự kiện › Diễn biến · đoạn thêm | Báo bị đình bản, nhiều người bị kỷ luật hoặc bị cấm sáng tác lâu năm. Một số được phục hồi sau Đổi Mới. |
 | `ev:nv56:v:vn` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Từng bị coi là hoạt động chống đối, sau được nhìn nhận lại. |
+| `ev:nv56:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Được dẫn như bằng chứng về việc kiểm soát văn nghệ, tư tưởng ở miền Bắc. |
 | `ev:nv56:v:intl` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Cuộc tranh luận về tự do sáng tác ở miền Bắc. |
 | `card:nv56:0` | C | Trò chơi · thẻ "Vụ Nhân Văn – Giai Phẩm" · lựa chọn 1 | Mua và giữ các số báo Nhân Văn: Trong họ có người thích văn chương. → Báo giấu trong tủ ba mươi năm. |
 
@@ -257,7 +258,7 @@ Cần để ý: Thương vong hai phía (khoảng, có nguồn); cách gọi cu�
 | `card:bb79{regions=T2+NE+NW}:1` | A | Trò chơi · thẻ "Chiến tranh biên giới phía Bắc" khi nhà đang ở vùng T2, NE, NW · lựa chọn 2 | Nghe tin qua đài: Chiến sự ở tận biên giới phía Bắc; trong này giá gạo lên, phường rà soát người gốc Hoa. → Đầu tháng Ba, Trung Quốc tuyên bố rút quân. Ở phố, mấy nhà người Hoa quen đã bán nhà, lặng lẽ ra đi. |
 | `card:vx84:0` | C | Trò chơi · thẻ "Mặt trận Vị Xuyên" · lựa chọn 1 | Đi lính Vị Xuyên: Người con nhập ngũ lên Hà Giang. → Những ngày tháng 7 năm 1984 không có trong sách giáo khoa, chỉ có trong trí nhớ dòng họ. |
 
-## Chủ quyền biển đảo và biên giới · 57 câu
+## Chủ quyền biển đảo và biên giới · 61 câu
 
 Cần để ý: Tên gọi, ngày, số người chết; lập trường chủ quyền của Việt Nam được nêu đúng; quan điểm Trung Quốc chỉ là lời tóm lược.
 
@@ -292,6 +293,7 @@ Cần để ý: Tên gọi, ngày, số người chết; lập trường chủ q
 | `ev:vbb00:s` | A | Chương 6 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Hai nước ký hiệp định phân định lãnh hải, vùng đặc quyền kinh tế trong Vịnh Bắc Bộ. |
 | `ev:vbb00:x` | A | Chương 6 · trang sự kiện › Diễn biến · đoạn thêm | Việt Nam được khoảng 53% diện tích vịnh. |
 | `ev:vbb00:v:vn` | A | Chương 6 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Thành công trong giải quyết tranh chấp bằng thương lượng. |
+| `ev:vbb00:v:intl` | A | Chương 6 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Thường được dẫn làm ví dụ hai nước láng giềng phân định biển bằng đàm phán, theo các nguyên tắc của UNCLOS. |
 | `ev:hd14:t` | A | Chương 6 · trang sự kiện · tiêu đề, ngày, nơi chốn | Giàn khoan Hải Dương 981 · 5–7.2014 · Gần quần đảo Hoàng Sa |
 | `ev:hd14:s` | A | Chương 6 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Trung Quốc hạ đặt giàn khoan trong vùng đặc quyền kinh tế mà Việt Nam tuyên bố. |
 | `ev:hd14:x` | A | Chương 6 · trang sự kiện › Diễn biến · đoạn thêm | Tàu hai bên đối đầu hơn hai tháng; ở Việt Nam bùng nổ biểu tình. |
@@ -305,6 +307,9 @@ Cần để ý: Tên gọi, ngày, số người chết; lập trường chủ q
 | `ev:pca16:v:intl` | A | Chương 6 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Mốc pháp lý quan trọng cho các bên ven Biển Đông. |
 | `fig:lbj` | B | Nhân vật · Lyndon B. Johnson | Lyndon B. Johnson (1908–1973), Tổng thống Mỹ. Tổng thống Mỹ 1963–1969. Sau Nghị quyết Vịnh Bắc Bộ (1964), đưa quân chiến đấu Mỹ vào miền Nam Việt Nam từ tháng 3.1965. Tuyên bố không tái tranh cử ngày 31.3.1968. |
 | `src:giaptuat` | B | Sử liệu · hồ sơ "Hiệp ước Giáp Tuất" | Hiệp ước Giáp Tuất · Hiệp ước · Đại Nam – Pháp · 15.3.1874 · ANOM · Thừa nhận chủ quyền của Pháp trên toàn bộ Nam Kỳ lục tỉnh. |
+| `src:vbb2000` | A | Sử liệu · hồ sơ "Hiệp định phân định Vịnh Bắc Bộ giữa Việt Nam và Trung Quốc" | Hiệp định phân định Vịnh Bắc Bộ giữa Việt Nam và Trung Quốc · Hiệp ước · Hai chính phủ · 25.12.2000 · Uỷ ban Biên giới quốc gia, Bộ Ngoại giao · Phân định lãnh hải, vùng đặc quyền kinh tế và thềm lục địa của hai nước trong Vịnh Bắc Bộ; có hiệu lực từ 30.6.2004. |
+| `src:bngvn` | A | Sử liệu · hồ sơ "Tuyên bố của Người phát ngôn Bộ Ngoại giao Việt Nam" | Tuyên bố của Người phát ngôn Bộ Ngoại giao Việt Nam · Văn kiện · Bộ Ngoại giao Việt Nam · Các năm 2014, 2016 · Cổng thông tin Bộ Ngoại giao · mofa.gov.vn · Các tuyên bố, trả lời báo chí về giàn khoan Hải Dương 981 (5–7.2014) và về phán quyết của Toà Trọng tài (12.7.2016). |
+| `src:pca2016` | A | Sử liệu · hồ sơ "Phán quyết vụ Trọng tài Biển Đông (Philippines kiện Trung Quốc)" | Phán quyết vụ Trọng tài Biển Đông (Philippines kiện Trung Quốc) · Văn kiện · Toà Trọng tài theo Phụ lục VII UNCLOS · 12.7.2016 · Toà Trọng tài Thường trực (PCA), La Haye · vụ số 2013-19 · pca-cpa.org · Phán quyết cuối cùng: yêu sách quyền lịch sử trong "đường chín đoạn" không có cơ sở theo UNCLOS; không cấu trúc nào ở Trường Sa có vùng đặc quyền kinh tế riêng. Việt Nam không phải một bên của vụ kiện. |
 | `scene:lb72:1` | B | Cảnh trận "Chiến dịch Linebacker II" · mũi tên 2 (Quân Mỹ) | Các tốp B-52 từ vịnh Bắc Bộ (đêm 26.12) |
 | `scene:hs74:0` | B | Cảnh trận "Hải chiến Hoàng Sa" · mũi tên 1 (Quân đội VNCH) | HQ-4, HQ-5, HQ-16, HQ-10 tiến về Quang Hòa |
 | `scene:hs74:1` | B | Cảnh trận "Hải chiến Hoàng Sa" · mũi tên 2 (Quân đội VNCH) | Biệt hải đổ bộ đảo Quang Hòa |
@@ -321,7 +326,7 @@ Cần để ý: Tên gọi, ngày, số người chết; lập trường chủ q
 | `card:gm88:0` | C | Trò chơi · thẻ "Gạc Ma" · lựa chọn 1 | Góp tiền cho Trường Sa: Đóng góp qua báo. → Tên dòng họ trên danh sách báo Tuổi Trẻ. |
 | `card:gm88:1` | C | Trò chơi · thẻ "Gạc Ma" · lựa chọn 2 | Theo dõi: Tin tức ít ỏi. → Gạc Ma thành một cái tên mãi sau này mới được nhắc. |
 
-## Quốc gia Việt Nam, VNCH và người Việt hải ngoại · 101 câu
+## Quốc gia Việt Nam, VNCH và người Việt hải ngoại · 109 câu
 
 Cần để ý: Cách gọi chính thể, quân đội, người ra đi; công bằng với cả hai miền.
 
@@ -338,6 +343,7 @@ Cần để ý: Cách gọi chính thể, quân đội, người ra đi; công b
 | `ev:el49:v:vnch` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Bước đầu thống nhất và độc lập theo con đường quốc gia. |
 | `ev:el49:v:vn` | B | Chương 4 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Chính quyền bù nhìn do Pháp dựng lên. |
 | `ev:el49:v:fr` | B | Chương 4 · trang sự kiện › Góc nhìn · Sử liệu Pháp | ‘Giải pháp Bảo Đại’ quốc tế hoá cuộc chiến chống cộng. |
+| `ev:dbp:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Ghi nhận các đơn vị Quân đội Quốc gia Việt Nam, như Tiểu đoàn 5 Nhảy dù, cùng chiến đấu và chịu tổn thất trong tập đoàn cứ điểm. |
 | `ev:gnv:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Phái đoàn Quốc gia Việt Nam không ký, phản đối chia cắt. |
 | `ev:cc53:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Một chiến dịch khủng bố ở nông thôn. |
 | `ev:dc54:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | ‘Bỏ phiếu bằng chân’ — lựa chọn tự do. |
@@ -349,9 +355,12 @@ Cần để ý: Cách gọi chính thể, quân đội, người ra đi; công b
 | `ev:vc55:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Nền cộng hoà đầu tiên của người Việt. |
 | `ev:vc55:v:vn` | B | Chương 5 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Chính quyền tay sai Mỹ, trưng cầu gian lận. |
 | `ev:vc55:v:intl` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Con số 98,2% cho thấy nhiều bất thường. |
+| `ev:nv56:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Được dẫn như bằng chứng về việc kiểm soát văn nghệ, tư tưởng ở miền Bắc. |
+| `ev:ts59:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Coi con đường là bằng chứng miền Bắc đưa người, vũ khí vào miền Nam qua đất Lào, Campuchia, trái các hiệp định Genève. |
 | `ev:dk60:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Các vụ khủng bố, ám sát viên chức xã ấp. |
 | `ev:mt60:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Cánh tay của Hà Nội. |
 | `ev:ab63:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Một đơn vị nhỏ của Quân Giải phóng đẩy lui lực lượng QL VNCH đông hơn có trực thăng Mỹ yểm trợ. |
+| `ev:ab63:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Chính quyền Sài Gòn khi đó coi là thắng lợi, vì quân VNCH chiếm được ấp sau khi đối phương rút đi trong đêm. |
 | `ev:qd63:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Biến cố làm rạn vỡ chế độ Đệ nhất Cộng hoà. |
 | `ev:dc63:t` | B | Chương 5 · trang sự kiện · tiêu đề, ngày, nơi chốn | Đảo chính lật đổ Ngô Đình Diệm · 1.11.1963 · Sài Gòn |
 | `ev:dc63:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Sau khủng hoảng Phật giáo, các tướng lĩnh lật đổ và sát hại anh em Diệm – Nhu. |
@@ -359,13 +368,17 @@ Cần để ý: Cách gọi chính thể, quân đội, người ra đi; công b
 | `ev:dc63:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Tranh luận kéo dài: cách mạng hay sai lầm chí tử. |
 | `ev:dc63:v:us` | B | Chương 5 · trang sự kiện › Góc nhìn · Sử liệu Hoa Kỳ | Washington biết trước và không ngăn cản. |
 | `ev:dc63:v:vn` | B | Chương 5 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Mâu thuẫn nội bộ của chế độ Sài Gòn. |
+| `ev:vb64:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Chính phủ Nguyễn Khánh, đang hô hào ‘Bắc tiến’, ủng hộ việc Mỹ đánh trả miền Bắc. |
 | `ev:dn65:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Đồng minh trực tiếp tham chiến. |
+| `ev:ks68:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Ghi nhận Tiểu đoàn 37 Biệt động quân cùng thuỷ quân lục chiến Mỹ giữ căn cứ suốt cuộc vây hãm. |
 | `ev:mt68:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Thắng lợi quân sự của QLVNCH; tưởng niệm thảm sát Huế. |
 | `ev:hcm69:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Chủ tịch Hồ Chí Minh mất. Cùng năm, Tổng thống Nixon bắt đầu rút quân Mỹ, chuyển gánh nặng chiến tranh sang QL VNCH. |
+| `ev:hcm69:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Với Sài Gòn, ‘Việt Nam hoá chiến tranh’ nghĩa là QL VNCH dần gánh phần chiến đấu khi quân Mỹ rút. |
 | `ev:lk71:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | QL VNCH, có không quân Mỹ yểm trợ, đánh sang Nam Lào để cắt đường Trường Sơn. |
 | `ev:lk71:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Cuộc hành quân vượt biên giới lớn nhất. |
 | `ev:qt72:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Quân đội VNDCCH chiếm Quảng Trị; QLVNCH tái chiếm Thành cổ sau 81 ngày đêm. |
 | `ev:qt72:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | ‘Mùa hè đỏ lửa’, chiến thắng tái chiếm Cổ thành. |
+| `ev:lb72:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Sài Gòn coi đợt ném bom là sức ép cần thiết lên Hà Nội, dù vẫn phản đối việc hiệp định để quân miền Bắc ở lại miền Nam. |
 | `ev:pr73:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Bị đồng minh ép ký, bị bỏ rơi. |
 | `ev:hs74:s` | A | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Hải quân VNCH giao chiến với hải quân Trung Quốc. 74 quân nhân VNCH hi sinh; Trung Quốc chiếm toàn bộ Hoàng Sa. |
 | `ev:hs74:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Cuộc chiến bảo vệ chủ quyền; tưởng niệm 74 tử sĩ. |
@@ -429,7 +442,7 @@ Cần để ý: Cách gọi chính thể, quân đội, người ra đi; công b
 | `lore:duong` | B | Trò chơi · gia phả mở đầu, họ Dương | Ước tính khoảng 1% dân số. Dương Đình Nghệ làm Tiết độ sứ Tĩnh Hải quân trước Ngô Quyền ở thế kỷ X; thế kỷ XX, tướng Dương Văn Minh, quê Mỹ Tho, là tổng thống cuối cùng của Việt Nam Cộng hoà. |
 | `hook:ngo-1963` | B | Trò chơi · gia phả mở đầu · biến cố riêng sắp tới của họ | Sau đảo chính tháng 11.1963, một gia đình họ Ngô sẽ bị dò hỏi có bà con với nhà Ngô Đình hay không. |
 
-## Hồ Chí Minh và Đảng Cộng sản · 52 câu
+## Hồ Chí Minh và Đảng Cộng sản · 54 câu
 
 Cần để ý: Đúng sử liệu, giọng trung tính; các chi tiết còn tranh luận (vd. vụ Phan Bội Châu bị bắt năm 1925) ghi rõ là còn tranh luận.
 
@@ -441,6 +454,7 @@ Cần để ý: Đúng sử liệu, giọng trung tính; các chi tiết còn tr
 | `ev:tn25:s` | B | Chương 2 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Nguyễn Ái Quốc lập hội, đào tạo cán bộ, ra báo Thanh Niên. |
 | `ev:tn25:x` | B | Chương 2 · trang sự kiện › Diễn biến · đoạn thêm | Cùng năm, Phan Bội Châu bị bắt ở Thượng Hải; phong trào đòi ân xá ông lan khắp ba kỳ. |
 | `ev:tn25:v:vn` | B | Chương 2 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Bước chuẩn bị về tư tưởng và tổ chức cho đảng cộng sản. |
+| `ev:tn25:v:intl` | A | Chương 2 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Ra đời ở Quảng Châu thời Quốc – Cộng hợp tác, khi Nguyễn Ái Quốc làm phiên dịch cho phái đoàn cố vấn Liên Xô. |
 | `ev:cs30:t` | B | Chương 3 · trang sự kiện · tiêu đề, ngày, nơi chốn | Thành lập Đảng Cộng sản Việt Nam · 3.2.1930 · Cửu Long, Hồng Kông |
 | `ev:cs30:s` | B | Chương 3 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Nguyễn Ái Quốc hợp nhất các tổ chức cộng sản. Tháng 10 đổi tên thành Đảng Cộng sản Đông Dương. |
 | `ev:cs30:x` | B | Chương 3 · trang sự kiện › Diễn biến · đoạn thêm | Chỉ vài tháng sau, Xô viết Nghệ Tĩnh nổ ra rồi bị đàn áp; nhiều lãnh đạo bị bắt. |
@@ -456,6 +470,7 @@ Cần để ý: Đúng sử liệu, giọng trung tính; các chi tiết còn tr
 | `ev:hcm69:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Chủ tịch Hồ Chí Minh mất. Cùng năm, Tổng thống Nixon bắt đầu rút quân Mỹ, chuyển gánh nặng chiến tranh sang QL VNCH. |
 | `ev:hcm69:x` | B | Chương 5 · trang sự kiện › Diễn biến · đoạn thêm | Hội nghị Paris bước vào giai đoạn bốn bên. |
 | `ev:hcm69:v:vn` | B | Chương 5 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Di chúc của Người được thực hiện trong thống nhất. |
+| `ev:hcm69:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Với Sài Gòn, ‘Việt Nam hoá chiến tranh’ nghĩa là QL VNCH dần gánh phần chiến đấu khi quân Mỹ rút. |
 | `ev:hcm69:v:us` | B | Chương 5 · trang sự kiện › Góc nhìn · Sử liệu Hoa Kỳ | Rút quân dần, giữ cam kết với đồng minh. |
 | `ev:tn76:s` | A | Chương 6 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Quốc hội khoá VI đặt tên nước mới. Sài Gòn đổi tên thành TP. Hồ Chí Minh. |
 | `ev:ct78:t` | B | Chương 6 · trang sự kiện · tiêu đề, ngày, nơi chốn | Cải tạo công thương nghiệp · nạn kiều · 3.1978 · TP. Hồ Chí Minh |

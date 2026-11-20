@@ -138,6 +138,7 @@ const MARKS: Mark[] = [
   { wave: 'G', id: 'ev:st25:v:intl', note: 'Đề tài nhạy cảm: tranh luận về tên gọi mới và bản sắc các tỉnh cũ sau sáp nhập.' },
   { wave: 'G', has: 'vùng Quân đội Nhân dân Việt Nam kiểm soát', note: 'Quảng Trị về tay QĐND Việt Nam từ 1.5.1972; lời của trò chơi tránh chữ mang lập trường ("vùng giải phóng").' },
   { wave: 'G', has: 'Xã về tay những người nổi dậy', note: 'Mặt trận Dân tộc Giải phóng ra đời 12.1960, sau Đồng khởi (1.1960); lời trung tính (bỏ "tề", "vùng giải phóng").' },
+  { wave: 'G', id: 'scene:cd61:0', note: 'Đồn Redoute có phải là đồn Hữu, ở đầu nam phòng tuyến phía chùa Cây Mai không.' },
   { wave: 'G', id: 'scene:cd61:1', note: 'Theo Pallu de la Barrière, ngày 25.2.1861 liên quân vòng lên đánh mặt bắc đại đồn; cánh phải có phải là bộ binh Tây Ban Nha không.' },
   { wave: 'G', id: 'scene:cd61:2', note: 'Cánh trái (công binh, thủy quân lục chiến, khinh binh) đánh vào mặt bắc đại đồn ngày 25.2.1861.' },
 ];
