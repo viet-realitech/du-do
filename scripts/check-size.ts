@@ -6,7 +6,8 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { gzipSync } from 'node:zlib';
 import { join } from 'node:path';
 
-const DIST = 'dist', FILE = 'scripts/size-budget.json', HEAD = 0.1;
+const argv = process.argv.slice(2), at = argv.indexOf('--budget');
+const DIST = 'dist', FILE = (at >= 0 && argv[at + 1]) || 'scripts/size-budget.json', HEAD = 0.1; // --budget <tệp>: mốc khác (e2e/guards.spec.ts)
 type Sizes = { mainJs: number; mainCss: number; allJs: number; precache: number };
 const LABEL: Record<keyof Sizes, string> = { mainJs: 'JS chính (gzip)', mainCss: 'CSS chính (gzip)', allJs: 'tổng JS (gzip)', precache: 'lưu sẵn ngoại tuyến (thô)' };
 
@@ -27,7 +28,7 @@ const now: Sizes = {
 };
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 
-if (process.argv.includes('--update')) {
+if (argv.includes('--update')) {
   writeFileSync(FILE, JSON.stringify({ about: `Mốc cỡ gói (byte), scripts/check-size.ts: lỗi khi vượt mốc ${HEAD * 100}%. Ghi lại: npm run build && npm run size:update`, ...now }, null, 1) + '\n');
   console.log(`đã ghi ${FILE}: ${(Object.keys(LABEL) as (keyof Sizes)[]).map(k => `${LABEL[k]} ${kb(now[k])}`).join(', ')}`);
   process.exit(0);

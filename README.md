@@ -32,7 +32,7 @@ SITE_URL=https://your-domain.example/ npm run build
   `index.html` / `sw.js` / `manifest.webmanifest` must stay `no-cache` so updates reach installed apps.
 - A Content-Security-Policy `<meta>` is injected at build time (`vite.config.ts`): own code only, plus Wikipedia/Wikimedia.
   If you add analytics or another API, extend `CSP` there.
-- CI (`.github/workflows/ci.yml`) runs typecheck, build and the e2e tests in Chromium and WebKit (two parallel jobs) on every push / PR;
+- CI (`.github/workflows/ci.yml`) runs typecheck, build, the content / size checks (see "Checks" below) and the e2e tests in Chromium and WebKit (parallel jobs) on every push / PR;
   a failing job uploads `test-results/` with traces of the retried tests (`npx playwright show-trace <trace.zip>`; locally:
   `npx playwright test --trace=retain-on-failure`).
 
@@ -101,6 +101,26 @@ All numbers are game abstractions, not historical data.
     `docs/voice/kich-ban.csv` is out of date, or when a clip reads an older line than the current text; add
     `-- --durations` to flag clips whose length does not fit their text (needs ffprobe).
 - **Effects** are synthesised with Web Audio (`src/audio.ts`); narration ducks music and effects.
+
+### Checks
+
+Guards that e2e cannot see. All run in CI (`.github/workflows/ci.yml`); `npm run checks` runs the fast content ones
+locally (scenes, choices, endings:filter, voice:check). A check that compares against a committed snapshot says which
+command rewrites it; rewrite one only when the change is on purpose.
+
+| Check | What it guards | In CI | When it fails on purpose |
+|---|---|---|---|
+| `npm run scenes` | battle scenes, the decision graph (`NEXT`), card variants, quizzes vs tours, "Nếu…" what-ifs, the rarity table's shape and reading-mode %, loyal-family sim (no loyal choice locked out) | `checks` job | fix the data (no snapshot) |
+| `npm run choices` | card option sets, `VARIANT` sets (order and conditions) and special events against `scripts/lock-choices.json`: saves store option **indices** and re-pick the variant set on load, so adding, removing or reordering options or sets makes old saves read decided cards wrongly (option effects are not locked) | `checks` job | add a save migration in `src/state.ts` if an index changes meaning, then `npm run choices:lock -- --note "<cards, why, how old saves are migrated>"` (the note is kept in the lock) |
+| `npm run endings:check` | `src/data/endings-rarity.json` equals a fresh run of the endings simulation number for number (the simulation is seeded, so it is exact); ~8–9 min | `endings` job, only when a path in `.github/filters.yml` `endings` changed (or Actions → CI → Run workflow) | `npm run endings`, then commit the table (every ending must stay within 1–25%) |
+| `npm run endings:filter` | the `endings` path filter covers every file the simulation imports | `checks` job | add the reported file to `.github/filters.yml` |
+| `npm run voice:check` | every narratable line has a clip and every clip reads the current line (see Sound) | `checks` job; with `-- --durations` (ffprobe) in the `voice` job when `src/voice/` changed | re-record the line (Sound) |
+| `npm run size` | gzip size of the main JS and CSS, of all JS, and the raw size of the offline precache against `scripts/size-budget.json` + 10% (a tripwire for a big jump, not a size target) | `checks` job, after the build | `npm run build && npm run size:update` |
+| `e2e/perf.spec.ts` | map work counted with a MutationObserver, never timed: a redraw with the year unchanged writes nothing to the map or the main panels; a scripted timeline drag 1955 → 1975 adds at most `e2e/perf-budget.json` DOM nodes per engine (measured × 1.5) | e2e jobs | `npm run build && PW_PORT=4211 npm run perf:budget` |
+
+After merging work that changes cards, rules or code size, the snapshots are rewritten with: `npm run endings`,
+`npm run choices:lock -- --note "…"` (only if options or sets changed), `npm run build && npm run size:update`, and
+`npm run build && PW_PORT=4211 npm run perf:budget` (only if the drag budget fails for a good reason).
 
 The prototype's Tweaks became player settings: theme (Lưu trữ / Chiến lược / Áp phích, also offered during onboarding),
 faction palette (flags / sepia ink), map style for Lưu trữ (engraved / flat), paper grain, today's border and graticule

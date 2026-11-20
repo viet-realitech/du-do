@@ -8,8 +8,8 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join, normalize, relative } from 'node:path';
 
-const SIM = 'scripts/sim-endings.ts', TABLE = 'src/data/endings-rarity.json', FILTERS = '.github/filters.yml';
-const argv = process.argv.slice(2);
+const argv = process.argv.slice(2), opt = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] || '' : ''; };
+const SIM = 'scripts/sim-endings.ts', TABLE = 'src/data/endings-rarity.json', FILTERS = opt('--filters') || '.github/filters.yml';
 
 /** Các tệp trong repo mà `entry` nhập (import / export … from / import()), lần hết vào trong. */
 function closure(entry: string): string[] {
@@ -53,8 +53,7 @@ if (argv.includes('--filter')) {
   process.exit(0);
 }
 
-const fromAt = argv.indexOf('--from');
-let fresh = fromAt >= 0 ? argv[fromAt + 1] : '';
+let fresh = opt('--from');
 if (!fresh) {
   fresh = join(mkdtempSync(join(tmpdir(), 'endings-')), 'rarity.json');
   const t0 = Date.now();

@@ -9,7 +9,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { CARD, VARIANT, type Choice, type Variant } from '../src/data/cards';
 import { SPECIAL, type SpecialChoice } from '../src/data/cards2';
 
-const FILE = 'scripts/lock-choices.json';
+const argv = process.argv.slice(2), opt = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? (argv[i + 1] || '').trim() : ''; };
+const FILE = opt('--lock') || 'scripts/lock-choices.json'; // --lock <tệp>: khoá khác (e2e/guards.spec.ts)
 /** Trong tệp: mỗi bộ một khoá, `id` (bộ gốc), `id @k <điều kiện>` (bộ theo vùng thứ k), `x:id @<sự kiện>` (biến cố riêng). */
 type Sets = Record<string, string[]>;
 type Lock = { about: string; notes: { date: string; ids: string[]; note: string }[]; cards: Sets; special: Sets };
@@ -58,8 +59,7 @@ function explain(was: Sets, now: Sets, id: string): string[] {
 const diff = (was: Sets, now: Sets) => [...new Set([...Object.keys(was), ...Object.keys(now)]
   .filter(k => !(k in was) || !(k in now) || was[k].join('|') !== now[k].join('|')).map(idOf))].sort();
 
-const argv = process.argv.slice(2), write = argv.includes('--write'), noteAt = argv.indexOf('--note');
-const note = noteAt >= 0 ? (argv[noteAt + 1] || '').trim() : '';
+const write = argv.includes('--write'), note = opt('--note');
 const lock: Lock | null = existsSync(FILE) ? JSON.parse(readFileSync(FILE, 'utf8')) : null;
 const now = snapshot();
 const changed = lock ? { cards: diff(lock.cards, now.cards), special: diff(lock.special, now.special) } : { cards: [], special: [] };
