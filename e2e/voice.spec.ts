@@ -65,11 +65,11 @@ test('ending: the narrator reads the ending once on the first open, "Nghe" repla
   // reopened: no second reading on its own
   await page.locator('.ov.end > .row [data-a=close]').click();
   await page.locator('#card [data-a=end].c').click();
-  await expect(page.locator('.end-title')).toHaveText('Bốn đời canh tân');
+  await expect(page.locator('#layer .end-title')).toHaveText('Bốn đời canh tân'); // #layer: not the closed copy fading out
   await page.waitForTimeout(2800);
   expect(await count(page, 'end-canhtan-4')).toBe(1);
   // "Nghe" reads it again
-  await page.locator('[data-a=listen-end]').click();
+  await page.locator('#layer [data-a=listen-end]').click();
   await expect.poll(() => count(page, 'end-canhtan-4')).toBe(2);
   // the film: each generation's chronicle line, and the closing plate speaks the ending, then the surname line
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
@@ -86,7 +86,7 @@ test('ending: with narration off the dossier stays silent until "Nghe" is presse
   await expect(page.locator('.end-title')).toHaveText('Sổ gạo và công điểm');
   await page.waitForTimeout(2800);
   expect(await clips(page)).toEqual([]);
-  await page.locator('[data-a=listen-end]').click();
+  await page.locator('#layer [data-a=listen-end]').click();
   await expect.poll(() => clips(page)).toEqual(['end-baocap']);
   expect(errors).toEqual([]);
 });
@@ -120,7 +120,8 @@ test('play mode: a family from the South hears its own region — Minh Tân at 1
     quiz: quiz6, harvests: ['e1', 'e2', 'e3', 'e4'] }, 'tn76', 'seeded2');
   await page.locator('#hv-go').click();
   if (await live(page, '.cine').count()) await page.goBack();
-  await page.locator('#lskip').click({ timeout: 8000 });
+  // the narrator's gate line (0.4 s here) unlocks the options on its own
+  await expect(live(page, '.scrim .opt[data-o=baocap]')).toBeEnabled({ timeout: 8000 });
   await live(page, '.scrim .opt[data-o=baocap]').click();
   await page.locator('#go').click();
   const out = page.locator('#layer > .scrim').last();
@@ -134,7 +135,7 @@ test('play mode: turning point 5 speaks the outcome written for the home (Quản
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 40 } }, 'dc54');
   await page.locator('#hv-go').click();
   if (await live(page, '.cine').count()) await page.goBack();
-  await page.locator('#lskip').click({ timeout: 8000 });
+  await expect(live(page, '.scrim .opt[data-o=bac]')).toBeEnabled({ timeout: 8000 });
   await live(page, '.scrim .opt[data-o=bac]').click();
   await page.locator('#go').click();
   await expect(page.locator('#layer > .scrim').last()).toContainText('để lại ở Quảng Nam một tấm ảnh');
@@ -148,7 +149,7 @@ test('play mode: a family that evacuated in 1975 hears gate 6 in the narrator\'s
   await page.locator('#hv-go').click();
   if (await live(page, '.cine').count()) await page.goBack();
   await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Gửi quà nuôi người ở quê', 'Về nước làm ăn', 'Bám rễ nơi xứ người'], { timeout: 8000 });
-  await page.locator('#lskip').click();
+  await expect(live(page, '.scrim .opt[data-o=baocap]')).toBeEnabled({ timeout: 8000 });
   await live(page, '.scrim .opt[data-o=baocap]').click();
   await page.locator('#go').click();
   await expect(page.locator('#layer > .scrim').last().locator('.chron')).toHaveText([/1981\s*Thùng quà về tới quê/]);
