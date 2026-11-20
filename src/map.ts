@@ -526,7 +526,7 @@ function boxIn(n: SVGGraphicsElement, m: DOMMatrix): Bx {
 }
 /** Các quãng [đầu, cuối] (đo dọc nét) đang có mực của một nét có stroke-dasharray, stroke-dashoffset: đoạn đường đi giấu
     phần chưa tới bằng một khoảng trống dài hơn nó (scene.ts), nét đứt chỉ có mực ở các vạch. */
-export function dashOn(da: number[], off: number, len: number): [number, number][] {
+function dashOn(da: number[], off: number, len: number): [number, number][] {
   if (!da.some(x => x > 0)) return [[0, len]];
   const pat = da.length % 2 ? da.concat(da) : da, per = pat.reduce((a, x) => a + x, 0), out: [number, number][] = [];
   let s = -(((off % per) + per) % per);
