@@ -7,9 +7,11 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # typecheck + production build to dist/ (static, deploy anywhere)
 npm run preview    # serve dist/ on http://localhost:4173
-npm run test:e2e   # Playwright end-to-end tests against the build (Wikipedia blocked → offline paths)
+npx playwright install chromium webkit   # once: the browsers for the e2e tests (Linux: add --with-deps)
+npm run test:e2e   # Playwright end-to-end tests against the build (Wikipedia blocked → offline paths), in Chromium and WebKit
 npx playwright test --project=webkit   # one engine only: chromium or webkit (iPhone 13 profile; WebKit = iPad Safari's engine)
 PW_PORT=4211 npx playwright test       # preview server on another port; PW_BASE_URL=http://host:port/ tests a running server instead
+PW_CHROMIUM=/path/to/chrome npm run test:e2e   # use a Chromium already on the machine; without WebKit installed only Chromium runs
 npm run geo        # regenerate src/data/region-50m.json from world-atlas
 npm run icons      # regenerate PNG icons + og.png in public/ (needs Playwright Chromium)
 ```
