@@ -17,9 +17,9 @@ type Home = typeof HOMES[number];
 const OPT = Object.fromEntries(ERAS.flatMap(e => e.opts.map(o => [o.id, o]))) as Record<string, Option>;
 const isNorth = (h: Home) => h[3] === 'B' || h[3] === 'T1';
 const SOUTH = HOMES.filter(h => !isNorth(h));
-/** Dòng họ đại diện: quê `h`, các cờ `fl` (đủ cho chronLine). */
-export const repFacts = (h: Home, fl: Flag[] = []): Facts =>
-  ({ mode: 'play', name: 'Họ Nguyễn', picks: [], home: { id: h[0], name: h[1], region: h[3] }, renames: [], flags: new Set(fl) });
+/** Dòng họ đại diện: quê `h`, các cờ `fl` (đủ cho chronLine); `front`: người con ở mặt trận Campuchia (Facts.front). */
+export const repFacts = (h: Home, fl: Flag[] = [], front = false): Facts =>
+  ({ mode: 'play', name: 'Họ Nguyễn', picks: [], home: { id: h[0], name: h[1], region: h[3] }, renames: [], flags: new Set(fl), ...(front ? { front } : {}) });
 const H = (id: string) => HOMES.find(h => h[0] === id)!;
 
 /** Cờ cả nhà rời nước sau năm 1976 (endings.ts GONE trừ di tản), có và không có nhánh đã đi trước năm 1978. */
@@ -41,8 +41,10 @@ const CHRON_REP: [string, string, Home, Flag[]][] = [
   ...Object.keys(ABROAD6).flatMap(id => GONE_REP.map(fl => [`chr-g-${id}-${fl.join('-').toLowerCase()}`, id, H('sg'), fl] as [string, string, Home, Flag[]])),
 ];
 export function chronVariants(): Line[] {
-  return CHRON_REP.map(([key, id, h, fl]) => ({ key, text: chronLine(id, repFacts(h, fl), CHRONICLE),
-    ctx: `Phim hành trình · dòng gia phả của hướng "${OPT[id].label}", ${fl.includes('ditan') ? 'nhà đã di tản' : key.startsWith('chr-g-') ? `chọn ở trong nước rồi cả nhà ra đi (${fl.join(', ')})` : `quê ${h[1]}${fl.length ? ' · ' + fl.join(', ') : ''}`}` }));
+  return [...CHRON_REP.map(([key, id, h, fl]) => ({ key, text: chronLine(id, repFacts(h, fl), CHRONICLE),
+    ctx: `Phim hành trình · dòng gia phả của hướng "${OPT[id].label}", ${fl.includes('ditan') ? 'nhà đã di tản' : key.startsWith('chr-g-') ? `chọn ở trong nước rồi cả nhà ra đi (${fl.join(', ')})` : `quê ${h[1]}${fl.length ? ' · ' + fl.join(', ') : ''}`}` })),
+    // chọn Ra đi mà người con còn ở mặt trận Campuchia (chỉ nhà Cần Thơ có thẻ cp79): đi sau năm 1989
+    { key: 'chr-radi-front', text: chronLine('radi', repFacts(H('ct'), [], true), CHRONICLE), ctx: `Phim hành trình · dòng gia phả của hướng "${OPT.radi.label}", người con còn ở mặt trận Campuchia nên cả nhà đi sau năm 1989` }];
 }
 
 /** Kết cục ở điểm rẽ theo quê (outText) và của nhà đã di tản (ABROAD6): khoá theo quê khi câu đổi theo từng quê (gọi tên

@@ -49,7 +49,7 @@ const DIARY={
  thuba:[[1966,'Bàn thờ Phật xuống đường',[107.58,16.46],'Phật tử Huế đặt bàn thờ ra đường phản đối chính quyền. Bạn đứng hàng thứ ba.'],[1973,'Hoà bình trên giấy',[106.70,10.78],'Hiệp định đã ký, súng vẫn nổ. Bạn viết báo, bị tịch thu số báo.']],
  baocap:[[1980,'Sổ gạo',[105.85,21.03],'Mỗi tháng 13 cân gạo, độn bo bo. Bạn xếp gạch giữ chỗ ở cửa hàng mậu dịch từ 4 giờ sáng.'],[1985,'Đổi tiền',[105.85,21.03],'Lương tháng của bạn chỉ còn đủ mua vài cân thịt. Giá cả đổi từng tuần.']],
  doimoi:[[1988,'Ruộng khoán',[106.34,20.45],'Hợp tác xã giao ruộng cho từng hộ. Vụ đầu tiên, nhà bạn thừa thóc.'],[2007,'Ngày vào WTO',[106.70,10.78],'Xưởng may nhỏ của bạn nhận đơn hàng đầu tiên từ châu Âu.']],
- radi:[[1979,'Đêm ra khơi',[105.2,9.2],'Ba mươi người trên chiếc ghe dài mười hai mét. Bạn giữ la bàn và nắm gạo rang.'],[1995,'Về Tân Sơn Nhất',[106.66,10.82],'Hai mươi năm sau, bạn quay lại với hộ chiếu nước khác, tóc đã điểm bạc.']]
+ radi:[[1979,'Đêm ra khơi',[105.2,9.2],'Ba mươi người trên chiếc ghe dài mười hai mét. Bạn giữ la bàn và nắm gạo rang.'],[1995,'Chuyến bay về',[106.66,10.82],'Bạn quay lại với hộ chiếu nước khác, tóc đã điểm bạc. Ở cửa sân bay, họ hàng đứng chờ; có người bạn không còn nhận ra.']]
 };
 /* "Gia đình bạn" ở điểm rẽ: cha của thế hệ mới là chính người đã chọn ở điểm rẽ trước (và đã quyết các thẻ liệt kê ngay
    dưới), nên ông còn sống qua chương ấy; người ngã xuống là đời ông. Trò chơi biết quê, thẻ, biến cố: gate.ts ctxFor. */

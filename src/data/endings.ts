@@ -28,6 +28,9 @@ export interface Facts {
   flags: Set<Flag>;
   /** Ngưỡng tổng gia sản của quê này trong mô phỏng: lo = P5 (sa sút nhất), hi = P92 (khá nhất). */
   th?: { lo: number; hi: number };
+  /** Trò chơi: người con đi bộ đội tình nguyện sang Campuchia năm 1979 (play.ts atFront): cả nhà không đi được trước năm
+      1989, nên nhà chọn Ra đi chỉ lên đường sau khi người con về. */
+  front?: boolean;
 }
 
 /* ---------- con đường qua sáu điểm rẽ ---------- */
@@ -66,7 +69,8 @@ export const ABROAD6: Record<string, { label: string; who: string; d: string; ou
     d: 'Nhập quốc tịch, mở tiệm, cho con học trường bên này; quê nhà ở trong ký ức và những lá thư.',
     out: 'Bạn lớn lên ở một thành phố xa lạ, nhập quốc tịch, nói tiếng Việt ở nhà và tiếng Anh ở trường. Sau năm 1995, bạn có thể quay về thăm quê.',
     doi: 'bám rễ ở xứ người sau năm 1975',
-    chron: 'Thế hệ 6 lớn lên ở xứ người, nhập quốc tịch, dựng lại đời sống trong cộng đồng người Việt; sau năm 1995 mới có người về thăm quê.',
+    // không nói năm về thăm quê: biến cố năm 1989 (cards2.ts x-kieuhoi89) và thẻ năm 1995 đã kể nhà về lúc nào
+    chron: 'Thế hệ 6 lớn lên ở xứ người, nhập quốc tịch, dựng lại đời sống trong cộng đồng người Việt.',
     diary: OPT.radi.diary.slice(1) },
 };
 
@@ -290,6 +294,8 @@ export function chronLine(id: string, f: Facts, chron: Record<string, string>): 
   if (reg && ABROAD6[id] && goneOf(f, GATE6)) return ABROAD6[id].chron;
   const g = reg && ABROAD6[id] ? goneOf(f) : undefined;
   if (g) return GEN6_GONE[id](GONE_AT[g].when, GONE_TAIL[g](f));
+  // chọn Ra đi mà người con còn ở mặt trận Campuchia: không ai đi được trước năm 1989 (cards2.ts x-radi89)
+  if (reg && id === 'radi' && f.front) return 'Thế hệ 6 chọn ra đi, nhưng người con còn ở mặt trận Campuchia; năm 1989 con về, cả nhà mới lên đường, rồi định cư ở xứ người.';
   if (reg && id === 'bac') return nth
     ? (f.flags.has('dicu') ? 'Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
     : `Thế hệ 5 tập kết ra Bắc năm 1954${f.flags.has('nguoiDi54') ? ', để vợ con ở lại quê chờ lời hẹn hai năm' : ''}; năm 1975 mới về lại ${q}.`;

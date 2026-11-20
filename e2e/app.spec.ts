@@ -561,6 +561,66 @@ test('play mode: a Lý household in Cần Thơ whose son went to the Cambodian f
   expect(errors).toEqual([]);
 });
 
+test('play mode: a Cần Thơ household that chose Ra đi is warned before sending its son to Cambodia; held back, it leaves only after he is home in 1989', async ({ page }) => {
+  const st = { name: 'Họ Lê', surname: 'le', home: 'ct', picks: { e1: 'chien', e2: 'duytan', e3: 'qdd', e4: 'qg', e5: 'nam', e6: 'radi' } };
+  const q5 = { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, hv = ['e1', 'e2', 'e3', 'e4', 'e5'], res = { g: 60, d: 45, b: 60, u: 40 };
+  // 1979: volunteering the son is against the path of a household that means to leave, and the card says why
+  const errors = await bootPlay(page, { ...st, year: 1979, xFrom: 1979, cards: { sg75: 1 }, quiz: q5, harvests: hv, res }, 'cp79');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(live(page, '.scrim h2')).toHaveText('Chiến tranh biên giới Tây Nam', { timeout: 8000 });
+  const opts = live(page, '.scrim .sheet > [role=radiogroup] .opt');
+  await expect(opts.nth(0).locator('h3')).toHaveText('Đi bộ đội tình nguyện');
+  await expect(opts.nth(0).locator('.al.bad')).toHaveText('Trái đường bạn theo');
+  await expect(opts.nth(0)).toContainText('khi con còn ở mặt trận, cả nhà chưa thể ra đi');
+  await expect(opts.nth(1).locator('.al')).toHaveCount(0);
+  expect(errors).toEqual([]);
+  // 1989: the son sent anyway kept the household in Cần Thơ; the sheet welcomes him home and the family sets out, it does
+  // not speak from "ten years abroad"
+  const at89 = await bootPlay(page, { ...st, year: 1989, xFrom: 1979, cards: { sg75: 1, cp79: 0, tn80: 1 }, quiz: q5, harvests: hv, res }, 'kh89', 'seeded89');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(live(page, '.scrim h2')).toHaveText('Việt Nam rút quân khỏi Campuchia', { timeout: 8000 });
+  await live(page, '.scrim .sheet > [role=radiogroup] .opt').first().click();
+  await page.locator('#cgo').click();
+  const xsp = live(page, '.scrim .xsp');
+  await expect(xsp.locator('> h3')).toHaveText('Người con về, cả nhà lên đường');
+  await expect(xsp).not.toContainText('ở xứ người;');
+  await expect(live(page, '.xopts .opt h3')).toHaveText(['Làm đơn đi diện đoàn tụ', 'Xuống ghe như những người đi trước']);
+  expect(at89).toEqual([]);
+  // the gia phả and the diary tell the same story: no 1979 night at sea, a departure after 1989
+  const done = await bootGone(page, { ...st, xFrom: 1979, cards: { sg75: 1, cp79: 0, tn80: 1, kh89: 0, 'x:x-radi89': 0 }, xs: { kh89: 'x-radi89' } });
+  expect((await diaryYears(page)).filter(y => y < 1989)).toEqual([]);
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toHaveText('Bên kia đại dương');
+  const gp = page.locator('.end-gp');
+  await expect(gp).toContainText('Thế hệ 6 chọn ra đi, nhưng người con còn ở mặt trận Campuchia; năm 1989 con về, cả nhà mới lên đường');
+  await expect(gp).not.toContainText('vượt biển, qua trại tị nạn');
+  await expect(gp).toContainText('Làm đơn đi diện đoàn tụ.');
+  expect(done).toEqual([]);
+});
+
+test('play mode: a Nam Định family that left by boat via Hồng Kông in 1980 — its 1995 diary page does not land at Tân Sơn Nhất "twenty years on"', async ({ page }) => {
+  const nd = { name: 'Họ Trần', surname: 'tran', home: 'nd', picks: { e1: 'hoa', e2: 'duytan', e3: 'laphien', e4: 'vm', e5: 'bac', e6: 'radi' } };
+  const errors = await bootGone(page, { ...nd, cards: { tn80: 0 } });
+  expect(await diaryYears(page)).toEqual([1995]);
+  const page95 = page.locator('#idx li').filter({ has: page.locator('em', { hasText: 'Nhật ký' }) });
+  await expect(page95.locator('span')).toHaveText('Chuyến bay về');
+  await expect(page.locator('#idx')).not.toContainText('Tân Sơn Nhất');
+  expect(errors).toEqual([]);
+});
+
+test('play mode: a Sài Gòn family evacuated in 1975 that first visited in 1989 — its gia phả no longer says the first visit came after 1995', async ({ page }) => {
+  const sg = { name: 'Họ Lê', surname: 'le', home: 'sg', picks: { e1: 'chien', e2: 'duytan', e3: 'qdd', e4: 'qg', e5: 'nam', e6: 'radi' } };
+  const done = await bootGone(page, { ...sg, cards: { sg75: 0, kh89: 0, 'x:x-kieuhoi89': 1 }, xs: { kh89: 'x-kieuhoi89' } });
+  await page.locator('#card [data-a=end].c').click();
+  const gp = page.locator('.end-gp');
+  await expect(gp).toContainText('Thế hệ 6 lớn lên ở xứ người, nhập quốc tịch, dựng lại đời sống trong cộng đồng người Việt.');
+  await expect(gp).toContainText('Về thăm quê lần đầu.');
+  await expect(gp).not.toContainText('sau năm 1995');
+  expect(done).toEqual([]);
+});
+
 test('play mode: a rich northern family answers land reform before the team comes — no outcome runs ahead of "Đội cải cách sắp về làng"', async ({ page }) => {
   const st = { name: 'Họ Phạm', surname: 'pham', home: 'hn', picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac' } };
   const errors = await bootPlay(page, { ...st, year: 1955, xFrom: 1955, cards: { dc54: 1 }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] },

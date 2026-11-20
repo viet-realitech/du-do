@@ -339,7 +339,8 @@ export const CARDS: Card[] = [
     ['Giấu vàng, chuẩn bị đi', 'Chôn vàng, tìm đường.', { b: -5, nn: -10 }, 'Vàng này mua được chỗ trên ghe năm 1980.'],
   ]],
   ['cp79', 'NW', [
-    ['Đi bộ đội tình nguyện', 'Người con sang Campuchia.', { d: -2, u: 6, nn: 15 }, 'Mười năm sau về, không nói gì về Campuchia.'],
+    // con còn ở mặt trận thì cả nhà không đi được trước năm 1989 (play.ts barred): nói trước lúc chọn
+    ['Đi bộ đội tình nguyện', 'Người con sang Campuchia; khi con còn ở mặt trận, cả nhà chưa thể ra đi.', { d: -2, u: 6, nn: 15 }, 'Mười năm sau về, không nói gì về Campuchia.'],
     ['Tản cư khỏi biên giới', 'Khmer Đỏ tàn sát Ba Chúc.', { g: -10, b: -5, d: -1 }, 'Về lại khi quân Việt Nam đã sang Phnom Penh.'],
   ]],
   ['bb79', 'B', [
