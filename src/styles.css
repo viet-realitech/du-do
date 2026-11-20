@@ -105,7 +105,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #eraNo { white-space: nowrap } /* "Chương 5/6 · Thế hệ 5" không gãy giữa chừng */
 .eraR .av { width: 20px; height: 20px; font-size: 8px; letter-spacing: 0 }
 .eraR[data-a=pickera] { color: var(--acc); border: 1px solid currentColor; border-radius: var(--r); padding: 4px 8px 3px; position: relative }
-.eraR[data-a=pickera]::after { content: ''; position: absolute; inset: -9px -4px } /* vùng chạm 44 px trong đầu trang */ /* Đọc sử: điểm rẽ chưa chọn, mời chứ không chặn */
+.eraR[data-a=pickera]::after { content: ''; position: absolute; left: -4px; right: -4px; top: 50%; height: max(44px, 100%); translate: 0 -50% } /* vùng chạm cao 44 px giữa nút, nút cao bao nhiêu cũng vậy */ /* Đọc sử: điểm rẽ chưa chọn, mời chứ không chặn */
 .av { overflow: hidden; display: inline-grid; place-items: center; border-radius: 50%; background: var(--paper3); color: var(--ink); font: 700 12px var(--disp); flex: none; width: 28px; height: 28px; border: 1px solid var(--rule); letter-spacing: .02em }
 .av img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; display: block; animation: fade .5s ease-out }
 .av.lock img { filter: blur(5px) grayscale(1); opacity: .55; transform: scale(1.15) }
@@ -535,7 +535,7 @@ button.chip::after { content: ''; position: absolute; inset: -5px -2px } /* vùn
 .bdg .d { font-size: calc(12px * var(--ts)); margin-top: 2px }
 .bdg.off { opacity: .6 }
 .bdg.off .bi { color: var(--ink3); border: 1.5px dashed var(--ink3); box-shadow: none; transform: none }
-.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.fgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px } /* minmax(0, …): tên dài một chữ ("Westmoreland") không đẩy cột ra ngoài màn hình */
 .fside { margin: 14px 0 2px }
 .figrow { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px }
 .figrow > button { display: flex; align-items: center; gap: 10px; text-align: left; font-size: calc(14px * var(--ts)); line-height: 1.2; max-width: 100%; padding: 4px 8px 4px 4px; border-radius: var(--r); background: var(--paper2); border: 1px solid var(--rule) }
@@ -544,9 +544,10 @@ button.chip::after { content: ''; position: absolute; inset: -5px -2px } /* vùn
 .evl:last-of-type { border-bottom: 0 }
 .fside + .fgrid + .fside { margin-top: 16px }
 /* Nhân vật: mục hồ sơ có kẻ dòng, ảnh hồ sơ chữ nhật khung đôi, tên / năm / vai trò đặt bên cạnh như nhãn bảo tàng */
-.fcard { display: grid; grid-template-columns: 60px 1fr; column-gap: 12px; align-content: start; border-top: 1px solid var(--rule); padding: 14px 0 12px; text-align: left }
+.fcard { display: grid; grid-template-columns: 60px minmax(0, 1fr); column-gap: 12px; align-content: start; border-top: 1px solid var(--rule); padding: 14px 0 12px; text-align: left }
 .fcard > .av { grid-row: span 3; width: 60px; height: 76px; font-size: 20px; border-radius: 1px; border: 1px solid var(--ink3); box-shadow: 0 0 0 3px var(--paper), 0 0 0 3.75px var(--rule) }
 .fcard .nm.h4 { align-self: end }
+.fcard .nm { overflow-wrap: anywhere } /* Chữ lớn trên điện thoại: chữ dài hơn cột thì xuống dòng giữa chữ, không tràn */
 /* bảng nhân vật: ảnh hồ sơ 96 × 120 khung đôi bên cạnh tên (không còn ảnh tròn 96 px) */
 .fhead { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 18px; align-items: center }
 .fph { width: 96px; height: 120px; border: 1px solid var(--ink3); box-shadow: 0 0 0 3px var(--paper), 0 0 0 3.75px var(--rule); border-radius: 1px; overflow: hidden }
@@ -891,7 +892,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .mstrip button { width: 150px; height: 112px }
   .mgrid { grid-template-columns: repeat(3, 1fr) }
   .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px }
-  .fcard { grid-template-columns: 72px 1fr; column-gap: 14px }
+  .fcard { grid-template-columns: 72px minmax(0, 1fr); column-gap: 14px }
   .fcard > .av { width: 72px; height: 92px; font-size: 24px }
   .bgrid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) }
   .lbstage { left: 60px; right: 60px }
@@ -1077,6 +1078,16 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .lt p { -webkit-line-clamp: 2 } /* bản đồ thấp: phụ đề hai dòng, còn thấy nơi trận diễn ra */
   .zoomc button { width: 32px; height: 32px } /* cột nút không chui dưới phụ đề / thanh tour neo đáy bản đồ */
   .zoomc .i { width: 16px; height: 16px }
+  /* Chữ lớn: cột bên chỉ cao ~290 px. Đầu trang và thước giá trị giữ cỡ thường (tên chương không xuống hai dòng, nút
+     "Chọn hướng" không cao gấp đôi) để phiếu sự kiện còn chỗ; chữ trong phiếu vẫn lớn, cắt ở dòng thứ hai, không tràn
+     xuống thanh năm hay thanh tab */
+  [data-text=big] .hd .era b { font-size: 17px }
+  [data-text=big][data-theme=poster] .hd .era b { font-size: 15px }
+  [data-text=big] .eraR, [data-text=big] #eraNo { font-size: 12px }
+  [data-text=big] .mt { font-size: 13.5px }
+  [data-text=big][data-theme=poster] .mt { font-size: 12px }
+  [data-text=big] .card { overflow: hidden }
+  [data-text=big] .card .c .cl { -webkit-line-clamp: 2 }
 }
 @keyframes panelin { from { transform: translateX(56px); opacity: 0 } }
 @keyframes panelout { to { transform: translateX(56px); opacity: 0 } }
@@ -1303,10 +1314,12 @@ details.cf .cf-tag { margin-right: 6px; font-style: normal }
 .mp { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start }
 .mp .plate-svg { height: 200px; outline-offset: 2px }
 .mp-l { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink) }
-.mp-l li { display: grid; grid-template-columns: 42px minmax(0, 1fr); column-gap: 8px; padding: 8px 0 9px; border-bottom: 1px solid var(--rule); font-size: calc(15px * var(--ts)); line-height: 1.35 }
+.mp-l li { display: grid; grid-template-columns: minmax(calc(42px * var(--ts)), max-content) minmax(0, 1fr); column-gap: 8px; padding: 8px 0 9px; border-bottom: 1px solid var(--rule); font-size: calc(15px * var(--ts)); line-height: 1.35 }
 .mp-l .y { font: 700 calc(17px * var(--ts))/1.2 var(--disp); font-variant-numeric: lining-nums tabular-nums; color: var(--ink2) }
 .mp-l li.none { color: var(--ink2); font-style: italic }
 [data-theme=poster] .mp-l li.none { font-style: normal }
+/* cột năm theo cỡ chữ: số đậm của Áp phích rộng hơn, Chữ lớn nhân thêm 1,18; năm không bao giờ chạm chữ của dòng */
+[data-theme=poster] .mp-l li { grid-template-columns: minmax(calc(46px * var(--ts)), max-content) minmax(0, 1fr) }
 .mp-n { margin-top: 10px; font-size: calc(13.5px * var(--ts)); line-height: 1.4; color: var(--ink2) }
 @media (min-width: 700px) { .mp .plate-svg { height: 250px } }
 /* con đường của bạn và lịch sử: mỗi điểm rẽ một dòng sổ, cột năm bên trái như mục lục chương */

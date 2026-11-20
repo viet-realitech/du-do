@@ -116,6 +116,42 @@ test('ending home plate: a southern family that regrouped north and came back in
   expect(errors).toEqual([]);
 });
 
+/** Nhãn của dấu trên tấm bản đồ mà một nét dời nhà (hay mũi tên của nó) chạy qua thân chữ. */
+const arcCrossings = (page: Page, root: string) => page.evaluate(root => {
+  const svg = document.querySelector<SVGSVGElement>(root);
+  if (!svg) return [`không có ${root}`];
+  const out: string[] = [], arcs = [...svg.querySelectorAll<SVGPathElement>('.pl-move, .pl-arrow')];
+  for (const t of svg.querySelectorAll<SVGTextElement>('text.pl-mk')) {
+    const b = t.getBBox(), x0 = b.x + 1, x1 = b.x + b.width - 1, y0 = b.y + b.height * 0.25, y1 = b.y + b.height * 0.85;
+    for (const p of arcs) {
+      const L = p.getTotalLength();
+      for (let d = 0; d <= L; d += 0.5) { const q = p.getPointAtLength(d); if (q.x > x0 && q.x < x1 && q.y > y0 && q.y < y1) { out.push(t.textContent!); break; } }
+    }
+  }
+  return out;
+}, root);
+
+test('ending home plate, Sài Gòn family that regrouped north (Áp phích, Chữ lớn): no arc through the home label, years clear of the rows', async ({ page }) => {
+  // hai nét Sài Gòn → miền Bắc → Sài Gòn cùng rời nhà đi lên: tên quê dài không đặt phía trên nhà nữa
+  await page.addInitScript(() => localStorage.setItem('dudo-text', 'big'));
+  const errors = await boot(page, { ...donePlay('sg', { ...PICKS, e5: 'bac' }), theme: 'poster' }, true);
+  await act(page, 'end');
+  const sec = page.locator('.ov.end .end-plate');
+  await expect(sec.locator('svg text.pl-mk')).toHaveText(['Sài Gòn – Gia Định', 'miền Bắc']);
+  await expect(sec.locator('svg .pl-move')).toHaveCount(2);
+  expect(await arcCrossings(page, '.end-plate svg')).toEqual([]);
+  await expect.poll(() => sovereigntyWhole(page, '.end-plate svg')).toEqual([]);
+  // số năm đậm của Áp phích, nhân 1,18: vẫn cách chữ của dòng
+  const gaps = await sec.locator('.mp-l li').evaluateAll(lis => lis.map(li => {
+    const y = li.querySelector('.y')!, r = document.createRange();
+    r.selectNodeContents(y);
+    return Math.round(y.nextElementSibling!.getBoundingClientRect().left - r.getBoundingClientRect().right);
+  }));
+  expect(gaps.length).toBe(3);
+  for (const g of gaps) expect(g).toBeGreaterThanOrEqual(6);
+  expect(errors).toEqual([]);
+});
+
 test('diary page on a phone: a plate with the footprint; play mode adds home and distance, read mode does not', async ({ page }) => {
   const errors = await boot(page, read54);
   await act(page, 'ev', { id: 'd-vm1' });
@@ -258,11 +294,50 @@ test('Chữ lớn: the setting scales the reading text, persists after a reload 
   await expect(page.locator('#et')).toBeVisible();
   expect(await wide()).toEqual([]);
   await page.keyboard.press('Escape');
+  // Nhân vật: tên một chữ dài ("Westmoreland") không đẩy cột thứ hai ra ngoài màn hình
+  await page.locator('.tab[data-t=fig]').click();
+  await expect(page.locator('.fgrid').first()).toBeVisible();
+  expect(await wide()).toEqual([]);
   await page.locator('.tab[data-t=me]').click();
   await expect(page.locator('.pane .vrose')).toBeVisible();
   expect(await wide()).toEqual([]);
   await page.locator('[data-a=bigtext]').click();
   await expect(page.locator('html')).not.toHaveAttribute('data-text', 'big');
   expect(await page.evaluate(() => localStorage.getItem('dudo-text'))).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('Chữ lớn on a phone in landscape: the side card stays above the timeline', async ({ browser }, info) => {
+  const { defaultBrowserType: _, ...d } = devices['iPhone 13 landscape'];
+  const ctx = await browser.newContext({ ...d, baseURL: info.project.use.baseURL, serviceWorkers: 'block' });
+  try {
+    const page = await ctx.newPage();
+    await page.addInitScript(() => localStorage.setItem('dudo-text', 'big'));
+    const errors = await boot(page, read54);
+    await expect(page.locator('html')).toHaveAttribute('data-text', 'big');
+    await expect(page.locator('#card .t')).toBeVisible();
+    // phần chữ của phiếu vẽ ra được (bị phiếu cắt thì tính tới mép phiếu) không xuống quá đỉnh thanh năm
+    const r = await page.evaluate(() => {
+      const card = document.getElementById('card')!, c = card.getBoundingClientRect(), clip = getComputedStyle(card).overflow !== 'visible';
+      const bottom = Math.max(...[...card.querySelectorAll('*')].map(e => e.getBoundingClientRect()).filter(b => b.width && b.height).map(b => (clip ? Math.min(b.bottom, c.bottom) : b.bottom)));
+      return { bottom, card: c.height, trk: document.getElementById('trk')!.getBoundingClientRect().top };
+    });
+    expect(r.bottom).toBeLessThanOrEqual(r.trk);
+    expect(r.card).toBeGreaterThan(70); // phiếu còn đủ chỗ cho dòng nhãn và tít, không bị ép còn một dải
+    expect(errors).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('the header Chọn hướng button answers a tap anywhere in a 44 px band', async ({ page }) => {
+  const errors = await boot(page, read54);
+  const b = page.locator('#eraR[data-a=pickera]');
+  await expect(b).toBeVisible();
+  const hits = await b.evaluate(btn => {
+    const r = btn.getBoundingClientRect(), cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+    return [-21.5, -15, 0, 15, 21.5].map(d => { const h = document.elementFromPoint(cx, cy + d); return !!h && (h === btn || btn.contains(h)); });
+  });
+  expect(hits).toEqual([true, true, true, true, true]);
   expect(errors).toEqual([]);
 });

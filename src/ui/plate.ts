@@ -23,8 +23,9 @@ export type Mark = { l: [number, number]; kind: 'home' | 'foot' | 'stop'; label?
 /** Thêm cho tấm bản đồ: các dấu, và các lần dời nhà (nét đứt cong từ nơi cũ tới nơi mới, mũi tên ở nơi mới). */
 export type PlateExtra = { marks?: Mark[]; moves?: [[number, number], [number, number]][] };
 
-/** Nét dời nhà: cung bậc hai uốn về phía biển (đông), không phải đường đi thật, chỉ nói "từ đây tới đây". */
-function moveArc(a: [number, number], b: [number, number], bend: number): string {
+/** Nét dời nhà: cung bậc hai uốn về phía biển (đông), không phải đường đi thật, chỉ nói "từ đây tới đây". `on`: các ô
+    nhỏ dọc nét (mỗi ~6 đơn vị một ô) và quanh mũi tên, để nhãn của dấu không đặt đè lên nét. */
+function moveArc(a: [number, number], b: [number, number], bend: number): { svg: string; on: Box[] } {
   const [x0, y0] = plateXY(a[0], a[1]), [x1, y1] = plateXY(b[0], b[1]), dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1;
   let nx = -dy / len, ny = dx / len;
   if (nx < 0) { nx = -nx; ny = -ny; } // uốn sang phía đông
@@ -32,14 +33,20 @@ function moveArc(a: [number, number], b: [number, number], bend: number): string
   const ang = Math.atan2(y1 - cy, x1 - cx), hd = (t: number) => `${f1(x1 - 6 * Math.cos(ang + t))},${f1(y1 - 6 * Math.sin(ang + t))}`;
   // nét dừng trước dấu nơi mới một quãng nhỏ, mũi tên chạm vừa tới mép dấu
   const ex = x1 - 5 * Math.cos(ang), ey = y1 - 5 * Math.sin(ang);
-  return `<path class="pl-move" d="M${f1(x0)},${f1(y0)}Q${f1(cx)},${f1(cy)} ${f1(ex)},${f1(ey)}"/><path class="pl-arrow" d="M${hd(-0.45)}L${f1(ex)},${f1(ey)}L${hd(0.45)}"/>`;
+  const n = Math.max(2, Math.ceil(len / 6)), on: Box[] = [];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, u = 1 - t, px = u * u * x0 + 2 * u * t * cx + t * t * ex, py = u * u * y0 + 2 * u * t * cy + t * t * ey;
+    on.push([px - 2.5, py - 2.5, px + 2.5, py + 2.5]);
+  }
+  return { svg: `<path class="pl-move" d="M${f1(x0)},${f1(y0)}Q${f1(cx)},${f1(cy)} ${f1(ex)},${f1(ey)}"/><path class="pl-arrow" d="M${hd(-0.45)}L${f1(ex)},${f1(ey)}L${hd(0.45)}"/>`, on };
 }
 
 /** Dấu và nhãn của nó. Nhãn thử bên phải, trái, trên, dưới (giữa, rồi lệch hai bên); chọn chỗ đầu tiên nằm trong khung và không đè lên nhãn chủ
-    quyền, cụm đảo, dấu hay nhãn khác (bề ngang chữ ước lượng theo số ký tự, cỡ 11 đơn vị). */
-function marks(ms: Mark[]): string {
+    quyền, cụm đảo, dấu, nét dời nhà (`lines`) hay nhãn khác (bề ngang chữ ước lượng theo số ký tự, cỡ 11 đơn vị). Không
+    chỗ nào trống hẳn: chỗ đè ít ô nhất, không bao giờ lên nhãn chủ quyền. */
+function marks(ms: Mark[], lines: Box[] = []): string {
   const pts = ms.map(m => plateXY(m.l[0], m.l[1]));
-  const taken: Box[] = [...KEEP, ...pts.map(([x, y]): Box => [x - 6, y - 7, x + 6, y + 7])];
+  const taken: Box[] = [...KEEP, ...lines, ...pts.map(([x, y]): Box => [x - 6, y - 7, x + 6, y + 7])];
   const glyph = (m: Mark, x: number, y: number) => m.kind === 'home'
     ? `<g class="pl-home" transform="translate(${f1(x)},${f1(y)})"><path d="M-5.5,1L0,-5.5L5.5,1L5.5,6L-5.5,6Z"/><rect x="-1.5" y="2" width="3" height="4"/></g>`
     : m.kind === 'foot' ? `<g class="pl-foot"><circle cx="${f1(x)}" cy="${f1(y)}" r="7"/><circle cx="${f1(x)}" cy="${f1(y)}" r="3.4"/></g>`
@@ -54,8 +61,8 @@ function marks(ms: Mark[]): string {
       [[x - 4, y - 19, x - 4 + w, y - 8], x - 4, y - 10, 'start'], [[x - 4, y + 8, x - 4 + w, y + 19], x - 4, y + 17, 'start'],
       [[x + 4 - w, y - 19, x + 4, y - 8], x + 4, y - 10, 'end'], [[x + 4 - w, y + 8, x + 4, y + 19], x + 4, y + 17, 'end'],
     ];
-    const ok = tries.filter(t => fit(t[0]));
-    const [b, tx, ty, anc] = ok.find(t => !taken.some(q => hit(t[0], q))) || ok[0] || tries[0];
+    const ok = tries.filter(t => fit(t[0]) && !KEEP.some(q => hit(t[0], q))), cost = (t: typeof tries[0]) => taken.filter(q => hit(t[0], q)).length;
+    const [b, tx, ty, anc] = ok.find(t => !cost(t)) || ok.slice().sort((p, q) => cost(p) - cost(q))[0] || tries.find(t => fit(t[0])) || tries[0];
     taken.push(b);
     return `${glyph(m, x, y)}<text class="pl-mk ${m.kind}" x="${f1(tx)}" y="${f1(ty)}" text-anchor="${anc}">${esc(m.label)}</text>`;
   }).join('');
@@ -75,6 +82,7 @@ export function plate(dots: [string, number, number, string][] = [], on = '', cl
   // nhãn Trường Sa canh lề phải (text-anchor end) phía trên các đảo: đặt giữa tại 114,1° E thì chữ tràn khỏi khung 200;
   // nâng lên 11,6° N để không chạm tên quê đang chọn ở Sài Gòn (màn chọn quê)
   const [hx, hy] = plateXY(112.2, 17.4), [, ty] = plateXY(114.1, 11.6), tx = 196, [bx, by] = plateXY(111, 13.4);
+  const arcs = (ex.moves || []).map((m, i) => moveArc(m[0], m[1], i % 2 ? 0.24 : 0.36));
   return `<svg class="${cls}" viewBox="0 8 200 244" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
   <g class="pl-grat">${lon.map(x => `<path d="M${f1(x)} 8V252"/>`).join('')}${lat.map(y => `<path d="M0 ${f1(y)}H200"/>`).join('')}</g>
   <path class="pl-vn" d="${VN}"/>
@@ -82,6 +90,6 @@ export function plate(dots: [string, number, number, string][] = [], on = '', cl
   <text class="pl-lab" x="${f1(hx)}" y="${f1(hy)}" text-anchor="middle">Q.đ. Hoàng Sa</text><text class="pl-lab" x="${f1(tx)}" y="${f1(ty)}" text-anchor="end">Q.đ. Trường Sa</text>
   <text class="pl-sea" x="${f1(bx)}" y="${f1(by)}" text-anchor="middle">Biển Đông</text>
   ${dots.map(([id, a, b, n]) => { const [x, y] = plateXY(a, b); return `<g class="pl-dot${id === on ? ' on' : ''}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${id === on ? 3.4 : 2.2}"/>${id === on ? `<text x="${f1(x + 7)}" y="${f1(y + 3.5)}">${esc(n)}</text>` : ''}</g>`; }).join('')}
-  ${(ex.moves || []).map((m, i) => moveArc(m[0], m[1], i % 2 ? 0.24 : 0.36)).join('')}${ex.marks ? marks(ex.marks) : ''}
+  ${arcs.map(a => a.svg).join('')}${ex.marks ? marks(ex.marks, arcs.flatMap(a => a.on)) : ''}
 </svg>`;
 }
