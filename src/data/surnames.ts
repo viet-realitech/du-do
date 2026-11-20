@@ -107,6 +107,8 @@ export const CHRONICLE: Record<string, string> = {
   duytan: "Thế hệ 2 dạy ở Đông Kinh Nghĩa Thục, cắt tóc ngắn, mặc âu phục; trường bị đóng cửa sau vài tháng.",
   cs: "Thế hệ 3 theo Đảng Cộng sản, hoạt động bí mật qua Xô viết Nghệ Tĩnh và nhà tù Côn Đảo, rồi về Pác Bó dựng Việt Minh.",
   qdd: "Thế hệ 3 theo Quốc dân đảng, sống sót sau Yên Bái rồi lưu vong sang Vân Nam; phong trào phân tán nơi đất khách.",
+  // Cần sử gia xem: Hội đồng Quản hạt là hội đồng của xứ Nam Kỳ (Đảng Lập hiến của Bùi Quang Chiêu); Bắc Kỳ, Trung Kỳ có
+  // Viện Dân biểu (1926), và người đồng hành của hướng này là Phạm Quỳnh ở Hà Nội, Huế. Câu này hiện cho nhà mọi miền.
   laphien: "Thế hệ 3 theo đường lập hiến, viết báo và vận động Hội đồng Quản hạt; Pháp nhượng bộ rất ít.",
   vm: "Thế hệ 4 theo Việt Minh lên chiến khu Việt Bắc; chín năm kháng chiến, từ du kích đến những chiến dịch lớn.",
   qg: "Thế hệ 4 làm việc cho Quốc gia Việt Nam từ năm 1949, giữa hai lằn đạn và một nền độc lập còn hạn chế.",

@@ -61,6 +61,21 @@ const CTX={
  e6:{bac:'Cha bạn vào Sài Gòn sau 21 năm, gặp lại họ hàng chưa từng biết mặt.',nam:'Cha bạn là cựu sĩ quan VNCH, vừa nhận giấy gọi trình diện "học tập cải tạo".',thuba:'Cha mẹ bạn từng xuống đường đòi hoà bình. Hoà bình đã đến, theo cách không ai lường trước.'}
 };
 D.ERAS.forEach(e=>{e.ctx=CTX[e.id]||null;e.opts.forEach(o=>{o.fx=FX[o.id];o.guide=GUIDE[o.id];o.diary=(DIARY[o.id]||[]).map((d,i)=>({id:'d-'+o.id+i,y:d[0],d:String(d[0]),k:'Nhật ký',t:d[1],l:d[2],s:d[3],p:'Nhật ký dòng họ (hư cấu)',v:[],src:[],diary:true,era:e.id,m:d[4]}));});});
+/* Trang nhật ký đời thường ở nhà (sổ gạo, đổi tiền, ruộng khoán) theo nơi dòng họ sống năm ấy, cho Trò chơi: t = miền
+   Trung (Nghệ An, Huế, Quảng Nam), n = miền Nam (kể cả nhà miền Bắc đã di cư năm 1954). Trang gốc ở trên là của miền
+   Bắc. Trò chơi đặt trang ở chính nơi dòng họ sống năm ấy (src/regional.ts); toạ độ ở đây là chỗ đặt mặc định. Trang
+   của người viết nhật ký đi xa (Hàng Đào, Pác Bó, Điện Biên…) không đổi theo quê. */
+const DIARY_R={
+ 'd-baocap0':{t:[1980,'Thóc chia theo công điểm',[107.58,16.46],'Hợp tác xã chia thóc theo công điểm; phần chia không đủ ăn tới mùa giáp hạt. Nhà bạn độn khoai lang, sắn lát vào nồi cơm.'],
+  n:[1980,'Bo bo thay gạo',[106.70,10.78],'Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, trạm kiểm soát trên đường thu từng bao gạo người ta chở từ miền Tây lên.']},
+ 'd-baocap1':{t:[1985,'Đổi tiền',[107.58,16.46],'Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Mấy tháng sau, giá muối, giá vải ở chợ huyện đã đổi từng tuần; nhà bạn giữ thóc trong bồ chứ không giữ tiền.'],
+  n:[1985,'Đổi tiền lần thứ ba',[106.70,10.78],'Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Ở miền Nam, đây là lần đổi tiền thứ ba kể từ năm 1975; ai còn chút vàng thì giữ vàng, không ai muốn giữ tiền.']},
+ 'd-doimoi0':{t:[1988,'Ruộng khoán',[107.58,16.46],'Theo Khoán 10, hợp tác xã giao ruộng cho từng hộ. Ruộng ít, lại là đất cát bạc màu, nhưng vụ đầu tiên tự làm, nhà bạn đủ ăn tới vụ sau.'],
+  n:[1988,'Ruộng khoán',[105.78,10.03],'Khoán 10 giao ruộng về cho từng hộ. Nhiều nhà trong xóm làm đơn xin lại phần đất cũ đã đưa vào tập đoàn sản xuất; nhà bạn nhận lại mấy công ruộng, vụ đầu đã có lúa bán.']}
+};
+D.DIARY_R={};
+const PAGES=Object.fromEntries(D.ERAS.flatMap(e=>e.opts.flatMap(o=>o.diary)).map(v=>[v.id,v]));
+Object.entries(DIARY_R).forEach(([id,z])=>{D.DIARY_R[id]={};Object.entries(z).forEach(([k,d])=>{D.DIARY_R[id][k]={id:id+'-'+k,y:d[0],d:String(d[0]),k:'Nhật ký',t:d[1],l:d[2],s:d[3],p:'Nhật ký dòng họ (hư cấu)',v:[],src:[],diary:true,era:PAGES[id].era,m:PAGES[id].m};});});
 D.ERAS[4].hist='Ngày 30.4.1975, lực lượng của VNDCCH và CH miền Nam VN vào Sài Gòn. Hai miền thống nhất năm 1976.';
 
 D.FIG={

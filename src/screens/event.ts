@@ -3,7 +3,7 @@ import { mood } from '../music';
 import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
 import { S, save, rt, allEv, evEra, chYear, curPick, figOpen } from '../state';
-import { av } from '../ui/bits';
+import { av, LISTEN } from '../ui/bits';
 import { icon } from '../ui/icons';
 import { on } from '../ui/actions';
 import { $, esc, layer, clearLayer, remember } from '../ui/dom';
@@ -26,8 +26,6 @@ type Tab = 'x' | 'v' | 'm' | 's';
 export const SIDE_PV = ['vn', 'vnch', 'nguyen'];
 const TABS: [Tab, string][] = [['x', 'Diễn biến'], ['v', 'Góc nhìn'], ['m', 'Ảnh, phim'], ['s', 'Nguồn']];
 const closeBtn = `<button class="back" data-a="close" aria-label="Đóng">${icon('prev', 20)}</button>`;
-/** nút Nghe / Dừng: hai nhãn sẵn trong nút, data-on chọn nhãn (narration.ts hush() gỡ data-on khi lời đọc dừng) */
-const LISTEN = `<span class="l1">${icon('listen', 16)}Nghe</span><span class="l2">${icon('stop', 14)}Dừng</span>`;
 
 /** Trang sự kiện mở từ bảng Nhân vật / Sử liệu / Hồ sơ (và thẻ nhân vật đang mở): đóng thì về lại đó, không về bản đồ trống.
     Đích quay về ghi trên chính trang (data-ret), suy từ những gì đang thật sự mở (không từ thanh tab, có thể đã cũ). */

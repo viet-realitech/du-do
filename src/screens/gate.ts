@@ -1,11 +1,13 @@
-import { gateKey, gateSpeech, outKey, outSpeech } from '../speech';
+import { gateKey, gateSpeech, outSpeech } from '../speech';
+import { outVoiceKey } from '../voiced';
 import type { Fx } from '../data/cards';
 import { mood } from '../music';
 import { ERAS, FIG, FIGERA, QUIZ, type Era, type Option, type QuizItem } from '../data';
 import { S, save, rt, familyName, quizAsked, markAsked } from '../state';
 import { on } from '../ui/actions';
 import { $, esc, sheet, clearLayer, ghost, announce, radios, reveal } from '../ui/dom';
-import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, abroadOpt, type Harvest } from '../play';
+import { isPlay, applyFx, eraFx, harvest, home, RES, powersAt, continues, choicesIn, mustDecide, ruler, regionAt, hasFlag, type Harvest } from '../play';
+import { outFor, localOpt } from '../regional';
 import { fxChipsPlay, relRows } from './card';
 import { av, flag, fxChips, TAG_LABEL } from '../ui/bits';
 import { SND, buzz } from '../audio';
@@ -51,6 +53,13 @@ export function ctxFor(e: Era, pp: string): string | null {
     t = 'Cha bạn theo nghĩa quân Hương Khê; khi chủ tướng mất, ông về làng chôn giấu súng dưới chân ruộng. ' +
       (x === 0 ? 'Cả họ đã dời sang phủ khác, làm lại từ mấy sào ruộng thuê.' : x === 1 ? 'Sổ đinh giờ ghi một họ khác; lính đồn hỏi "nhà phiến loạn" thì không ai chỉ tới nhà bạn.' : x === 2 ? 'Từ ngày ra thú, làng gọi nhà bạn là "nhà ra thú".' : 'Sổ của Pháp ghi gia đình là "phiến loạn".');
   }
+  // Duy Tân của nhà phía nam vĩ tuyến 17: người cha từng dạy ở Đông Kinh Nghĩa Thục (như kết cục ở điểm rẽ 2), trường
+  // bị đóng thì về quê theo phong trào ở Trung Kỳ, Nam Kỳ (Minh Tân)
+  if (e.id === 'e3' && pp === 'duytan' && !north) {
+    t = reg === 'NE' || reg === 'NW'
+      ? 'Cha bạn từng ra Hà Nội dạy ở Đông Kinh Nghĩa Thục; trường bị đóng, ông về Nam Kỳ góp vốn vào một hội buôn của phong trào Minh Tân. Nhà còn cả tủ sách mới.'
+      : 'Cha bạn từng dạy ở Đông Kinh Nghĩa Thục; trường bị đóng, ông về quê mở lớp dạy chữ Quốc ngữ theo phong trào Duy Tân ở Trung Kỳ. Nhà còn cả tủ sách mới.';
+  }
   if (e.id === 'e6' && pp === 'bac') {
     t = !north ? (hasFlag(['nguoiDi54']) ? `Cha bạn về ${q} sau hai mươi mốt năm tập kết; mẹ bạn vẫn chờ ở quê, tóc đã bạc.` : `Cha bạn đưa cả nhà về lại ${q} sau hai mươi mốt năm tập kết; ruộng cũ đã qua tay người khác.`)
       : regionAt(1975) !== reg ? (hasFlag(['ditan']) ? 'Cả nhà đã vào Nam từ năm 1955, trước khi đội cải cách về làng; tháng Tư năm 1975, cha bạn lại đưa cả nhà lên tàu ra biển. Bạn lớn lên ở trại tị nạn, rồi ở một thành phố xa lạ.' : 'Cả nhà đã vào Nam từ năm 1955, trước khi đội cải cách về làng; hai mươi năm sau, chuyện cũ vẫn chỉ kể trong nhà.')
@@ -68,20 +77,6 @@ export function ctxFor(e: Era, pp: string): string | null {
   const ng = ren.find(n => surnameKey(n.from) === 'nguyen' && n.y < 1925);
   if (ng && e.cy > 1925 && !('x:x-nguyen25' in S.cards)) lines.push(`Mang ${ng.to.replace(/^Họ /, 'họ ')}, dòng họ đi qua những năm 1919–1925 mà không ai hỏi tới những tờ giấy ký tên Nguyễn Ái Quốc.`);
   return [t, ...lines].filter(Boolean).join(' ') || null;
-}
-
-/** Kết cục của hướng vừa chọn, theo quê (Trò chơi): sau Genève nói đúng nhà ở lại hay ra đi (data.js nói chung chung
-    "tập kết ra Bắc hoặc ở lại Hà Nội" cho mọi quê). */
-function outFor(o: Option): string {
-  if (!isPlay()) return o.out;
-  const reg = home()[3], north = reg === 'B' || reg === 'T1', q = home()[1];
-  if (o.id === 'bac') return north ? `Bạn ở lại ${q}, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.`
-    : `Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở ${q} một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.`;
-  if (o.id === 'nam') return north ? `Bạn rời ${q} trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.`
-    : `Bạn ở lại ${q}, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.`;
-  if (o.id === 'thuba') return north ? 'Bạn theo dòng người di cư vào Nam năm 1954; ở Sài Gòn, bạn đứng cùng những người đòi hoà bình. Cả hai phía đều nghi ngờ bạn.'
-    : reg === 'T2' ? 'Bạn xuống đường đòi hoà bình ở Huế, rồi ở Sài Gòn. Cả hai phía đều nghi ngờ bạn.' : o.out;
-  return o.out;
 }
 
 /** Câu đố của chương (tối đa hai): chỉ những câu về sự kiện người chơi đã thấy trong tour hay đã mở trang, câu chưa hỏi
@@ -170,7 +165,7 @@ export function openChoice(e: Era): void {
 function choice(e: Era, quiet: boolean): void {
   stopTour();
   let selOpt: string | null = null;
-  const opts = e.opts.map(abroadOpt); // nhà đã di tản: điểm rẽ 6 nói từ xứ người (cùng id)
+  const opts = e.opts.map(localOpt); // nhà đã di tản: điểm rẽ 6 nói từ xứ người (cùng id); trang nhật ký theo miền
   clearLayer();
   mood('gate');
   if (!quiet) { SND.gong(); buzz([30, 60, 30]); }
@@ -271,8 +266,8 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   const go = () => { if (!armed || !layer.contains(d)) return; armed = false; clearLayer(); renderMain(); checkBadges(); startTour(e); };
   // speak() gọi callback ngay (đồng bộ) khi không có giọng: khi đó dùng bộ đếm thay vì kết thúc lời đọc.
   let sync = true;
-  // giọng thu sẵn (như lời dẫn điểm rẽ) đọc câu chung; câu đã chỉnh theo quê (hay nói từ xứ người) thì giọng máy đọc đúng câu đang hiện
-  const spoke = speak(outSpeech(out), () => { if (!sync && armed) setTimeout(go, 700); }, false, out === e.opts.find(x => x.id === o.id)?.out ? outKey(o.id) : undefined);
+  // bản thu của đúng câu đang hiện: câu chung, câu theo quê, câu nói từ xứ người (voiced.ts); câu chưa có bản thu thì giọng máy
+  const spoke = speak(outSpeech(out), () => { if (!sync && armed) setTimeout(go, 700); }, false, outVoiceKey(o.id, out));
   sync = false;
   const ms = spoke ? Math.max(6000, out.length * 95) : Math.max(7000, 4500 + out.length * 80); // tự đọc: đủ chậm
   bar.style.setProperty('animation-duration', ms + 'ms', 'important'); // giảm chuyển động vẫn thấy thanh đếm (không phải hiệu ứng bay)

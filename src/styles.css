@@ -1082,7 +1082,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .cine .print figcaption { position: absolute; left: var(--m); right: var(--m); bottom: 0; height: var(--mb); display: flex; align-items: center; gap: 12px; font: italic 400 12.5px/1.2 var(--serif); color: var(--cmi) }
 .cine .print figcaption span:first-child { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .cine .print figcaption .cr { flex: none; font: 500 9.5px/1 var(--serif); letter-spacing: .14em; text-transform: uppercase; opacity: .85 }
-[data-theme=poster] .cine .print figcaption { font-style: normal } /* Be Vietnam Pro không tải kiểu nghiêng */
+[data-theme=poster] .cine .print figcaption, [data-theme=poster] .end-line { font-style: normal } /* Be Vietnam Pro không tải kiểu nghiêng */
 @container (max-width: 420px) { .cine .print figcaption .cr { display: none } } /* bản in hẹp: chú thích được trọn chỗ */
 /* tấm nhãn: nét kẻ đôi, nhãn chương, năm, tên; là một vùng chứa để cỡ năm theo bề ngang tấm nhãn */
 .cine .plate { position: relative; min-width: 0; text-align: left; container-type: inline-size }
@@ -1166,7 +1166,11 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
 .end-mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; padding-bottom: 10px; border-bottom: 3px double var(--ink) }
 .end-kick { color: var(--ink2); min-width: 0 }
 .end-mast .stamp { flex: none; margin-bottom: 2px; animation: stampin .55s .25s cubic-bezier(.2, 1.3, .4, 1) backwards }
-.end-title { font-size: clamp(36px, 6vw + 14px, 64px); line-height: 1.02; margin: 18px 0 14px }
+.end-title { font-size: clamp(36px, 6vw + 14px, 64px); line-height: 1.02; margin: 18px 0 10px }
+/* câu tóm của kết cục: đọc liền sau tên kết cục (bản thu end-<id>), như dòng phụ đề của tập hồ sơ */
+.end-line { font: italic 400 var(--t-lead)/1.4 var(--serif); color: var(--ink2); max-width: 36em; margin-bottom: 14px }
+.end-tr { gap: 10px; min-width: 0 }
+.end-tr .chip { height: 36px; gap: 5px }
 .end-epi { font-size: var(--t-lead); line-height: 1.5; max-width: 40em }
 .end-rar { margin-top: 12px; font-size: 15px; line-height: 1.4; max-width: 46em }
 .end-rar b { color: var(--acc) }

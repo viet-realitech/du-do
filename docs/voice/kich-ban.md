@@ -1,6 +1,6 @@
 # Dư Đồ · Kịch bản thu giọng thuyết minh
 
-195 đoạn, tổng khoảng 40 phút đọc. Người thật đã thu: 0/195; giọng máy VieNeu: 195.
+262 đoạn, tổng khoảng 50 phút đọc. Người thật đã thu: 0/262; giọng máy VieNeu: 195.
 
 ## Hướng dẫn thu
 
@@ -179,17 +179,17 @@
 
 > Con đường của bạn. Bạn dạy ở Đông Kinh Nghĩa Thục, cắt tóc ngắn, mặc âu phục. Trường bị đóng cửa sau vài tháng.
 
-### `cv85` · giọng máy
-
-*Chính trị · 13.7.1885 · ~21 giây*
-
-> Năm 1885. Phản công Kinh thành và Chiếu Cần Vương. Tôn Thất Thuyết tấn công đồn Mang Cá thất bại, đưa vua Hàm Nghi ra Tân Sở, phát hịch Cần Vương. Hàng trăm cuộc khởi nghĩa nổ ra: Ba Đình, Bãi Sậy, Hương Khê. Pháp lập vua Đồng Khánh; Hàm Nghi bị bắt năm 1888, đày sang Algérie.
-
 ### `tt85` · giọng máy
 
 *Hiệp ước · 9.6.1885 · ~22 giây*
 
 > Năm 1885. Chiến tranh Pháp – Thanh, Hiệp ước Thiên Tân. Sau các trận ở Bắc Kỳ và Lạng Sơn, nhà Thanh ký Hiệp ước Thiên Tân, công nhận quyền bảo hộ của Pháp. Chấm dứt quan hệ tông phiên giữa nhà Thanh và triều Nguyễn. Biên giới Bắc Kỳ – Trung Hoa được phân định những năm 1887–1895.
+
+### `cv85` · giọng máy
+
+*Chính trị · 13.7.1885 · ~21 giây*
+
+> Năm 1885. Phản công Kinh thành và Chiếu Cần Vương. Tôn Thất Thuyết tấn công đồn Mang Cá thất bại, đưa vua Hàm Nghi ra Tân Sở, phát hịch Cần Vương. Hàng trăm cuộc khởi nghĩa nổ ra: Ba Đình, Bãi Sậy, Hương Khê. Pháp lập vua Đồng Khánh; Hàm Nghi bị bắt năm 1888, đày sang Algérie.
 
 ### `bd86` · giọng máy
 
@@ -368,17 +368,17 @@
 
 > Năm 1940. Khởi nghĩa Nam Kỳ. Khởi nghĩa nổ ra ở nhiều tỉnh, cờ đỏ sao vàng lần đầu xuất hiện. Bị lộ kế hoạch, cuộc khởi nghĩa bị đàn áp mạnh tay.
 
-### `vm41` · giọng máy
-
-*Chính trị · 19.5.1941 · ~18 giây*
-
-> Năm 1941. Mặt trận Việt Minh thành lập. Nguyễn Ái Quốc về nước, lập Việt Nam Độc lập Đồng minh hội, đặt độc lập dân tộc lên hàng đầu. Căn cứ Cao – Bắc – Lạng dần mở rộng; Đội Việt Nam Tuyên truyền Giải phóng quân ra đời cuối 1944.
-
 ### `ft41` · giọng máy
 
 *Trận đánh · 1.1941 – 5.1941 · ~16 giây*
 
 > Năm 1941. Chiến tranh Pháp – Thái Lan. Thái Lan đánh Đông Dương thuộc Pháp. Hải quân Pháp thắng ở Koh Chang, nhưng Nhật đứng ra hoà giải. Thái Lan được nhận một phần đất Lào và Campuchia, sau trả lại năm 1946.
+
+### `vm41` · giọng máy
+
+*Chính trị · 19.5.1941 · ~18 giây*
+
+> Năm 1941. Mặt trận Việt Minh thành lập. Nguyễn Ái Quốc về nước, lập Việt Nam Độc lập Đồng minh hội, đặt độc lập dân tộc lên hàng đầu. Căn cứ Cao – Bắc – Lạng dần mở rộng; Đội Việt Nam Tuyên truyền Giải phóng quân ra đời cuối 1944.
 
 ### `vb44` · giọng máy
 
@@ -461,17 +461,17 @@
 
 > Năm 1945. Quân Đồng minh vào giải giáp quân Nhật. Theo thoả thuận Potsdam, quân Trung Hoa Dân Quốc vào phía Bắc vĩ tuyến 16, quân Anh vào phía Nam. Quân Anh giúp Pháp tái chiếm Sài Gòn; quân Trung Hoa ở Bắc đến khi rút theo Hiệp ước Hoa – Pháp (2.1946).
 
-### `tk46` · giọng máy
-
-*Trận đánh · 19.12.1946 · ~14 giây*
-
-> Năm 1946. Toàn quốc kháng chiến. Sau Hiệp định Sơ bộ 6.3 và vụ Pháp pháo kích Hải Phòng, chiến tranh lan ra toàn quốc. Hà Nội cầm cự 60 ngày đêm để cơ quan đầu não rút lên Việt Bắc.
-
 ### `tu46` · giọng máy
 
 *Hiệp ước · 14.9.1946 · ~14 giây*
 
 > Năm 1946. Tạm ước Việt – Pháp. Hội nghị Fontainebleau không đạt kết quả. Hồ Chí Minh ký Tạm ước, nhượng bộ một số quyền lợi kinh tế, văn hoá. Ba tháng sau, chiến tranh bùng nổ toàn quốc.
+
+### `tk46` · giọng máy
+
+*Trận đánh · 19.12.1946 · ~14 giây*
+
+> Năm 1946. Toàn quốc kháng chiến. Sau Hiệp định Sơ bộ 6.3 và vụ Pháp pháo kích Hải Phòng, chiến tranh lan ra toàn quốc. Hà Nội cầm cự 60 ngày đêm để cơ quan đầu não rút lên Việt Bắc.
 
 ### `vb47` · giọng máy
 
@@ -560,6 +560,114 @@
 
 > Con đường của bạn. Bạn xuống đường đòi hoà bình ở Sài Gòn. Cả hai phía đều nghi ngờ bạn.
 
+### `out-bac-hn`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Hà Nội · ~10 giây*
+
+> Con đường của bạn. Bạn ở lại Hà Nội, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.
+
+### `out-bac-nd`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Nam Định · ~10 giây*
+
+> Con đường của bạn. Bạn ở lại Nam Định, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.
+
+### `out-bac-na`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Nghệ An · ~10 giây*
+
+> Con đường của bạn. Bạn ở lại Nghệ An, dưới chính quyền Việt Nam Dân chủ Cộng hoà. Cải cách ruộng đất, hợp tác xã, rồi đường Trường Sơn.
+
+### `out-bac-hue`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Huế · ~11 giây*
+
+> Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Huế một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
+
+### `out-bac-qn`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Quảng Nam · ~11 giây*
+
+> Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Quảng Nam một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
+
+### `out-bac-sg`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Sài Gòn – Gia Định · ~12 giây*
+
+> Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Sài Gòn – Gia Định một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
+
+### `out-bac-mt`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Mỹ Tho · ~11 giây*
+
+> Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Mỹ Tho một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
+
+### `out-bac-ct`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Bắc — VNDCCH" cho nhà ở Cần Thơ · ~11 giây*
+
+> Con đường của bạn. Bạn tập kết ra Bắc theo Hiệp định Genève, để lại ở Cần Thơ một tấm ảnh và lời hẹn hai năm. Hai năm thành hai mươi mốt năm.
+
+### `out-nam-hn`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Hà Nội · ~13 giây*
+
+> Con đường của bạn. Bạn rời Hà Nội trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-nd`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Nam Định · ~13 giây*
+
+> Con đường của bạn. Bạn rời Nam Định trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-na`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Nghệ An · ~13 giây*
+
+> Con đường của bạn. Bạn rời Nghệ An trên những chuyến tàu di cư từ Hải Phòng, làm lại nhà ở miền Nam. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-hue`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Huế · ~10 giây*
+
+> Con đường của bạn. Bạn ở lại Huế, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-qn`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Quảng Nam · ~11 giây*
+
+> Con đường của bạn. Bạn ở lại Quảng Nam, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-sg`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Sài Gòn – Gia Định · ~11 giây*
+
+> Con đường của bạn. Bạn ở lại Sài Gòn – Gia Định, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-mt`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Mỹ Tho · ~10 giây*
+
+> Con đường của bạn. Bạn ở lại Mỹ Tho, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-nam-ct`
+
+*Điểm rẽ 5 · kết cục của hướng "Miền Nam — VNCH" cho nhà ở Cần Thơ · ~10 giây*
+
+> Con đường của bạn. Bạn ở lại Cần Thơ, dưới chính quyền ở Sài Gòn. Hai nền cộng hoà, nhiều cuộc đảo chính, một cuộc chiến ngày càng lớn.
+
+### `out-thuba-n`
+
+*Điểm rẽ 5 · kết cục của hướng "Thành phần thứ ba" cho nhà ở miền Bắc · ~11 giây*
+
+> Con đường của bạn. Bạn theo dòng người di cư vào Nam năm 1954; ở Sài Gòn, bạn đứng cùng những người đòi hoà bình. Cả hai phía đều nghi ngờ bạn.
+
+### `out-thuba-t`
+
+*Điểm rẽ 5 · kết cục của hướng "Thành phần thứ ba" cho nhà ở miền Trung · ~8 giây*
+
+> Con đường của bạn. Bạn xuống đường đòi hoà bình ở Huế, rồi ở Sài Gòn. Cả hai phía đều nghi ngờ bạn.
+
 ### `dbp` · giọng máy
 
 *Trận đánh · 13.3 – 7.5.1954 · ~18 giây*
@@ -572,29 +680,29 @@
 
 > Năm 1954. Hiệp định Genève. Đình chỉ chiến sự; giới tuyến quân sự tạm thời ở vĩ tuyến 17; hẹn tổng tuyển cử tháng 7.1956. Trong 300 ngày, các lực lượng tập kết về hai miền. Cuộc tổng tuyển cử không bao giờ diễn ra.
 
-### `dc54` · giọng máy
-
-*Xã hội · 8.1954 – 5.1955 · ~18 giây*
-
-> Năm 1955. Cuộc di cư 1954. Khoảng 800.000 đến 1 triệu người, phần lớn là giáo dân, rời Bắc vào Nam. Hàng chục nghìn người tập kết ra Bắc. Hải quân Pháp và Mỹ hỗ trợ vận chuyển. Cuộc di cư định hình xã hội miền Nam suốt hai thập niên.
-
-### `vc55` · giọng máy
-
-*Chính trị · 26.10.1955 · ~14 giây*
-
-> Năm 1955. Việt Nam Cộng hoà ra đời. Sau trưng cầu dân ý phế truất Bảo Đại, Ngô Đình Diệm làm Tổng thống. Kết quả công bố 98,2% phiếu ủng hộ. Năm 1956, Hiến pháp Đệ nhất Cộng hoà ban hành.
-
 ### `cc53` · giọng máy
 
 *Xã hội · 1953–1956 · ~17 giây*
 
 > Năm 1955. Cải cách ruộng đất ở miền Bắc. Ruộng đất được chia cho nông dân, kèm các toà án đấu tố địa chủ. Năm 1956, Đảng Lao động Việt Nam thừa nhận sai lầm, tiến hành sửa sai. Số người bị xử tử đến nay vẫn còn tranh luận.
 
+### `dc54` · giọng máy
+
+*Xã hội · 8.1954 – 5.1955 · ~18 giây*
+
+> Năm 1955. Cuộc di cư 1954. Khoảng 800.000 đến 1 triệu người, phần lớn là giáo dân, rời Bắc vào Nam. Hàng chục nghìn người tập kết ra Bắc. Hải quân Pháp và Mỹ hỗ trợ vận chuyển. Cuộc di cư định hình xã hội miền Nam suốt hai thập niên.
+
 ### `bx55` · giọng máy
 
 *Trận đánh · 4–5.1955 · ~17 giây*
 
 > Năm 1955. Đánh Bình Xuyên tại Sài Gòn. Quân đội Quốc gia của Thủ tướng Ngô Đình Diệm đánh bật lực lượng Bình Xuyên khỏi Sài Gòn. Các giáo phái Cao Đài, Hoà Hảo lần lượt bị khuất phục. Chính quyền Diệm củng cố quyền lực.
+
+### `vc55` · giọng máy
+
+*Chính trị · 26.10.1955 · ~14 giây*
+
+> Năm 1955. Việt Nam Cộng hoà ra đời. Sau trưng cầu dân ý phế truất Bảo Đại, Ngô Đình Diệm làm Tổng thống. Kết quả công bố 98,2% phiếu ủng hộ. Năm 1956, Hiến pháp Đệ nhất Cộng hoà ban hành.
 
 ### `nv56` · giọng máy
 
@@ -608,23 +716,17 @@
 
 > Năm 1959. Mở đường Trường Sơn. Đoàn 559 thành lập để vận chuyển người và vũ khí vào Nam, qua lãnh thổ Lào và Campuchia. Đến 1975, hệ thống đường dài hàng chục nghìn km, liên tục bị ném bom.
 
-### `mt60` · giọng máy
-
-*Chính trị · 20.12.1960 · ~14 giây*
-
-> Năm 1960. Mặt trận Dân tộc Giải phóng miền Nam. Mặt trận ra đời sau phong trào Đồng khởi ở Bến Tre. Quân Giải phóng miền Nam hình thành, được miền Bắc chi viện qua đường Trường Sơn.
-
 ### `dk60` · giọng máy
 
 *Trận đánh · 17.1.1960 · ~12 giây*
 
 > Năm 1960. Đồng khởi Bến Tre. Nông dân nổi dậy phá bộ máy chính quyền ở nhiều xã. Phong trào lan khắp miền Nam, dẫn tới việc lập Mặt trận Dân tộc Giải phóng.
 
-### `dc63` · giọng máy
+### `mt60` · giọng máy
 
-*Chính trị · 1.11.1963 · ~14 giây*
+*Chính trị · 20.12.1960 · ~14 giây*
 
-> Năm 1963. Đảo chính lật đổ Ngô Đình Diệm. Sau khủng hoảng Phật giáo, các tướng lĩnh lật đổ và sát hại anh em Diệm – Nhu. Miền Nam bước vào giai đoạn bất ổn với hàng loạt cuộc đảo chính.
+> Năm 1960. Mặt trận Dân tộc Giải phóng miền Nam. Mặt trận ra đời sau phong trào Đồng khởi ở Bến Tre. Quân Giải phóng miền Nam hình thành, được miền Bắc chi viện qua đường Trường Sơn.
 
 ### `ab63` · giọng máy
 
@@ -637,6 +739,12 @@
 *Xã hội · 11.6.1963 · ~18 giây*
 
 > Năm 1963. Hoà thượng Thích Quảng Đức tự thiêu. Hoà thượng tự thiêu tại ngã tư đường Phan Đình Phùng – Lê Văn Duyệt để phản đối chính sách tôn giáo. Bức ảnh của Malcolm Browne gây chấn động thế giới, khủng hoảng Phật giáo dẫn tới đảo chính.
+
+### `dc63` · giọng máy
+
+*Chính trị · 1.11.1963 · ~14 giây*
+
+> Năm 1963. Đảo chính lật đổ Ngô Đình Diệm. Sau khủng hoảng Phật giáo, các tướng lĩnh lật đổ và sát hại anh em Diệm – Nhu. Miền Nam bước vào giai đoạn bất ổn với hàng loạt cuộc đảo chính.
 
 ### `vb64` · giọng máy
 
@@ -656,17 +764,17 @@
 
 > Năm 1965. Trận Ia Drang. Trận đánh lớn đầu tiên giữa quân Mỹ và Quân đội Nhân dân Việt Nam. Cả hai bên đều rút ra bài học riêng: Mỹ tin vào "tỷ lệ tiêu hao", phía VN chọn lối "nắm thắt lưng địch mà đánh".
 
-### `mt68` · giọng máy
-
-*Trận đánh · 30.1.1968 · ~17 giây*
-
-> Năm 1968. Tổng tấn công Tết Mậu Thân. Đồng loạt tấn công hơn 100 đô thị. Huế bị chiếm gần một tháng. Tổn thất quân sự rất lớn cho phía tấn công; nhiều dân thường ở Huế bị giết hại. Dư luận Mỹ quay lưng với chiến tranh.
-
 ### `ks68` · giọng máy
 
 *Trận đánh · 21.1 – 9.7.1968 · ~10 giây*
 
 > Năm 1968. Khe Sanh. Căn cứ thuỷ quân lục chiến Mỹ bị vây 77 ngày. Mỹ rút khỏi căn cứ vào tháng 7. Cả hai bên đều tuyên bố thắng lợi.
+
+### `mt68` · giọng máy
+
+*Trận đánh · 30.1.1968 · ~17 giây*
+
+> Năm 1968. Tổng tấn công Tết Mậu Thân. Đồng loạt tấn công hơn 100 đô thị. Huế bị chiếm gần một tháng. Tổn thất quân sự rất lớn cho phía tấn công; nhiều dân thường ở Huế bị giết hại. Dư luận Mỹ quay lưng với chiến tranh.
 
 ### `ml68` · giọng máy
 
@@ -710,17 +818,17 @@
 
 > Năm 1974. Hải chiến Hoàng Sa. Hải quân VNCH giao chiến với hải quân Trung Quốc. 74 quân nhân VNCH hi sinh; Trung Quốc chiếm toàn bộ Hoàng Sa. Việt Nam đến nay vẫn khẳng định chủ quyền đối với Hoàng Sa.
 
-### `sg75` · giọng máy
-
-*Trận đánh · 30.4.1975 · ~16 giây*
-
-> Năm 1975. Sài Gòn — 30 tháng Tư. Xe tăng vào Dinh Độc Lập. Tổng thống Dương Văn Minh tuyên bố đầu hàng. Hàng chục nghìn người di tản trong những ngày cuối. Cộng hoà miền Nam Việt Nam tạm quản lý miền Nam.
-
 ### `bmt75` · giọng máy
 
 *Trận đánh · 10.3.1975 · ~16 giây*
 
 > Năm 1975. Trận Buôn Ma Thuột. Quân đội Nhân dân Việt Nam đánh chiếm thị xã, mở màn chiến dịch Tây Nguyên. Lệnh rút khỏi Tây Nguyên dẫn tới cuộc tháo chạy trên đường số 7. Huế, Đà Nẵng mất trong tháng 3.
+
+### `cm75` · giọng máy
+
+*Chính trị · 4 – 12.1975 · ~15 giây*
+
+> Năm 1975. Đông Dương đổi chế độ. Khmer Đỏ chiếm Phnom Penh (17.4); Lào thành lập CHDCND Lào (2.12). Khmer Đỏ đuổi dân khỏi thành phố. Ước tính 1,5–2 triệu người Campuchia chết dưới chế độ này.
 
 ### `xl75` · giọng máy
 
@@ -728,11 +836,11 @@
 
 > Năm 1975. Trận Xuân Lộc. Sư đoàn 18 QL VNCH cầm cự gần hai tuần ở cửa ngõ phía đông Sài Gòn. Ngày 21.4, Tổng thống Thiệu từ chức. Chín ngày sau, Sài Gòn thất thủ.
 
-### `cm75` · giọng máy
+### `sg75` · giọng máy
 
-*Chính trị · 4 – 12.1975 · ~15 giây*
+*Trận đánh · 30.4.1975 · ~16 giây*
 
-> Năm 1975. Đông Dương đổi chế độ. Khmer Đỏ chiếm Phnom Penh (17.4); Lào thành lập CHDCND Lào (2.12). Khmer Đỏ đuổi dân khỏi thành phố. Ước tính 1,5–2 triệu người Campuchia chết dưới chế độ này.
+> Năm 1975. Sài Gòn — 30 tháng Tư. Xe tăng vào Dinh Độc Lập. Tổng thống Dương Văn Minh tuyên bố đầu hàng. Hàng chục nghìn người di tản trong những ngày cuối. Cộng hoà miền Nam Việt Nam tạm quản lý miền Nam.
 
 ### `d-bac0` · giọng máy
 
@@ -796,6 +904,24 @@
 *Điểm rẽ 6 · kết cục của hướng "Ra đi" (màn Con đường của bạn) · ~9 giây*
 
 > Con đường của bạn. Bạn vượt biển, qua trại tị nạn, định cư ở Mỹ, Pháp, Úc. Sau 1995, bạn có thể quay về thăm quê.
+
+### `out-xbaocap`
+
+*Điểm rẽ 6 · kết cục của hướng "Gửi quà nuôi người ở quê", nhà đã di tản tháng 4.1975 · ~13 giây*
+
+> Con đường của bạn. Bạn lớn lên giữa những thùng quà đóng dở trong phòng khách. Ở quê, họ hàng bán dần từng lọ thuốc, từng xấp vải để đong gạo qua những năm tem phiếu.
+
+### `out-xdoimoi`
+
+*Điểm rẽ 6 · kết cục của hướng "Về nước làm ăn", nhà đã di tản tháng 4.1975 · ~15 giây*
+
+> Con đường của bạn. Bạn học nghề, đi làm ở xứ người. Tháng 2.1994 Mỹ bỏ cấm vận, và bạn ở trong những chuyến bay đầu tiên về làm ăn: giấy phép mất hai năm, đối tác đổi ba lần, nhưng xưởng vẫn đứng.
+
+### `out-xradi`
+
+*Điểm rẽ 6 · kết cục của hướng "Bám rễ nơi xứ người", nhà đã di tản tháng 4.1975 · ~12 giây*
+
+> Con đường của bạn. Bạn lớn lên ở một thành phố xa lạ, nhập quốc tịch, nói tiếng Việt ở nhà và tiếng Anh ở trường. Sau năm 1995, bạn có thể quay về thăm quê.
 
 ### `tn76` · giọng máy
 
@@ -905,17 +1031,53 @@
 
 > Nhật ký dòng họ, năm 1980. Sổ gạo. Mỗi tháng 13 cân gạo, độn bo bo. Bạn xếp gạch giữ chỗ ở cửa hàng mậu dịch từ 4 giờ sáng.
 
+### `d-baocap0-t`
+
+*Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Trung · 1980 · ~13 giây*
+
+> Nhật ký dòng họ, năm 1980. Thóc chia theo công điểm. Hợp tác xã chia thóc theo công điểm; phần chia không đủ ăn tới mùa giáp hạt. Nhà bạn độn khoai lang, sắn lát vào nồi cơm.
+
+### `d-baocap0-n`
+
+*Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Nam · 1980 · ~18 giây*
+
+> Nhật ký dòng họ, năm 1980. Bo bo thay gạo. Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, trạm kiểm soát trên đường thu từng bao gạo người ta chở từ miền Tây lên.
+
 ### `d-baocap1` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá" · 1985 · ~8 giây*
 
 > Nhật ký dòng họ, năm 1985. Đổi tiền. Lương tháng của bạn chỉ còn đủ mua vài cân thịt. Giá cả đổi từng tuần.
 
+### `d-baocap1-t`
+
+*Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Trung · 1985 · ~15 giây*
+
+> Nhật ký dòng họ, năm 1985. Đổi tiền. Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Mấy tháng sau, giá muối, giá vải ở chợ huyện đã đổi từng tuần; nhà bạn giữ thóc trong bồ chứ không giữ tiền.
+
+### `d-baocap1-n`
+
+*Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Nam · 1985 · ~16 giây*
+
+> Nhật ký dòng họ, năm 1985. Đổi tiền lần thứ ba. Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Ở miền Nam, đây là lần đổi tiền thứ ba kể từ năm 1975; ai còn chút vàng thì giữ vàng, không ai muốn giữ tiền.
+
 ### `d-doimoi0` · giọng máy
 
 *Nhật ký dòng họ, nếu chọn "Đổi Mới" · 1988 · ~8 giây*
 
 > Nhật ký dòng họ, năm 1988. Ruộng khoán. Hợp tác xã giao ruộng cho từng hộ. Vụ đầu tiên, nhà bạn thừa thóc.
+
+### `d-doimoi0-t`
+
+*Nhật ký dòng họ, nếu chọn "Đổi Mới", nhà ở miền Trung · 1988 · ~13 giây*
+
+> Nhật ký dòng họ, năm 1988. Ruộng khoán. Theo Khoán 10, hợp tác xã giao ruộng cho từng hộ. Ruộng ít, lại là đất cát bạc màu, nhưng vụ đầu tiên tự làm, nhà bạn đủ ăn tới vụ sau.
+
+### `d-doimoi0-n`
+
+*Nhật ký dòng họ, nếu chọn "Đổi Mới", nhà ở miền Nam · 1988 · ~16 giây*
+
+> Nhật ký dòng họ, năm 1988. Ruộng khoán. Khoán 10 giao ruộng về cho từng hộ. Nhiều nhà trong xóm làm đơn xin lại phần đất cũ đã đưa vào tập đoàn sản xuất; nhà bạn nhận lại mấy công ruộng, vụ đầu đã có lúa bán.
 
 ### `d-doimoi1` · giọng máy
 
@@ -934,6 +1096,18 @@
 *Nhật ký dòng họ, nếu chọn "Ra đi" · 1995 · ~9 giây*
 
 > Nhật ký dòng họ, năm 1995. Về Tân Sơn Nhất. Hai mươi năm sau, bạn quay lại với hộ chiếu nước khác, tóc đã điểm bạc.
+
+### `d-xbaocap0`
+
+*Nhật ký dòng họ, nhà đã di tản, nếu chọn "Gửi quà nuôi người ở quê" · 1981 · ~15 giây*
+
+> Nhật ký dòng họ, năm 1981. Thùng quà về tới quê. Thùng quà gửi từ California về tới Bưu điện Thành phố sau ba tháng. Họ hàng xếp hàng nhận, đóng thuế, rồi bán dần thuốc tây, vải vóc để đong gạo.
+
+### `d-xdoimoi0`
+
+*Nhật ký dòng họ, nhà đã di tản, nếu chọn "Về nước làm ăn" · 1994 · ~15 giây*
+
+> Nhật ký dòng họ, năm 1994. Ngày bỏ cấm vận. Mỹ bỏ cấm vận tháng 2.1994. Chuyến bay về Tân Sơn Nhất chật người mang va li giấy tờ: hồ sơ xin giấy phép, bản vẽ xưởng, danh thiếp in hai thứ tiếng.
 
 
 ## Kết cục · Phim hành trình
@@ -1045,6 +1219,126 @@ Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, r�
 *Phim hành trình · dòng gia phả của hướng "radi" · ~8 giây*
 
 Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.
+
+### `chr-bac-n`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Hà Nội · ~7 giây*
+
+Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.
+
+### `chr-bac-n-dicu`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Hà Nội · dicu · ~7 giây*
+
+Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.
+
+### `chr-bac-s-hue`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Huế · ~4 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Huế.
+
+### `chr-bac-s-hue-hen`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Huế · nguoiDi54 · ~8 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Huế.
+
+### `chr-bac-s-qn`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Quảng Nam · ~5 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Quảng Nam.
+
+### `chr-bac-s-qn-hen`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Quảng Nam · nguoiDi54 · ~8 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Quảng Nam.
+
+### `chr-bac-s-sg`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Sài Gòn – Gia Định · ~6 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Sài Gòn – Gia Định.
+
+### `chr-bac-s-sg-hen`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Sài Gòn – Gia Định · nguoiDi54 · ~9 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Sài Gòn – Gia Định.
+
+### `chr-bac-s-mt`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Mỹ Tho · ~5 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Mỹ Tho.
+
+### `chr-bac-s-mt-hen`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Mỹ Tho · nguoiDi54 · ~8 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Mỹ Tho.
+
+### `chr-bac-s-ct`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Cần Thơ · ~5 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954; năm 1975 mới về lại Cần Thơ.
+
+### `chr-bac-s-ct-hen`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Bắc — VNDCCH", quê Cần Thơ · nguoiDi54 · ~8 giây*
+
+Thế hệ 5 tập kết ra Bắc năm 1954, để vợ con ở lại quê chờ lời hẹn hai năm; năm 1975 mới về lại Cần Thơ.
+
+### `chr-nam-n`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Nam — VNCH", quê Hà Nội · ~7 giây*
+
+Thế hệ 5 di cư vào Nam năm 1954, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.
+
+### `chr-nam-s`
+
+*Phim hành trình · dòng gia phả của hướng "Miền Nam — VNCH", quê Sài Gòn – Gia Định · ~6 giây*
+
+Thế hệ 5 sống ở miền Nam, qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.
+
+### `chr-thuba-n`
+
+*Phim hành trình · dòng gia phả của hướng "Thành phần thứ ba", quê Hà Nội · ~9 giây*
+
+Thế hệ 5 di cư vào Nam năm 1954, rồi xuống đường đòi hoà bình cùng thành phần thứ ba ở Sài Gòn; cả hai phía đều nghi ngờ.
+
+### `chr-duytan-t`
+
+*Phim hành trình · dòng gia phả của hướng "Duy Tân", quê Huế · ~13 giây*
+
+Thế hệ 2 theo phong trào Duy Tân ở Trung Kỳ: mở lớp dạy chữ Quốc ngữ, lập hội buôn, cắt tóc ngắn; năm 1908 phong trào chống thuế bị đàn áp, Phan Châu Trinh bị đày ra Côn Đảo.
+
+### `chr-duytan-s`
+
+*Phim hành trình · dòng gia phả của hướng "Duy Tân", quê Sài Gòn – Gia Định · ~14 giây*
+
+Thế hệ 2 theo phong trào Minh Tân, nhánh duy tân ở Nam Kỳ: góp vốn lập hội buôn, mở khách sạn làm nơi gặp gỡ, đọc Lục tỉnh tân văn; năm 1908 Trần Chánh Chiếu bị bắt, phong trào tan rã.
+
+### `chr-xbaocap`
+
+*Phim hành trình · dòng gia phả của hướng "Giữ kế hoạch hoá", nhà đã di tản · ~10 giây*
+
+Thế hệ 6 lớn lên ở xứ người; lương làm hai ca thành những thùng quà gửi về nuôi họ hàng qua những năm tem phiếu, lạm phát ba con số.
+
+### `chr-xdoimoi`
+
+*Phim hành trình · dòng gia phả của hướng "Đổi Mới", nhà đã di tản · ~9 giây*
+
+Thế hệ 6 lớn lên ở xứ người; sau khi Mỹ bỏ cấm vận năm 1994, về nước mở xưởng, nối đường làm ăn giữa hai bờ đại dương.
+
+### `chr-xradi`
+
+*Phim hành trình · dòng gia phả của hướng "Ra đi", nhà đã di tản · ~10 giây*
+
+Thế hệ 6 lớn lên ở xứ người, nhập quốc tịch, dựng lại đời sống trong cộng đồng người Việt; sau năm 1995 mới có người về thăm quê.
 
 ### `epi-nguyen` · giọng máy
 
@@ -1201,3 +1495,114 @@ Tạ là họ của Tạ Quang Bửu (1910–1986); Giải thưởng Tạ Quang 
 *Phim hành trình · lời khép, họ Thái / Thới · ~10 giây*
 
 Thái là một họ nhỏ; nghệ sĩ dương cầm Thái Thị Liên (1918–2023), người đồng sáng lập Trường Âm nhạc Việt Nam, là mẹ của Đặng Thái Sơn.
+
+### `end-lytan`
+
+*Kết cục "Còn lại tên họ" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
+
+Còn lại tên họ. Gia sản gần cạn, người còn ít, nhưng gia phả vẫn giữ được cái tên.
+
+### `end-xanam`
+
+*Kết cục "Bên kia đại dương" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
+
+Bên kia đại dương. Từ miền Nam sau năm 1975, dòng họ dựng lại đời sống ở bên kia đại dương.
+
+### `end-xabac`
+
+*Kết cục "Người đi từ phía Bắc" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~9 giây*
+
+Người đi từ phía Bắc. Đời thứ năm theo miền Bắc; sau chiến tranh, dòng họ có người ra đi, có người ở lại giữ từ đường.
+
+### `end-xagiua`
+
+*Kết cục "Tiếng nói từ xa" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
+
+Tiếng nói từ xa. Bị cả hai phía nghi ngờ, rồi ra đi; con cháu thành người bắc cầu.
+
+### `end-thuandong`
+
+*Kết cục "Cùng nhịp với lịch sử" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
+
+Cùng nhịp với lịch sử. Ở hầu hết các điểm rẽ, dòng họ đứng về hướng sau này chiếm ưu thế.
+
+### `end-doiho`
+
+*Kết cục "Hai cái tên, một từ đường" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
+
+Hai cái tên, một từ đường. Dòng họ đổi họ để qua một cơn biến, rồi giữ cả hai tên trong gia phả.
+
+### `end-vongtoc`
+
+*Kết cục "Vọng tộc" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~5 giây*
+
+Vọng tộc. Sau sáu đời, một nhà có của, có người, có tiếng ở quê mình.
+
+### `end-chiadoi`
+
+*Kết cục "Hai mươi mốt năm chờ nhau" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~8 giây*
+
+Hai mươi mốt năm chờ nhau. Năm 1954 dòng họ chia hai nhánh ở hai miền; hai mươi mốt năm sau mới gặp lại.
+
+### `end-canhtan`
+
+*Kết cục "Ba đời canh tân" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~8 giây*
+
+Ba đời canh tân. Nhiều đời chọn học hỏi và cải cách; phần lớn đề xuất bị gác lại khi người đề xướng còn sống.
+
+### `end-canhtan-4`
+
+*Kết cục "Ba đời canh tân" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~8 giây*
+
+Bốn đời canh tân. Nhiều đời chọn học hỏi và cải cách; phần lớn đề xuất bị gác lại khi người đề xướng còn sống.
+
+### `end-nhieunga`
+
+*Kết cục "Rẽ nhiều ngả" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
+
+Rẽ nhiều ngả. Mỗi đời đi một ngả khác đời trước; gia phả giống một tấm bản đồ.
+
+### `end-nguocdong`
+
+*Kết cục "Năm lần rẽ khác" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
+
+Năm lần rẽ khác. Ở cả năm điểm rẽ có hướng chiếm ưu thế, dòng họ đều chọn ngả khác.
+
+### `end-dunggiua`
+
+*Kết cục "Người đứng giữa" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
+
+Người đứng giữa. Dòng họ thường chọn thương thuyết, cải cách hay đứng ngoài hơn là cầm súng.
+
+### `end-olainam`
+
+*Kết cục "Ở lại sau ngày 30 tháng Tư" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~7 giây*
+
+Ở lại sau ngày 30 tháng Tư. Đời thứ năm theo miền Nam, và dòng họ ở lại sau ngày 30.4.1975.
+
+### `end-baocap`
+
+*Kết cục "Sổ gạo và công điểm" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~6 giây*
+
+Sổ gạo và công điểm. Đời thứ sáu giữ sổ gạo, công điểm qua những năm bao cấp.
+
+### `end-doimoi`
+
+*Kết cục "Từ tem phiếu đến xưởng nhỏ" · tên và câu tóm (màn kết, tấm cuối phim hành trình) · ~9 giây*
+
+Từ tem phiếu đến xưởng nhỏ. Đi qua chiến tranh và tem phiếu, rồi làm ăn sau Đổi Mới, như phần đông gia đình Việt Nam.
+
+
+## Cài đặt
+
+### `ui-narr-on`
+
+*Cài đặt · bật giọng đọc · ~1 giây*
+
+Giọng đọc đã bật.
+
+### `ui-rate`
+
+*Cài đặt · nghe thử tốc độ đọc · ~5 giây*
+
+Đây là giọng thuyết minh của Dư Đồ, đọc ở tốc độ bạn vừa chọn.

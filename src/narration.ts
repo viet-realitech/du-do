@@ -22,6 +22,15 @@ if (hasTTS) {
 }
 
 export const hasVoice = () => !!VOICE;
+/** Đã có một câu chưa có bản thu cần đọc trên máy không có giọng tiếng Việt (nhãn ở Cài đặt, thông báo một lần). */
+let missed = false;
+export const missedVoice = () => missed;
+function noVoice(): void {
+  missed = true;
+  if (warnedVoice) return;
+  warnedVoice = true;
+  toast('Đoạn này chưa có bản thu, và máy này chưa có giọng đọc tiếng Việt để đọc thay.');
+}
 /** Tên giọng hệ thống đang dùng (bảng chẩn đoán). */
 export const voiceName = (): string => VOICE?.name || '';
 /** Bảng chẩn đoán: bản thu bắt đầu phát, bị trình duyệt chặn (cần một cú chạm), lỗi tải / giải mã (mất mạng…). */
@@ -144,18 +153,12 @@ export function speak(text: string, onend?: () => void, force = false, key?: str
     });
     return true;
   }
-  if (!hasTTS) { done(); return false; }
+  // câu chưa có bản thu: giọng tiếng Việt của máy đọc thay; máy không có thì báo (một lần), đúng lúc ấy
+  if (!hasTTS) { noVoice(); done(); return false; }
   hush();
   if (!VOICE) {
     pickVoice();
-    if (!VOICE) {
-      if (!warnedVoice) {
-        warnedVoice = true;
-        toast('Máy này chưa có giọng đọc tiếng Việt. Hãy cài giọng "Tiếng Việt" trong cài đặt hệ điều hành.');
-      }
-      done();
-      return false;
-    }
+    if (!VOICE) { noVoice(); done(); return false; }
   }
   const me = run, parts = phrases(text);
   duck(true);
