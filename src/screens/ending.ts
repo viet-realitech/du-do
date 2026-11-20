@@ -2,7 +2,7 @@ import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
-import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
+import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1, archive, archiveRun, viewRun, type ArcRun } from '../state';
 import { chronLine, epilogue, whyText, rarityLine, firstDivergence, cfOf, exitNote, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
 import { endSpeech, epiKey } from '../speech';
 import { chronKey, endVoiceKey } from '../voiced';
@@ -21,6 +21,8 @@ import { openQuiz, openHarvest, quizFor } from './gate';
 import { splash } from './onboarding';
 import { setTab } from '../tabs';
 import { montage, preloadEra } from './cinema';
+import { nextTry, arcDate, backToLedger } from './ledger';
+import { note } from '../errlog';
 
 /** Trò chơi: tour chương 6 kết thúc → mùa màng cuối → đố → kết cục. */
 export function endGame(e: Era): void {
@@ -107,17 +109,21 @@ function pathTable(first: number | undefined): string {
 
 /** Kết luận, dàn như một tập hồ sơ: đầu hồ sơ (họ, dấu kết cục, tên kết cục, lời kết riêng, độ hiếm, vì sao, phim), dòng
     sổ tóm tắt, gia phả, thẻ "Nếu…", gia sản (Trò chơi), la bàn giá trị, con đường so với lịch sử, lời khép. Điện thoại: một
-    cột theo thứ tự ấy; màn ngang: gia phả bên trái, các mục ngắn bên phải, con đường thành một bảng trải ngang bên dưới. */
-export function openEnd(): void {
-  stopTour();
+    cột theo thứ tự ấy; màn ngang: gia phả bên trái, các mục ngắn bên phải, con đường thành một bảng trải ngang bên dưới.
+    Có kết cục thì cất cả bản lưu vào Sổ kết cục (state.ts archiveRun) và gợi ý "Ván sau, thử…". `ro`: hồ sơ một dòng họ
+    đã khép, mở lại từ Sổ kết cục với S tạm là bản lưu của nó (openPast): chỉ xem, không lưu, không trao huy hiệu, không
+    phim, không chia sẻ, không nút chọn lại; nút đóng về Hồ sơ. */
+export function openEnd(ro?: ArcRun): void {
+  if (!ro) stopTour();
   const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
   // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
-  const fresh = !!end && !S.endSaid;
-  if (!S.ended || fresh) { S.ended = true; if (end) S.endSaid = true; save(); }
+  const fresh = !ro && !!end && !S.endSaid;
+  if (!ro && (!S.ended || fresh)) { S.ended = true; if (end) S.endSaid = true; save(); }
+  if (!ro && end) archiveRun({ end: end.id, title, name: nameChain(), home: play ? home()[1] : '' });
   mood('finale');
-  ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
+  if (!ro) ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;
-  const film = `<button class="btn end-film" data-a="film">${icon('play')}Xem phim hành trình</button>`;
+  const film = ro ? '' : `<button class="btn end-film" data-a="film">${icon('play')}Xem phim hành trình</button>`; // phim đọc S suốt lúc chiếu: không chiếu hồ sơ cũ
   // đầu hồ sơ: họ (và quê), dấu kết cục, tên kết cục, lời kết riêng của dòng họ, tỷ lệ hiếm, vì sao; Đọc sử chưa chọn đủ: còn bỏ ngỏ
   const head = end ? `<header class="end-head">
    <div class="end-mast"><span class="mono end-kick">Hồ sơ dòng họ · ${esc(nameChain())}${play ? ' · ' + esc(home()[1]) : ''}</span><span class="stamp">${esc(end.seal)}</span></div>
@@ -136,9 +142,9 @@ export function openEnd(): void {
    <div><dt class="mono">Trùng hướng chiếm ưu thế</dt><dd><b class="n">${ms.m}/${ms.t}</b>${end ? `<span>${esc(matchLine(ms.m))}</span>` : ''}</dd></div>
    <div><dt class="mono">Dòng họ bạn là</dt><dd><b>${a ? esc(a[0]) : '—'}</b></dd></div>
    ${play && rank()[0] !== title ? `<div><dt class="mono">Gia sản</dt><dd><b>${esc(rank()[0])}</b></dd></div>` : ''}</dl>`; // hạng trùng tên kết cục: không lặp
-  layer.innerHTML = `<div class="ov end">
-  <div class="row sb"><button class="back" data-a="close" aria-label="Đóng">‹</button><span class="row end-tr"><span class="mono muted">Kết luận · 1858 – 2026</span>${end ? `<button class="chip nbtn" data-a="listen-end" title="Nghe tên kết cục">${LISTEN}</button>` : ''}</span></div>
-  ${head}
+  layer.innerHTML = `<div class="ov end"${ro ? ` data-ro="${esc(ro.id)}"` : ''}>
+  <div class="row sb"><button class="back" data-a="close" aria-label="${ro ? 'Về Hồ sơ' : 'Đóng'}">‹</button><span class="row end-tr"><span class="mono muted">${ro ? 'Sổ kết cục · chỉ xem' : 'Kết luận · 1858 – 2026'}</span>${end ? `<button class="chip nbtn" data-a="listen-end" title="Nghe tên kết cục">${LISTEN}</button>` : ''}</span></div>
+  ${ro ? roNote(ro) : ''}${head}
   <div class="end-body">
    <div class="end-main">${giaPha(f)}</div>
    <div class="end-side">${reg}${end ? cfCard(f) : ''}${play ? wealth(f) : ''}
@@ -148,9 +154,10 @@ export function openEnd(): void {
   <section class="end-close"><h2>Mọi con đường đều dẫn về hôm nay</h2>
   <p>Dù dòng họ bạn chọn gì, bản đồ năm 2026 vẫn là một: một Việt Nam thống nhất từ Lũng Cú đến Cà Mau, cùng các quần đảo ngoài Biển Đông.</p>
   <blockquote class="end-q"><span class="mono">Điều đọng lại</span><p>Ở mỗi điểm rẽ, người Việt ở mọi phía đều tin mình đang làm điều đúng cho đất nước. Lịch sử ghi lại bên chiếm ưu thế, còn sử liệu giữ lại tiếng nói của tất cả.</p></blockquote></section>
-  <div class="end-acts"><button class="btn" data-a="share">Tạo thẻ chia sẻ</button><button class="btn ghost" data-a="tab" data-t="src">Đọc sử liệu gốc</button></div>
-  <button class="lnk" data-a="reset">Chọn lại từ 1858</button></div>`;
+  ${ro ? `<div class="end-back"><button class="btn ghost" data-a="close">‹ Về Sổ kết cục</button></div></div>` : `<div class="end-acts"><button class="btn" data-a="share">Tạo thẻ chia sẻ</button><button class="btn ghost" data-a="tab" data-t="src">Đọc sử liệu gốc</button></div>
+  ${end ? nextTry() : ''}<button class="lnk" data-a="reset">Chọn lại từ 1858</button></div>`}`;
   layer.querySelector<HTMLElement>('.end-title')?.focus({ preventScroll: true }); // như trang sự kiện: tiêu điểm vào hồ sơ vừa mở, trình đọc màn hình đọc từ tên kết cục
+  if (ro) { layer.querySelector<HTMLElement>(':scope > .ov.end')!.dataset.ret = JSON.stringify({ tab: 'me' }); return; } // nút đóng (event.ts) về Hồ sơ
   checkBadges();
   if (!end) return;
   warmEnd(f, end); // lời kể của phim hành trình cho lúc mất mạng
@@ -162,13 +169,29 @@ export function openEnd(): void {
 }
 let autoRead: ReturnType<typeof setTimeout> | undefined;
 
+/** Dòng "chỉ xem" trên đầu hồ sơ mở lại từ Sổ kết cục. */
+const roNote = (r: ArcRun) => `<p class="end-ro"><span class="mono">Hồ sơ đã khép</span>${esc(r.name)} khép hồ sơ ngày ${esc(arcDate(r.at))}${r.mode === 'read' ? ' (Đọc sử)' : ''}. Xem lại ở đây không đổi gì trong ván đang chơi.</p>`;
+
+/** Sổ kết cục: mở lại hồ sơ một dòng họ đã khép, chỉ để xem (openEnd dựng với S tạm là bản lưu của nó, rồi trả S lại). */
+export function openPast(id: string): boolean {
+  const run = archive().runs.find(r => r.id === id);
+  let ok = false;
+  try { ok = !!run && !!viewRun(run, () => { openEnd(run); return true; }); } catch (e) { note(`Sổ kết cục: không mở được hồ sơ ${id}: ${String((e as Error)?.message || e)}`); }
+  if (!ok) { toast('Không mở được hồ sơ này: bản lưu trong sổ đã hỏng.'); return false; }
+  backToLedger(id);
+  return true;
+}
+
 /** Tên kết cục và câu tóm bằng giọng thuyết minh (bản thu end-<id>, nếu đọc đúng câu trên màn; không thì giọng của máy);
-    bấm lần nữa thì dừng. */
+    bấm lần nữa thì dừng. Hồ sơ mở lại từ Sổ kết cục: đọc kết cục của dòng họ ấy. */
 function listenEnd(b: HTMLElement, force: boolean): void {
-  const { f, e } = endingNow();
-  if (!e) return;
   if (b.dataset.on) { hush(); return; }
-  if (speak(endSpeech(e, f), () => { delete b.dataset.on; }, force, endVoiceKey(e, f))) b.dataset.on = '1';
+  const id = b.closest<HTMLElement>('.ov.end')?.dataset.ro, run = id ? archive().runs.find(r => r.id === id) : undefined;
+  const go = () => {
+    const { f, e } = endingNow();
+    if (e && speak(endSpeech(e, f), () => { delete b.dataset.on; }, force, endVoiceKey(e, f))) b.dataset.on = '1';
+  };
+  if (run) viewRun(run, go); else if (!id) go();
 }
 on('listen-end', el => { clearTimeout(autoRead); listenEnd(el, true); });
 /** Lời kể của phim hành trình (dòng gia phả từng đời, kết cục, lời khép theo họ): tải sẵn cho lúc mất mạng (warm.ts). */
