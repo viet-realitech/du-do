@@ -129,7 +129,7 @@ const NUMW = ['Không', 'Một', 'Hai', 'Ba', 'Bốn', 'Năm', 'Sáu'];
 export const ENDINGS: Ending[] = [
   { id: 'lytan', title: 'Còn lại tên họ', seal: 'Giữ được tên', play: true,
     // câu chung cho phim hành trình: đúng cả khi họ còn đông người (gia sản thấp là ở lúa gạo, bạc, uy tín)
-    line: 'Sáu đời qua chiến tranh và những lần chọn phe; nhà sa sút, nhưng gia phả vẫn giữ được cái tên.',
+    line: 'Nhà sa sút, nhưng gia phả vẫn giữ được cái tên.',
     why: 'Gia sản cuối cùng thuộc nhóm 5% thấp nhất của các dòng họ cùng quê trong mô phỏng, hoặc dòng họ còn dưới 25 nhân đinh.',
     test: f => (!!f.th && sum(f.res) <= f.th.lo) || (!!f.res && f.res.d < 25) },
   { id: 'xanam', title: 'Bên kia đại dương', seal: 'Hai bờ đại dương',
