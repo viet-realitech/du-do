@@ -145,7 +145,7 @@ export const SPECIAL: SpecialCard[] = [
     s: "Mười năm trước cả nhà đã định ra đi, nhưng người con sang mặt trận Campuchia; nay quân tình nguyện về nước, người con đã về, và không còn gì giữ chân cả nhà ở lại.",
     choices: [
       ["Làm đơn đi diện đoàn tụ", "Nhờ người thân, người quen đã ở xứ người đứng ra bảo lãnh theo Chương trình Ra đi có trật tự (ODP).", {"b": -6, "u": 1, "nn": -5, "my": 8}, "Hồ sơ đi qua nhiều văn phòng và mấy năm chờ phỏng vấn. Đầu thập niên 1990, cả nhà, cả người con từng ở Campuchia, mới lên máy bay ra đi; từ đường để lại cho họ hàng trông nom."],
-      ["Xuống ghe như những người đi trước", "Bán nhà, mua chỗ cho cả nhà trên một chiếc ghe ra từ cửa biển miền Tây.", {"g": -10, "b": -15, "d": -2, "u": -3, "nn": -15, "my": 10}, "Ghe tới trại tị nạn đúng năm các nước bắt đầu thanh lọc người tới sau. Gần hai năm ở trại, cả nhà mới được công nhận là người tị nạn và nhận đi định cư."],
+      ["Xuống ghe như những người đi trước", "Bán nhà, mua chỗ cho cả nhà trên một chiếc ghe ra từ cửa biển miền Tây.", {"g": -10, "b": -15, "d": -2, "u": -3, "nn": -15, "my": 10}, "Ghe tới trại đúng năm các nước bắt đầu thanh lọc người tới sau. Gần hai năm chờ xét hồ sơ, cả nhà được công nhận là người tị nạn và nhận đi định cư; nhiều gia đình cùng ghe thì phải hồi hương."],
     ],
     note: "Quân tình nguyện Việt Nam rút hết khỏi Campuchia tháng 9.1989. Chương trình Ra đi có trật tự (ODP, thoả thuận UNHCR – Việt Nam tháng 5.1979) cho người có thân nhân ở nước ngoài bảo lãnh xuất cảnh hợp pháp. Kế hoạch Hành động Toàn diện (CPA), thông qua ở Hội nghị Genève tháng 6.1989, bắt đầu thanh lọc thuyền nhân tới sau ngày hạn: chỉ người được công nhận tị nạn mới được nhận đi định cư, nhiều người khác phải hồi hương.",
   },
