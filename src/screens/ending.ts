@@ -3,7 +3,13 @@ import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices }
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
-import { chronLine, epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts } from '../data/endings';
+import { chronLine, epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
+import { endSpeech, epiKey } from '../speech';
+import { chronKey, endVoiceKey } from '../voiced';
+import { sayKey } from '../said';
+import { hush, speak } from '../narration';
+import { warmKeys } from '../warm';
+import { LISTEN } from '../ui/bits';
 import { on } from '../ui/actions';
 import { app, esc, layer, sheet, toast, clearLayer, clearToasts } from '../ui/dom';
 import { icon } from '../ui/icons';
@@ -104,16 +110,19 @@ function pathTable(first: number | undefined): string {
     cột theo thứ tự ấy; màn ngang: gia phả bên trái, các mục ngắn bên phải, con đường thành một bảng trải ngang bên dưới. */
 export function openEnd(): void {
   stopTour();
-  if (!S.ended) { S.ended = true; save(); }
+  const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
+  // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
+  const fresh = !!end && !S.endSaid;
+  if (!S.ended || fresh) { S.ended = true; if (end) S.endSaid = true; save(); }
   mood('finale');
   ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
-  const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;
   const film = `<button class="btn end-film" data-a="film">${icon('play')}Xem phim hành trình</button>`;
   // đầu hồ sơ: họ (và quê), dấu kết cục, tên kết cục, lời kết riêng của dòng họ, tỷ lệ hiếm, vì sao; Đọc sử chưa chọn đủ: còn bỏ ngỏ
   const head = end ? `<header class="end-head">
    <div class="end-mast"><span class="mono end-kick">Hồ sơ dòng họ · ${esc(nameChain())}${play ? ' · ' + esc(home()[1]) : ''}</span><span class="stamp">${esc(end.seal)}</span></div>
    <h1 class="end-title" tabindex="-1">${esc(title)}</h1>
+   <p class="end-line">${esc(end.line)}</p>
    <p class="end-epi">${esc(epilogue(end.id, f))}</p>
    ${rar ? `<p class="end-rar"><b>${esc(rar.lead)}</b> <span class="muted">${esc(rar.note)}</span></p>` : ''}
    <details class="end-why"><summary>Vì sao là kết cục này?</summary><p>${esc(whyText(end, f))}</p></details>${film}
@@ -128,7 +137,7 @@ export function openEnd(): void {
    <div><dt class="mono">Dòng họ bạn là</dt><dd><b>${a ? esc(a[0]) : '—'}</b></dd></div>
    ${play && rank()[0] !== title ? `<div><dt class="mono">Gia sản</dt><dd><b>${esc(rank()[0])}</b></dd></div>` : ''}</dl>`; // hạng trùng tên kết cục: không lặp
   layer.innerHTML = `<div class="ov end">
-  <div class="row sb"><button class="back" data-a="close" aria-label="Đóng">‹</button><span class="mono muted">Kết luận · 1858 – 2026</span></div>
+  <div class="row sb"><button class="back" data-a="close" aria-label="Đóng">‹</button><span class="row end-tr"><span class="mono muted">Kết luận · 1858 – 2026</span>${end ? `<button class="chip nbtn" data-a="listen-end" title="Nghe tên kết cục">${LISTEN}</button>` : ''}</span></div>
   ${head}
   <div class="end-body">
    <div class="end-main">${giaPha(f)}</div>
@@ -143,6 +152,29 @@ export function openEnd(): void {
   <button class="lnk" data-a="reset">Chọn lại từ 1858</button></div>`;
   layer.querySelector<HTMLElement>('.end-title')?.focus({ preventScroll: true }); // như trang sự kiện: tiêu điểm vào hồ sơ vừa mở, trình đọc màn hình đọc từ tên kết cục
   checkBadges();
+  if (!end) return;
+  warmEnd(f, end); // lời kể của phim hành trình cho lúc mất mạng
+  // lần đầu mở: đọc tên kết cục và câu tóm sau khi dấu triện đóng xong (~0,8 s) chừng một giây, nếu giọng đọc đang bật và
+  // người chơi chưa rời màn kết, chưa mở phim và chưa tự bấm "Nghe" / "Dừng"; mở lại về sau thì chỉ đọc khi bấm "Nghe"
+  const ov = layer.querySelector<HTMLElement>('.ov.end'), b = ov?.querySelector<HTMLElement>('[data-a=listen-end]');
+  clearTimeout(autoRead);
+  if (fresh && ov && b) autoRead = setTimeout(() => { if (layer.contains(ov) && !b.dataset.on && !document.querySelector('.cine.film:not(.out)')) listenEnd(b, false); }, 1800);
+}
+let autoRead: ReturnType<typeof setTimeout> | undefined;
+
+/** Tên kết cục và câu tóm bằng giọng thuyết minh (bản thu end-<id>, nếu đọc đúng câu trên màn; không thì giọng của máy);
+    bấm lần nữa thì dừng. */
+function listenEnd(b: HTMLElement, force: boolean): void {
+  const { f, e } = endingNow();
+  if (!e) return;
+  if (b.dataset.on) { hush(); return; }
+  if (speak(endSpeech(e, f), () => { delete b.dataset.on; }, force, endVoiceKey(e, f))) b.dataset.on = '1';
+}
+on('listen-end', el => { clearTimeout(autoRead); listenEnd(el, true); });
+/** Lời kể của phim hành trình (dòng gia phả từng đời, kết cục, lời khép theo họ): tải sẵn cho lúc mất mạng (warm.ts). */
+function warmEnd(f: Facts, end: Ending): void {
+  const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
+  warmKeys([...ERAS.map(e => { const o = optOf(e); return o ? chronKey(o.id, chronLine(o.id, f, CHRONICLE)) : undefined; }), endVoiceKey(end, f), epi ? sayKey(epiKey(skey), epi) : undefined]);
 }
 
 /** Địa chỉ công khai của trò chơi, in ở chân thẻ chia sẻ và gửi kèm khi chia sẻ (bản xem thử, bản chạy trên máy riêng

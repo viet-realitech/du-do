@@ -10,7 +10,8 @@ import { S, save, optOf, archetype, quizCorrect, values, pct, familyName, Y1 } f
 import { on } from '../ui/actions';
 import { esc, layer, sheet, ghost } from '../ui/dom';
 import { SND, buzz, audioSession } from '../audio';
-import { hasTTS, hasVoice, speak } from '../narration';
+import { hasVoice, missedVoice, speak } from '../narration';
+import { UI_LINES } from '../speech';
 import { openShare, resetAll } from './ending';
 import { qmode, setQMode, type QMode } from '../ui/quality';
 import './about';
@@ -66,8 +67,8 @@ export function paneMe(): void {
   <h3 style="margin:22px 0 6px">Cài đặt</h3>
   ${sw('sound', 'Âm thanh', S.sound)}
   ${sw('music', 'Nhạc nền', S.music)}
-  ${sw('narr', `Giọng đọc${hasTTS && !hasVoice() ? ' <span class="muted small">· chưa có giọng tiếng Việt</span>' : ''}`, S.narr)}
-  <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}" data-l="${l}">${l}</button>`).join('')}</div></div>
+  ${sw('narr', `Giọng đọc${missedVoice() && !hasVoice() ? ' <span class="muted small">· vài đoạn chưa thu, máy không đọc thay được</span>' : ''}`, S.narr)}
+  <div class="row sb" style="padding:6px 0"><span class="muted">Tốc độ đọc</span><div class="seg" style="width:190px">${RATES.map(([r, l]) => `<button class="${S.rate === r ? 'on' : ''}" style="height:30px;font-size:14px" data-a="rate" data-r="${r}">${l}</button>`).join('')}</div></div>
   ${sw('haptic', 'Rung <span class="muted small">· máy và khung bản đồ khi pháo nổ</span>', S.haptic)}
   ${sw('fx', 'Cảnh động <span class="muted small">· trận đánh 3D, phim tư liệu</span>', S.fx)}
   <div class="row sb" style="padding:6px 0"><span class="muted">Hiệu ứng</span><div class="seg" style="width:240px;flex:none">${([['auto', 'Tự động'], ['full', 'Đầy đủ'], ['lite', 'Nhẹ']] as [QMode, string][]).map(([v, l]) => `<button class="${qmode() === v ? 'on' : ''}" style="height:30px;font-size:14px" data-a="qmode" data-v="${v}" aria-pressed="${qmode() === v}">${l}</button>`).join('')}</div></div>
@@ -88,13 +89,14 @@ on('set', el => {
   if (k === 'sound' && S.sound) SND.chime();
   if (k === 'sound' || k === 'music') refreshMusic();
   if (k === 'sound') audioSession();
-  if (k === 'narr' && S.narr) speak('Giọng đọc đã bật.');
+  if (k === 'narr' && S.narr) speak(UI_LINES['ui-narr-on'], undefined, false, 'ui-narr-on');
   if (k === 'haptic') buzz(20);
   if ((k === 'fx' || k === 'sound') && !S[k]) endScene();
   if (k === 'grain' || k === 'modern' || k === 'grat') { applyTheme(); SND.tick(); }
 });
 on('qmode', el => { setQMode(el.dataset.v as QMode); paneMe(); SND.tick(); });
-on('rate', el => { S.rate = +el.dataset.r!; save(); paneMe(); speak(`Tốc độ ${el.dataset.l!.toLowerCase()}.`); });
+// nghe thử: một câu của chính giọng thuyết minh (~4 giây), phát ở tốc độ vừa chọn như mọi bản thu
+on('rate', el => { S.rate = +el.dataset.r!; save(); paneMe(); speak(UI_LINES['ui-rate'], undefined, false, 'ui-rate'); });
 on('share', () => openShare());
 // Xoá cả dòng họ / tiến trình: hỏi lại trước (nút Huỷ được chọn sẵn)
 on('reset', () => {
