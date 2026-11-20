@@ -38,6 +38,18 @@ SITE_URL=https://your-domain.example/ npm run build
 
 Before launch, have a historian review the event texts, quotes and casualty / population figures in `src/data/`
 (the design notes flag these as unreviewed), and confirm the attribution text in `src/screens/about.ts`.
+`npm run review:export` writes the review pack to `docs/review/` from the current content: a Tier A sheet of the riskiest
+lines (numbers, quotes, sensitive topics, VNCH and diaspora views, the "Nếu…" estimates, lines marked for checking), a
+sheet of every historical line, a sensitivity list by topic and a short brief in Vietnamese for the reviewer (CSV with a
+UTF-8 BOM, so Excel and Google Sheets keep the diacritics; `-- --check` fails when the pack is stale). The owner's
+pre-launch decisions (where to launch, how identifiable the owner is, the flag palette default, the domain, questions for
+a Vietnamese lawyer) are in `docs/quyet-dinh-truoc-khi-ra-mat.md`; it is not legal advice.
+
+**"Góp ý / Báo sai" link**: one address, `FEEDBACK_URL` in `src/ui/feedback.ts`, set at build time with
+`VITE_FEEDBACK_URL=https://… npm run build` (or a Vercel environment variable); `https://` or `mailto:` only, and `{ref}`
+in the address is replaced with the event / figure and build it was sent from. While it is empty no link renders; once
+set, it appears at the bottom of an event's Nguồn tab, under a figure and in Giới thiệu, opens a new tab and sends nothing
+from the app.
 
 **Stack:** Vite + TypeScript, d3 + topojson for the map, self-hosted fonts (Fontsource), `vite-plugin-pwa` for install/offline.
 Geodata ships with the app: provinces from `project/vn-provinces.json`, countries from Natural Earth via `world-atlas`, trimmed to the region by `npm run geo` (`src/data/region-50m.json`, lazy-loaded).

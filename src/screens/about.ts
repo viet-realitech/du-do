@@ -22,7 +22,7 @@ export function openAbout(): void {
    <p style="font-size:16px;margin-top:4px">Các góc nhìn được tóm lược từ sử liệu công khai và xếp ngang hàng; ứng dụng không đứng về phía nào. Nhật ký dòng họ là hư cấu. Số liệu thương vong, dân số là ước tính, khác nhau giữa các nguồn. Ranh giới ba kỳ được ghép theo địa giới tỉnh hiện nay nên chỉ gần đúng với địa giới lịch sử.</p>
    <p style="font-size:16px;margin-top:8px" class="method">Phần chữ được soạn với sự trợ giúp của công cụ AI, rồi đối chiếu với Wikipedia tiếng Việt, tiếng Anh và các sử liệu ghi ở mục Nguồn của từng sự kiện. Mỗi góc nhìn là lời tóm lược của ứng dụng, không phải lời trích; chỉ những câu đặt trong khung trích dẫn, có ghi người nói hay văn bản gốc, mới là trích dẫn. Các con số của phần Chơi (gia sản, tỉ lệ kết cục, ước lượng trong thẻ "Nếu…") là của trò chơi, không phải số liệu lịch sử.</p>
    <p style="font-size:16px;margin-top:8px">Nội dung chưa được nhà sử học thẩm định. Chỗ sai nào được chỉ ra, sau khi đối chiếu với sử liệu, sẽ được sửa trong bản cập nhật sau.${FEEDBACK_URL ? ' Bạn có thể báo chỗ sai qua mục Góp ý / Báo sai ở dưới.' : ''}</p></div>
-  ${FEEDBACK_URL ? `<h3 style="margin:18px 0 4px">Góp ý</h3>${feedbackRow('giới thiệu')}` : ''}
+  ${FEEDBACK_URL ? `<div style="margin-top:16px">${feedbackRow('giới thiệu')}</div>` : ''}
   <h3 style="margin:18px 0 4px">Nguồn dữ liệu</h3>
   ${CREDITS.map(([k, v, u]) => `<a class="src" href="${u}" target="_blank" rel="noopener"><div class="tt"><h3 style="font-size:16.5px">${k}</h3><span class="mono" style="color:var(--acc)">↗</span></div><div class="muted" style="font-size:15px;margin-top:2px">${v}</div></a>`).join('')}
   <h3 style="margin:18px 0 4px">Quyền riêng tư</h3>
