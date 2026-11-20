@@ -905,7 +905,9 @@ test('event detail tabs work offline and Back closes overlays without leaving th
   await expect(page.locator('#et')).toBeVisible();
   for (const t of ['Góc nhìn', 'Ảnh, phim', 'Nguồn', 'Diễn biến']) await page.locator('#et').getByRole('tab', { name: t }).click();
   await page.locator('#et').getByRole('tab', { name: 'Ảnh, phim' }).click();
-  await expect(page.getByText('Chưa tìm thấy bài Wikipedia phù hợp.')).toBeVisible();
+  // offline: says the article could not load and offers to try again, not that no article exists
+  await expect(page.getByText(/Chưa tải được bài Wikipedia và ảnh tư liệu/)).toBeVisible();
+  await expect(page.locator('#eb [data-a=wretry]')).toBeVisible();
   await page.goBack();
   await expect(page.locator('.ov')).toHaveCount(0);
   await expect(page.locator('#yr')).toBeVisible();

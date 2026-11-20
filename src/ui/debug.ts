@@ -4,6 +4,7 @@ import { acState } from '../audio';
 import { vstats, voiceName } from '../narration';
 import { swStats } from '../pwa';
 import { errlog } from '../errlog';
+import { keptSaves } from '../boot';
 
 /* Bảng chẩn đoán trên máy (chỉ tải khi mở: ?debug, hay chạm 5 lần vào dòng phiên bản ở Hồ sơ → Giới thiệu; ứng dụng
    trên màn hình chính không thêm được ?debug). Một góc nhỏ kiểu "Bản đồ hồ sơ": khung hình, mức hiệu ứng và các lần
@@ -62,6 +63,7 @@ function report(): string {
     `Lời kể (bản thu): ${vstats.started} phát · ${vstats.refused} bị chặn · ${vstats.error} lỗi · giọng máy: ${safe(voiceName, '') || 'không có giọng tiếng Việt'}`,
     `Ứng dụng: ${sa ? 'màn hình chính (standalone)' : 'trình duyệt'} · ${navigator.onLine ? 'có mạng' : 'mất mạng'} · ${store || '…'}`,
     sw ? `Service worker: ${sw.supported ? `${sw.controlled ? 'đang phục vụ' : 'chưa phục vụ trang này'} · ${sw.active || 'không có'}${sw.waiting ? ' · bản mới đang chờ' : ''}${sw.installing ? ' · đang cài' : ''}${sw.pending ? ' · chờ lúc an toàn' : ''}${sw.lastCheck ? ` · kiểm tra ${sw.lastCheck}` : ''}` : 'không hỗ trợ'}` : 'Service worker: ?',
+    safe(() => { const k = keptSaves(), l = k[k.length - 1]; return `Bản lưu: phiên bản ${S.v} · bản sao hỏng đã cất: ${k.length}${l ? ` (mới nhất ${l.t}, ${l.key}, ${l.why})` : ''}`; }, 'Bản lưu: ?'),
     `Máy: ${navigator.userAgent}`,
     `DPR ${devicePixelRatio} · khung nhìn ${innerWidth}×${innerHeight} · màn hình ${screen.width}×${screen.height}`,
     `Lỗi gần nhất (${errs.length}):`,
@@ -80,12 +82,17 @@ function paint(): void {
   if (pre && !panel!.classList.contains('min')) pre.textContent = safeReport();
 }
 
-async function copy(btn: HTMLButtonElement): Promise<void> {
-  const text = safeReport();
+/** Bản sao bản lưu hỏng mới nhất (màn khôi phục, hay bản lưu đã được sửa lúc mở), để dán vào cuộc trò chuyện. */
+function keptText(): string {
+  const k = keptSaves(), l = k[k.length - 1];
+  return l ? `Dư Đồ · bản lưu hỏng ${l.n} · ${l.key} · ${l.t} · ${l.why}\n${l.raw ?? '(trống)'}` : '';
+}
+
+async function copy(btn: HTMLButtonElement, text = safeReport(), label = 'Sao chép báo cáo'): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
     btn.textContent = 'Đã sao chép';
-    setTimeout(() => { btn.textContent = 'Sao chép báo cáo'; }, 2000);
+    setTimeout(() => { btn.textContent = label; }, 2000);
   } catch {
     // không có quyền chép: hiện ô chữ đã chọn sẵn để tự chép
     panel?.querySelector('textarea')?.remove();
@@ -112,12 +119,13 @@ export function openDebug(): void {
   const p = panel = document.createElement('section');
   p.id = 'dbg';
   p.setAttribute('aria-label', 'Chẩn đoán');
-  p.innerHTML = `<header><b>Chẩn đoán</b><button type="button" data-d="min" aria-label="Thu gọn">–</button><button type="button" data-d="x" aria-label="Đóng">×</button></header><pre></pre><button type="button" class="btn go">Sao chép báo cáo</button>`;
+  p.innerHTML = `<header><b>Chẩn đoán</b><button type="button" data-d="min" aria-label="Thu gọn">–</button><button type="button" data-d="x" aria-label="Đóng">×</button></header><pre></pre><button type="button" class="btn go">Sao chép báo cáo</button>${keptSaves().length ? '<button type="button" class="btn go kept">Sao chép bản lưu hỏng</button>' : ''}`;
   p.addEventListener('click', ev => {
     ev.stopPropagation();
     const d = (ev.target as HTMLElement).closest<HTMLElement>('[data-d]')?.dataset.d;
     if (d === 'min') { p.classList.toggle('min'); paint(); }
     else if (d === 'x') { closeDebug(); }
+    else if ((ev.target as HTMLElement).closest('.kept')) void copy(p.querySelector<HTMLButtonElement>('.kept')!, keptText(), 'Sao chép bản lưu hỏng');
     else if ((ev.target as HTMLElement).closest('.go')) void copy(p.querySelector<HTMLButtonElement>('.go')!);
   });
   document.body.appendChild(p);
