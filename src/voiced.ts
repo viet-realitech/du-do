@@ -22,6 +22,8 @@ export const repFacts = (h: Home, fl: Flag[] = []): Facts =>
   ({ mode: 'play', name: 'Họ Nguyễn', picks: [], home: { id: h[0], name: h[1], region: h[3] }, renames: [], flags: new Set(fl) });
 const H = (id: string) => HOMES.find(h => h[0] === id)!;
 
+/** Cờ cả nhà rời nước sau năm 1976 (endings.ts GONE trừ di tản), có và không có nhánh đã đi trước năm 1978. */
+const GONE_REP: Flag[][] = [['ly79Di'], ['vuotbien'], ['vuotbien', 'lylichDi'], ['odp'], ['odp', 'lylichDi']];
 /** Dòng gia phả theo quê và theo nhà ở xứ người (phim hành trình): khoá, hướng, quê đại diện, cờ. Nhà tập kết từ phía nam
     vĩ tuyến 17 về lại quê năm 1975: mỗi quê một bản thu (câu gọi tên quê). */
 const CHRON_REP: [string, string, Home, Flag[]][] = [
@@ -34,10 +36,13 @@ const CHRON_REP: [string, string, Home, Flag[]][] = [
   ['chr-duytan-t', 'duytan', H('hue'), []],
   ['chr-duytan-s', 'duytan', H('sg'), []],
   ...Object.keys(ABROAD6).map(id => ['chr-x' + id, id, H('sg'), ['ditan']] as [string, string, Home, Flag[]]),
+  // đời thứ sáu chọn hướng ở trong nước năm 1976 rồi cả nhà mới ra đi (endings.ts GEN6_GONE): câu không gọi tên quê, mỗi
+  // cách đi một bản; nhà đã có một nhánh xuống ghe năm 1978 (lylichDi) thì cả nhà còn lại đi theo nhánh ấy
+  ...Object.keys(ABROAD6).flatMap(id => GONE_REP.map(fl => [`chr-g-${id}-${fl.join('-').toLowerCase()}`, id, H('sg'), fl] as [string, string, Home, Flag[]])),
 ];
 export function chronVariants(): Line[] {
   return CHRON_REP.map(([key, id, h, fl]) => ({ key, text: chronLine(id, repFacts(h, fl), CHRONICLE),
-    ctx: `Phim hành trình · dòng gia phả của hướng "${OPT[id].label}", ${fl.includes('ditan') ? 'nhà đã di tản' : `quê ${h[1]}${fl.length ? ' · ' + fl.join(', ') : ''}`}` }));
+    ctx: `Phim hành trình · dòng gia phả của hướng "${OPT[id].label}", ${fl.includes('ditan') ? 'nhà đã di tản' : key.startsWith('chr-g-') ? `chọn ở trong nước rồi cả nhà ra đi (${fl.join(', ')})` : `quê ${h[1]}${fl.length ? ' · ' + fl.join(', ') : ''}`}` }));
 }
 
 /** Kết cục ở điểm rẽ theo quê (outText) và của nhà đã di tản (ABROAD6): khoá theo quê khi câu đổi theo từng quê (gọi tên

@@ -3,7 +3,7 @@ import { SPECIAL, type SpecialCard } from './data/cards2';
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Option, type Region } from './data';
 import { CARD, VARIANT, type Card, type Choice, type Fx } from './data/cards';
 import { S, save, curPick, chYear, evEra, optView, type Res, type Rel, renameFamily, familyName } from './state';
-import { tiersOf, thOf, complete, endingOf, titleOf, ABROAD6, type Ending, type Facts, type Flag } from './data/endings';
+import { tiersOf, thOf, complete, endingOf, titleOf, ABROAD6, GONE, GONE_AT, type Ending, type Facts, type Flag } from './data/endings';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
    và "mùa màng" ở mỗi thế hệ. Lịch sử vẫn diễn ra như đã diễn ra; chỉ vận mệnh dòng họ đổi. */
@@ -30,7 +30,7 @@ export function regionAt(y: number): Region {
 /** Nơi dòng họ sống vào năm y: quê nhà, hay nơi ở mới sau 1954 (tên, toạ độ cho dấu nhà trên bản đồ). */
 export function placeAt(y: number): { name: string; l: [number, number]; moved: boolean } {
   const h = home(), r = regionAt(y);
-  if (abroad(y)) return { name: 'xứ người', l: h[2], moved: true }; // cả nhà đã di tản: dấu nhà trên bản đồ vẫn ở quê gốc
+  if (abroad(y)) return { name: 'xứ người', l: h[2], moved: true }; // cả nhà đã ra nước ngoài: dấu nhà trên bản đồ vẫn ở quê gốc
   if (r === h[3]) return { name: h[1], l: h[2], moved: false };
   return r === 'B' ? { name: 'miền Bắc', l: [105.85, 21.03], moved: true } : { name: 'miền Nam', l: [106.82, 10.95], moved: true };
 }
@@ -62,7 +62,7 @@ export function powersAt(y: number): (keyof Rel)[] {
 
 /** Thế lực cai quản quê nhà vào năm y. */
 export function ruler(y: number): keyof Rel | null {
-  if (abroad(y)) return 'my'; // cả nhà đã di tản (Guam, rồi California): mùa màng theo nơi ở mới, không theo chính quyền ở quê
+  if (abroad(y)) return 'my'; // cả nhà đã ra nước ngoài: mùa màng theo nơi ở mới (quan hệ với Mỹ, phương Tây), không theo chính quyền ở quê
   const g = regionAt(y), key = (g === 'QT' ? (y >= 1954 && y < 1976 ? 'T2' : 'T1') : g) as Exclude<Region, 'QT'>;
   const f = regime2(y).reg[key];
   return ({ dainam: 'tr', dnph: 'ph', phap: 'ph', phap_bh: 'ph', jp: 'nh', vndcch: 'vm', cmlt: 'vm', vnch: 'qg', chxhcn: 'nn', tc: null } as Record<string, keyof Rel | null>)[f || ''] ?? null;
@@ -95,14 +95,16 @@ export function cardOf(v: HistEvent): Card | undefined {
 }
 /** Bộ lựa chọn thẻ của sự kiện dùng: chỉ số trong VARIANT, -1 = bộ gốc, undefined = không có thẻ. Vùng (`regions`) là
     vùng dòng họ đang sống vào năm của chương (regionAt), `from` là vùng quê gốc: nhà Huế tập kết ra Bắc là regions B,
-    from T2. `picks`: đã chọn một trong các hướng đó; `flags`: một lựa chọn đã quyết trước năm của sự kiện mang cờ đó. */
+    from T2. `picks`: đã chọn một trong các hướng đó; `flags`: một lựa chọn đã quyết trước năm của sự kiện mang cờ đó;
+    `special`: biến cố riêng ấy gắn vào sự kiện (chốt trong S.xs lúc quyết định). */
 function variantIx(v: HistEvent): number | undefined {
   if (v.diary || !CARD[v.id]) return undefined;
   if (S.cardv[v.id] === 'base' || !VARIANT[v.id]) return -1; // quyết trước khi có lựa chọn theo vùng: giữ bộ gốc
   const picked = Object.values(S.picks), g = regionAt(chYear(v)), g0 = home()[3];
   return VARIANT[v.id].findIndex(x => (!x.regions || x.regions.includes(g)) && (!x.from || x.from.includes(g0)) && (!x.homes || x.homes.includes(S.home)) &&
     (!x.picks || x.picks.some(p => picked.includes(p))) && !x.notPicks?.some(p => picked.includes(p)) &&
-    (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })) && (!x.flags || hasFlag(x.flags, v.y)));
+    (!x.after || x.after.some(a => { const [k, i] = a.split('='); return S.cards[k] === +i; })) && (!x.flags || hasFlag(x.flags, v.y)) &&
+    (!x.special || specialFor(v)?.id === x.special));
 }
 /** Sự kiện và biến cố riêng có thể mang mỗi cờ (bộ gốc và mọi bộ thay thế): hasFlag chỉ xét chúng, không dựng lại cả
     trăm thẻ (và các bộ thay thế theo cờ lồng nhau) mỗi lần vẽ. */
@@ -122,10 +124,13 @@ export function alKey(v: HistEvent, i: number): string {
   const k = variantIx(v);
   return k !== undefined && k >= 0 ? `${v.id}@${k}:${i}` : `${v.id}:${i}`;
 }
-/** Cả nhà đã di tản tháng 4.1975 (cờ 'ditan' trên thẻ 30 tháng Tư), tính tới năm y: dòng họ sống ở xứ người, nên thẻ
+/** Cả nhà đã ra nước ngoài trước năm y (cờ rời nước endings.ts GONE: di tản tháng 4.1975, "bán chính thức" 1979, vượt
+    biển hay đi diện đoàn tụ ODP 1980; hasFlag xét năm của thẻ mang cờ): dòng họ sống ở xứ người từ sau năm ấy, nên thẻ
     theo vùng và biến cố trong nước không còn là việc của họ; thẻ cả nước có bộ lựa chọn nói từ xứ người (VARIANT, cờ
-    'ditan'), điểm rẽ 6 cũng vậy (ABROAD6). */
-export const abroad = (y = 9999): boolean => isPlay() && y > 1975 && hasFlag(['ditan'], y);
+    GONE). Điểm rẽ 6 (1976) nói từ xứ người chỉ với nhà đã đi trước năm ấy (abroadOpt, ABROAD6). */
+export const abroad = (y = 9999): boolean => isPlay() && y > 1975 && hasFlag(GONE, y);
+/** Bộ lựa chọn VARIANT nói từ xứ người (mang cờ rời nước). */
+const abroadSet = (k: number, id: string) => k >= 0 && !!VARIANT[id][k].flags?.some(f => GONE.includes(f));
 /** Bắt buộc quyết định: cả nước, hoặc sự kiện chạm tới nơi dòng họ đang sống (quê, hay nơi ở mới sau 1954). */
 export function mustDecide(v: HistEvent): boolean {
   const c = cardOf(v);
@@ -137,11 +142,11 @@ export function mustDecide(v: HistEvent): boolean {
 }
 export const decided = (id: string) => id in S.cards;
 /** Thẻ dành cho dòng họ này: thẻ bắt buộc (cả nước / chạm quê) hay thẻ tuỳ chọn chung (phạm vi ''); thẻ tuỳ chọn của
-    vùng khác (vd. giữ thành Hà Nội 1882 với nhà ở Nghệ An) không mời. Nhà đã di tản: thẻ tuỳ chọn viết cho người trong
-    nước (góp tiền qua báo Tuổi Trẻ, nhận ruộng tái định cư…) không mời, trừ thẻ có bộ lựa chọn nói từ xứ người. */
+    vùng khác (vd. giữ thành Hà Nội 1882 với nhà ở Nghệ An) không mời. Nhà đã ra nước ngoài: thẻ tuỳ chọn viết cho người
+    trong nước (góp tiền qua báo Tuổi Trẻ, nhận ruộng tái định cư…) không mời, trừ thẻ có bộ lựa chọn nói từ xứ người. */
 export const localCard = (v: HistEvent): boolean => {
   const c = cardOf(v), k = variantIx(v);
-  return !!c && ((c[1] === '' && (!abroad(chYear(v)) || (k !== undefined && k >= 0 && !!VARIANT[v.id][k].flags?.includes('ditan')))) || mustDecide(v));
+  return !!c && ((c[1] === '' && (!abroad(chYear(v)) || (k !== undefined && abroadSet(k, v.id)))) || mustDecide(v));
 };
 /** Thẻ hiện cho dòng họ này (nút ◆ / ✓): thẻ của mình, thẻ đã quyết từ trước, hay có biến cố riêng gắn vào. */
 export const ownCard = (v: HistEvent): boolean => isPlay() && !!cardOf(v) && (localCard(v) || decided(v.id) || !!specialFor(v));
@@ -195,11 +200,21 @@ export function payFx(fx: Fx): { fx: Fx; swap: ['g' | 'b', number] | null } {
     sức thì khoá, trừ khi thế thì thẻ bắt buộc thành ngõ cụt hay chỉ còn câu trả lời trái đường dòng họ theo: khi ấy lựa
     chọn không trái đường rẻ nhất mở (tài nguyên dừng ở 0), như nhà Nghệ An ở vùng tự do không bị ép trả lời "ở vùng
     Pháp" năm 1954; không có lựa chọn nào như thế mà cũng không gì đủ sức thì lựa chọn rẻ nhất mở. */
-export function locks(fxs: Fx[], al: number[]): (string | null)[] {
-  const no = fxs.map(canAfford), all = fxs.map((_, i) => i);
+export function locks(fxs: Fx[], al: number[], bar: (string | null)[] = []): (string | null)[] {
+  // `bar` (barred): khoá cứng vì một việc đã quyết, không phải vì thiếu sức: không bao giờ mở lại để tránh ngõ cụt
+  const no = fxs.map((fx, i) => bar[i] || canAfford(fx)), all = fxs.map((_, i) => i).filter(i => !bar[i]);
   const open = (ix: number[]) => { if (ix.length) no[ix.reduce((b, i) => (cost(fxs[i]) < cost(fxs[b]) ? i : b))] = null; };
-  if (!all.some(i => !no[i] && al[i] >= 0)) { const on = all.filter(i => al[i] >= 0); if (on.length) open(on); else if (no.every(Boolean)) open(all); }
+  if (!all.some(i => !no[i] && al[i] >= 0)) { const on = all.filter(i => al[i] >= 0); if (on.length) open(on); else if (all.every(i => no[i])) open(all); }
   return no;
+}
+/** Lựa chọn mang cờ `flag` không thể chọn năm y vì một việc dòng họ đã quyết (lý do, hay null): người con đi bộ đội tình
+    nguyện sang Campuchia năm 1979 (cp79, quân tình nguyện về hết năm 1989) thì không còn "cả nhà" để cùng ra đi (cờ GONE:
+    "bán chính thức", vượt biển, diện đoàn tụ). Chỉ khi thẻ ấy thật là của nhà này (nhà ở miền Tây Nam Bộ năm 1979). card.ts
+    và các mô phỏng (npm run scenes, npm run endings) cùng dùng. */
+export function barred(flag: Flag | undefined, y: number): string | null {
+  if (!flag || !GONE.includes(flag) || S.cards.cp79 !== 0 || y >= 1989) return null;
+  const cp = EV.find(v => v.id === 'cp79');
+  return cp && mustDecide(cp) ? 'Người con còn ở mặt trận Campuchia' : null;
 }
 
 export function decide(v: HistEvent, i: number): Fx {
@@ -213,7 +228,7 @@ export function decide(v: HistEvent, i: number): Fx {
 
 /* ---------- biến cố riêng của dòng họ (cards2.ts) ---------- */
 function matches(w: SpecialCard['when'], y: number): boolean {
-  // nhà đã di tản: biến cố trong nước (khai lý lịch, rà soát người Hoa) không đến; biến cố của người ra đi (kiều hối) vẫn đến
+  // nhà đã ra nước ngoài: biến cố trong nước (khai lý lịch, rà soát người Hoa) không đến; biến cố của người ra đi (kiều hối) vẫn đến
   if (abroad(y) && !w.picks?.includes('radi')) return false;
   if (w.surnames && !w.surnames.includes(S.surname || surnameKey(S.name))) return false;
   if (w.homes && !w.homes.includes(S.home)) return false;
@@ -256,8 +271,19 @@ export function needsDecision(v: HistEvent): boolean {
   return !!sp && !specialDecided(sp);
 }
 
-/** Điểm rẽ 6 với nhà đã di tản: cùng id (kết cục, quan hệ, nhãn Hợp / Trái đọc như cũ), lời nói từ xứ người. */
-export const abroadOpt = (o: Option): Option => { const x = ABROAD6[o.id]; return x && abroad() ? { ...o, ...x } : o; };
+/** Điểm rẽ 6 (năm 1976) với nhà đã di tản năm 1975: cùng id (kết cục, quan hệ, nhãn Hợp / Trái đọc như cũ), lời nói từ
+    xứ người. Nhà chọn hướng ở trong nước rồi mới ra đi (1979, 1980): hướng giữ nguyên, nhưng trang nhật ký của hướng ấy đề
+    năm sau năm ra đi (sổ gạo, ruộng khoán ở quê, ngày vào WTO) không còn là chuyện của nhà; hướng Ra đi bỏ trang đêm ra
+    khơi năm 1979, vì thẻ rời nước đã kể chuyến đi thật của nhà (như nhà di tản). */
+const GATE6 = ERAS[ERAS.length - 1].cy;
+export const abroadOpt = (o: Option): Option => {
+  const x = ABROAD6[o.id];
+  if (!x || !isPlay()) return o;
+  if (abroad(GATE6)) return { ...o, ...x };
+  const g = GONE.find(f => hasFlag([f]));
+  if (!g) return o;
+  return { ...o, diary: o.id === 'radi' ? x.diary : o.diary.filter(d => d.y <= GONE_AT[g].y) };
+};
 optView.of = abroadOpt;
 
 /* ---------- lựa chọn điểm rẽ đổi quan hệ ---------- */
@@ -348,7 +374,11 @@ export function harvest(lived: Era, y: number): Harvest | null {
   // phe mình thì đã được trả ở dòng cai quản
   const pk = curPick(lived.cy), refs = pk ? ALIGN[pk.id] || [] : [];
   const onlyLg = refs.every(([k]) => k === 'lg'), rulesForUs = !!r && refs.some(([k, sg]) => k === r && sg > 0);
-  const st = pk && refs.length && !onlyLg && !rulesForUs ? standing(pk.id) : 0;
+  // đời này chọn một đường ở trong nước (giữ kế hoạch hoá, Đổi Mới) rồi cả nhà ra đi giữa đời (1979, 1980): không còn
+  // "người cùng đường góp gạo, góp tiền" cho một đường nhà đã rời; nhà di tản năm 1975 thấy hướng nói từ xứ người
+  // (ABROAD6), nhà chọn Ra đi thì đã đi đúng đường mình
+  const leftPath = !!pk && pk.id !== 'radi' && abroad(ry) && !abroad(lived.cy);
+  const st = pk && refs.length && !onlyLg && !rulesForUs && !leftPath ? standing(pk.id) : 0;
   // Thu nhập cố định; chi phí tăng theo quy mô (họ càng đông càng tốn gạo, càng giàu càng nặng thuế, danh tiếng phai dần):
   // không chọn gì cũng không thể giàu mãi, và không có tài nguyên nào kẹt ở mức trần.
   const { g, d, b, u } = S.res;
@@ -359,7 +389,9 @@ export function harvest(lived: Era, y: number): Harvest | null {
     ['Danh tiếng phai theo thời gian', { u: -Math.max(4, Math.round((u * u) / 700)) }],
   ];
   const pl = placeAt(ry); // sau 1954: nơi dòng họ thật sự sống (di cư, tập kết)
-  if (r) lines.push([`Bên cai quản ${pl.moved ? `nơi ở mới (${pl.name})` : pl.name}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 8), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
+  // ở xứ người: không ai "cai quản" nhà, nhưng làm ăn, giấy tờ nơi ở mới vẫn tuỳ quan hệ với Mỹ và phương Tây (số đọc
+  // từ quan hệ 'my'); lời không gọi tên nước nào, vì nhà có thể ở Canada, Anh, Úc, Pháp…
+  if (r) lines.push([abroad(ry) ? `Nơi ở mới ở xứ người · quan hệ với nước sở tại: ${relLabel(rv).toLowerCase()}` : `Bên cai quản ${pl.moved ? `nơi ở mới (${pl.name})` : pl.name}: ${POWERS[r][0]} · ${relLabel(rv).toLowerCase()}`, { g: Math.round((rv - 50) / 5), b: Math.round((rv - 50) / 8), u: rv >= 75 ? 3 : rv < 25 ? -4 : 0 }]);
   else lines.push(['Vùng tranh chấp', { g: -6, d: -2 }]);
   if (pk && st >= 55) lines.push([`Đường bạn theo: ${pk.label} · ${st >= 75 ? 'son sắt' : 'vững vàng'}`, { g: Math.round((st - 40) / 6), d: 2, b: st >= 75 ? 3 : 2, u: st >= 75 ? 4 : 2 }]); // người cùng đường góp gạo, góp tiền
   else if (pk && onlyLg && refs.length && CAMP[pk.id] === 'pt' && lg >= 55) lines.push(['Anh em trong phong trào', { d: 2, u: 3 }]);
@@ -393,7 +425,11 @@ export function rank(): [string, string] {
   if (s >= t[2]) return ['Gia đình khá giả', 'Giữ được ruộng, giữ được người, có tiếng trong vùng.'];
   if (s >= t[1]) return ['Thường dân', 'Qua được mọi cơn bão, không giàu, không mất gốc.'];
   if (s > t[0]) return ['Nhà sa sút', 'Chiến tranh và lựa chọn lấy đi nhiều; nhà còn người, còn ruộng, nhưng kém xưa.'];
-  return ['Còn lại tên họ', 'Chiến tranh và lựa chọn lấy đi gần hết, chỉ còn tên họ: nhóm 5% sa sút nhất cùng quê trong mô phỏng.'];
+  // nói đúng số trên sổ: họ còn đông người thì cái thiếu là lúa gạo, bạc, uy tín (phần cạn nhất), không phải người
+  const RN: [number, string][] = [[g, 'lúa gạo'], [b, 'bạc'], [u, 'uy tín']], dry = RN.filter(x => x[0] <= 25);
+  const low = (dry.length ? dry : RN.sort((x, y) => x[0] - y[0]).slice(0, 2)).map(x => x[1]);
+  const lowT = `${low.length > 1 ? low.slice(0, -1).join(', ') + ' và ' + low[low.length - 1] : low[0]} ${dry.length ? 'gần cạn' : 'xuống thấp'}`;
+  return ['Còn lại tên họ', `Nhóm 5% sa sút nhất cùng quê trong mô phỏng: ${lowT}${d >= 40 ? `, dù trong họ vẫn còn ${d} nhân đinh` : d >= 25 ? '' : ', người cũng còn ít'}; tên họ thì vẫn giữ được.`];
 }
 
 /** Dữ kiện cho kết cục (data/endings.ts): sáu hướng, quê, gia sản, gia sản sau từng mùa màng, các lần đổi họ và cờ
@@ -419,14 +455,18 @@ export function endingNow(): { f: Facts; e: Ending | null; title: string } {
 /** Việc dòng họ đã quyết trong chương `e` (thẻ sự kiện và biến cố riêng), việc lớn trước: biến cố riêng, lựa chọn có cờ
     (di cư, tập kết, vượt biên…), rồi lựa chọn đổi gia sản nhiều nhất. Cho gia phả và phim hành trình ở kết cục. */
 export function bigChoices(e: Era, n = 2): { y: number; label: string; out: string }[] {
-  const xs: { y: number; label: string; out: string; w: number }[] = [];
+  const xs: { y: number; o: number; label: string; out: string; w: number }[] = [];
   const mag = (fx: Fx) => RES.reduce((a, [k]) => a + Math.abs(fx[k] || 0), 0);
-  for (const { v, ch } of choicesIn(0, 0, e)) xs.push({ y: v.y, label: ch[0], out: ch[3], w: (ch[4] ? 1000 : 0) + mag(ch[2]) });
+  // cả nhà rời nước (cờ GONE) đứng trên cả biến cố riêng: phim và gia phả của đời ấy mở bằng chuyến đi, không bằng một
+  // việc quyết trước đó mà kết cục còn kể chuyện ở quê
+  const w0 = (fl: Flag | undefined, base: number) => (fl && GONE.includes(fl) ? 3000 : base);
+  // `o`: thứ tự quyết trong năm: thẻ sự kiện trước, biến cố riêng gắn vào nó ngay sau
+  for (const { v, ch } of choicesIn(0, 0, e)) xs.push({ y: v.y, o: EV.indexOf(v), label: ch[0], out: ch[3], w: w0(ch[4], ch[4] ? 1000 : 0) + mag(ch[2]) });
   for (const c of SPECIAL) {
     const i = S.cards['x:' + c.id], v = EV.find(x => x.id === c.ev), ch = i != null ? c.choices[i] : undefined;
-    if (ch && v && evEra(v) === e) xs.push({ y: v.y, label: ch[0], out: ch[3], w: 2000 + mag(ch[2]) });
+    if (ch && v && evEra(v) === e) xs.push({ y: v.y, o: EV.indexOf(v) + 0.5, label: ch[0], out: ch[3], w: w0(ch[5], 2000) + mag(ch[2]) });
   }
-  return xs.sort((a, b) => b.w - a.w).slice(0, n).sort((a, b) => a.y - b.y).map(({ y, label, out }) => ({ y, label, out }));
+  return xs.sort((a, b) => b.w - a.w).slice(0, n).sort((a, b) => a.y - b.y || a.o - b.o).map(({ y, label, out }) => ({ y, label, out }));
 }
 
 export const decidedCount = () => Object.keys(S.cards).length;

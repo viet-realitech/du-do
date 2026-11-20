@@ -9,7 +9,7 @@ import { esc, sheet, toast, ghost, calm, radios, reveal } from '../ui/dom';
 import { flag } from '../ui/bits';
 import { icon } from '../ui/icons';
 import { SND, buzz } from '../audio';
-import { cardOf, locks, payFx, alKey, placeAt, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial, ruler } from '../play';
+import { cardOf, locks, payFx, alKey, placeAt, decide, decided, mustDecide, home, RES, POWERS, relLabel, alignment, specialFor, specialDecided, decideSpecial, ruler, abroad, barred } from '../play';
 import { pauseForCard } from '../tour';
 import { layer } from '../ui/dom';
 import { renderMain, continueFlow } from '../view';
@@ -53,7 +53,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   const done = decided(v.id), must = mustDecide(v) || spPending, y = chYear(v), pl = placeAt(y);
   const als = c[2].map((ch, i) => alignment(ch[2], y, alKey(v, i)));
   // Không đủ sức thì khoá, trừ khi thẻ bắt buộc thành ngõ cụt hay chỉ còn lựa chọn trái đường (play.ts locks)
-  const noList = done ? c[2].map(() => null) : locks(c[2].map(ch => ch[2]), als);
+  const noList = done ? c[2].map(() => null) : locks(c[2].map(ch => ch[2]), als, c[2].map(ch => barred(ch[4], y)));
   if (inTour) { buzz(must ? [15, 30, 15] : 10); }
   const near = c[1] !== 'all' && c[1] !== '' && mustDecide(v); // thẻ bị biến cố riêng buộc (tn25 của họ Nguyễn) không phải vì chạm tới quê
   const d = sheet(`<div class="kick${must ? ' must' : ''}"><span class="mono">${must ? icon('seal', 12) : ''}${must ? 'Dòng họ phải quyết định' : 'Dòng họ có thể hành động'} · ${v.y}</span><span class="mono muted">${esc(familyName())} · ${esc(pl.moved ? `${home()[1]} → ${pl.name}` : pl.name)}</span></div>
@@ -138,7 +138,7 @@ function finish(d: HTMLElement, v: HistEvent, inTour: boolean): void {
 function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boolean): void {
   const sh = d.querySelector('.sheet')!;
   const als = sp.choices.map(ch => (ch[4] ? 0 : alignment(ch[2], chYear(v)))); // đổi họ: không hợp, không trái
-  const noList = locks(sp.choices.map(ch => ch[2]), als);
+  const noList = locks(sp.choices.map(ch => ch[2]), als, sp.choices.map(ch => barred(ch[5], chYear(v))));
   const mine = S.surname || surnameKey(S.name);
   const moms = SURNAMES.filter(s => s.key !== mine).slice(0, 8);
   // vì họ: "của Họ X"; vì đường cha ông theo / phe / quê / gia sản: nói đúng lý do (không ngụ ý vì cái tên)
@@ -195,16 +195,19 @@ on('card', el => {
 on('close-card', el => { const sc = el.closest<HTMLElement>('.scrim'); if (sc) ghost(sc); continueFlow(); });
 
 const relCls = (v: number) => (v >= 55 ? 'ok' : v >= 40 ? '' : 'bad');
+/** Bên quyết định mùa màng năm y: cai quản quê (hay nơi ở mới sau 1954); cả nhà đã ra nước ngoài thì không ai "cai quản"
+    nhà, quan hệ ấy chỉ quyết định đời sống ở xứ người (nhà ở Mỹ, Canada, Úc… đều vậy). */
+const rulesTxt = (y: number) => (abroad(y) ? 'đời sống ở xứ người' : `cai quản ${placeAt(y).name}`);
 /** Chip quan hệ cho chú giải màn chính. `y`: năm để đánh dấu (mái nhà) bên đang cai quản quê (bên quyết định mùa màng). */
 export const relChip = (k: keyof typeof POWERS, y?: number) => {
   const [name, fac] = POWERS[k], v = S.rel[k], rules = y !== undefined && ruler(y) === k;
-  return `<span class="relc" title="${rules ? `${name}: đang cai quản ${esc(placeAt(y!).name)}` : name}">${rules ? icon('home', 13) : ''}${fac ? flag(fac) : '<i class="dot"></i>'}${name} · <b class="${relCls(v)}">${relLabel(v)}</b></span>`;
+  return `<span class="relc" title="${rules ? `${name}: ${esc(rulesTxt(y!).replace(/^cai/, 'đang cai'))}` : name}">${rules ? icon('home', 13) : ''}${fac ? flag(fac) : '<i class="dot"></i>'}${name} · <b class="${relCls(v)}">${relLabel(v)}</b></span>`;
 };
 /** Sổ quan hệ trong bảng (mùa màng): mỗi thế lực một dòng kẻ (cờ, tên, mức), không phải một đám chip xuống dòng lởm chởm;
     bên đang cai quản quê ghi rõ bằng chữ, cạnh dấu mái nhà. */
 export const relRows = (ks: (keyof typeof POWERS)[], y?: number) => `<ul class="rels">${ks.map(k => {
   const [name, fac] = POWERS[k], v = S.rel[k], rules = y !== undefined && ruler(y) === k;
-  return `<li>${fac ? flag(fac) : '<i class="dot"></i>'}<span>${name}${rules ? `<small>${icon('home', 12)}cai quản ${esc(placeAt(y!).name)}</small>` : ''}</span><b class="${relCls(v)}">${relLabel(v)}</b></li>`;
+  return `<li>${fac ? flag(fac) : '<i class="dot"></i>'}<span>${name}${rules ? `<small>${icon('home', 12)}${esc(rulesTxt(y!))}</small>` : ''}</span><b class="${relCls(v)}">${relLabel(v)}</b></li>`;
 }).join('')}</ul>`;
 
 export { toast };

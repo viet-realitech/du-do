@@ -12,6 +12,7 @@ const P = await import('../src/play');
 const { SPECIAL } = await import('../src/data/cards2');
 const { SURNAMES, loreOf } = await import('../src/data/surnames');
 type Fx = Parameters<typeof P.canAfford>[0];
+type Flag = import('../src/data/endings').Flag;
 
 const paths: string[][] = [];
 const walk = (i: number, acc: string[]) => {
@@ -29,15 +30,15 @@ const fails: string[] = [];
 const surnames = ['', ...new Set(SPECIAL.flatMap(c => c.when.surnames || []))];
 /** Chọn như dòng họ trung thành: hợp đường nhất mà đủ sức (rẻ hơn nếu ngang nhau); ghi lại lần lựa chọn hợp đường bị khoá.
     `rename[i]`: lựa chọn đổi họ (thẻ hiện nhãn "Đổi họ", không tính là hợp / trái đường). */
-function choose(tag: string, chs: { fx: Fx; label: string; rename?: boolean; key?: string }[], y: number): number {
+function choose(tag: string, chs: { fx: Fx; label: string; rename?: boolean; key?: string; flag?: Flag }[], y: number): number {
   const als = chs.map(ch => (ch.rename ? 0 : P.alignment(ch.fx, y, ch.key)));
   // như card.ts: không lựa chọn nào đủ sức thì lựa chọn rẻ nhất mở; chỉ còn lựa chọn trái đường thì lựa chọn không trái
-  // đường rẻ nhất mở (play.ts locks)
-  const no = P.locks(chs.map(ch => ch.fx), als);
+  // đường rẻ nhất mở (play.ts locks); lựa chọn bị chặn vì việc đã quyết (play.ts barred) không tính là trung thành bị phạt
+  const bar = chs.map(ch => P.barred(ch.flag, y)), no = P.locks(chs.map(ch => ch.fx), als, bar);
   const opts = chs.map((ch, i) => ({ i, al: als[i], no: no[i], cost: P.cost(ch.fx) }));
   const ok = opts.filter(o => !o.no);
   // bị khoá thật: có lựa chọn hợp đường nhưng không cái nào đủ sức, trong khi lựa chọn khác vẫn đủ
-  const loyal = opts.filter(o => o.al > 0), locked = loyal.length && loyal.every(o => o.no) ? loyal[0] : null;
+  const loyal = opts.filter(o => o.al > 0 && !bar[o.i]), locked = loyal.length && loyal.every(o => o.no) ? loyal[0] : null;
   if (locked && ok.length) { bad++; fails.push(`${tag}: "${chs[locked.i].label}" ${locked.no}`); }
   return (ok.length ? ok : opts).sort((a, b) => b.al - a.al || a.cost - b.cost)[0].i;
 }
@@ -58,10 +59,10 @@ for (const sk of surnames) for (const [hid] of P.HOMES) for (const path of paths
       const c = P.cardOf(v);
       if (!c || !(P.mustDecide(v) || P.specialFor(v))) continue; // như pendingCard: bắt buộc, hay có biến cố riêng
       const y = st.chYear(v);
-      P.decide(v, choose(`${who} ${v.id} (${v.y})`, c[2].map((ch, i) => ({ fx: ch[2], label: ch[0], key: P.alKey(v, i) })), y));
+      P.decide(v, choose(`${who} ${v.id} (${v.y})`, c[2].map((ch, i) => ({ fx: ch[2], label: ch[0], key: P.alKey(v, i), flag: ch[4] })), y));
       const sp = P.specialFor(v);
       if (sp && !P.specialDecided(sp)) {
-        const i = choose(`${who} ${sp.id} (${v.y})`, sp.choices.map(ch => ({ fx: ch[2], label: ch[0], rename: !!ch[4] })), y);
+        const i = choose(`${who} ${sp.id} (${v.y})`, sp.choices.map(ch => ({ fx: ch[2], label: ch[0], rename: !!ch[4], flag: ch[5] })), y);
         const mom = SURNAMES.find(x => x.key !== (S.surname || ''))?.names[0]; // chip mặc định "Lấy họ mẹ"
         P.decideSpecial(sp, i, v.y, sp.choices[i][4] === 'mother' ? mom : sp.choices[i][4]);
       }

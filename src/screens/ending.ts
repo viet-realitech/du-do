@@ -3,7 +3,7 @@ import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices }
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
-import { chronLine, epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
+import { chronLine, epilogue, whyText, rarityLine, firstDivergence, cfOf, exitNote, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
 import { endSpeech, epiKey } from '../speech';
 import { chronKey, endVoiceKey } from '../voiced';
 import { sayKey } from '../said';
@@ -61,7 +61,7 @@ function giaPha(f: Facts): string {
 /** Thẻ "Nếu…": giả định ở điểm rẽ đầu tiên con đường rời hướng chiếm ưu thế, ghi rõ là giả định, kèm ước lượng của trò
     chơi, cách tính, căn cứ, và lịch sử thật ngay bên dưới. Không bao giờ vẽ lên bản đồ. */
 function cfCard(f: Facts): string {
-  const d = firstDivergence(f.picks);
+  const d = firstDivergence(f.picks, f); // điểm rẽ 6 nhìn từ xứ người: giả định của bản ấy
   if (!d) return '';
   const e = ERAS[d.i], pv = e.opts.find(o => o.id === e.prev), div = f.picks.filter((x, i) => PREV[i] && x && x !== PREV[i]).length;
   const intro = d.free
@@ -96,7 +96,7 @@ function pathTable(first: number | undefined): string {
   // màn ngang: bảng có một dòng tên cột (nhãn trong từng ô khi ấy chỉ còn cho trình đọc màn hình)
   return `<section class="end-sec end-path" aria-labelledby="pth">${sh('Sáu điểm rẽ', 'Con đường của bạn và lịch sử', 'pth')}
   <div class="path-h mono" aria-hidden="true"><span>Năm</span><span>Điểm rẽ</span><span>Bạn chọn</span><span>Hướng chiếm ưu thế</span><span>Lịch sử thật</span></div><ol class="path">${ERAS.map((e, i) => {
-    const o = optOf(e), pv = e.opts.find(x => x.id === e.prev), cf = o && o.id !== PREV[i] && first !== i ? CFS[o.id] : undefined;
+    const o = optOf(e), pv = e.opts.find(x => x.id === e.prev), cf = o && o.id !== PREV[i] && first !== i ? cfOf(o) : undefined; // nhìn từ xứ người: giả định của bản ấy
     const mark = o && pv ? `<em>${o.id === pv.id ? 'trùng' : 'rẽ khác'}</em>` : '';
     return `<li class="pr"><span class="y">${e.cy}</span><div><h3>${esc(e.title)}</h3>
      <dl class="pr-c"><div><dt class="mono">Bạn chọn</dt><dd>${o ? esc(o.label) : '—'}${mark}</dd></div><div><dt class="mono">Hướng chiếm ưu thế</dt><dd>${pv ? esc(pv.label) : 'Không hướng nào'}</dd></div></dl>
@@ -222,11 +222,15 @@ async function makeCard(): Promise<string> {
   if (rar) { const f2 = (n: number) => `500 ${n}px ${mono}`; x.fillStyle = ink2; line(rar.lead.toUpperCase(), f2, 22, 366 + dy, { num: f2 }); }
   let y = 420 + dy;
   x.fillStyle = ink; x.fillRect(100, y - 30, W - 200, 2);
-  ERAS.forEach(e => {
+  // cả nhà đã ra nước ngoài trên thẻ sự kiện (Trò chơi): dòng năm 1976 ghi thêm một dòng nhỏ dưới hướng đã chọn, trong
+  // khoảng trống giữa hai dòng (không đẩy phần dưới thẻ xuống)
+  const gone = isPlay() && f.picks[ERAS.length - 1] ? exitNote(f) : undefined;
+  ERAS.forEach((e, i) => {
     const o = optOf(e);
     x.fillStyle = acc; x.font = `500 26px ${mono}`; x.fillText(String(e.cy), 100, y + 22);
     x.fillStyle = ink2; x.font = `400 30px ${serif}`; x.fillText(e.title, 220, y + 22);
     x.fillStyle = ink; line(o ? o.label : '—', n => `700 ${n}px ${disp}`, 34, y + 22, { right: true, max: 330 });
+    if (gone && i === ERAS.length - 1) { x.fillStyle = ink2; line(gone, n => `${it}400 ${n}px ${serif}`, 24, y + 52, { right: true, max: 600 }); }
     y += 70;
   });
   y += 30;
