@@ -128,7 +128,7 @@ export const SPECIAL: SpecialCard[] = [
     choices: [
       ["Khai đầy đủ, đúng sự thật", "Không giấu gì; chấp nhận bị xếp diện.", {"u": 5, "b": -6, "nn": -10}, "Hồ sơ ghi 'gia đình có người đi cải tạo'. Đứa cháu thi đủ điểm vẫn không được gọi nhập học; phải nhiều năm sau mới có đứa thứ hai vào đại học.", undefined, "lylich"],
       ["Chuyển các cháu sang họ mẹ", "Nhập khẩu về bên ngoại, khai cha 'mất tích'.", {"u": -8, "b": -4, "nn": 5, "lg": -5}, "Mấy đứa trẻ mang họ mẹ, hộ khẩu ở nhà ngoại, và một đứa đỗ đại học. Về quê giỗ họ, nó không biết xưng tên nào trước bàn thờ.", "mother"],
-      ["Tìm đường ra đi", "Bán nốt vàng, bán cả ruộng, mua chỗ trên ghe.", {"g": -8, "b": -8, "d": -3, "nn": -20, "my": 10}, "Ghe rời Rạch Giá một đêm tháng 5; ba người tới trại Songkhla, hai người không. Thư đầu tiên về năm 1980, kèm một tờ 20 đô la gấp tư.", undefined, "lylichDi"],
+      ["Tìm đường ra đi", "Bán nốt vàng, bán cả ruộng, mua chỗ trên ghe.", {"g": -8, "b": -8, "d": -3, "nn": -20, "my": 8}, "Ghe rời Rạch Giá một đêm tháng 5; ba người tới trại Songkhla, hai người không. Thư đầu tiên về năm 1980, kèm một tờ 20 đô la gấp tư.", undefined, "lylichDi"],
     ],
     note: "Sau 1975, lý lịch ba đời và hộ khẩu quyết định việc học, việc làm; con em các gia đình bị xếp diện 'nguỵ quân, nguỵ quyền' thường bị hạn chế xét tuyển đại học cho đến cuối thập niên 1980. Làn sóng vượt biên lên cao nhất 1978–1979, trùng với đợt cải tạo công thương nghiệp ở miền Nam.",
   },
