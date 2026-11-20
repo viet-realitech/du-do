@@ -56,7 +56,7 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
     layer.innerHTML = `<div class="ov evp diary"><div class="evtop">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
      <div style="margin-top:22px"><span class="stamp acc">Nhật ký dòng họ · ${v.y}</span></div>
      <h1 style="margin:16px 0 6px;font-size:32px">${esc(v.t)}</h1><div class="dbl"></div>
-     <p style="font:italic 400 21px/1.45 var(--serif)">${esc(v.s)}</p>
+     <p style="font:italic 400 calc(21px*var(--ts))/1.45 var(--serif)">${esc(v.s)}</p>
      ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:calc(16px*var(--ts));margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
      <p class="muted" style="font-size:calc(14px*var(--ts));margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
      ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}
