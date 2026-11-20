@@ -152,8 +152,8 @@ test('debug panel: 5 taps on the version line, build id, error log, copy report'
   const errors = await boot(page);
   // an uncaught error is kept in the on-device log (never shown outside the panel)
   await page.evaluate(() => setTimeout(() => { throw new Error('thử sổ lỗi'); }));
-  await page.waitForTimeout(1300); // the log is written at most once a second
-  expect(await page.evaluate(() => localStorage.getItem('dudo-errlog'))).toContain('thử sổ lỗi');
+  // the log is written at most once a second (later on a loaded machine)
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('dudo-errlog') || ''), { timeout: 10_000 }).toContain('thử sổ lỗi');
   await expect(page.locator('#dbg')).toHaveCount(0);
   await page.locator('.tab[data-t=me]').click();
   await page.locator('[data-a=about]').click();

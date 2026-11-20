@@ -47,6 +47,11 @@ async function boot(page: Page, context: BrowserContext, state: object = STATE, 
   return errors;
 }
 
+/** Page errors that come from the app. WebKit reports the worker's "no-response" for a Wikipedia lookup (blocked here)
+    made while offline as page errors (two: the message and the URL); the app is unaffected (nothing reaches
+    window.onerror or the on-device error log). */
+const appErrors = (errors: string[]) => errors.filter(e => !/no-response|wikipedia\.org/.test(e));
+
 const clipCount = (page: Page) => page.evaluate(async () => (await (await caches.open('voice-music')).keys()).length);
 /** The build of the active / waiting worker (serveDist), 'base' for the unmodified dist/sw.js, null when there is none. */
 const swBuild = (page: Page, which: 'active' | 'waiting') => page.evaluate(async w => {
@@ -67,7 +72,7 @@ test('service worker installs, controls the page, and an offline reload boots', 
   await page.waitForSelector('#map text[data-city]');
   await expect(page.locator('#map > g > g:first-child path').first()).toBeAttached();
   await expect(page.locator('#play')).toBeVisible();
-  expect(errors).toEqual([]);
+  expect(appErrors(errors)).toEqual([]);
 });
 
 test('a chapter tour saves its narration for offline; offline, a clip is served from the cache (whole and in ranges)', async ({ page, context }) => {
@@ -99,9 +104,7 @@ test('a chapter tour saves its narration for offline; offline, a clip is served 
     a.load();
   }), url!);
   expect(ok).toBe(true);
-  // WebKit reports the worker's "no-response" for a Wikipedia lookup (blocked here) made while offline as page errors;
-  // the app is unaffected (nothing reaches window.onerror or the on-device error log)
-  expect(errors.filter(e => !/no-response/.test(e))).toEqual([]);
+  expect(appErrors(errors)).toEqual([]);
 });
 
 test('a new build waits for a safe moment: applied on return to the idle map, offered by a toast during a tour', async ({ page, context }) => {
