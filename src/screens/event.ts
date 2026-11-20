@@ -75,16 +75,17 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
   const body = (k: Tab): string => {
     if (k === 'x') {
       return `<p style="font-size:19px;line-height:1.38">${esc(v.s)}</p>${v.x ? `<p style="margin-top:12px" class="muted">${esc(v.x)}</p>` : ''}
-     ${isPlay() && mine && SIDE_PV.includes(mine) && vs.some(([pp]) => pp === mine) ? `<div class="pv mine" style="margin-top:12px"><div class="mono muted">Phe bạn theo nhìn nhận · ${P[mine]}</div><q>${esc(vs.find(([pp]) => pp === mine)![1])}</q></div>` : ''}
+     ${isPlay() && mine && SIDE_PV.includes(mine) && vs.some(([pp]) => pp === mine) ? `<div class="pv mine" style="margin-top:12px"><div class="mono muted">Phe bạn theo nhìn nhận · ${P[mine]} · tóm lược</div><p class="pvt">${esc(vs.find(([pp]) => pp === mine)![1])}</p></div>` : ''}
      ${v.qt ? `<button class="quote" data-a="src" data-id="${v.qt.src}"><blockquote>${esc(v.qt.t)}</blockquote><div class="mono muted" style="margin-top:8px">— ${esc(v.qt.by)}</div></button>` : ''}
-     ${v.n ? `<div class="nums">${v.n.map(([a, b]) => `<div><span class="muted">${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><p class="muted" style="font-size:13px;margin-top:6px">Số liệu ước tính, khác nhau giữa các nguồn.</p>` : ''}
+     ${v.n ? `<div class="nums">${v.n.map(([a, b]) => `<div><span class="muted">${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><p class="muted" style="font-size:13px;margin-top:6px">Số liệu ước tính, khác nhau giữa các nguồn.${v.nNote ? ' ' + esc(v.nNote) : ''}</p>` : ''}
      <div id="mstrip"></div>
      ${(EVFIG[v.id] || []).filter(id => FIG[id]).length ? `<div class="mono muted" style="margin-top:18px">Nhân vật</div><div class="figrow">${(EVFIG[v.id] || []).filter(id => FIG[id]).map(id => `<button data-a="fig" data-id="${id}"${figOpen(id) ? '' : ' aria-label="Nhân vật chưa mở"'}>${av(id, 44, !figOpen(id))}<span><b>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</b><br><span class="muted">${esc(FIG[id][2])}</span></span></button>`).join('')}</div>` : ''}
      ${pk ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Gia đình bạn đang theo · ${esc(pk.label)}</div><p style="font-size:16px;margin-top:4px">${esc(pk.out)}</p></div>` : ''}`;
     }
     if (k === 'v') {
       if (!S.pvSeen.includes(v.id)) { S.pvSeen.push(v.id); save(); }
-      return vs.map(([pp, tx]) => `<div class="pv${pp === mine ? ' mine' : ''}"><div class="pvh"><span class="mono muted">${P[pp]}</span>${pp === mine ? '<span class="mono" style="color:var(--acc)">Gần lựa chọn của bạn</span>' : ''}</div><q>${esc(tx)}</q></div>`).join('') +
+      // lời tóm lược của ứng dụng, không phải trích dẫn: không đặt trong ngoặc kép (trích dẫn thật ở khối .quote, thẻ Diễn biến)
+      return `<p class="pv-sum mono muted">Tóm lược · không phải trích dẫn</p>` + vs.map(([pp, tx]) => `<div class="pv${pp === mine ? ' mine' : ''}"><div class="pvh"><span class="mono muted">${P[pp]}</span>${pp === mine ? '<span class="mono" style="color:var(--acc)">Gần lựa chọn của bạn</span>' : ''}</div><p class="pvt">${esc(tx)}</p></div>`).join('') +
         `<p class="muted" style="font-size:14px;margin-top:14px">Các góc nhìn được tóm lược từ sử liệu công khai, xếp ngang hàng nhau. Ứng dụng không đứng về phía nào.</p>`;
     }
     if (k === 'm') return `<div class="skel" style="height:120px;border-radius:14px"></div><div class="mgrid" style="margin-top:18px">${'<div class="skel" style="aspect-ratio:4/3;border-radius:10px"></div>'.repeat(6)}</div>`;

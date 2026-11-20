@@ -37,7 +37,7 @@ const ERAS = [
    {id:'vm', tag:'vutrang', label:'Theo Việt Minh', who:'Hồ Chí Minh · Võ Nguyên Giáp', d:'Kháng chiến toàn dân giành độc lập trọn vẹn.', out:'Bạn lên chiến khu Việt Bắc. Chín năm kháng chiến, từ du kích đến những chiến dịch lớn.', persp:'vn', fac:'vndcch'},
    {id:'qg', tag:'thuongthuyet', label:'Giải pháp Bảo Đại', who:'Bảo Đại · Trần Văn Hữu', d:'Độc lập từng bước trong Liên hiệp Pháp, chống cộng.', out:'Bạn làm việc cho Quốc gia Việt Nam (1949), giữa hai lằn đạn và một nền độc lập còn hạn chế.', persp:'vnch', fac:'vnch'},
    {id:'tl', tag:'thuongthuyet', label:'Đứng ngoài', who:'Trí thức, tôn giáo, dân thường', d:'Không theo phe nào, tìm cách sống sót và giữ làng.', out:'Bạn ở lại vùng xôi đậu, ban ngày một chính quyền, ban đêm một chính quyền khác.', persp:'intl'}],
-  prev:'vm', hist:'Chiến thắng Điện Biên Phủ buộc Pháp ngồi vào bàn Genève.'},
+  prev:'vm', hist:'Sau gần chín năm chiến tranh, tập đoàn cứ điểm Điện Biên Phủ thất thủ ngày 7.5.1954, một ngày trước khi Hội nghị Genève bắt đầu bàn về Đông Dương.'},
  {id:'e5', n:5, from:1954, to:1975, cy:1954, title:'Vĩ tuyến 17',
   q:'Điện Biên Phủ vừa thất thủ. Hiệp định Genève tạm chia đất nước tại sông Bến Hải, hẹn tổng tuyển cử năm 1956. Bạn ở lại đâu?',
   opts:[
@@ -84,7 +84,7 @@ const EV = [
   v:[['fr','Một cấu trúc hành chính ‘hợp lý hoá’ thuộc địa.'],['vn','Chính sách ‘chia để trị’, xoá tên Việt Nam trên bản đồ.']], src:['lsvn']},
  {id:'hk96', y:1896, d:'1.1896', k:'Trận đánh', t:'Khởi nghĩa Hương Khê kết thúc', p:'Vụ Quang, Hà Tĩnh', l:[105.45,18.35],
   s:'Phan Đình Phùng mất cuối 1895; nghĩa quân tan rã đầu 1896, khép lại phong trào Cần Vương.', x:'Hơn mười năm, nghĩa quân tự chế súng theo mẫu Pháp, lập căn cứ trải bốn tỉnh Thanh – Nghệ – Tĩnh – Bình.',
-  v:[['vn','Đỉnh cao của phong trào Cần Vương.']], src:['lsvn']},
+  v:[['vn','Đỉnh cao của phong trào Cần Vương.'],['fr','Coi việc nghĩa quân tan rã là hoàn tất cuộc ‘bình định’ vùng Nghệ – Tĩnh.']], src:['lsvn']},
  {id:'dd05', y:1905, d:'1905–1909', k:'Chính trị', t:'Phong trào Đông Du', p:'Nghệ An → Nhật Bản', l:[105.68,18.67],
   s:'Phan Bội Châu đưa khoảng 200 thanh niên sang Nhật học, mong dựa vào nước "đồng văn đồng chủng".', x:'Năm 1909, theo thoả thuận Pháp – Nhật, du học sinh bị trục xuất. Phan Bội Châu chuyển sang Trung Quốc, lập Việt Nam Quang phục hội (1912).',
   v:[['vn','Bước chuyển từ quân chủ sang tư tưởng dân chủ tư sản.'],['intl','Cho thấy giới hạn của việc trông cậy cường quốc bên ngoài.']], src:['pbc']},
@@ -111,7 +111,7 @@ const EV = [
   v:[['vn','Cách mạng giành chính quyền về tay nhân dân, mở ra kỷ nguyên độc lập.'],['vnch','Việt Minh nắm khoảng trống quyền lực, sau đó loại bỏ các đảng phái quốc gia.'],['fr','Không công nhận, quyết tâm tái lập chủ quyền.'],['us','Tình báo OSS có tiếp xúc với Việt Minh; Mỹ chưa công nhận nhà nước mới.']], src:['tuyenngon','thoaivi']},
  {id:'tk46', y:1946, d:'19.12.1946', k:'Trận đánh', t:'Toàn quốc kháng chiến', p:'Hà Nội', l:[105.85,21.03],
   s:'Sau Hiệp định Sơ bộ 6.3 và vụ Pháp pháo kích Hải Phòng, chiến tranh lan ra toàn quốc.', x:'Hà Nội cầm cự 60 ngày đêm để cơ quan đầu não rút lên Việt Bắc.',
-  v:[['vn','Kháng chiến bắt buộc khi mọi nỗ lực hoà hoãn thất bại.'],['fr','Cuộc tấn công của Việt Minh vào kiều dân Pháp.']], src:['sobo']},
+  v:[['vn','Kháng chiến bắt buộc khi mọi nỗ lực hoà hoãn thất bại.'],['fr','Cuộc tấn công của Việt Minh vào kiều dân Pháp.']], src:['sobo','vkd']},
  {id:'el49', y:1949, d:'8.3.1949', k:'Hiệp ước', t:'Hiệp ước Élysée — Quốc gia Việt Nam', p:'Sài Gòn', l:[106.70,10.78],
   s:'Pháp công nhận một Việt Nam thống nhất do Bảo Đại làm Quốc trưởng, trong khối Liên hiệp Pháp.', x:'Nam Kỳ được trả về cho Việt Nam. Quân đội, ngoại giao, tài chính vẫn chịu nhiều ràng buộc.',
   v:[['vnch','Bước đầu thống nhất và độc lập theo con đường quốc gia.'],['vn','Chính quyền bù nhìn do Pháp dựng lên.'],['fr','‘Giải pháp Bảo Đại’ quốc tế hoá cuộc chiến chống cộng.']], src:['elysee']},
@@ -120,7 +120,7 @@ const EV = [
   v:[['vn','Chiến dịch tiến công lớn đầu tiên, giành thế chủ động.'],['intl','Chiến tranh Đông Dương trở thành một mặt trận của Chiến tranh Lạnh.']], src:['lsvn']},
  {id:'dbp', y:1954, d:'13.3 – 7.5.1954', k:'Trận đánh', t:'Điện Biên Phủ', p:'Điện Biên Phủ', l:[103.02,21.39],
   s:'Sau 56 ngày đêm, tập đoàn cứ điểm của Pháp thất thủ. Tướng de Castries bị bắt.', x:'Pháo binh kéo lên núi bằng sức người, hệ thống giao thông hào siết dần các cứ điểm. Hôm sau, Hội nghị Genève bàn về Đông Dương.',
-  v:[['vn','Chiến thắng ‘lừng lẫy năm châu, chấn động địa cầu’.'],['fr','Thảm bại quân sự, chấm dứt sự hiện diện ở Đông Dương.'],['intl','Lần đầu một quân đội thuộc địa đánh bại quân đội châu Âu trong một trận đánh quy ước lớn.']], src:['lsvn','pentagon']},
+  v:[['vn','Chiến thắng ‘lừng lẫy năm châu, chấn động địa cầu’.'],['vnch','Ghi nhận các đơn vị Quân đội Quốc gia Việt Nam, như Tiểu đoàn 5 Nhảy dù, cùng chiến đấu và chịu tổn thất trong tập đoàn cứ điểm.'],['fr','Thảm bại quân sự, chấm dứt sự hiện diện ở Đông Dương.'],['intl','Nhiều sử gia coi đây là lần đầu quân đội của một dân tộc thuộc địa đánh bại một đạo quân châu Âu trong một trận đánh quy ước lớn.']], src:['lsvn','pentagon']},
  {id:'gnv', y:1954, d:'21.7.1954', k:'Hiệp ước', t:'Hiệp định Genève', p:'Sông Bến Hải, vĩ tuyến 17', l:[107.0,17.0],
   s:'Đình chỉ chiến sự; giới tuyến quân sự tạm thời ở vĩ tuyến 17; hẹn tổng tuyển cử tháng 7.1956.', x:'Trong 300 ngày, các lực lượng tập kết về hai miền. Cuộc tổng tuyển cử không bao giờ diễn ra.',
   v:[['vn','Thắng lợi nhưng chưa trọn vẹn; tổng tuyển cử bị phá hoại.'],['vnch','Phái đoàn Quốc gia Việt Nam không ký, phản đối chia cắt.'],['us','Mỹ không ký, chỉ ra tuyên bố đơn phương ghi nhận.'],['cn','Trung Quốc thúc đẩy thoả hiệp chia đôi.']], src:['geneva','frus']},
@@ -174,13 +174,13 @@ const EV = [
   v:[['vn','Tưởng niệm 64 liệt sĩ bảo vệ chủ quyền.'],['cn','Gọi là ‘xung đột Xích Qua’.']], src:['lsvn']},
  {id:'hn95', y:1995, d:'7.1995', k:'Chính trị', t:'Bình thường hoá với Mỹ, gia nhập ASEAN', p:'Hà Nội', l:[105.85,21.03],
   s:'Ngày 11.7 bình thường hoá quan hệ với Mỹ; ngày 28.7 gia nhập ASEAN.', x:'Năm 2007 Việt Nam gia nhập WTO.',
-  v:[['vn','Phá thế bao vây, cấm vận.'],['vnch','Mở đường cho kiều bào về nước.'],['us','Khép lại một chương lịch sử.']], src:['frus']},
+  v:[['vn','Phá thế bao vây, cấm vận.'],['vnch','Mở đường cho kiều bào về nước.'],['us','Khép lại một chương lịch sử.']], src:['bthmy95','asean95']},
  {id:'bg99', y:1999, d:'30.12.1999', k:'Hiệp ước', t:'Hiệp ước biên giới trên đất liền Việt – Trung', p:'Hữu Nghị, Lạng Sơn', l:[106.73,21.98],
   s:'Phân định đường biên giới dài khoảng 1.400 km. Cắm mốc hoàn thành năm 2008.', x:'Năm 2000 ký tiếp hiệp định phân định Vịnh Bắc Bộ.',
   v:[['vn','Xây dựng đường biên giới hoà bình, hữu nghị.'],['intl','Giải quyết dứt điểm tranh chấp trên bộ.']], src:['bg1999']},
  {id:'st25', y:2025, d:'1.7.2025', k:'Chính trị', t:'Sắp xếp 63 tỉnh thành còn 34', p:'Cả nước', l:[105.85,21.03],
   s:'Cuộc sắp xếp hành chính lớn nhất kể từ 1976; bỏ cấp huyện, chính quyền hai cấp.', x:'Ranh giới hành chính bên trong thay đổi; biên giới quốc gia giữ nguyên.',
-  v:[['vn','Tinh gọn bộ máy, mở không gian phát triển.']], src:['nq2025']}
+  v:[['vn','Tinh gọn bộ máy, mở không gian phát triển.'],['intl','Ngoài mục tiêu tinh gọn, việc sáp nhập khơi lên tranh luận về tên gọi mới và bản sắc của các tỉnh cũ.']], src:['nq2025']}
 ];
 const SRC = [
  {id:'dnt', t:'Đại Nam thực lục', k:'Biên niên', by:'Quốc sử quán triều Nguyễn', y:'Biên soạn 1821–1909', at:'Trung tâm Lưu trữ Quốc gia I · bản dịch Viện Sử học', d:'Bộ chính sử biên niên của triều Nguyễn, ghi chép triều chính và chiến sự thời Pháp xâm lược.'},
@@ -202,6 +202,12 @@ const SRC = [
  {id:'lsvn', t:'Lịch sử Việt Nam (15 tập)', k:'Biên niên', by:'Viện Sử học', y:'2017', at:'NXB Khoa học Xã hội', d:'Bộ thông sử chính thức, từ tiền sử đến hiện đại.'},
  {id:'bg1999', t:'Hiệp ước biên giới trên đất liền Việt Nam – Trung Quốc', k:'Hiệp ước', by:'Hai chính phủ', y:'30.12.1999', at:'Uỷ ban Biên giới quốc gia, Bộ Ngoại giao', d:'Phân định toàn tuyến biên giới trên bộ.'},
  {id:'unhcr', t:'Hồ sơ người tị nạn Đông Dương', k:'Lưu trữ', by:'UNHCR', y:'1975–1996', at:'Lưu trữ UNHCR, Genève', d:'Tài liệu về trại tị nạn, Chương trình Ra đi Có trật tự và Kế hoạch Hành động Toàn diện (CPA).'},
+ {id:'bthmy95', t:'Tuyên bố bình thường hoá quan hệ ngoại giao với Việt Nam', k:'Văn kiện', by:'Tổng thống Hoa Kỳ Bill Clinton', y:'11.7.1995', at:'Public Papers of the Presidents of the United States · govinfo.gov', d:'Lời tuyên bố tại Nhà Trắng về việc Hoa Kỳ bình thường hoá quan hệ ngoại giao với Việt Nam.'},
+ {id:'asean95', t:'Tuyên bố kết nạp Việt Nam vào ASEAN', k:'Văn kiện', by:'Các nước thành viên ASEAN', y:'28.7.1995', at:'Ban Thư ký ASEAN · asean.org', d:'Việt Nam trở thành thành viên thứ bảy của Hiệp hội các quốc gia Đông Nam Á, tại Bandar Seri Begawan (Brunei).'},
+ {id:'vbb2000', t:'Hiệp định phân định Vịnh Bắc Bộ giữa Việt Nam và Trung Quốc', k:'Hiệp ước', by:'Hai chính phủ', y:'25.12.2000', at:'Uỷ ban Biên giới quốc gia, Bộ Ngoại giao', d:'Phân định lãnh hải, vùng đặc quyền kinh tế và thềm lục địa của hai nước trong Vịnh Bắc Bộ; có hiệu lực từ 30.6.2004.'},
+ {id:'wto2006', t:'Nghị định thư gia nhập Tổ chức Thương mại Thế giới của Việt Nam', k:'Hiệp ước', by:'Việt Nam – Tổ chức Thương mại Thế giới (WTO)', y:'7.11.2006', at:'Ban Thư ký WTO, Genève · wto.org', d:'Đại hội đồng WTO chấp thuận cho Việt Nam gia nhập; Việt Nam là thành viên thứ 150 từ ngày 11.1.2007.'},
+ {id:'bngvn', t:'Tuyên bố của Người phát ngôn Bộ Ngoại giao Việt Nam', k:'Văn kiện', by:'Bộ Ngoại giao Việt Nam', y:'Các năm 2014, 2016', at:'Cổng thông tin Bộ Ngoại giao · mofa.gov.vn', d:'Các tuyên bố, trả lời báo chí về giàn khoan Hải Dương 981 (5–7.2014) và về phán quyết của Toà Trọng tài (12.7.2016).'},
+ {id:'pca2016', t:'Phán quyết vụ Trọng tài Biển Đông (Philippines kiện Trung Quốc)', k:'Văn kiện', by:'Toà Trọng tài theo Phụ lục VII UNCLOS', y:'12.7.2016', at:'Toà Trọng tài Thường trực (PCA), La Haye · vụ số 2013-19 · pca-cpa.org', d:'Phán quyết cuối cùng: yêu sách quyền lịch sử trong "đường chín đoạn" không có cơ sở theo UNCLOS; không cấu trúc nào ở Trường Sa có vùng đặc quyền kinh tế riêng. Việt Nam không phải một bên của vụ kiện.'},
  {id:'nq2025', t:'Nghị quyết về sắp xếp đơn vị hành chính cấp tỉnh', k:'Văn kiện', by:'Quốc hội khoá XV', y:'12.6.2025', at:'Cổng thông tin Quốc hội', d:'Sắp xếp 63 tỉnh, thành phố thành 34, hiệu lực từ 1.7.2025.'}
 ];
 function regime(y){

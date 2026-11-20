@@ -22,7 +22,7 @@ export const CARDS: Card[] = [
     ['Tiếp tế cho quân triều đình', 'Đưa thóc vào đại đồn đang xây.', { g: -10, u: 4, tr: 10, ph: -6 }, 'Thóc của dòng họ đắp vào luỹ Chí Hoà.'],
   ]],
   ['cd61', 'NE', [
-    ['Gửi trai tráng vào đồn', 'Con cháu cầm giáo giữ luỹ với Nguyễn Tri Phương.', { d: -6, u: 6, tr: 12, ph: -10 }, 'Đồn vỡ. Hai người không về. Tên họ được ghi trong bài vị làng.'],
+    ['Gửi trai tráng vào đồn', 'Con cháu cầm giáo giữ luỹ với Nguyễn Tri Phương.', { d: -6, tr: 4, ph: -10 }, 'Đồn vỡ. Hai người không về. Cả họ để tang; mùa ấy ruộng thiếu người cày.'],
     ['Giấu lương, đóng cổng làng', 'Không cho bên nào lấy thóc.', { g: -3, lg: 4, tr: -3 }, 'Lính thua chạy qua làng không ai mở cổng. Thóc còn, nhưng lòng áy náy.'],
   ]],
   ['nt61', 'NE,NW', [
@@ -40,15 +40,15 @@ export const CARDS: Card[] = [
   ]],
   ['td64', 'NE', [
     ['Che giấu nghĩa quân tan rã', 'Nuôi giấu mấy người lính của Trương Định.', { g: -6, d: 2, u: 6, ph: -10, lg: 5 }, 'Ba người lính sau này thành rể, thành bạn của dòng họ.'],
-    ['Giao nộp để yên thân', 'Chỉ chỗ cho quan Pháp.', { b: 6, u: -15, ph: 8, lg: -15 }, 'Pháp thưởng bạc. Làng không ai mời dòng họ đi đám nữa.'],
+    ['Giao nộp để yên thân', 'Chỉ chỗ cho quan Pháp.', { b: 6, u: -12, ph: 8, lg: -15 }, 'Pháp thưởng bạc. Làng không ai mời dòng họ đi đám nữa.'],
     ['Đóng cửa, không biết gì', 'Mặc ai hỏi cũng lắc đầu.', { u: -2 }, 'Nghĩa quân tan vào ruộng. Dòng họ sống như chưa có gì.'],
   ]],
   ['vl67', 'NW', [
     ['Theo Phan Thanh Giản giao thành', 'Tin rằng giữ dân hơn giữ thành.', { g: 3, u: -3, ph: 5, tr: -3 }, 'Không đổ máu. Mấy năm sau con cháu phải học chữ Tây.'],
-    ['Về rừng lập trại', 'Theo nghĩa quân rút vào Đồng Tháp Mười.', { g: -10, d: -3, u: 7, ph: -15, tr: 6 }, 'Sốt rét lấy đi hai người. Tên dòng họ xuất hiện trong thơ Nguyễn Đình Chiểu.'],
+    ['Về rừng lập trại', 'Theo nghĩa quân rút vào Đồng Tháp Mười.', { g: -10, d: -3, ph: -15, tr: 4 }, 'Sốt rét lấy đi hai người. Những người còn lại theo nghĩa quân thêm mấy mùa nước rồi lần về làng.'],
   ]],
   ['hn73', 'B', [
-    ['Giữ cổng thành với Nguyễn Tri Phương', 'Đưa người lên mặt thành.', { d: -4, u: 6, tr: 10, ph: -8 }, 'Thành mất trong một buổi sáng. Những người sống sót kể chuyện đến già.'],
+    ['Giữ cổng thành với Nguyễn Tri Phương', 'Đưa người lên mặt thành.', { d: -4, tr: 4, ph: -8 }, 'Thành mất trong một buổi sáng. Những người sống sót kể chuyện đến già.'],
     ['Lánh ra ngoại thành', 'Đóng cửa hiệu buôn phố Hàng, chạy về quê.', { b: -6, d: 2 }, 'Hiệu buôn bị lính cướp sạch, nhưng người còn đủ.'],
     ['Bán hàng cho quân Garnier', 'Lính Pháp cần vải, muối, gạo.', { b: 10, u: -8, ph: 8, tr: -10 }, 'Garnier chết ở Cầu Giấy, Pháp rút. Người mua hàng của bạn không còn, danh tiếng cũng không.'],
   ]],
@@ -57,7 +57,7 @@ export const CARDS: Card[] = [
     ['Giữ nếp nhà Nho', 'Con vẫn học chữ Hán đi thi.', { u: 3, tr: 5, b: -3 }, 'Hai khoa thi nữa còn mở. Dòng họ có người đỗ tú tài.'],
   ]],
   ['hd82', 'B', [
-    ['Theo Hoàng Diệu giữ thành', 'Người của họ lên thành lần nữa.', { d: -4, u: 7, tr: 10, ph: -10 }, 'Hoàng Diệu tuẫn tiết. Dòng họ lập bàn thờ ông ở từ đường.'],
+    ['Theo Hoàng Diệu giữ thành', 'Người của họ lên thành lần nữa.', { d: -4, tr: 4, ph: -10 }, 'Hoàng Diệu tuẫn tiết. Dòng họ lập bàn thờ ông ở từ đường.'],
     ['Chạy về quê gốc', 'Rời Hà Nội trước khi thành mất.', { b: -5, g: -3 }, 'Phố phường tan hoang, nhưng dòng họ lại đông đủ ở quê.'],
   ]],
   ['ta83', 'T2', [
@@ -136,7 +136,7 @@ export const CARDS: Card[] = [
     ['Giữ khoảng cách', 'Không muốn liên luỵ.', { vm: -5 }, 'Dòng họ không có tên trong hồ sơ Sở Liêm phóng.'],
   ]],
   ['yb30', 'B', [
-    ['Có người trong Quốc dân đảng', 'Một người con theo Nguyễn Thái Học.', { d: -2, u: 6, ph: -20, vm: 3 }, 'Người ấy bị chém ở Yên Bái. Dòng họ giữ tấm ảnh trong hộp gỗ.'],
+    ['Có người trong Quốc dân đảng', 'Một người con theo Nguyễn Thái Học.', { d: -2, ph: -20 }, 'Người ấy bị chém ở Yên Bái. Dòng họ giữ tấm ảnh trong hộp gỗ.'],
     ['Đứng ngoài', 'Không tham gia.', {}, 'Tin tử hình về làng, cả họ im lặng.'],
   ]],
   ['xv30', 'T1', [
@@ -153,7 +153,7 @@ export const CARDS: Card[] = [
     ['Giấu thóc', 'Chôn thóc trong vườn.', { g: 4, nh: -8 }, 'Thóc chôn này cứu được cả họ năm 1945.'],
   ]],
   ['nk40', 'NE,NW', [
-    ['Theo khởi nghĩa', 'Người của họ cầm cờ đỏ sao vàng.', { d: -4, u: 7, vm: 20, ph: -25 }, 'Pháp xử bắn hàng loạt. Cờ được giấu trong ống tre.'],
+    ['Theo khởi nghĩa', 'Người của họ cầm cờ đỏ sao vàng.', { d: -4, vm: 5, ph: -25 }, 'Pháp xử bắn hàng loạt. Cờ được giấu trong ống tre.'],
     ['Cho người trốn qua Miên', 'Giúp người của họ lánh sang Campuchia.', { b: -5, d: 1, vm: 5, ph: -8 }, 'Người về sau năm 1945, kể chuyện sông Mekong.'],
     ['Đóng cửa', 'Không ra khỏi làng.', { u: -3 }, 'Cuộc khởi nghĩa đi qua ngoài cửa.'],
   ]],
@@ -247,7 +247,7 @@ export const CARDS: Card[] = [
     ['Đứng giữa', 'Ngày nộp thuế, đêm nộp gạo.', { g: -8, b: -5, lg: 3 }, 'Cả hai bên đến nhà, cả hai bên đều lấy.'],
   ]],
   ['dk60', 'NW', [
-    ['Theo Đồng khởi', 'Cả họ phá đồn tề.', { d: -2, u: 7, vm: 18, qg: -20 }, 'Xã thành vùng giải phóng. Rồi bom.'],
+    ['Theo Đồng khởi', 'Cả họ theo dân làng nổi dậy, phá bộ máy xã.', { d: -2, u: 7, vm: 18, qg: -20 }, 'Xã về tay những người nổi dậy. Rồi bom.'],
     ['Lánh lên tỉnh', 'Tránh xa chuyện làng.', { b: -5, g: -5 }, 'Về sau ruộng đã có người khác cày.'],
   ]],
   ['dc63', 'NE', [
@@ -281,7 +281,7 @@ export const CARDS: Card[] = [
   ]],
   ['ks68', 'QT', [
     ['Rời Khe Sanh', 'Dân quanh căn cứ được đưa đi.', { g: -10, b: -3 }, 'Không bao giờ quay lại bản cũ.'],
-    ['Ở lại vùng Bru', 'Sống với người Bru-Vân Kiều.', { d: -1, u: 3, lg: 6 }, 'Học tiếng Bru, mất một người vì bom.'],
+    ['Ở lại vùng Bru', 'Sống với người Bru-Vân Kiều.', { d: -1, lg: 5 }, 'Học tiếng Bru, mất một người vì bom.'],
   ]],
   ['ml68', 'T2', [
     ['Làm chứng về Sơn Mỹ', 'Kể cho nhà báo nước ngoài.', { u: 7, my: -10, qg: -5 }, 'Lời kể được in ở Mỹ. Ở quê, không ai nhắc nữa.'],
@@ -292,16 +292,16 @@ export const CARDS: Card[] = [
     ['Không bày tỏ', 'Nhà ở miền Nam hoặc khác chính kiến.', {}, 'Nghe tin trên BBC.'],
   ]],
   ['lk71', 'QT', [
-    ['Đi lính Sư đoàn 1 VNCH', 'Người con bị động viên.', { d: -2, b: 5, qg: 12, vm: -10 }, 'Trở về từ Nam Lào với một chân.'],
+    ['Đi lính Sư đoàn 1 VNCH', 'Người con bị động viên.', { d: -2, qg: 5, vm: -10 }, 'Trở về từ Nam Lào với một chân.'],
     ['Trốn lính', 'Lên rừng, đổi tên.', { b: -8, qg: -12, vm: 5 }, 'Sống chui ba năm, rồi theo luôn bên kia.'],
   ]],
   ['qt72', 'QT,T2', [
     ['Chạy trên "Đại lộ Kinh hoàng"', 'Rời Quảng Trị theo Quốc lộ 1.', { g: -12, b: -8, d: -3 }, 'Mất hai người trên đường. Tới Huế với hai bàn tay trắng.'],
-    ['Ở lại vùng giải phóng', 'Không chạy vào Nam.', { g: -8, d: -1, vm: 10, qg: -10 }, 'Sống dưới bom B-52 ba tháng.'],
+    ['Ở lại quê nhà', 'Không chạy vào Nam; quê nay thuộc vùng Quân đội Nhân dân Việt Nam kiểm soát.', { g: -8, d: -1, vm: 4, qg: -10 }, 'Sống dưới bom B-52 ba tháng.'],
   ]],
   ['lb72', 'B', [
     ['Sơ tán khỏi Hà Nội', 'Về quê tránh bom.', { g: -6, b: -4 }, 'Phố Khâm Thiên bị san phẳng. Nhà bạn ở cách đó hai phố.'],
-    ['Ở lại trực chiến', 'Người của họ trong tự vệ.', { d: -1, u: 6, vm: 12 }, 'Bắn rơi một máy bay, được ghi tên trên báo.'],
+    ['Ở lại trực chiến', 'Người của họ trong tự vệ.', { d: -1, vm: 4 }, 'Mười hai ngày đêm trên trận địa tự vệ giữa tiếng bom. Hết đợt ném bom, người ấy về nhà, ít nói hẳn đi.'],
   ]],
   ['pr73', 'all', [
     ['Tin hoà bình, sửa nhà', 'Lấy bạc dành dụm ra xây.', { b: -10, g: 3, u: 1 }, 'Nhà xây xong năm 1974. Năm 1975 đổi chủ.'],
@@ -344,12 +344,12 @@ export const CARDS: Card[] = [
     ['Tản cư khỏi biên giới', 'Khmer Đỏ tàn sát Ba Chúc.', { g: -10, b: -5, d: -1 }, 'Về lại khi quân Việt Nam đã sang Phnom Penh.'],
   ]],
   ['bb79', 'B', [
-    ['Đi dân quân biên giới', 'Người của họ lên Lạng Sơn.', { d: -2, u: 6, nn: 12 }, 'Một tháng chiến tranh, cả đời mang vết sẹo.'],
+    ['Đi dân quân biên giới', 'Người của họ lên Lạng Sơn.', { d: -2, nn: 5 }, 'Một tháng chiến tranh, cả đời mang vết sẹo.'],
     ['Sơ tán về xuôi', 'Rời tỉnh biên giới.', { g: -8, b: -4 }, 'Thị xã Lạng Sơn bị san phẳng. Nhà không còn.'],
   ]],
   ['tn80', 'all', [
     // cả nhà đi (endings.ts GONE: từ năm sau, các thẻ nói từ xứ người); gửi một người đi thì cả nhà còn ở lại (guiDi)
-    ['Cả nhà vượt biên', 'Bán hết nhà cửa, mua chỗ cho cả nhà trên một chiếc ghe.', { b: -25, g: -15, d: -4, u: -5, nn: -25, my: 15 }, 'Ghe lênh đênh hai tuần mới tới trại tị nạn; có người trong nhà không tới bờ. Sau nhiều tháng ở trại, cả nhà được nhận đi định cư; lá thư đầu tiên gửi về cho họ hàng ở quê kèm tấm ảnh chụp trước căn nhà thuê.', 'vuotbien'],
+    ['Cả nhà vượt biên', 'Bán hết nhà cửa, mua chỗ cho cả nhà trên một chiếc ghe.', { b: -25, g: -15, d: -4, u: -5, nn: -25, my: 8 }, 'Ghe lênh đênh hai tuần mới tới trại tị nạn; có người trong nhà không tới bờ. Sau nhiều tháng ở trại, cả nhà được nhận đi định cư; lá thư đầu tiên gửi về cho họ hàng ở quê kèm tấm ảnh chụp trước căn nhà thuê.', 'vuotbien'],
     ['Ở lại', 'Chịu đói qua thời bao cấp.', { g: -8, nn: 5 }, 'Sổ gạo, tem phiếu, xếp hàng. Nhưng còn nhau.'],
     ['Gửi một người đi, giữ phần còn lại', 'Dồn tiền cho một người con.', { b: -15, d: -1, nn: -8, my: 8 }, 'Người ấy tới Pulau Bidong, rồi Úc. Thùng đồ đầu tiên về năm 1983.', 'guiDi'],
   ]],
@@ -586,19 +586,19 @@ export const VARIANT: Record<string, Variant[]> = {
     // nhà miền Nam tập kết ra Bắc: về lại quê
     { from: ['T2', 'NE', 'NW'], regions: ['B'], choices: [
       ['Về quê tìm người thân', 'Lên xe về Nam sau hai mươi mốt năm tập kết.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Làng cũ còn đó, người cũ còn một nửa. Có người mừng, có người ngượng ngùng, có người không nhận ra nhau.', 'seek75'],
-      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
     // nhà miền Bắc đã tiễn một nhánh di cư năm 1954 (thẻ di cư, bộ "ở lại" chỉ số 0): vào Nam tìm nhánh ấy
     { regions: ['B', 'T1'], after: ['dc54=0'], choices: [
       ['Vào Nam tìm người thân', 'Lên xe vào Nam tìm nhánh họ di cư từ năm 1954.', { b: -6, u: 3, lg: 4, nn: 3 }, 'Hai nhánh họ gặp lại sau hai mươi mốt năm. Có người mừng, có người ngượng ngùng.', 'seek75'],
-      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
     // không nhánh nào di cư: vào Nam là đi tìm tin những người đã đi chiến trường ("đi B")
     { regions: ['B', 'T1'], choices: [
       ['Vào Nam tìm tin người đi B', 'Lên xe vào Nam hỏi tin những người con, người cháu đã đi chiến trường.', { b: -6, u: 3, lg: 3, nn: 3 }, 'Có người tìm được đơn vị cũ, có người chỉ tìm thấy một cái tên trên bia. Cả nhà thắp hương ở từng hàng mộ không tên.'],
-      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, u: 3, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
+      ['Chờ con về từ chiến trường', 'Cả nhà ngóng tin người đi bộ đội.', { d: -1, vm: 5, nn: 5 }, 'Có người về, có nhà chỉ nhận giấy báo tử.'],
       ['Làm cỗ mừng thống nhất', 'Treo cờ, mời cả xóm.', { g: -4, lg: 5, vm: 6, nn: 6 }, 'Cả xóm ăn mừng. Ai cũng tin những ngày khó nhất đã qua.'],
     ] },
     // nhà theo thành phần thứ ba (luôn ở miền Nam sau 1954): không làm cho chính quyền cũ, nên "ở lại" là chờ cái hội
@@ -655,7 +655,7 @@ export const VARIANT: Record<string, Variant[]> = {
   ],
   yb30: [
     { picks: ['qdd'], choices: [
-      ['Theo anh em đánh đồn Yên Bái', 'Người trong họ nhận phần việc trong đêm khởi nghĩa.', { d: -2, u: 6, ph: -20, vm: 3 }, 'Khởi nghĩa tan sau vài giờ. Người ấy bị bắt; dòng họ giữ tấm ảnh trong hộp gỗ.'],
+      ['Theo anh em đánh đồn Yên Bái', 'Người trong họ nhận phần việc trong đêm khởi nghĩa.', { d: -2, ph: -20 }, 'Khởi nghĩa tan sau vài giờ. Người ấy bị bắt; dòng họ giữ tấm ảnh trong hộp gỗ.'],
       ['Giấu người, đốt sổ sách', 'Sau khi khởi nghĩa vỡ, nhà thành chỗ trốn của đồng chí.', { g: -4, u: 4, ph: -10 }, 'Danh sách đảng viên cháy trong bếp. Hai người trốn trên gác thóc đến khi lên được biên giới.'],
     ] },
   ],
@@ -751,11 +751,11 @@ export const VARIANT: Record<string, Variant[]> = {
   lb72: [
     { homes: ['nd'], regions: ['B'], choices: [
       ['Sơ tán khỏi thành phố Nam Định', 'Đưa người già, trẻ nhỏ về các làng ngoại thành tránh bom.', { g: -6, b: -4 }, 'Năm ấy thành phố đã nhiều lần bị ném bom. Những đêm cuối năm, cả xóm sơ tán đứng nhìn về phía Hà Nội, trời đỏ rực.'],
-      ['Ở lại trực chiến', 'Người của họ trong tự vệ nhà máy.', { d: -1, u: 6, vm: 12 }, 'Cả mùa đông canh trận địa bên bờ sông Đào. Tin Hà Nội bắn rơi B-52 về qua loa phóng thanh.'],
+      ['Ở lại trực chiến', 'Người của họ trong tự vệ nhà máy.', { d: -1, vm: 4 }, 'Cả mùa đông canh trận địa bên bờ sông Đào. Tin Hà Nội bắn rơi B-52 về qua loa phóng thanh.'],
     ] },
     { from: ['T2', 'NE', 'NW'], regions: ['B'], choices: [
       ['Sơ tán về nông thôn', 'Theo cơ quan, nhà trường về nơi sơ tán; quê thật ở tận miền Nam.', { g: -6, b: -4 }, 'Mười hai ngày đêm B-52 rải bom Hà Nội, Hải Phòng. Ở nơi sơ tán, người tập kết ngồi nghe đài, nhẩm tính bao giờ hiệp định ký xong để về Nam.'],
-      ['Ở lại trực chiến', 'Người của họ trong tự vệ khu tập thể.', { d: -1, u: 6, vm: 12 }, 'Bắn rơi một máy bay, được ghi tên trên báo.'],
+      ['Ở lại trực chiến', 'Người của họ trong tự vệ khu tập thể.', { d: -1, vm: 4 }, 'Mười hai ngày đêm trên trận địa tự vệ giữa tiếng bom. Hết đợt ném bom, người ấy về nhà, ít nói hẳn đi.'],
     ] },
   ],
   // Chiến tranh biên giới phía Bắc (17.2 – 16.3.1979) nhìn từ một nhà ở miền Trung, miền Nam (thẻ chỉ mở khi có biến cố

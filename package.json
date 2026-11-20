@@ -17,7 +17,7 @@
     "voice:script": "tsx scripts/voice-script.ts",
     "voice:tts": "python3 scripts/tts/generate.py",
     "voice:check": "tsx scripts/check-voice.ts",
-    "scenes": "tsx scripts/check-scenes.ts && tsx scripts/sim-loyal.ts --strict",
+    "scenes": "tsx scripts/lint-content.ts && tsx scripts/check-scenes.ts && tsx scripts/sim-loyal.ts --strict",
     "endings": "tsx scripts/sim-endings.ts --strict --out src/data/endings-rarity.json"
   },
   "dependencies": {

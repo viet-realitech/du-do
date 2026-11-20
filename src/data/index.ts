@@ -26,6 +26,8 @@ export interface HistEvent {
   src: string[];
   qt?: Quote;
   n?: [string, string][];
+  /** Ghi chú phạm vi / nguồn của bảng số liệu, in nhỏ dưới bảng (giá trị trong bảng giữ ngắn). */
+  nNote?: string;
   diary?: boolean;
   era?: string;
   /** Trang nhật ký: tháng (khi cùng năm với một sự kiện có thẻ, để dòng "Ở nhà" không nhắc việc xảy ra sau). */
