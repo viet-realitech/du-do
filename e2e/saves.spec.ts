@@ -210,6 +210,41 @@ test.describe('the recovery screen', () => {
     expect(await kept(page)).toEqual([]);
   });
 
+  test('with storage full, the screen promises no copy it could not keep; Bắt đầu lại says the game will be lost, then keeps a copy in the space it frees', async ({ page }) => {
+    // a big unreadable play save (no copy fits beside it), and the origin's storage filled up to a small gap
+    const raw = JSON.stringify({ ...midPlay, name: 'Họ Lê ' + 'x'.repeat(6000) }).slice(0, -20);
+    const errors = await seed(page, { 'dudo-v2-play': raw, 'dudo-mode': 'play' });
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('filled')) return;
+      sessionStorage.setItem('filled', '1');
+      localStorage.setItem('gap', 'g'.repeat(2000));
+      let chunk = 'y'.repeat(1 << 20), i = 0;
+      while (chunk.length > 8) { try { localStorage.setItem('filler-' + i++, chunk); } catch { chunk = chunk.slice(0, chunk.length >> 1); } }
+      localStorage.removeItem('gap');
+    });
+    await page.goto('/');
+    const box = page.locator('#rescue');
+    await expect(box.getByRole('heading')).toHaveText('Bản lưu bị hỏng');
+    expect(await kept(page)).toEqual([]);
+    await expect(box.locator('#rescue-p')).toHaveText('Bản lưu trên máy này không đọc được nên ván của bạn chưa mở ra được. Dư Đồ chưa xoá gì cả, nhưng chỗ lưu của Dư Đồ trên máy đã đầy nên chưa cất được bản sao. Muốn giữ ván này, hãy bấm Sao chép bản lưu hỏng rồi dán vào một ghi chú hay tin nhắn.');
+    await expect(box.locator('.note')).toContainText('Chưa cất được bản sao nào, nên Bắt đầu lại sẽ xoá hẳn ván đang lưu');
+    await box.getByRole('button', { name: 'Sao chép bản lưu hỏng' }).click();
+    expect(await page.evaluate(() => (window as unknown as { copied: string }).copied)).toContain(raw);
+    // the question says the game will be lost, not that a copy is kept
+    await box.getByRole('button', { name: 'Bắt đầu lại' }).click();
+    await expect(page.locator('#rescue-q')).toHaveText('Xoá ván đang lưu và bắt đầu từ đầu? Chỗ lưu đã đầy nên chưa cất được bản sao: nếu chưa chép bản lưu hỏng ra, ván này sẽ mất hẳn.');
+    expect(await stored(page, 'dudo-v2-play')).toBe(raw);
+    const fresh = page.waitForEvent('load');
+    await box.getByRole('button', { name: 'Xoá và bắt đầu lại' }).click();
+    await fresh;
+    await expect(page.getByRole('button', { name: /Mở hồ sơ/ })).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('#rescue')).toHaveCount(0);
+    // the old save, removed from its slot, went into the space it left
+    expect(await stored(page, 'dudo-v2-play')).not.toBe(raw);
+    expect(await kept(page)).toMatchObject([{ n: 1, key: 'dudo-v2-play', why: 'trước khi bắt đầu lại', raw }]);
+    expect(errors.join()).toContain('không đọc được');
+  });
+
   test('a main map that never draws brings up the recovery screen after a while, and it goes away if the map draws after all', async ({ page }) => {
     test.setTimeout(90_000);
     await seed(page, { 'dudo-v2': JSON.stringify({ ...midGame, v: 1 }) });

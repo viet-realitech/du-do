@@ -45,10 +45,11 @@ try {
     return out.sort(function (a, b) { return a.n - b.n; });
   }
 
-  /** Cất một bản sao của bản lưu `key` (cùng nội dung với một bản đã cất thì thôi); trả số thứ tự, 0 nếu không cất được. */
-  function keep(key, reason) {
+  /** Cất một bản sao của bản lưu `key` (cùng nội dung với một bản đã cất thì thôi); trả số thứ tự, 0 nếu không cất được
+      (chỗ lưu đầy). `raw0`: nội dung đã đọc sẵn (bản lưu vừa bị xoá để lấy chỗ). */
+  function keep(key, reason, raw0) {
     try {
-      var raw = get(key), list = kept();
+      var raw = raw0 != null ? raw0 : get(key), list = kept();
       if (raw === null) return 0;
       for (var i = 0; i < list.length; i++) if (list[i].raw === raw) return list[i].n;
       var n = list.length ? list[list.length - 1].n + 1 : 1;
@@ -103,9 +104,10 @@ try {
     if (!document.body) { document.addEventListener('DOMContentLoaded', function () { show(w, key, msg); }); return; }
     why = w; slot = key || slotKey();
     if (msg) errs.push(String(msg).slice(0, 300));
-    keep(slot, w === 'save' ? 'không đọc được' : 'ứng dụng không mở được' + (msg ? ': ' + String(msg).slice(0, 120) : ''));
-    // chưa có ván nào trên máy (lần mở đầu tiên): không nói tới bản sao, không có gì để xoá
-    var has = get(slot) !== null;
+    var n = keep(slot, w === 'save' ? 'không đọc được' : 'ứng dụng không mở được' + (msg ? ': ' + String(msg).slice(0, 120) : ''));
+    // chưa có ván nào trên máy (lần mở đầu tiên): không nói tới bản sao, không có gì để xoá. Chỗ lưu đầy (n = 0): không hứa
+    // một bản sao chưa cất được, chỉ cách chép bản lưu ra trước
+    var has = get(slot) !== null, copied = has && n > 0;
     note('Màn khôi phục: ' + (w === 'save' ? 'bản lưu ' + slot + ' không đọc được' : 'ứng dụng không mở được') + (msg ? ' (' + String(msg).slice(0, 160) + ')' : ''));
     var st = el('style', { id: 'rescue-css' }); st.textContent = CSS; document.head.appendChild(st);
     box = el('div', { id: 'rescue', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': 'rescue-h', 'aria-describedby': 'rescue-p' });
@@ -113,8 +115,10 @@ try {
     c.appendChild(el('div', { class: 'k' }, 'Dư Đồ'));
     c.appendChild(el('h1', { id: 'rescue-h', tabindex: '-1' }, w === 'save' ? 'Bản lưu bị hỏng' : 'Dư Đồ chưa mở được'));
     c.appendChild(el('p', { id: 'rescue-p' }, w === 'save'
-      ? 'Bản lưu trên máy này không đọc được nên ván của bạn chưa mở ra được. Dư Đồ đã cất riêng một bản sao của nó, chưa xoá gì cả.'
-      : has ? 'Lần mở này gặp trục trặc. Ván đang chơi vẫn nằm trên máy, và Dư Đồ đã cất thêm một bản sao để phòng.'
+      ? 'Bản lưu trên máy này không đọc được nên ván của bạn chưa mở ra được. ' + (copied
+        ? 'Dư Đồ đã cất riêng một bản sao của nó, chưa xoá gì cả.'
+        : 'Dư Đồ chưa xoá gì cả, nhưng chỗ lưu của Dư Đồ trên máy đã đầy nên chưa cất được bản sao. Muốn giữ ván này, hãy bấm Sao chép bản lưu hỏng rồi dán vào một ghi chú hay tin nhắn.')
+      : has ? 'Lần mở này gặp trục trặc. Ván đang chơi vẫn nằm trên máy' + (copied ? ', và Dư Đồ đã cất thêm một bản sao để phòng.' : ', chưa xoá gì cả.')
         : 'Lần mở này gặp trục trặc. Hãy thử lại sau giây lát.'));
     var row = el('div', { class: 'row' });
     var retry = el('button', { type: 'button', class: 'go', 'data-r': 'retry' }, 'Thử lại');
@@ -123,7 +127,9 @@ try {
     row.appendChild(retry); row.appendChild(copy); if (has) row.appendChild(reset);
     c.appendChild(row);
     c.appendChild(el('p', { class: 'note' }, has
-      ? 'Thử lại vẫn không được thì chép bản lưu hỏng, gửi kèm khi báo lỗi để có thể khôi phục ván. Bắt đầu lại sẽ xoá ván đang lưu; bản sao đã cất vẫn còn.'
+      ? 'Thử lại vẫn không được thì chép bản lưu hỏng, gửi kèm khi báo lỗi để có thể khôi phục ván. ' + (copied
+        ? 'Bắt đầu lại sẽ xoá ván đang lưu; bản sao đã cất vẫn còn.'
+        : 'Chưa cất được bản sao nào, nên Bắt đầu lại sẽ xoá hẳn ván đang lưu: hãy chép nó ra trước.')
       : 'Thử lại vẫn không được thì chép báo cáo này, gửi kèm khi báo lỗi.'));
     box.appendChild(c);
     document.body.appendChild(box);
@@ -194,16 +200,22 @@ try {
 
   function ask(c, row, reset) {
     reset.disabled = true;
+    // có bản sao của đúng bản lưu này chưa (lúc mở màn chỗ lưu đầy thì chưa; thử cất lại lần nữa)
+    var n = keep(slot, 'trước khi bắt đầu lại');
     var a = el('div', { class: 'ask', role: 'group', 'aria-labelledby': 'rescue-q' });
-    a.appendChild(el('p', { id: 'rescue-q' }, 'Xoá ván đang lưu và bắt đầu từ đầu? Bản sao đã cất vẫn được giữ.'));
+    a.appendChild(el('p', { id: 'rescue-q' }, 'Xoá ván đang lưu và bắt đầu từ đầu? ' + (n
+      ? 'Bản sao đã cất vẫn được giữ.'
+      : 'Chỗ lưu đã đầy nên chưa cất được bản sao: nếu chưa chép bản lưu hỏng ra, ván này sẽ mất hẳn.')));
     var r2 = el('div', { class: 'row' });
     var yes = el('button', { type: 'button', class: 'go', 'data-r': 'wipe' }, 'Xoá và bắt đầu lại');
     var no = el('button', { type: 'button', 'data-r': 'keep' }, 'Thôi');
     r2.appendChild(yes); r2.appendChild(no); a.appendChild(r2);
     row.parentNode.insertBefore(a, row.nextSibling);
     yes.onclick = function () {
-      keep(slot, 'trước khi bắt đầu lại');
+      // chưa có bản sao: xoá bản lưu rồi thử cất bản sao vào đúng chỗ vừa trống (được thì ván không mất hẳn)
+      var raw = n ? null : get(slot);
       try { localStorage.removeItem(slot); localStorage.setItem('dudo-mode', slot === 'dudo-v2-play' ? 'play' : 'read'); } catch (e) { /* riêng tư */ }
+      if (raw !== null) keep(slot, 'trước khi bắt đầu lại', raw);
       note('Bắt đầu lại: đã xoá ' + slot);
       location.reload();
     };
