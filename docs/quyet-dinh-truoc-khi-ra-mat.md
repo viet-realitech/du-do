@@ -57,7 +57,7 @@ Danh sách đầy đủ, nguyên văn từng câu: `docs/review/nhay-cam.md` (si
 
 ## 7. Câu hỏi cho luật sư (cần kiểm lại từng văn bản)
 
-1. **Luật An ninh mạng 2018, Điều 16**: liệt kê thông tin bị cấm trên mạng, trong đó có thông tin "xuyên tạc lịch sử, phủ nhận thành tựu cách mạng". Các góc nhìn đặt ngang hàng, góc nhìn VNCH, giả định "Nếu…" có rủi ro gì? Theo hiểu biết chưa kiểm chứng của người soạn, Quốc hội đã thông qua một Luật An ninh mạng hợp nhất cuối năm 2025, hiệu lực từ giữa năm 2026: số điều có thể đã đổi.
+1. **Luật An ninh mạng 2025** (số 116/2025/QH15, hiệu lực từ 1.7.2026, thay Luật An ninh mạng 2018): Điều 7 liệt kê các hành vi bị nghiêm cấm; khoản 1 điểm b cấm đăng tải, phát tán trên mạng thông tin "xuyên tạc lịch sử, phủ nhận thành tựu cách mạng" (ở luật 2018 là Điều 8 khoản 1 điểm c; còn Điều 16 của luật 2018 nói về thông tin tuyên truyền chống Nhà nước, như xúc phạm quốc kỳ, lãnh tụ, anh hùng dân tộc). Các góc nhìn đặt ngang hàng, góc nhìn VNCH, giả định "Nếu…" có rủi ro gì? Nhờ luật sư xác nhận số điều, khoản.
 2. **Nghị định 147/2024/NĐ-CP** (dịch vụ Internet, thông tin trên mạng, trò chơi điện tử G1–G4): một trò chơi miễn phí, không tài khoản, chơi một mình, đặt máy chủ ở nước ngoài có cần giấy phép không? Nếu sau này có thu tiền, tài khoản, bảng xếp hạng, hay người vận hành ở Việt Nam thì sao?
 3. **Luật Đo đạc và Bản đồ 2018**: bản đồ phải thể hiện đúng chủ quyền, kể cả Hoàng Sa, Trường Sa. Bản đồ lịch sử (ranh giới thời Pháp thuộc, hai miền) có thuộc quy định này không; nhãn hiện có đã đủ chưa?
 4. **Bộ luật Hình sự, Điều 117 và Điều 331**: hai điều thường được dùng với nội dung trên mạng. Với anh, rủi ro phụ thuộc vào việc anh sống ở đâu và dễ bị nhận ra tới mức nào (mục 2).

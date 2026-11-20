@@ -89,6 +89,11 @@ test('no "Góp ý / Báo sai" link anywhere while the feedback address is empty'
   await openAbout(page);
   // the method paragraph is there, without a pointer to a link that does not exist
   await expect(live(page, '.scrim')).toContainText('Nội dung chưa được nhà sử học thẩm định.');
+  // it claims only the check that was done (Wikipedia), not one against every source in a Nguồn tab
+  const method = live(page, '.scrim .method');
+  await expect(method).toContainText('mới được đối chiếu với Wikipedia tiếng Việt, tiếng Anh.');
+  await expect(method).toContainText('chưa được đối chiếu từng câu với các sử liệu ấy');
+  await expect(method).not.toContainText('và các sử liệu ghi ở mục Nguồn');
   await expect(live(page, '.scrim')).not.toContainText('Góp ý');
   await expect(fbLinks(page)).toHaveCount(0);
   await expect(page.locator('a.fb')).toHaveCount(0);
