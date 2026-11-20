@@ -5,7 +5,7 @@ Sinh tự động bằng `npm run review:export` từ mã nguồn (chạy lại 
 ## Ngoài chữ: màu cờ, nhãn bản đồ
 
 - Màu phe mặc định là màu cờ lịch sử (`pal: 'flag'`, src/state.ts:61): vùng của Quốc gia Việt Nam / VNCH tô nền vàng ba sọc đỏ (src/ui/bits.ts:30). Người chơi đổi được sang "mực nâu" trong Hồ sơ → Giao diện.
-- Nhãn chủ quyền trên bản đồ chính: Biển Đông, Vịnh Bắc Bộ, Q.đ. Hoàng Sa, Q.đ. Trường Sa (src/map.ts:174); trên tấm bản đồ nhỏ ở màn chào (src/ui/plate.ts:25).
+- Nhãn chủ quyền trên bản đồ chính: Biển Đông, Vịnh Bắc Bộ, Q.đ. Hoàng Sa, Q.đ. Trường Sa (src/map.ts:174); trên tấm bản đồ nhỏ ở màn chào (src/ui/plate.ts:90).
 - Đường biên hiện nay lấy từ Natural Earth 1:50m (src/data/region-50m.json); không đa giác quốc gia nào của Natural Earth phủ lên Hoàng Sa hay Trường Sa.
 
 ## Cách mạng tháng Tám và việc bắt, giết người khác chính kiến (1945–1947) · 21 câu
