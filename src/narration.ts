@@ -47,7 +47,8 @@ if (hasTTS) {
 
 /* "Chạm để nghe": chỉ hiện khi trình duyệt chặn bản thu (NotAllowedError: Safari, không có cú chạm gần đây). Phát lại
    chính bản thu ấy trong cú chạm; bước tour vẫn theo hẹn giờ đọc, không bị rút ngắn. */
-function hideTap(): void { document.getElementById('tapvo')?.remove(); }
+let tapOff: (() => void) | null = null;
+function hideTap(): void { tapOff?.(); tapOff = null; document.getElementById('tapvo')?.remove(); }
 function tapToHear(play: () => void): void {
   hideTap();
   const b = document.createElement('button');
@@ -56,10 +57,23 @@ function tapToHear(play: () => void): void {
   b.className = 'chip on tapvo';
   b.innerHTML = `${icon('listen', 15)}Chạm để nghe`;
   b.addEventListener('click', ev => { ev.stopPropagation(); hideTap(); play(); });
-  const tb = document.getElementById('tourb');
-  // có thanh tour (và không có màn điện ảnh phủ lên): ngay trên thanh tour, trong khung bản đồ; còn lại giữa chân màn hình
-  if (tb?.parentElement && !document.querySelector('body > .cine')) { b.style.bottom = `${tb.offsetHeight + 14}px`; tb.parentElement.appendChild(b); }
-  else document.body.appendChild(b);
+  const tb = document.getElementById('tourb'), wrap = tb?.parentElement;
+  // có thanh tour (và không có màn điện ảnh phủ lên): trong khung bản đồ, ngay trên phụ đề cảnh nếu có (không che chữ),
+  // không thì trên thanh tour; cách 12 px để vòng viền của chip không dính nét viền bên dưới. Đặt lại khi phụ đề hiện,
+  // đổi cỡ theo nhịp hay mất đi. Còn lại: giữa chân màn hình
+  if (!tb || !wrap || document.querySelector('body > .cine')) { document.body.appendChild(b); return; }
+  let lt: HTMLElement | null = null;
+  const place = () => {
+    const c = wrap.querySelector<HTMLElement>(':scope > .lt:not(.out)');
+    if (c !== lt) { if (lt) ro.unobserve(lt); if (c) ro.observe(c); lt = c; }
+    b.style.bottom = `${wrap.clientHeight - (c || tb).offsetTop + 12}px`;
+  };
+  const ro = new ResizeObserver(place), mo = new MutationObserver(place);
+  ro.observe(tb);
+  mo.observe(wrap, { childList: true });
+  tapOff = () => { ro.disconnect(); mo.disconnect(); };
+  place();
+  wrap.appendChild(b);
 }
 /** Narration is possible for `key`: a recorded clip, or a Vietnamese system voice. */
 export const canSpeak = (key?: string) => !!recording(key) || (hasTTS && !!VOICE);
