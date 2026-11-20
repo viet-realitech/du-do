@@ -15,7 +15,7 @@ import { hidePop } from '../map';
 import { renderMain } from '../view';
 import { wikiFor, cachedWiki, probe, mediaCaption, commonsPage, type WikiInfo } from '../wiki';
 import { openMedia } from './lightbox';
-import { openSrc } from './sources';
+import { openSrc, srcFoot } from './sources';
 import { canReplay, closeReplay } from '../replay';
 import type { HistEvent } from '../data';
 import { setTab, type TabId } from '../tabs';
@@ -91,7 +91,7 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
     return v.src.map(sid => {
       const s = SRC.find(x => x.id === sid)!;
       return `<button class="src" data-a="src" data-id="${sid}"><div class="tt"><h3>${esc(s.t)}</h3><span class="mono muted">${s.k}</span></div><div class="muted" style="font-size:15px;margin-top:3px">${esc(s.at)}</div></button>`;
-    }).join('');
+    }).join('') + srcFoot(v);
   };
   const show = (k: Tab) => {
     $('#eb')!.innerHTML = body(k);
