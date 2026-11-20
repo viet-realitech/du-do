@@ -1,4 +1,4 @@
-import { isPlay, decided, homeChoice, ownCard, placeAt, home } from '../play';
+import { isPlay, decided, homeChoice, ownCard, placeAt, home, livesAbroad } from '../play';
 import { mood } from '../music';
 import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
@@ -158,7 +158,8 @@ function diaryPlate(v: HistEvent): string {
   const marks: Mark[] = [];
   let cap = `Dấu chân người viết · ${v.y}`;
   if (isPlay()) {
-    const pl = placeAt(v.y), away = pl.name === 'xứ người', h = home();
+    // ở xứ người: đã ra nước ngoài trên thẻ, hay chọn Ra đi ở điểm rẽ 6 (play.ts livesAbroad, như kết cục)
+    const pl = placeAt(v.y), away = livesAbroad(v.y) || pl.name === 'xứ người', h = home();
     const at: [number, number] = away ? h[2] : pl.l, name = away ? h[1] : pl.name, km = kmBetween(v.l, at);
     if (km < 15) {
       marks.push({ l: v.l, kind: 'foot' }, { l: at, kind: 'home', label: name });

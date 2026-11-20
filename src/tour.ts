@@ -313,6 +313,9 @@ export function resumeTour(why?: 'overlay'): void {
   clearTimeout(mapIdle);
   clearTimeout(tour.t);
   hush();
+  // nhạc của chương: trong lúc dừng, một màn khác có thể đã đổi nhạc (hồ sơ mở lại từ Sổ kết cục: nhạc khép rồi nhạc Hồ
+  // sơ); nhạc đang đúng thì mood() không làm gì
+  mood(eraMood(tour.e.id));
   const was = tour.paused;
   tour.paused = undefined;
   if (was === 'card') {

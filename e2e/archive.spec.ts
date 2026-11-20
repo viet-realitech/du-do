@@ -1,5 +1,6 @@
 import { test, expect, devices, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { navCut } from './fixtures/errors';
 
 /* Sổ kết cục (iPad Pro 11, cả Chromium lẫn WebKit):
    - dòng họ đi tới kết cục được cất cả bản lưu vào 'dudo-archive'; mở lại màn kết không cất thêm; chọn lại từ 1858 giữ sổ
@@ -36,7 +37,7 @@ const run = (id: string, save: Record<string, unknown>, end: string, title: stri
 /** Đặt bộ nhớ một lần (tải lại trang không đặt lại), chặn Wikipedia, gom lỗi trang. */
 async function seed(page: Page, items: Record<string, string>) {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, rt => rt.abort());
   await page.addInitScript(items => {
     if (sessionStorage.getItem('seeded')) return;
@@ -186,7 +187,7 @@ test('a damaged book never stops the app: unreadable is treated as empty and cop
 });
 
 test('one bad entry in the book is dropped on its own; its neighbours and the counts of dropped-out runs still show', async ({ page }) => {
-  const good = { ...run('ok1', { ...finished('Họ Đinh', 'ct', oldPath), ended: true }, 'olainam', 'Ở lại sau ngày 30 tháng Tư', 'Cần Thơ'), th: { lo: 'x' }, tiers: [1, 2] }; // bad thresholds: dropped, today's table used
+  const good = { ...run('ok1', { ...finished('Họ Đinh', 'ct', oldPath), ended: true }, 'olainam', 'Ở lại sau ngày 30 tháng Tư', 'Cần Thơ'), th: { lo: 'x' }, tiers: [1, 2] }; // bad thresholds: dropped; its save has no endFix either, so today's table is used
   const book = { v: 1, runs: [{ id: 5 }, good, { id: 'x', mode: 'play', end: 'xanam', save: 'oops' }, null], gone: { chiadoi: 2, xabac: 'two' }, live: { play: 'nope' } };
   const errors = await seed(page, { 'dudo-v2': JSON.stringify(midRead), 'dudo-archive': JSON.stringify(book) });
   await page.goto('/');
@@ -284,7 +285,7 @@ test("after the recovery screen's Bắt đầu lại, the same path played again
   expect(a.runs).toEqual(book.runs);
   // a new family on the same surname, home and six turning points, with another journey (other wealth)
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...finished('Họ Phan', 'qn', reformPath), res: r(70, 70, 70, 70) }));
   await page.reload();
   await alive(page);
@@ -296,5 +297,137 @@ test("after the recovery screen's Bắt đầu lại, the same path played again
   expect(b.runs[1].id).not.toBe('famX');
   expect(b.runs[1].save).toMatchObject({ res: r(70, 70, 70, 70) });
   expect(b.live).toEqual({ play: b.runs[1].id });
+  expect(errors).toEqual([]);
+});
+
+/** Bấm một hành động data-a (như nút trong ứng dụng) mà không cần nút ấy đang hiện. */
+const act = (page: Page, a: string, data: Record<string, string> = {}) => page.evaluate(([a, data]) => {
+  const b = document.createElement('button');
+  b.dataset.a = a;
+  Object.assign(b.dataset, data);
+  b.hidden = true;
+  document.body.appendChild(b);
+  b.click();
+  b.remove();
+}, [a, data] as const);
+const stored = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2-play')!));
+/** Mọi thẻ tới thẻ `id` (thứ tự trong cards.ts) đã quyết bằng lựa chọn `n`. */
+const upTo = (id: string, n: number) => Object.fromEntries(ids.slice(0, ids.indexOf(id) + 1).map(x => [x, n]));
+
+test('play mode closes a dossier only at 2026: no Xem kết luận in Hồ sơ at 1976, an early read is neither kept nor filed, and the 1980 crossing decides the ending', async ({ page }) => {
+  const path = { e1: 'chien', e2: 'canvuong', e3: 'qdd', e4: 'qg', e5: 'nam', e6: 'baocap' };
+  // 1976: six turning points chosen, five harvests; in 1975 the family stayed (sg75 = 2)
+  const at76 = { ...finished('Họ Trần', 'hn', path), year: 1976, xFrom: 1976, cards: { ...upTo('tn76', 0), sg75: 2 }, harvests: es.slice(0, 5), sound: false, music: false };
+  const errors = await seed(page, { 'dudo-v2-play': JSON.stringify(at76), 'dudo-mode': 'play' });
+  await page.goto('/');
+  await alive(page);
+  await openLedger(page);
+  await expect(live(page, '.pane [data-a=share]')).toBeVisible();
+  await expect(page.locator('.pane [data-a=end]')).toHaveCount(0);
+  expect((await stored(page)).harvests).toEqual(es.slice(0, 5)); // the sixth harvest is not taken early
+  // the ending screen itself keeps nothing before 2026 (2025, every harvest and quiz done: the action opens it directly)
+  await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...at76, year: 2025, harvests: es }));
+  await page.reload();
+  await alive(page);
+  await act(page, 'end');
+  await expect(live(page, '.ov.end .end-title')).not.toHaveText('');
+  let s = await stored(page);
+  expect(s.endFix).toBeUndefined();
+  expect(s.endSaid).toBe(false);
+  expect(await arc(page)).toBeNull();
+  // 2026, after the 1980 crossing (tn80 = 0): the ending follows it, and only now is it kept and filed
+  const at26 = { ...at76, year: 2026, cards: { ...upTo('st25', 1), ...upTo('tn76', 0), sg75: 2, tn80: 0 }, harvests: es };
+  await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify(at26));
+  await page.reload();
+  await alive(page);
+  await openLedger(page);
+  await live(page, '.pane [data-a=end]').click();
+  const end = live(page, '.ov.end');
+  await expect(end.locator('.end-title')).toHaveText('Bên kia đại dương');
+  await expect(end.locator('.end-plate .mp-l li').last()).toHaveText(/1980\s*Cả nhà vượt biển; từ đó sống ở xứ người/);
+  s = await stored(page);
+  expect(s.endFix?.id).toBe('xanam');
+  await expect.poll(async () => (await arc(page))?.runs.map(x => x.end)).toEqual(['xanam']);
+  expect(errors).toEqual([]);
+});
+
+test('a closed play dossier takes no further card decisions: a skipped optional card offers no Dòng họ làm gì?', async ({ page }) => {
+  const fam = finished('Họ Đỗ', 'hn', oldPath), { ld87: _skip, ...cards } = fam.cards;
+  const errors = await seed(page, { 'dudo-v2-play': JSON.stringify({ ...fam, cards, sound: false, music: false }), 'dudo-mode': 'play' });
+  await page.goto('/');
+  await alive(page);
+  // before the dossier is closed, the 1887 card can still be taken up
+  await act(page, 'ev', { id: 'ld87' });
+  await expect(live(page, '.ov.evp [data-a=card]')).toContainText('Dòng họ làm gì?');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#layer > .ov')).toHaveCount(0);
+  await page.locator('#card [data-a=end].c').click();
+  const title = (await live(page, '.ov.end .end-title').textContent())!.trim();
+  expect((await stored(page)).endFix?.id).toBeTruthy();
+  await live(page, '.ov.end .back').click();
+  await expect(page.locator('#layer > .ov')).toHaveCount(0);
+  // closed: no card on the event page, nothing left to decide; the ending reads the same
+  await act(page, 'ev', { id: 'ld87' });
+  await expect(live(page, '.ov.evp h1')).toBeVisible();
+  await expect(page.locator('.ov.evp [data-a=card]')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#layer > .ov')).toHaveCount(0);
+  await page.locator('#card [data-a=end].c').click();
+  await expect(live(page, '.ov.end .end-title')).toHaveText(title);
+  expect('ld87' in (await stored(page)).cards).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('a family that read its ending before this update is in Sổ kết cục as soon as Hồ sơ opens; clearing the book does not bring it back', async ({ page }) => {
+  // bản lưu thật của bản d11afee đã đọc kết cục "Bên kia đại dương" (ended, endSaid), khi chưa có Sổ kết cục
+  const old = JSON.parse(readFileSync('e2e/fixtures/save-d11afee-end.json', 'utf8'));
+  const errors = await seed(page, { 'dudo-v2-play': JSON.stringify({ ...old, narr: false, sound: false, music: false }), 'dudo-mode': 'play' });
+  await page.goto('/');
+  await alive(page);
+  await openLedger(page);
+  await expect(page.locator('.ledg h3')).toHaveText('Sổ kết cục · 1/15');
+  await expect(page.locator('.ledg-e')).toHaveCount(0);
+  await expect(page.locator('.ledg .arc-runs li')).toHaveCount(1);
+  await expect(page.locator('.ledg .arc-runs')).toContainText('Họ Lê · ván này');
+  await expect(page.locator('.seal[data-id=xanam] .n')).toHaveText('Đã gặp');
+  const a = (await arc(page))!;
+  expect(a.runs.map(x => [x.end, x.title, x.home])).toEqual([['xanam', 'Bên kia đại dương', 'Nam Định']]);
+  expect(a.runs[0].tiers).toEqual([165, 197, 265, 298]); // the wealth lines it was read with
+  expect((await stored(page)).endFix).toEqual({ id: 'xanam', t: [165, 197, 265, 298] });
+  // the player clears the book: the finished family is not filed again behind their back
+  await page.locator('[data-a=arc-clear]').click();
+  await live(page, '#layer > .scrim.dlg [data-a=arc-clear-yes]').click();
+  await expect(page.locator('.ledg h3')).toHaveText('Sổ kết cục · 0/15');
+  await page.locator('[data-a=bigtext]').click(); // Hồ sơ is drawn again
+  await expect(page.locator('html')).toHaveAttribute('data-text', 'big');
+  await expect(page.locator('.ledg h3')).toHaveText('Sổ kết cục · 0/15');
+  expect(await arc(page)).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('Chữ lớn enlarges the seal stamps and numbers of Sổ kết cục like the text beside them', async ({ page }) => {
+  const book = { v: 1, runs: [run('ok1', { ...finished('Họ Đinh', 'ct', oldPath), ended: true }, 'olainam', 'Ở lại sau ngày 30 tháng Tư', 'Cần Thơ')], gone: {}, live: {} };
+  const errors = await seed(page, { 'dudo-v2': JSON.stringify({ ...midRead, sound: false, music: false }), 'dudo-archive': JSON.stringify(book) });
+  await page.goto('/');
+  await alive(page);
+  await openLedger(page);
+  const SEL = ['.seal .no', '.seal .sl', '.arc-run .sl', '.seal b'];
+  const sizes = () => page.evaluate(sel => sel.map(s => parseFloat(getComputedStyle(document.querySelector(s)!).fontSize)), SEL);
+  /** Cỡ chữ của dấu trong hộp một dấu (chạm vào dấu). */
+  const dt = async () => {
+    await page.locator('.seal[data-id=olainam]').click();
+    const n = parseFloat(await live(page, '.scrim .arc-dt .sl').evaluate(e => getComputedStyle(e).fontSize));
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#layer > .scrim')).toHaveCount(0);
+    return n;
+  };
+  const s0 = await sizes(), d0 = await dt();
+  await page.locator('[data-a=bigtext]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-text', 'big');
+  const s1 = await sizes(), d1 = await dt();
+  s0.forEach((n, i) => expect(s1[i] / n, SEL[i]).toBeCloseTo(1.18, 2));
+  expect(d1 / d0).toBeCloseTo(1.18, 2);
+  // the larger stamps wrap inside their cells: nothing scrolls sideways
+  expect(await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.pane, .seals, .arc-runs')].filter(e => e.scrollWidth > e.clientWidth + 1).map(e => e.className))).toEqual([]);
   expect(errors).toEqual([]);
 });

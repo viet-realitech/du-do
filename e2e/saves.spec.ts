@@ -1,5 +1,6 @@
 import { test, expect, devices, type Page, type Route } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { navCut } from './fixtures/errors';
 
 /* Bản lưu không bao giờ làm chết ứng dụng (iPad Pro 11, cả Chromium lẫn WebKit):
    - bản lưu hỏng từng trường (null, sai kiểu, phiên bản lạ) được sửa từng trường, ván vẫn mở, bản gốc được cất một bản sao;
@@ -17,7 +18,7 @@ type Kept = { n: number; t: string; key: string; why: string; raw: string | null
 /** Đặt bản lưu một lần (lần tải lại sau không đặt lại), chặn Wikipedia, gom lỗi trang. */
 async function seed(page: Page, items: Record<string, string>) {
   const errors: string[] = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
   await page.addInitScript(items => {
     if (sessionStorage.getItem('seeded')) return;

@@ -108,8 +108,18 @@ export function openCard(v: HistEvent, inTour = false): void {
     const sps1 = specialsFor(v), steps = d.querySelector<HTMLElement>('.steps');
     if (steps) { if (sps1.length) steps.innerHTML = stepSpans(sps1); else steps.remove(); }
     const sp = sps1.find(c => !specialDecided(c));
-    if (sp) mountSpecial(d, v, sp, inTour); else finish(d, v, inTour);
+    if (!sp) { finish(d, v, inTour); return; }
+    nextUp(d.querySelector<HTMLElement>('.sheet')!, () => mountSpecial(d, v, sp, inTour));
   };
+}
+/** Còn việc phải quyết sau kết cục vừa hiện (biến cố của sự kiện): người chơi đọc xong mới bấm sang, bảng không tự cuộn
+    mất kết cục ấy (iPad ngang, điện thoại: biến cố mở ngay thì kết cục của thẻ trôi lên khỏi mép bảng). */
+function nextUp(box: HTMLElement, go: () => void): void {
+  box.insertAdjacentHTML('beforeend', `<div style="height:12px"></div><button class="btn" id="xnext">Sang việc kế tiếp ›</button>`);
+  const nb = box.querySelector<HTMLButtonElement>('#xnext')!;
+  nb.focus({ preventScroll: true });
+  reveal(nb);
+  nb.onclick = () => { nb.remove(); go(); };
 }
 /** Dòng các bước đầu bảng thẻ: "1 · Thẻ sự kiện", rồi mỗi biến cố một bước. */
 const stepSpans = (sps: SpecialCard[]) => `<span class="on">1 · Thẻ sự kiện</span>${sps.map((c, i) => `<span>${i + 2} · ${c.when.after ? 'Hệ quả' : 'Biến cố riêng'}</span>`).join('')}`;
@@ -142,8 +152,8 @@ function finish(d: HTMLElement, v: HistEvent, inTour: boolean): void {
 }
 
 /** Biến cố của dòng họ (họ, phe, quê…, hay hệ quả một việc đã quyết) nối tiếp thẻ sự kiện trong cùng một bảng; có thể
-    đổi họ. Sự kiện có hai biến cố: quyết xong biến cố đầu, kết cục và phần đổi hiện ra, nút "Sang việc kế tiếp" mới mở biến
-    cố sau (không cuộn mất kết cục vừa đọc). */
+    đổi họ. Quyết xong thẻ (hay biến cố đầu, khi sự kiện có hai biến cố), kết cục và phần đổi hiện ra, nút "Sang việc kế
+    tiếp" mới mở biến cố (không cuộn mất kết cục vừa đọc). */
 function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boolean): void {
   const sh = d.querySelector<HTMLElement>('.sheet')!;
   const all = specialsFor(v), k = all.indexOf(sp), n = all.length;
@@ -201,11 +211,7 @@ function mountSpecial(d: HTMLElement, v: HistEvent, sp: SpecialCard, inTour: boo
     const next = specialsFor(v).find(c => !specialDecided(c));
     if (!next) { finish(d, v, inTour); return; }
     // còn một biến cố: người chơi đọc xong kết cục vừa rồi mới sang (không tự cuộn đi)
-    box.insertAdjacentHTML('beforeend', `<div style="height:12px"></div><button class="btn" id="xnext">Sang việc kế tiếp ›</button>`);
-    const nb = box.querySelector<HTMLButtonElement>('#xnext')!;
-    nb.focus({ preventScroll: true });
-    reveal(nb);
-    nb.onclick = () => { nb.remove(); mountSpecial(d, v, next, inTour); };
+    nextUp(box, () => mountSpecial(d, v, next, inTour));
   };
 }
 

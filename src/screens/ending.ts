@@ -1,8 +1,8 @@
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices, keepEnding, tiersNow } from '../play';
-import { mood, finaleFor } from '../music';
+import { mood, finaleFor, moodNow } from '../music';
 import { ERAS, VAL, type Era } from '../data';
-import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1, archive, archiveRun, viewRun, type ArcRun } from '../state';
+import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1, archive, archiveRun, viewRun, readOnly, type ArcRun } from '../state';
 import { chronLine, epilogue, whyText, rarityLine, firstDivergence, cfOf, exitNote, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
 import { endSpeech, epiKey } from '../speech';
 import { chronKey, endVoiceKey } from '../voiced';
@@ -18,7 +18,7 @@ import { stopTour } from '../tour';
 import { renderMain, invalidateTrack } from '../view';
 import { compass } from './profile';
 // bản đồ dòng họ ở cột bên của hồ sơ kết cục (homePlate)
-import { placeAt } from '../play';
+import { placeAt, livesAbroad } from '../play';
 import { Y0 } from '../state';
 import { goneOf, GONE_AT } from '../data/endings';
 import { plate, type Mark } from '../ui/plate';
@@ -98,13 +98,14 @@ function wealth(f: Facts): string {
 }
 
 /** Quê và những lần dời nhà (Trò chơi): chỉ những gì bản lưu có. Quê đã chọn; nơi ở mới sau Genève (di cư vào Nam, tập
-    kết ra Bắc rồi về lại quê năm 1976), theo đúng play.ts placeAt; cả nhà ra nước ngoài (cờ rời nước), chỉ ghi trong danh
-    sách vì bản lưu không biết nước nào. Không có chặng nào bản lưu không có, không vẽ đường đi: nét đứt chỉ nói từ đâu
-    tới đâu. Đọc sử không có quê nên không có mục này. */
+    kết ra Bắc rồi về lại quê năm 1976), theo đúng play.ts placeAt; cả nhà ra nước ngoài (cờ rời nước, hay chọn Ra đi ở
+    điểm rẽ 6: play.ts livesAbroad), chỉ ghi trong danh sách vì bản lưu không biết nước nào. Không có chặng nào bản lưu
+    không có, không vẽ đường đi: nét đứt chỉ nói từ đâu tới đâu. Đọc sử không có quê nên không có mục này. */
 function homePlate(f: Facts): string {
   const h = home(), seen: { y: number; name: string; l: [number, number] }[] = [];
   for (let y = Y0; y <= Y1; y++) {
-    const p = placeAt(y), q = seen[seen.length - 1];
+    // chọn Ra đi ở điểm rẽ 6 mà không qua thẻ rời nước nào: cả nhà cũng sống ở xứ người (play.ts livesAbroad), như kết cục kể
+    const p = livesAbroad(y) ? { name: 'xứ người', l: h[2] } : placeAt(y), q = seen[seen.length - 1];
     if (!q || q.name !== p.name || q.l.join() !== p.l.join()) seen.push({ y, name: p.name, l: p.l });
   }
   const marks: Mark[] = [{ l: h[2], kind: 'home', label: h[1] }], moves: [[number, number], [number, number]][] = [];
@@ -113,7 +114,8 @@ function homePlate(f: Facts): string {
   for (const s of seen.slice(1)) {
     if (s.name === 'xứ người') {
       const g = goneOf(f), x = g ? GONE_AT[g] : undefined;
-      rows.push([x ? x.y : s.y, x ? `Cả nhà ${esc(x.go)}; từ đó sống ở xứ người` : 'Cả nhà ra nước ngoài, sống ở xứ người']);
+      // không có cờ rời nước: đời thứ sáu chọn Ra đi, đêm ra khơi năm 1979 (người con còn ở mặt trận Campuchia: năm 1989)
+      rows.push([x ? x.y : f.front ? 1989 : 1979, x ? `Cả nhà ${esc(x.go)}; từ đó sống ở xứ người` : 'Cả nhà ra đi; từ đó sống ở xứ người']);
       continue;
     }
     const back = s.name === h[1];
@@ -147,17 +149,20 @@ function pathTable(first: number | undefined): string {
 /** Kết luận, dàn như một tập hồ sơ: đầu hồ sơ (họ, dấu kết cục, tên kết cục, lời kết riêng, độ hiếm, vì sao, phim), dòng
     sổ tóm tắt, gia phả, thẻ "Nếu…", gia sản (Trò chơi), la bàn giá trị, con đường so với lịch sử, lời khép. Điện thoại: một
     cột theo thứ tự ấy; màn ngang: gia phả bên trái, các mục ngắn bên phải, con đường thành một bảng trải ngang bên dưới.
-    Có kết cục thì cất cả bản lưu vào Sổ kết cục (state.ts archiveRun) và gợi ý "Ván sau, thử…". `ro`: hồ sơ một dòng họ
-    đã khép, mở lại từ Sổ kết cục với S tạm là bản lưu của nó (openPast): chỉ xem, không lưu, không trao huy hiệu, không
-    phim, không chia sẻ, không nút chọn lại; nút đóng về Hồ sơ. */
+    Hồ sơ khép được (có kết cục; Trò chơi: đã đi tới năm 2026) thì giữ kết cục ấy (S.endFix), cất cả bản lưu vào Sổ kết
+    cục (state.ts archiveRun) và gợi ý "Ván sau, thử…". `ro`: hồ sơ một dòng họ đã khép, mở lại từ Sổ kết cục với S tạm là
+    bản lưu của nó (openPast): chỉ xem, không lưu, không trao huy hiệu, không phim, không chia sẻ, không nút chọn lại; nút
+    đóng về Hồ sơ. */
 export function openEnd(ro?: ArcRun): void {
   if (!ro) stopTour();
   const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
+  // hồ sơ khép được: có kết cục, và Trò chơi đã đi tới năm 2026 (trước đó thẻ còn đổi gia sản, cờ rời nước: không giữ,
+  // không cất kết cục đọc sớm)
+  const closed = !ro && closable(end);
   // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
-  const fresh = !ro && !!end && !S.endSaid;
-  if (!ro && (!S.ended || fresh || (end && !S.endFix?.id))) { S.ended = true; if (end) { S.endSaid = true; keepEnding(end); } save(); }
-  // Trò chơi: cất cả ngưỡng gia sản lúc khép, mở lại hồ sơ thì giữ đúng dấu này dù bảng mô phỏng tính lại (state.ts viewing)
-  const meta = end && !ro ? { end: end.id, title, name: nameChain(), home: play ? home()[1] : '', ...(play ? { th: f.th, tiers: tiersNow() } : {}) } : null;
+  const fresh = closed && !S.endSaid;
+  if (!ro && (!S.ended || fresh || (closed && !S.endFix?.id))) { S.ended = true; if (closed) { S.endSaid = true; keepEnding(end); } save(); }
+  const meta = closed ? runMeta(f, end, title) : null;
   if (meta) archiveRun(meta); // trước khi dựng: gợi ý "Ván sau, thử…" tính cả dòng họ này
   mood(finaleFor(end?.id)); // kết cục mất mát: nhạc khép trầm buồn (music.ts ELEGY), còn lại Heroic Age
   if (!ro) ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
@@ -210,16 +215,34 @@ export function openEnd(ro?: ArcRun): void {
 }
 let autoRead: ReturnType<typeof setTimeout> | undefined;
 
+/** Hồ sơ của ván đang chơi khép được: có kết cục, và Trò chơi đã đi hết tới năm 2026 (Hồ sơ cho xem kết luận từ lúc đủ
+    sáu điểm rẽ chỉ ở Đọc sử). */
+const closable = (e: Ending | null): e is Ending => !!e && (!isPlay() || S.year >= Y1);
+/** Dòng của ván đang chơi trong Sổ kết cục; Trò chơi cất cả ngưỡng gia sản lúc khép, mở lại hồ sơ thì giữ đúng dấu này dù
+    bảng mô phỏng tính lại (state.ts viewing). */
+const runMeta = (f: Facts, e: Ending, title: string) => ({ end: e.id, title, name: nameChain(), home: isPlay() ? home()[1] : '', ...(isPlay() ? { th: f.th, tiers: tiersNow() } : {}) });
+/** Dòng họ đã đọc kết cục ở một bản trước (S.endSaid mà chưa có S.endFix.id: kết cục chỉ được giữ, được cất vào sổ từ bản
+    này): giữ kết cục ấy và cất vào Sổ kết cục ngay khi mở Hồ sơ, không đợi mở lại màn kết. Hồ sơ đã khép rồi (kể cả khi
+    người chơi vừa xoá sổ) thì không làm gì. */
+export function closeLive(): void {
+  if (readOnly() || !S.endSaid || S.endFix?.id || (isPlay() && S.year < Y1)) return;
+  const { f, e, title } = endingNow();
+  if (!closable(e)) return;
+  keepEnding(e);
+  save();
+  archiveRun(runMeta(f, e, title));
+}
+
 /** Dòng "chỉ xem" trên đầu hồ sơ mở lại từ Sổ kết cục. */
 const roNote = (r: ArcRun) => `<p class="end-ro"><span class="mono">Hồ sơ đã khép</span> ${esc(r.name)} khép hồ sơ ngày ${esc(arcDate(r.at))}${r.mode === 'read' ? ' (Đọc sử)' : ''}. Xem lại ở đây không đổi gì trong ván đang chơi.</p>`;
 
 /** Sổ kết cục: mở lại hồ sơ một dòng họ đã khép, chỉ để xem (openEnd dựng với S tạm là bản lưu của nó, rồi trả S lại). */
 export function openPast(id: string): boolean {
-  const run = archive().runs.find(r => r.id === id);
+  const run = archive().runs.find(r => r.id === id), was = moodNow(); // nhạc lúc mở (tour đang dừng: nhạc của chương)
   let ok = false;
   try { ok = !!run && !!viewRun(run, () => { openEnd(run); return true; }); } catch (e) { note(`Sổ kết cục: không mở được hồ sơ ${id}: ${String((e as Error)?.message || e)}`); }
   if (!ok) { toast('Không mở được hồ sơ này: bản lưu trong sổ đã hỏng.'); return false; }
-  backToLedger(id);
+  backToLedger(id, was);
   return true;
 }
 
