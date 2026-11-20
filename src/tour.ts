@@ -160,6 +160,9 @@ export function startTour(eIn?: Era): void {
 function tourStep(): void {
   if (!tour) return;
   const { L, i } = tour;
+  // ảnh của màn mở chương kế tiếp: lần tải lúc tour bắt đầu mà hỏng (mạng chập chờn) thì, khi đã hết hạn, bước sau tải lại
+  // để ảnh có sẵn trước màn mở chương (ở đó chỉ chờ 0,3 s). Đã có ảnh, hay chưa hết hạn: không tải gì
+  void preloadEra(ERAS[ERAS.indexOf(tour.e) + 1]);
   if (i >= L.length) { finishTour(tour.step === 0); return; } // chưa kể bước nào (▶ ở cuối chương): như bỏ qua
   const v = L[i], step = ++tour.step;
   const live = () => !!tour && tour.step === step && !tour.paused;

@@ -14,9 +14,11 @@ async function boot(page: Page) {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
-  const net = { mode: 'ok' as 'ok' | 'down' | 'missing', lead: 'Tall' as Shape, api: 0, imgs: {} as Record<string, Buffer> };
+  const net = { mode: 'ok' as 'ok' | 'down' | 'missing', lead: 'Tall' as Shape, api: 0, imgs: {} as Record<string, Buffer>, delay: 0, log: [] as string[] };
   await page.route(/wikipedia\.org|wikimedia\.org/, async r => {
     const u = r.request().url();
+    if (net.delay) await new Promise(res => setTimeout(res, net.delay));
+    net.log.push(`${net.mode} ${decodeURIComponent(u)}`);
     if (net.mode === 'down') return r.abort('internetdisconnected');
     if (/\/w\/api\.php/.test(u)) {
       net.api++;
@@ -167,3 +169,39 @@ test('event photos: an event with no Wikipedia article says so, not that the net
   await expect(page.locator('#eb a.src')).not.toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+/* Màn mở chương 2 (Đọc sử, chương 1 đang kể): ảnh của nó tải sẵn lúc tour chương 1 bắt đầu. Lần ấy hỏng vì mất mạng thì
+   ảnh phải được tải lại trước khi tới màn mở chương (ở đó chỉ chờ 0,3 s): ngay khi máy có mạng lại, hay ở bước tour sau
+   khi lần hỏng đã hết hạn (mạng chập chờn mà máy không báo mất mạng). Mỗi lần hỏi mạng chậm 0,4 s như mạng thật. */
+for (const back of ['the online event', 'a later tour step once the failure has expired'])
+  test(`chapter opener: a photo that failed at tour start is fetched again on ${back}, and the opener shows it`, async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.addInitScript(s => { if (!localStorage.getItem('dudo-v2')) localStorage.setItem('dudo-v2', s); },
+      JSON.stringify({ step: 'play', name: 'Họ Lê', mode: 'read', year: 1860, picks: { e1: 'chien' }, quiz: { e1: [true, true] }, narr: false, music: false, sound: false }));
+    const { errors, net } = await boot(page);
+    net.lead = 'Wide';
+    net.delay = 400;
+    // bài của sự kiện đại diện chương 2 (Kinh thành Huế 1885), và ảnh cỡ lớn chỉ màn mở chương xin (cảnh tour dùng ảnh nhỏ)
+    const era2 = (m: string) => net.log.filter(l => l.startsWith(m) && l.includes('api.php') && l.includes('Trận Kinh thành Huế 1885')).length;
+    const print = () => net.log.filter(l => l.startsWith('ok') && /\/(960|1280|1920)px-Wide\.png$/.test(l)).length;
+    net.mode = 'down';
+    await page.locator('#play').click();
+    await expect(page.locator('#tourb')).toBeVisible();
+    await expect.poll(() => era2('down'), { timeout: 10_000 }).toBeGreaterThan(0);
+    await page.waitForTimeout(300);
+    net.mode = 'ok';
+    if (back === 'the online event') await page.evaluate(() => dispatchEvent(new Event('online')));
+    else await page.evaluate(() => { const now = Date.now.bind(Date); Date.now = () => now() + 60_000; });
+    // tải lại ngay (không đợi tới màn mở chương), lúc tour chương 1 còn đang chạy
+    await expect.poll(print, { timeout: 20_000 }).toBeGreaterThan(0);
+    await expect(page.locator('#tourb')).toBeVisible();
+    expect(await page.locator('.cine.op').count()).toBe(0);
+    await page.waitForTimeout(600); // giải mã ảnh
+    const skip = page.locator('#tourb [data-t=skip]');
+    await skip.click();
+    await expect(skip).toContainText('Bỏ');
+    await skip.click();
+    await expect(page.locator('.cine.op')).toBeAttached({ timeout: 10_000 });
+    await expect(page.locator('.cine.op .pic img')).toHaveCount(1);
+    expect(errors).toEqual([]);
+  });

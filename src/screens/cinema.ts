@@ -3,7 +3,7 @@ import { S, optOf, familyName, archetype, nameChain } from '../state';
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, rank, endingNow, bigChoices, factsFromState } from '../play';
 import { rarityLine, chronLine } from '../data/endings';
-import { wikiFor, expired } from '../wiki';
+import { wikiFor, expired, onOnline } from '../wiki';
 import { esc, app } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { watch } from '../ui/quality';
@@ -95,6 +95,9 @@ export function preloadEra(e: Era | undefined): Promise<Pic | null> {
   if (!cache.has(e.id)) cache.set(e.id, load(e).catch(() => null).then(p => { got.set(e.id, p); if (!p) missAt.set(e.id, Date.now()); return p; }));
   return cache.get(e.id)!;
 }
+/* Máy có mạng trở lại: tải lại ngay ảnh của các chương vừa hỏng. Không chờ tới màn mở chương: ở đó chỉ chờ ảnh 0,3 s,
+   không đủ để tải lại bài và ảnh, màn sẽ vẫn thiếu ảnh. */
+onOnline(() => { for (const id of [...missAt.keys()]) void preloadEra(ERAS.find(e => e.id === id)); });
 /** Ảnh tư liệu của chương (ảnh đầu bài Wikipedia của sự kiện đại diện), hoặc null nếu chưa có trong `ms`. */
 export function eraImage(e: Era, ms: number): Promise<Pic | null> {
   return Promise.race([preloadEra(e), new Promise<null>(res => setTimeout(() => res(null), ms))]);
