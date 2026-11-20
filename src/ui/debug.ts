@@ -65,18 +65,23 @@ function report(): string {
     `Máy: ${navigator.userAgent}`,
     `DPR ${devicePixelRatio} · khung nhìn ${innerWidth}×${innerHeight} · màn hình ${screen.width}×${screen.height}`,
     `Lỗi gần nhất (${errs.length}):`,
-    ...(errs.length ? errs.slice().reverse().map(e => `  ${e.t} [${e.b}]${e.n && e.n > 1 ? ` ×${e.n}` : ''} ${e.m}${e.at ? ` @ ${e.at}` : ''}`) : ['  không có']),
+    ...(errs.length ? errs.slice().reverse().map(e => safe(() => `  ${e.t} [${e.b}]${e.n && e.n > 1 ? ` ×${e.n}` : ''} ${e.m}${e.at ? ` @ ${e.at}` : ''}`, '  ?')) : ['  không có']),
   ];
   return L.join('\n');
 }
 
+/** Báo cáo, không bao giờ ném lỗi: bảng không bao giờ trống. */
+function safeReport(): string {
+  try { return report(); } catch (e) { return `Dư Đồ ${__APP_VERSION__} · bản dựng ${__APP_BUILD__}\nKhông dựng được báo cáo: ${String(e)}`; }
+}
+
 function paint(): void {
   const pre = panel?.querySelector('pre');
-  if (pre && !panel!.classList.contains('min')) pre.textContent = report();
+  if (pre && !panel!.classList.contains('min')) pre.textContent = safeReport();
 }
 
 async function copy(btn: HTMLButtonElement): Promise<void> {
-  const text = report();
+  const text = safeReport();
   try {
     await navigator.clipboard.writeText(text);
     btn.textContent = 'Đã sao chép';

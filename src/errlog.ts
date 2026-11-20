@@ -20,7 +20,8 @@ export function errlog(): ErrRow[] {
   if (!rows) {
     try {
       const v = JSON.parse(localStorage.getItem(KEY) || '[]');
-      rows = Array.isArray(v) ? v.slice(-MAX) : [];
+      // chỉ giữ dòng hợp lệ (bộ nhớ hỏng / bản cũ ghi khác: một dòng null từng làm trống bảng chẩn đoán)
+      rows = Array.isArray(v) ? v.filter((r: unknown) => !!r && typeof r === 'object' && typeof (r as ErrRow).m === 'string').slice(-MAX) : [];
     } catch { rows = []; }
   }
   return rows;

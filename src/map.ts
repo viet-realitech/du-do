@@ -247,12 +247,13 @@ function deco(): void {
   put(G.rip.node()!, 'filter', co ? 'url(#rough)' : null);
   put(G.r0.node()!, 'filter', co && !moving && !busy ? 'url(#rough)' : null);
 }
-/** Vùng lọc nét cổ = phần bản đồ đang thấy cộng lề 12 đơn vị, đặt lại mỗi khi bản đồ dừng (deco) và khi đổi cỡ khung.
+/** Vùng lọc nét cổ = phần bản đồ đang thấy cộng một lề, đặt lại mỗi khi bản đồ dừng (deco) và khi đổi cỡ khung.
     Vùng cố định cỡ toàn cảnh nhỏ nhất lớn theo k²: Safari bỏ hẳn bộ lọc quá ~16,8 triệu điểm ảnh thiết bị, nên từ k ≈ 2
     (iPad ngang) cả lớp đất biến mất khi dừng. Vùng vẫn quá 12 triệu điểm ảnh (màn rất lớn): false, không dùng nét cổ.
-    Độ rung (độ dời, cỡ hạt nhiễu tính theo đơn vị bản đồ) chia theo k: nét rung cùng cỡ trên màn hình ở mọi mức zoom. */
+    Lề, độ rung (độ dời, cỡ hạt nhiễu tính theo đơn vị bản đồ) chia theo k: cùng cỡ trên màn hình ở mọi mức zoom, nên vùng
+    lọc luôn xấp xỉ khung nhìn (lề cố định 12 đơn vị lớn theo k: màn máy tính lớn quá ngưỡng ngay khi phóng to). */
 function fitRough(): boolean {
-  const n = G.svg.node()!, vb = n.viewBox.baseVal, t = d3.zoomTransform(n), k = t.k, m = 12;
+  const n = G.svg.node()!, vb = n.viewBox.baseVal, t = d3.zoomTransform(n), k = t.k, m = 12 / k;
   if (!vb || !vb.width) return false;
   const w = vb.width / k + 2 * m, h = vb.height / k + 2 * m, d = k * G.px * (window.devicePixelRatio || 1);
   if (w * d * h * d > 12e6) return false;
