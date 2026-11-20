@@ -13,6 +13,41 @@ async function boot(page: Page, state?: object) {
   return errors;
 }
 
+/** Bảng / trang / màn điện ảnh đang mở, không bắt nhầm bản sao đang mờ dần: ghost() (src/ui/dom.ts) dời bảng, trang vừa
+    đóng vào #app > .exiting trong 320 ms; màn điện ảnh đóng thì mang .out trong 450 ms. Dùng cho mọi locator .scrim / .ov /
+    .cine không neo vào #layer. `toHaveCount(0)` giữ locator trần: chờ cả bản sao đi hẳn. */
+const live = (page: Page, sel: string) => page.locator(`${sel}:not(.exiting *, .cine.out, .cine.out *)`);
+
+/** Bắt thông báo kế tiếp có chữ `text` ngay trong trang: gọi trước thao tác làm nó hiện, rồi chờ hàm trả về. Thông báo
+    chỉ sống 2,8 s, còn mỗi lượt hỏi từ máy chạy test (WebKit bận, đang ghi trace) có thể tốn hàng trăm ms: ba lượt
+    toHaveCount → toContainText → đo từng lỡ mất nó; chờ hiệu ứng trượt vào chạy xong rồi mới đo cũng lỡ (WebKit có lúc
+    3 s mới vẽ một khung). Nên đo ngay lúc nó hiện, theo chỗ nó đứng yên: ô trên màn trừ đi đoạn dời của hiệu ứng trượt
+    (transform chỉ là translate). Kết quả: ô ấy, số thông báo đang hiện lúc ấy (`shown`); null nếu tới `wait` ms sau khi
+    thao tác xong vẫn chưa thấy (hỏng trong vài giây, không treo tới hết 60 s; tính từ lúc thao tác xong vì một cú bấm mở
+    trang kết cục trên WebKit quá tải từng tốn tới 16 s). */
+async function catchToast(page: Page, text: string) {
+  type Caught = { x: number; y: number; width: number; height: number; shown: number } | null;
+  await page.evaluate(text => {
+    (window as unknown as { caught: Promise<Caught> }).caught = new Promise<Caught>(done => {
+      const up = () => [...document.querySelectorAll<HTMLElement>('.toast')].filter(n => n.style.visibility !== 'hidden');
+      const look = () => {
+        const n = up().find(x => x.textContent!.includes(text));
+        if (!n) return;
+        mo.disconnect();
+        const r = n.getBoundingClientRect(), t = getComputedStyle(n).transform, m = new DOMMatrixReadOnly(t === 'none' ? undefined : t);
+        done({ x: r.x - m.m41, y: r.y - m.m42, width: r.width, height: r.height, shown: up().length });
+      };
+      const mo = new MutationObserver(look);
+      mo.observe(document.body, { childList: true, subtree: true });
+      look();
+    });
+  }, text);
+  return (wait = 10_000) => page.evaluate(w => Promise.race([
+    (window as unknown as { caught: Promise<Caught> }).caught,
+    new Promise<Caught>(r => setTimeout(() => r(null), w)),
+  ]), wait);
+}
+
 const midGame = { step: 'play', name: 'Họ Lê', year: 1954, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam' }, quiz: { e1: [true, true], e2: [true, false], e3: [true, true], e4: [false, true] } };
 
 test('first run: onboarding → turning point → outcome → chapter tour', async ({ page }) => {
@@ -127,6 +162,10 @@ test('reading mode never forces a side: the turning point can wait, tours run wi
   await expect(page.getByText('Đi qua 168 năm lịch sử Việt Nam trên bản đồ.')).toBeVisible();
   await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
   await expect(page.locator('#layer .scrim .opt').first()).toBeAttached();
+  // màn mở chương còn phủ trên bảng hai khung hình sau khi bảng dựng xong: Escape lúc ấy chỉ bỏ qua màn (WebKit hay gặp).
+  // Chờ màn mờ đi và bảng điểm rẽ giữ tiêu điểm, rồi mới bấm
+  await expect(live(page, '.cine')).toHaveCount(0);
+  await expect(page.locator('#layer > .scrim [role=dialog]')).toBeFocused();
   await page.keyboard.press('Escape'); // "Đọc chương trước, chọn sau"
   await expect(page.locator('#layer .scrim')).toHaveCount(0);
   await expect(page.locator('#yr')).toHaveText('1858');
@@ -140,7 +179,7 @@ test('reading mode never forces a side: the turning point can wait, tours run wi
   await expect(page.locator('#tourb')).toBeVisible();
   await skip.click();
   await expect(page.locator('#tourb')).toHaveCount(0, { timeout: 3000 });
-  if (await page.locator('.cine').count()) await page.goBack(); // chapter 2 opener
+  if (await live(page, '.cine').count()) await page.goBack(); // chapter 2 opener
   await expect(page.locator('#layer .scrim .opt').first()).toBeAttached({ timeout: 8000 }); // next turning point (optional)
   await expect(page.getByText(/Đố nhanh/i)).toHaveCount(0); // a skipped chapter is not quizzed
   expect(errors).toEqual([]);
@@ -170,7 +209,7 @@ test('reading mode: a tour stopped at Genève resumes chapter 4 after a reload, 
   await expect(page.locator('#card')).toContainText('Genève', { timeout: 5000 });
   const next = page.locator('#tourb [data-t=next]');
   for (let k = 0; k < 12 && await page.locator('#tourb').count(); k++) { if (await next.count()) await next.click().catch(() => {}); await page.waitForTimeout(400); }
-  if (await page.locator('.cine').count()) await page.goBack(); // chapter 5 opener
+  if (await live(page, '.cine').count()) await page.goBack(); // chapter 5 opener
   await expect(page.getByText(/Đố nhanh · Chương 4/i)).toBeVisible({ timeout: 8000 }); // the chapter was watched: quiz, then turning point 5
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2') || '{}').tourAt)).toBeNull(); // ▶ at 1954 now starts chapter 5
   expect(errors).toEqual([]);
@@ -201,7 +240,7 @@ test('keyboard: choices move with arrow keys, the filter menu closes on Escape, 
   let errors = await boot(page);
   await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
   await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
-  if (await page.locator('.cine').count()) await page.goBack();
+  if (await live(page, '.cine').count()) await page.goBack();
   await page.locator('#lskip').click({ timeout: 10000 });
   const opts = page.locator('#layer .opt');
   await opts.first().focus();
@@ -241,7 +280,7 @@ test('keyboard: the side card keeps focus across ‹ ›, an event page focuses 
   await expect(page.locator('#card .t')).not.toHaveText(t1!);
   await page.locator('#card .c').focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('.ov h1')).toBeFocused();
+  await expect(live(page, '.ov h1')).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.locator('.ov')).toHaveCount(0);
   await expect(page.locator('#card .c')).toBeFocused();
@@ -257,7 +296,7 @@ test('play mode: another region\'s optional card is not offered (Hà Nội 1882 
   await page.goto('/');
   await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'hd82'; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
   await page.locator('#goto').click();
-  await expect(page.locator('.ov h1')).toBeVisible();
+  await expect(live(page, '.ov h1')).toBeVisible();
   await expect(page.locator('.ov [data-a=card]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -299,16 +338,16 @@ test('play mode: turning point 5 moves the family — a Huế family that picks 
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await page.locator('#tourb [data-t=skip]').click();
   // land reform is a northern card: owed now that the family lives in the North, told from a regrouped family's side
-  await expect(page.locator('.scrim h2')).toHaveText('Cải cách ruộng đất ở miền Bắc', { timeout: 8000 });
-  await expect(page.locator('.scrim .sheet')).toContainText('Huế → miền Bắc');
-  await expect(page.locator('.scrim .sheet')).toContainText('Chạm tới nơi dòng họ đang sống (miền Bắc)');
-  await expect(page.locator('.scrim .opt h3').first()).toHaveText('Về nông trường khai hoang');
-  await page.locator('.scrim .opt').first().click();
+  await expect(live(page, '.scrim h2')).toHaveText('Cải cách ruộng đất ở miền Bắc', { timeout: 8000 });
+  await expect(live(page, '.scrim .sheet')).toContainText('Huế → miền Bắc');
+  await expect(live(page, '.scrim .sheet')).toContainText('Chạm tới nơi dòng họ đang sống (miền Bắc)');
+  await expect(live(page, '.scrim .opt h3').first()).toHaveText('Về nông trường khai hoang');
+  await live(page, '.scrim .opt').first().click();
   await page.locator('#cgo').click();
   await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
   // the 1954 migration card asks whether the whole household goes (not "where to live" again, not a southern host's card)
-  await expect(page.locator('.scrim h2')).toHaveText('Cuộc di cư 1954', { timeout: 8000 });
-  await expect(page.locator('.scrim .opt h3')).toHaveText(['Cả nhà cùng ra Bắc', 'Người đi, vợ con ở lại giữ đất']);
+  await expect(live(page, '.scrim h2')).toHaveText('Cuộc di cư 1954', { timeout: 8000 });
+  await expect(live(page, '.scrim .opt h3')).toHaveText(['Cả nhà cùng ra Bắc', 'Người đi, vợ con ở lại giữ đất']);
   expect(errors).toEqual([]);
 });
 
@@ -344,17 +383,17 @@ test('play mode: Điện Biên Phủ seen from Nghệ An (free zone), and rice s
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 5, d: 40, b: 40, u: 30 } }, 'dbp');
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await page.locator('#tourb [data-t=skip]').click();
-  await expect(page.locator('.scrim h2')).toHaveText('Điện Biên Phủ', { timeout: 8000 });
-  await expect(page.locator('.scrim .opt h3')).toHaveText(['Đi dân công Điện Biên', 'Đóng thuế nông nghiệp', 'Ở nhà giữ làng, nghe tin chiến thắng']);
+  await expect(live(page, '.scrim h2')).toHaveText('Điện Biên Phủ', { timeout: 8000 });
+  await expect(live(page, '.scrim .opt h3')).toHaveText(['Đi dân công Điện Biên', 'Đóng thuế nông nghiệp', 'Ở nhà giữ làng, nghe tin chiến thắng']);
   // not enough rice, but silver covers it (one for one), said on the option; the loyal option is not locked
-  const go = page.locator('.scrim .opt').first();
+  const go = live(page, '.scrim .opt').first();
   await expect(go).toBeEnabled();
   await expect(go).toContainText('Bỏ 5 bạc đong gạo');
   await expect(go).toContainText('Hợp đường bạn theo');
   await go.click();
   await page.locator('#cgo').click();
-  await expect(page.locator('.scrim .resrow')).toContainText('Lúa gạo 0');
-  await expect(page.locator('.scrim .resrow')).toContainText('Bạc 31');
+  await expect(live(page, '.scrim .resrow')).toContainText('Lúa gạo 0');
+  await expect(live(page, '.scrim .resrow')).toContainText('Bạc 31');
   expect(errors).toEqual([]);
 });
 
@@ -363,9 +402,9 @@ test('play mode: 30.4.1975 for a Third Force family that migrated South is not t
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 20, d: 50, b: 20, u: 50 } }, 'sg75');
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await page.locator('#tourb [data-t=skip]').click();
-  await expect(page.locator('.scrim h2')).toContainText('Sài Gòn', { timeout: 8000 });
-  await expect(page.locator('.scrim .opt h3')).toHaveText(['Di tản', 'Ở lại, chờ hoà hợp', 'Đón quân giải phóng']);
-  await expect(page.locator('.scrim .opt').nth(1)).toContainText('Hợp đường bạn theo');
+  await expect(live(page, '.scrim h2')).toContainText('Sài Gòn', { timeout: 8000 });
+  await expect(live(page, '.scrim .opt h3')).toHaveText(['Di tản', 'Ở lại, chờ hoà hợp', 'Đón quân giải phóng']);
+  await expect(live(page, '.scrim .opt').nth(1)).toContainText('Hợp đường bạn theo');
   expect(errors).toEqual([]);
 });
 
@@ -373,11 +412,11 @@ test('play mode: a family that evacuated in April 1975 lives abroad — gate 6 a
   const errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'ct', year: 1976, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam' }, cards: { sg75: 0 },
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 40, d: 40, b: 40, u: 40 } }, 'tn76');
   await page.locator('#hv-go').click();
-  if (await page.locator('.cine').count()) await page.goBack();
+  if (await live(page, '.cine').count()) await page.goBack();
   await expect(page.locator('#layer > .scrim .pv.mine')).toContainText('lên tàu ra biển', { timeout: 8000 });
   await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Gửi quà nuôi người ở quê', 'Về nước làm ăn', 'Bám rễ nơi xứ người']);
   await page.locator('#lskip').click();
-  await page.locator('.scrim .opt[data-o=radi]').click();
+  await live(page, '.scrim .opt[data-o=radi]').click();
   await page.locator('#go').click();
   await expect(page.locator('#layer > .scrim').last()).toContainText('nhập quốc tịch');
   await expect(page.locator('#layer > .scrim').last()).toContainText('Phạm Duy');
@@ -402,8 +441,8 @@ test('turning points: "Gia đình bạn" follows what the family lived (a father
     names: [{ y: 1896, from: 'Họ Nguyễn', to: 'Họ Lê', why: 'Sau khi Hương Khê tan rã' }], xs: { hk96: 'x-canvuong96' }, cards: { 'x:x-canvuong96': 1 },
     quiz: { e1: [true, true], e2: [true, true] }, harvests: ['e1'] }, 'cs30');
   await page.locator('#hv-go').click(); // harvest of generation 2
-  if (await page.locator('.cine').count()) await page.goBack(); // chapter opener
-  const ctx = page.locator('.scrim .pv.mine');
+  if (await live(page, '.cine').count()) await page.goBack(); // chapter opener
+  const ctx = live(page, '.scrim .pv.mine');
   await expect(ctx).toContainText('Cha bạn theo nghĩa quân Hương Khê', { timeout: 8000 });
   await expect(ctx).toContainText('Năm 1896, Họ Nguyễn đổi thành Họ Lê.');
   await expect(ctx).toContainText('Nguyễn Ái Quốc');
@@ -414,9 +453,9 @@ test('turning points: "Gia đình bạn" follows what the family lived (a father
   errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'na', year: 1976, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac' },
     cards: { dc54: 1, sg75: 1 }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'] }, 'tn76', 'seeded2');
   await page.locator('#hv-go').click();
-  if (await page.locator('.cine').count()) await page.goBack();
-  await expect(page.locator('.scrim .pv.mine')).toContainText('tìm tin những người trong họ đã đi chiến trường', { timeout: 8000 });
-  await expect(page.locator('.scrim .pv.mine')).not.toContainText('họ hàng chưa từng biết mặt');
+  if (await live(page, '.cine').count()) await page.goBack();
+  await expect(live(page, '.scrim .pv.mine')).toContainText('tìm tin những người trong họ đã đi chiến trường', { timeout: 8000 });
+  await expect(live(page, '.scrim .pv.mine')).not.toContainText('họ hàng chưa từng biết mặt');
   expect(errors).toEqual([]);
 });
 
@@ -460,8 +499,8 @@ test('an event opened from Sử liệu returns there, through a replay too', asy
   await page.locator('.tab[data-t=src]').click();
   await page.locator('#sq').fill('dien bien');
   await page.locator('#sl .src[data-a=ev][data-id=dbp]').click();
-  await expect(page.locator('.ov h1')).toContainText('Điện Biên Phủ');
-  await page.locator('.ov .hero .hplay').click(); // replay, then Đóng: back on the event page
+  await expect(live(page, '.ov h1')).toContainText('Điện Biên Phủ');
+  await live(page, '.ov .hero .hplay').click(); // replay, then Đóng: back on the event page
   await expect(page.locator('#replb')).toBeVisible();
   await page.locator('#replb [data-t=rclose]').click();
   // #layer > .ov: the page that left for the replay may still be fading out (ghost) when the replay is closed at once
@@ -482,7 +521,7 @@ test('map renders the 1954 regime and legend', async ({ page }) => {
   const mk = await page.locator('#map g.m').first().elementHandle();
   await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dbp'; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
   await page.locator('#goto').click();
-  await expect(page.locator('.ov')).toBeVisible();
+  await expect(live(page, '.ov')).toBeVisible();
   await page.goBack();
   await expect(page.locator('#layer .ov')).toHaveCount(0);
   expect(await mk!.evaluate(e => e.isConnected)).toBe(true);
@@ -577,7 +616,7 @@ test('event detail tabs work offline and Back closes overlays without leaving th
   await expect(page.locator('#sl .src[data-a=ev]').first()).toBeVisible();
   await expect(page.locator('#sl .src[data-a=src]').first()).toBeVisible();
   await page.locator('#sl .src[data-a=src]').first().click();
-  await expect(page.locator('.scrim')).toBeVisible();
+  await expect(live(page, '.scrim')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('.scrim')).toHaveCount(0);
   await page.goBack();
@@ -603,7 +642,7 @@ test('ending: the dossier takes focus; restarting is a small dialog and leaves n
   await page.locator('#card [data-a=end].c').click();
   await expect(page.locator('.end-title')).toBeFocused();
   await expect(page.locator('.toast')).toBeVisible({ timeout: 6000 }); // huy hiệu của ván này ("Khép hồ sơ"…)
-  await page.locator('.ov.end [data-a=reset]').click();
+  await live(page, '.ov.end [data-a=reset]').click();
   const dlg = page.locator('#layer > .scrim.dlg');
   await expect(dlg).toBeVisible();
   await expect(dlg).not.toContainText('gia sản'); // Đọc sử không có gia sản
@@ -631,7 +670,7 @@ test('onboarding: a surname typed in all caps is shown as "Họ Nguyễn"', asyn
   await page.getByRole('button', { name: /Mở hồ sơ/ }).click();
   await page.locator('#nm').fill('NGUYỄN');
   await page.getByRole('button', { name: 'Bước vào năm 1858' }).click();
-  await expect(page.locator('.scrim .kick').first()).toContainText('Họ Nguyễn');
+  await expect(live(page, '.scrim .kick').first()).toContainText('Họ Nguyễn');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2')!).name)).toBe('Họ Nguyễn');
   expect(errors).toEqual([]);
 });
@@ -641,8 +680,8 @@ test('play mode: Linebacker II speaks to a Nam Định family (not "leave Hà N�
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true] }, harvests: ['e1', 'e2', 'e3', 'e4'], res: { g: 50, d: 50, b: 50, u: 50 } }, 'lb72');
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await page.locator('#tourb [data-t=skip]').click();
-  await expect(page.locator('.scrim h2')).toHaveText('Chiến dịch Linebacker II', { timeout: 8000 });
-  await expect(page.locator('.scrim .opt h3')).toHaveText(['Sơ tán khỏi thành phố Nam Định', 'Ở lại trực chiến']);
+  await expect(live(page, '.scrim h2')).toHaveText('Chiến dịch Linebacker II', { timeout: 8000 });
+  await expect(live(page, '.scrim .opt h3')).toHaveText(['Sơ tán khỏi thành phố Nam Định', 'Ở lại trực chiến']);
   expect(errors).toEqual([]);
 });
 
@@ -675,9 +714,18 @@ test('smooth map: static layers apart, ripples rest while moving, nothing rebuil
   await expect(page.locator('#map .rip')).toHaveCount(0);
   await expect(page.locator('#map rect[fill="url(#spotg)"]')).toHaveCSS('display', 'none');
   await expect(page.locator('#map mask')).toHaveCount(0);
-  // the ripples step aside while the map flies and come back once it rests
+  // the ripples step aside while the map flies and come back once it rests. "hidden" is caught in the page on every DOM
+  // change for 5 s from before the click: polled from the runner, a busy machine (or WebKit's slow frames here) can miss
+  // the whole flight (~0.3 s)
+  await page.locator('#mapbg .rip').evaluate(r => {
+    const w = window as unknown as { ripHid?: boolean };
+    w.ripHid = false;
+    const mo = new MutationObserver(() => { if (getComputedStyle(r).visibility === 'hidden') { w.ripHid = true; mo.disconnect(); } });
+    mo.observe(document, { attributes: true, childList: true, subtree: true });
+    setTimeout(() => mo.disconnect(), 5000);
+  });
   await page.locator('#zin').click();
-  await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'hidden');
+  await expect.poll(() => page.evaluate(() => (window as unknown as { ripHid?: boolean }).ripHid)).toBe(true);
   await expect(page.locator('#mapbg .rip')).toHaveCSS('visibility', 'visible', { timeout: 3000 });
   // dragging the timeline inside one chapter keeps the guide's portrait (it used to blink out every frame)
   const guide = await page.locator('#eraR .av').elementHandle();
@@ -705,6 +753,8 @@ test('smooth map: static layers apart, ripples rest while moving, nothing rebuil
 });
 
 test('game flow: one continuous loop — choice → tour auto-starts → card pauses it → continue resumes', async ({ page }) => {
+  // chờ thật: lời dẫn điểm rẽ (~12 s), trận Đà Nẵng và lời kể (~30 s); một mình đã 55–60 s, sát mức 60 s mặc định
+  test.setTimeout(120_000);
   const errors = await boot(page);
   await page.getByRole('button', { name: /Vào trò chơi/ }).click();
   await expect(page.getByText('Giữ gia sản một dòng họ qua 168 năm.')).toBeVisible();
@@ -716,8 +766,8 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   await page.getByRole('button', { name: /Bắt đầu năm 1858 ở Huế/ }).click();
   // generation 1 has nothing to harvest yet: the chapter opener, then the turning point. Offline (no archive photo) the
   // opener is the caption plate alone, not an empty print frame
-  await expect(page.locator('.cine')).toBeVisible();
-  await expect(page.locator('.cine .plate h1')).toHaveText('Tiếng súng Sơn Trà');
+  await expect(live(page, '.cine')).toBeVisible();
+  await expect(live(page, '.cine .plate h1')).toHaveText('Tiếng súng Sơn Trà');
   await expect(page.locator('.cine .print')).toHaveCount(0);
   // Back skips the opener instead of leaving the app
   await page.goBack();
@@ -742,12 +792,12 @@ test('game flow: one continuous loop — choice → tour auto-starts → card pa
   const before = await page.locator('#res .mt').first().locator('b').first().textContent();
   // a tap only selects: nothing is spent until "Quyết định"
   await expect(page.locator('#cgo')).toBeDisabled();
-  await page.locator('.scrim .opt').first().click();
+  await live(page, '.scrim .opt').first().click();
   expect(await page.locator('#res .mt').first().locator('b').first().textContent()).toBe(before);
-  await expect(page.locator('.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
+  await expect(live(page, '.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
   await page.locator('#cgo').click();
-  await expect(page.locator('.scrim .opt').first()).toBeDisabled();
-  await expect(page.locator('.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
+  await expect(live(page, '.scrim .opt').first()).toBeDisabled();
+  await expect(live(page, '.scrim .opt').first()).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByRole('button', { name: 'Tiếp tục ▶' })).toBeFocused(); // focus moves on, not to <body>
   await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
   // the tour goes on by itself: progress advances past 1/n, no Play press needed
@@ -775,29 +825,29 @@ test('reaching the present opens the ending (reading mode does not quiz a chapte
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   // the journey film: one scene per generation, closable
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
-  await expect(page.locator('.cine.film')).toBeVisible();
-  await expect(page.locator('.cine.film .prog i')).toHaveCount(7);
+  await expect(live(page, '.cine.film')).toBeVisible();
+  await expect(live(page, '.cine.film .prog i')).toHaveCount(7);
   // Escape closes only the film; the ending stays underneath
   await page.keyboard.press('Escape');
   await expect(page.locator('.cine.film')).toHaveCount(0);
   await expect(page.getByText('Mọi con đường đều dẫn về hôm nay')).toBeVisible();
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   // the film can be held on a slide (Space or ❚❚) and resumed; Space with focus on ✕ pauses, it does not close
-  const pz = page.locator('.cine.film .pz');
-  await expect(page.locator('.cine.film .x')).toBeFocused();
+  const pz = live(page, '.cine.film .pz');
+  await expect(live(page, '.cine.film .x')).toBeFocused();
   await page.keyboard.press('Space');
   await expect(pz).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.cine.film:not(.out)')).toHaveCount(1);
+  await expect(live(page, '.cine.film')).toHaveCount(1);
   await page.keyboard.press('Space');
   await expect(pz).toHaveAttribute('aria-pressed', 'false');
   await pz.click();
   await expect(pz).toHaveAttribute('aria-pressed', 'true');
-  const w = await page.locator('.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width);
+  const w = await live(page, '.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width);
   await page.waitForTimeout(600);
-  expect(await page.locator('.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width)).toBeCloseTo(w, 0);
+  expect(await live(page, '.cine.film .prog b').first().evaluate(b => b.getBoundingClientRect().width)).toBeCloseTo(w, 0);
   await pz.click();
   await expect(pz).toHaveAttribute('aria-label', 'Tạm dừng');
-  await page.locator('.cine.film .x').click();
+  await live(page, '.cine.film .x').click();
   await expect(page.locator('.cine.film')).toHaveCount(0);
   // starting over asks first; Huỷ keeps the ending
   await page.getByRole('button', { name: 'Chọn lại từ 1858' }).click();
@@ -811,8 +861,8 @@ test('an event page replays its battle scene; Back closes the replay without lea
   const errors = await boot(page, midGame);
   await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dbp'; b.id = 'goto-dbp'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
   await page.locator('#goto-dbp').click();
-  await expect(page.locator('.ov .hero .hplay')).toBeVisible();
-  await page.locator('.ov .hero .hplay').click();
+  await expect(live(page, '.ov .hero .hplay')).toBeVisible();
+  await live(page, '.ov .hero .hplay').click();
   await expect(page.locator('.ov')).toHaveCount(0);
   await expect(page.locator('#replb')).toContainText('Điện Biên Phủ');
   await expect(page.locator('#mapwrap.tilt')).toHaveCount(1, { timeout: 3000 });
@@ -827,12 +877,12 @@ test('an event page replays its battle scene; Back closes the replay without lea
   await expect(page.locator('#replb')).toHaveCount(0);
   expect(page.url()).toContain('localhost');
   await expect(page.locator('#mapwrap.tilt')).toHaveCount(0);
-  await expect(page.locator('.ov .hero .hplay')).toBeVisible(); // back on the event page the replay came from
+  await expect(live(page, '.ov .hero .hplay')).toBeVisible(); // back on the event page the replay came from
   await page.goBack();
   await expect(page.locator('.ov')).toHaveCount(0);
   // again: the replay restarts from the first beat, and Đóng closes it
   await page.locator('#goto-dbp').click();
-  await page.locator('.ov .hero .hplay').click();
+  await live(page, '.ov .hero .hplay').click();
   await expect(page.locator('#mapwrap .lt .lt-h')).toContainText('2/', { timeout: 9000 });
   await page.locator('#replb [data-t=again]').click();
   // › during the fly-in goes to the first beat, not past the battle
@@ -851,7 +901,7 @@ test('an event page replays its battle scene; Back closes the replay without lea
   // a treaty has no scene to replay
   await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'el49'; b.id = 'goto-el'; b.style.cssText = 'position:fixed;left:20px;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
   await page.locator('#goto-el').click();
-  await expect(page.locator('.ov .hero')).toBeVisible();
+  await expect(live(page, '.ov .hero')).toBeVisible();
   await expect(page.locator('.ov .hero .hplay')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -862,7 +912,7 @@ test('battle pieces follow the sources: a doubted attack, an engagement, an unop
   const replay = async (id: string) => {
     await page.evaluate(id => { document.getElementById('goto')?.remove(); const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = id; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); }, id);
     await page.locator('#goto').click();
-    await page.locator('.ov .hero .hplay').click();
+    await live(page, '.ov .hero .hplay').click();
   };
   // Vịnh Bắc Bộ: the 4.8 attack is shown dotted with a "?" (declassified 2005); Maddox and the torpedo boats engage
   await replay('vb64');
@@ -882,7 +932,7 @@ test('battle pieces follow the sources: a doubted attack, an engagement, an unop
   await expect(page.locator('#mapwrap .lt.end p')).toContainText('thất thủ');
   await expect(page.locator('#mapfx g.scene rect[fill-opacity="0"]')).toHaveCount(3, { timeout: 2000 });
   await page.locator('#mapwrap .lt.end [data-tab=v]').click();
-  await expect(page.locator('.ov #et button[data-k="v"]')).toHaveAttribute('aria-selected', 'true');
+  await expect(live(page, '.ov #et button[data-k="v"]')).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('#replb')).toHaveCount(0);
   await expect(page.locator('#mapwrap .endw')).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -902,7 +952,7 @@ test('play mode: a replay cut short by a tab switch keeps the paused tour paused
   await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dn58'; b.id = 'goto'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
   await page.locator('#goto').click();
   await expect(page.locator('#tourb')).toContainText('tạm dừng');
-  await page.locator('.ov .hero .hplay').click();
+  await live(page, '.ov .hero .hplay').click();
   await expect(page.locator('#replb')).toBeVisible();
   await expect(page.locator('#mapwrap.tilt')).toHaveCount(1, { timeout: 3000 });
   await page.locator('.tab[data-t=fig]').click();
@@ -929,7 +979,7 @@ test('play mode: "Điểm rẽ ›" still flies to each decision the family owes
   await expect(page.getByText('Dòng họ phải quyết định')).toBeVisible({ timeout: 5000 });
   await expect(page.locator('#tourb')).toContainText('Còn');
   await expect(page.locator('#tourb [data-t=skip]')).toHaveCount(0);
-  await page.locator('.scrim .opt:not([disabled])').first().click();
+  await live(page, '.scrim .opt:not([disabled])').first().click();
   await page.locator('#cgo').click();
   await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
   // the next owed card comes after a flight to its place, not stacked on the last one
@@ -986,11 +1036,11 @@ test('ending (reading mode): the path picks its own ending, with the family name
   // the journey film ends on a closed-dossier plate: the ending title, the family name, the six picks as a strip
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
-  await expect(page.locator('.cine.film .fin h1')).toHaveText('Bốn đời canh tân');
-  await expect(page.locator('.cine.film .fin .mono').first()).toContainText('Họ Trần');
-  await expect(page.locator('.cine.film .fin .strip li')).toHaveCount(6);
-  await expect(page.locator('.cine.film .fin .strip li').first()).toContainText('Canh tân');
-  await page.locator('.cine.film .x').click();
+  await expect(live(page, '.cine.film .fin h1')).toHaveText('Bốn đời canh tân');
+  await expect(live(page, '.cine.film .fin .mono').first()).toContainText('Họ Trần');
+  await expect(live(page, '.cine.film .fin .strip li')).toHaveCount(6);
+  await expect(live(page, '.cine.film .fin .strip li').first()).toContainText('Canh tân');
+  await live(page, '.cine.film .x').click();
   await page.getByRole('button', { name: 'Tạo thẻ chia sẻ' }).click();
   await expect(page.getByAltText('Thẻ kết quả')).toBeVisible();
   expect(errors).toEqual([]);
@@ -1014,9 +1064,9 @@ for (const [name, w, h] of [['phone', 390, 844], ['iPad landscape', 1194, 834]] 
     await page.route(/upload\.wikimedia\.org\/.*px-Test\.png/, r => { sizes.push(r.request().url().match(/\/(\d+)px-/)![1]); return r.fulfill({ contentType: 'image/png', body: png }); });
     await page.locator('#card [data-a=end].c').click();
     await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
-    const scene = page.locator('.cine.film .scene-s:not(.gone)');
+    const scene = live(page, '.cine.film .scene-s:not(.gone)');
     await expect(scene.locator('.print img')).toBeVisible({ timeout: 6000 });
-    await page.locator('.cine.film .pz').click(); // hold the slide while measuring
+    await live(page, '.cine.film .pz').click(); // hold the slide while measuring
     await page.waitForTimeout(1200); // entrance animations settle
     const m = await scene.evaluate(s => {
       const r = (e: Element | null) => { const b = e!.getBoundingClientRect(); return { x: b.left, y: b.top, r: b.right, b: b.bottom, w: b.width, h: b.height }; };
@@ -1088,8 +1138,8 @@ test('ending (play mode): home, card decisions and harvest snapshots shape the e
   expect(await page.locator('.end-gp .chron.gp-dec').count()).toBeLessThanOrEqual(12);
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
-  await expect(page.locator('.cine.film .fin h1')).toHaveText('Cùng nhịp với lịch sử');
-  await expect(page.locator('.cine.film .fin .mono').first()).toContainText('Họ Lê');
+  await expect(live(page, '.cine.film .fin h1')).toHaveText('Cùng nhịp với lịch sử');
+  await expect(live(page, '.cine.film .fin .mono').first()).toContainText('Họ Lê');
   expect(errors).toEqual([]);
 });
 
@@ -1110,17 +1160,17 @@ test('play mode: after a card decision the family event comes into view, the unp
     quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0 }, 'ng45');
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await page.locator('#tourb [data-t=skip]').click();
-  await expect(page.locator('.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
-  await expect(page.locator('.scrim .steps')).toContainText('Biến cố riêng'); // the second decision is announced up front
+  await expect(live(page, '.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
+  await expect(live(page, '.scrim .steps')).toContainText('Biến cố riêng'); // the second decision is announced up front
   // values are ledger lines in the text face (name, then a signed number), not monospace pills
-  const fx = page.locator('.scrim .opt .fx').first();
+  const fx = live(page, '.scrim .opt .fx').first();
   expect(await fx.evaluate(e => getComputedStyle(e).fontFamily)).not.toMatch(/Mono/i);
   await expect(fx.locator('b')).toHaveText(/^[+−]\d+$/);
-  await page.locator('.scrim .opt').first().click();
+  await live(page, '.scrim .opt').first().click();
   await page.locator('#cgo').click();
-  await expect(page.locator('.scrim .sheet > [role=radiogroup] .opt.skip')).toHaveCount(2);
-  await expect(page.locator('.scrim .xsp > h3')).toBeInViewport(); // not ~900 px below the fold
-  await expect(page.locator('.scrim .steps')).toHaveClass(/two/);
+  await expect(live(page, '.scrim .sheet > [role=radiogroup] .opt.skip')).toHaveCount(2);
+  await expect(live(page, '.scrim .xsp > h3')).toBeInViewport(); // not ~900 px below the fold
+  await expect(live(page, '.scrim .steps')).toHaveClass(/two/);
   expect(errors).toEqual([]);
 });
 
@@ -1129,17 +1179,44 @@ test('toasts come one at a time, above the tab bar on the main screen', async ({
   await page.waitForTimeout(800);
   // notices in a row (a locked chapter-6 figure tapped twice, plus any badge earned at start): never drawn on top of each other
   const tap = () => page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'fig'; b.dataset.id = 'vvk'; document.body.appendChild(b); b.click(); b.remove(); });
-  await tap(); await tap();
-  let most = 0, shown = 0;
-  for (let t = 0; t < 32; t++) { const n = await page.locator('.toast:visible').count(); most = Math.max(most, n); shown += n; await page.waitForTimeout(250); }
-  expect(most).toBe(1);
-  expect(shown).toBeGreaterThan(14); // more than one notice's 2,8 s: the second showed after the first
+  // ghi trong trang lúc mỗi thông báo hiện và tắt (đếm .toast từ máy chạy test 32 lần × 250 ms trượt nhịp khi WebKit ghi
+  // trace: mỗi lượt đếm tốn 17–56 ms), tới khi cả hai thông báo của hai cái chạm đã tắt
+  const seen = await page.evaluate(async () => {
+    const tap = () => { const b = document.createElement('button'); b.dataset.a = 'fig'; b.dataset.id = 'vvk'; document.body.appendChild(b); b.click(); b.remove(); };
+    const t0 = performance.now(), on = new Map<Node, { from: number; to?: number; fig: boolean }>();
+    let most = 0;
+    const look = (rs: MutationRecord[]) => {
+      const now = performance.now() - t0;
+      for (const r of rs) {
+        r.removedNodes.forEach(n => { const s = on.get(n); if (s && s.to === undefined) s.to = now; });
+        r.addedNodes.forEach(n => {
+          if (!(n instanceof HTMLElement) || !n.matches('.toast') || !n.isConnected || n.style.visibility === 'hidden') return;
+          on.set(n, { from: now, fig: n.textContent!.includes('Nhân vật này mở') });
+        });
+      }
+      most = Math.max(most, [...on.values()].filter(s => s.to === undefined).length);
+    };
+    const mo = new MutationObserver(look);
+    document.querySelectorAll('.toast').forEach(n => on.set(n, { from: 0, fig: false })); // huy hiệu đang hiện từ lúc vào
+    most = on.size;
+    mo.observe(document.body, { childList: true, subtree: true });
+    tap(); tap();
+    const figs = () => [...on.values()].filter(s => s.fig);
+    for (let t = 0; t < 200 && !(figs().length === 2 && figs().every(s => s.to !== undefined)); t++) await new Promise(r => setTimeout(r, 100));
+    mo.disconnect();
+    const end = performance.now() - t0, all = [...on.values()];
+    return { most, figs: figs().map(s => [s.from, s.to ?? end]), total: all.reduce((a, s) => a + (s.to ?? end) - s.from, 0) };
+  });
+  expect(seen.most).toBe(1);
+  expect(seen.figs).toHaveLength(2);
+  expect(seen.figs[1][0]).toBeGreaterThanOrEqual(seen.figs[0][1]); // the second showed after the first had gone
+  expect(seen.total).toBeGreaterThan(2800 * 1.25); // more than one notice's 2,8 s
   // on the main screen a notice sits above the tab bar, not over the year in the header
   await expect(page.locator('.toast')).toHaveCount(0, { timeout: 8000 });
+  const caught = await catchToast(page, 'Nhân vật này mở');
   await tap();
-  await expect(page.locator('.toast:visible')).toHaveCount(1);
-  await page.waitForTimeout(600); // đã trượt vào chỗ
-  const tb = (await page.locator('.toast:visible').boundingBox())!, yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+  const tb = (await caught())!, yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+  expect(tb).toMatchObject({ shown: 1 }); // null: no notice within 10 s
   expect(tb.y).toBeGreaterThan(yr.y + yr.height);
   expect(tb.y + tb.height).toBeLessThanOrEqual(tabs.y);
   expect(errors).toEqual([]);
@@ -1165,8 +1242,8 @@ test.describe('iPad sheets', () => {
       quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 30 } }, 'dbp');
     await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
     await page.locator('#tourb [data-t=skip]').click();
-    await expect(page.locator('.scrim h2')).toHaveText('Điện Biên Phủ', { timeout: 8000 });
-    const map = (await page.locator('#mapwrap').boundingBox())!, sh = (await page.locator('.scrim .sheet').boundingBox())!;
+    await expect(live(page, '.scrim h2')).toHaveText('Điện Biên Phủ', { timeout: 8000 });
+    const map = (await page.locator('#mapwrap').boundingBox())!, sh = (await live(page, '.scrim .sheet').boundingBox())!;
     expect(sh.x).toBeGreaterThanOrEqual(map.x + map.width - 1);
     expect(Math.round(sh.height)).toBe(820);
     expect(errors).toEqual([]);
@@ -1189,7 +1266,7 @@ test.describe('iPad sheets', () => {
     const errors = await boot(page, midGame);
     await page.locator('.tab[data-t=src]').click();
     await page.locator('#sl .src[data-a=src]').first().click();
-    const box = () => page.locator('.scrim .sheet').evaluate(e => { const r = e.getBoundingClientRect(); return [r.x, r.width, Math.round(r.bottom)]; });
+    const box = () => live(page, '.scrim .sheet').evaluate(e => { const r = e.getBoundingClientRect(); return [r.x, r.width, Math.round(r.bottom)]; });
     await expect.poll(box).toEqual([0, 820, 1180]); // sau khi trượt lên xong
     expect(errors).toEqual([]);
   });
@@ -1215,7 +1292,7 @@ test.describe('iPad layouts', () => {
       // a battle replay lists its beats in the side panel (landscape only); tapping a later beat jumps to it
       await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'dbp'; b.id = 'goto-dbp'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
       await page.locator('#goto-dbp').click();
-      await page.locator('.ov .hero .hplay').click();
+      await live(page, '.ov .hero .hplay').click();
       if (twoCol) {
         await expect(page.locator('#beats li')).toHaveCount(4);
         const side = (await page.locator('#beats').boundingBox())!;
@@ -1253,18 +1330,34 @@ test.describe('short and wide windows', () => {
     // a card decision scrolls its sheet to the family event; the app frame itself never stays scrolled
     await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
     await page.locator('#tourb [data-t=skip]').click();
-    await expect(page.locator('.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
-    await page.locator('.scrim .opt').first().evaluate(b => (b as HTMLElement).click());
+    await expect(live(page, '.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
+    await live(page, '.scrim .opt').first().evaluate(b => (b as HTMLElement).click());
     await page.locator('#cgo').evaluate(b => (b as HTMLElement).click());
-    await expect(page.locator('.scrim .xsp > h3')).toBeVisible();
+    await expect(live(page, '.scrim .xsp > h3')).toBeVisible();
     expect(await page.locator('#app').evaluate(a => a.scrollTop)).toBe(0);
     const shift = await page.evaluate(async () => { const a = document.getElementById('app')!, d = document.createElement('div'); d.style.cssText = 'position:absolute;top:1500px;width:4px;height:4px'; a.appendChild(d); d.scrollIntoView(); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); const t = a.scrollTop; d.remove(); return t; });
     expect(shift).toBe(0);
     await page.locator('.xopts .opt').first().evaluate(b => (b as HTMLElement).click());
     await page.locator('#xgo').evaluate(b => (b as HTMLElement).click());
-    await page.locator('.scrim .btn[data-a="close-card"]').click();
+    // đóng thẻ rồi chạm Hồ sơ trong cùng một lượt trong trang: ~1,8 s sau khi đóng, tour đã bay tới thẻ còn nợ kế tiếp, và
+    // máy bận từng để thẻ ấy che thanh tab trước cú chạm (WebKit). Mỗi nút phải là thứ nằm dưới tâm của chính nó (không bị
+    // che, không inert), như một cú chạm thật; trial click cuộn nút Đóng vào tầm nhìn và kiểm tra nó bấm được
+    const close = live(page, '.scrim .btn[data-a="close-card"]');
+    await close.click({ trial: true });
+    const tapped = await close.evaluate(async c => {
+      const tap = (b: HTMLElement) => {
+        const r = b.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+        const ok = !!hit && b.contains(hit) && !b.closest('[inert]');
+        b.click();
+        return ok;
+      };
+      const closed = tap(c as HTMLElement);
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const gone = !document.querySelector('#layer > .scrim');
+      return { closed, gone, tab: tap(document.querySelector<HTMLElement>('.tab[data-t=me]')!) };
+    });
+    expect(tapped).toEqual({ closed: true, gone: true, tab: true });
     await expect(page.locator('#layer > .scrim')).toHaveCount(0);
-    await page.locator('.tab[data-t=me]').click();
     await expect(page.locator('#layer > .pane')).toBeVisible();
     expect(errors).toEqual([]);
   });
@@ -1272,12 +1365,11 @@ test.describe('short and wide windows', () => {
     test(`${name}: badges earned on the ending show while it is open, clear of the dossier masthead`, async ({ page }) => {
       await page.setViewportSize({ width: w, height: h });
       const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, badges: ['start'] });
+      // màn rộng: trước đây huy hiệu chờ tới khi đóng trang (không bao giờ hiện ở đây: catchToast trả null)
+      const caught = await catchToast(page, 'huy hiệu');
       await page.locator('#card [data-a=end].c').click();
-      const t = page.locator('.toast:visible');
-      await expect(t).toHaveCount(1, { timeout: 4000 }); // màn rộng: trước đây chờ tới khi đóng trang
-      await expect(t).toContainText('huy hiệu');
-      await page.waitForTimeout(500); // đã trượt vào chỗ
-      const a = (await t.boundingBox())!, m = (await page.locator('.end-mast').boundingBox())!;
+      const a = (await caught())!, m = (await page.locator('.end-mast').boundingBox())!;
+      expect(a).toMatchObject({ shown: 1 }); // null: no badge notice within 10 s
       expect(a.y + a.height <= m.y || a.y >= m.y + m.height).toBe(true);
       expect(errors).toEqual([]);
     });
