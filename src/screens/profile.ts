@@ -98,7 +98,7 @@ export function paneMe(): void {
   <p class="muted small" style="margin:0 0 4px">Tự động: máy chạy chậm thì tự bớt gợn sóng, khói và rung để bản đồ mượt hơn.</p>
   <div style="height:18px"></div>
   ${done ? '<button class="btn" data-a="share">Tạo thẻ chia sẻ</button><div style="height:10px"></div>' : ''}
-  ${(isPlay() ? done === 6 && S.year >= Y1 : done === 6 || S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
+  ${(isPlay() ? done === 6 && (S.year >= Y1 || !!S.endFix?.id) : done === 6 || S.year >= Y1) ? '<button class="btn ghost" data-a="end">Xem kết luận</button><div style="height:10px"></div>' : ''}
   <button class="btn ghost" data-a="about">Giới thiệu & nguồn dữ liệu</button>
   <button class="lnk" data-a="reset">Chơi lại từ đầu</button></div>`;
   layer.querySelector('.pane')!.scrollTop = keep;

@@ -348,6 +348,14 @@ test('play mode closes a dossier only at 2026: no Xem kết luận in Hồ sơ a
   s = await stored(page);
   expect(s.endFix?.id).toBe('xanam');
   await expect.poll(async () => (await arc(page))?.runs.map(x => x.end)).toEqual(['xanam']);
+  // closed, then the timeline moved back to 1960: Hồ sơ still offers the kept ending (it no longer changes)
+  await page.evaluate(() => { const k = 'dudo-v2-play', s = JSON.parse(localStorage.getItem(k)!); s.year = 1960; localStorage.setItem(k, JSON.stringify(s)); });
+  await page.reload();
+  await alive(page);
+  await openLedger(page);
+  await live(page, '.pane [data-a=end]').click();
+  await expect(live(page, '.ov.end .end-title')).toHaveText('Bên kia đại dương');
+  await expect.poll(async () => (await arc(page))?.runs.map(x => x.end)).toEqual(['xanam']); // nothing filed twice
   expect(errors).toEqual([]);
 });
 
