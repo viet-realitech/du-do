@@ -109,11 +109,12 @@ function pathTable(first: number | undefined): string {
     cột theo thứ tự ấy; màn ngang: gia phả bên trái, các mục ngắn bên phải, con đường thành một bảng trải ngang bên dưới. */
 export function openEnd(): void {
   stopTour();
-  const fresh = !S.ended; // lần đầu mở màn kết của ván này: giọng thuyết minh tự đọc tên kết cục (một lần)
-  if (!S.ended) { S.ended = true; save(); }
+  const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
+  // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
+  const fresh = !!end && !S.endSaid;
+  if (!S.ended || fresh) { S.ended = true; if (end) S.endSaid = true; save(); }
   mood('finale');
   ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
-  const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;
   const film = `<button class="btn end-film" data-a="film">${icon('play')}Xem phim hành trình</button>`;
   // đầu hồ sơ: họ (và quê), dấu kết cục, tên kết cục, lời kết riêng của dòng họ, tỷ lệ hiếm, vì sao; Đọc sử chưa chọn đủ: còn bỏ ngỏ
@@ -135,7 +136,7 @@ export function openEnd(): void {
    <div><dt class="mono">Dòng họ bạn là</dt><dd><b>${a ? esc(a[0]) : '—'}</b></dd></div>
    ${play && rank()[0] !== title ? `<div><dt class="mono">Gia sản</dt><dd><b>${esc(rank()[0])}</b></dd></div>` : ''}</dl>`; // hạng trùng tên kết cục: không lặp
   layer.innerHTML = `<div class="ov end">
-  <div class="row sb"><button class="back" data-a="close" aria-label="Đóng">‹</button><span class="row end-tr"><span class="mono muted">Kết luận · 1858 – 2026</span>${end ? `<button class="chip nbtn" data-a="listen-end" aria-label="Nghe tên kết cục">${LISTEN}</button>` : ''}</span></div>
+  <div class="row sb"><button class="back" data-a="close" aria-label="Đóng">‹</button><span class="row end-tr"><span class="mono muted">Kết luận · 1858 – 2026</span>${end ? `<button class="chip nbtn" data-a="listen-end" title="Nghe tên kết cục">${LISTEN}</button>` : ''}</span></div>
   ${head}
   <div class="end-body">
    <div class="end-main">${giaPha(f)}</div>
@@ -153,10 +154,12 @@ export function openEnd(): void {
   if (!end) return;
   warmEnd(f, end); // lời kể của phim hành trình cho lúc mất mạng
   // lần đầu mở: đọc tên kết cục và câu tóm sau khi dấu triện đóng xong (~0,8 s) chừng một giây, nếu giọng đọc đang bật và
-  // người chơi chưa rời màn kết hay mở phim; mở lại về sau thì chỉ đọc khi bấm "Nghe"
+  // người chơi chưa rời màn kết, chưa mở phim và chưa tự bấm "Nghe" / "Dừng"; mở lại về sau thì chỉ đọc khi bấm "Nghe"
   const ov = layer.querySelector<HTMLElement>('.ov.end'), b = ov?.querySelector<HTMLElement>('[data-a=listen-end]');
-  if (fresh && ov && b) setTimeout(() => { if (layer.contains(ov) && !document.querySelector('.cine.film:not(.out)')) listenEnd(b, false); }, 1800);
+  clearTimeout(autoRead);
+  if (fresh && ov && b) autoRead = setTimeout(() => { if (layer.contains(ov) && !b.dataset.on && !document.querySelector('.cine.film:not(.out)')) listenEnd(b, false); }, 1800);
 }
+let autoRead: ReturnType<typeof setTimeout> | undefined;
 
 /** Tên kết cục và câu tóm bằng giọng thuyết minh (bản thu end-<id>); bấm lần nữa thì dừng. */
 function listenEnd(b: HTMLElement, force: boolean): void {
@@ -165,7 +168,7 @@ function listenEnd(b: HTMLElement, force: boolean): void {
   if (b.dataset.on) { hush(); return; }
   if (speak(endSpeech(e, f), () => { delete b.dataset.on; }, force, endKey(e, f))) b.dataset.on = '1';
 }
-on('listen-end', el => listenEnd(el, true));
+on('listen-end', el => { clearTimeout(autoRead); listenEnd(el, true); });
 /** Lời kể của phim hành trình (dòng gia phả từng đời, kết cục, lời khép theo họ): tải sẵn cho lúc mất mạng (warm.ts). */
 function warmEnd(f: Facts, end: Ending): void {
   const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name);

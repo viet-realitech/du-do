@@ -1041,7 +1041,7 @@
 
 *Nhật ký dòng họ, nếu chọn "Giữ kế hoạch hoá", nhà ở miền Nam · 1980 · ~18 giây*
 
-> Nhật ký dòng họ, năm 1980. Bo bo thay gạo. Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, trạm kiểm soát trên đường thu từng bao gạo người ta chở từ miền Tây lên.
+> Nhật ký dòng họ, năm 1980. Bo bo thay gạo. Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, chở gạo qua khỏi tỉnh là bị trạm kiểm soát dọc đường thu từng bao.
 
 ### `d-baocap1` · giọng máy
 

@@ -3,33 +3,43 @@ import { readFileSync } from 'node:fs';
 
 /* Lời thuyết minh thu sẵn (src/voice): kết cục, dòng gia phả theo quê, kết cục ở điểm rẽ của nhà đã di tản, trang nhật ký
    đời thường theo miền, màn Cài đặt. Trình duyệt thử không phát được AAC, nên play() của bản thu được thay bằng một bản
-   ghi lại khoá (tên tệp trong assets/) và tốc độ, rồi báo "ended" sau 0,4 s như một bản thu ngắn. */
+   ghi lại khoá (tên tệp trong assets/) và tốc độ, rồi báo "ended" sau 0,4 s như một bản thu ngắn (hay sau `ms`); pause()
+   trước lúc ấy ghi là bị dừng. */
 
-type Clip = { key: string; rate: number };
+type Clip = { key: string; rate: number; stopped?: boolean };
 const clips = (page: Page) => page.evaluate(() => (window as unknown as { clips: Clip[] }).clips.map(c => c.key));
 const lastClip = (page: Page) => page.evaluate(() => { const c = (window as unknown as { clips: Clip[] }).clips; return c[c.length - 1]; });
 const count = async (page: Page, key: string) => (await clips(page)).filter(k => k === key).length;
 
-async function stubClips(page: Page) {
-  await page.addInitScript(() => {
+async function stubClips(page: Page, ms = 400) {
+  await page.addInitScript(ms => {
     const w = window as unknown as { clips: Clip[] };
     w.clips = [];
-    const play = HTMLMediaElement.prototype.play;
+    const play = HTMLMediaElement.prototype.play, pause = HTMLMediaElement.prototype.pause;
+    const on = new WeakMap<HTMLMediaElement, Clip>();
     HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
       const m = decodeURIComponent(this.src).match(/\/assets\/(.+)-[\w-]{8}\.m4a$/);
       if (!m) return play.call(this);
-      w.clips.push({ key: m[1], rate: this.playbackRate });
-      setTimeout(() => this.dispatchEvent(new Event('ended')), 400);
+      const c: Clip = { key: m[1], rate: this.playbackRate };
+      w.clips.push(c);
+      on.set(this, c);
+      setTimeout(() => { if (on.get(this) === c) { on.delete(this); this.dispatchEvent(new Event('ended')); } }, ms);
       return Promise.resolve();
     };
-  });
+    HTMLMediaElement.prototype.pause = function (this: HTMLMediaElement) {
+      const c = on.get(this);
+      if (c) { c.stopped = true; on.delete(this); }
+      return pause.call(this);
+    };
+  }, ms);
 }
+const stopped = (page: Page) => page.evaluate(() => (window as unknown as { clips: Clip[] }).clips.filter(c => c.stopped).map(c => c.key));
 
-async function boot(page: Page, state: object) {
+async function boot(page: Page, state: object, ms?: number) {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
-  await stubClips(page);
+  await stubClips(page, ms);
   await page.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('dudo-v2', s); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(state));
   await page.goto('/');
   return errors;
@@ -88,6 +98,58 @@ test('ending: with narration off the dossier stays silent until "Nghe" is presse
   expect(await clips(page)).toEqual([]);
   await page.locator('#layer [data-a=listen-end]').click();
   await expect.poll(() => clips(page)).toEqual(['end-baocap']);
+  expect(errors).toEqual([]);
+});
+
+test('ending: "Nghe" tapped right after the first open is not cut by the auto-read; "Dừng" is the button\'s name while it reads', async ({ page }) => {
+  // bản thu dài 5 s: còn đang đọc khi hẹn giờ tự đọc (1,8 s) tới
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, narr: true, sound: false, music: false }, 5000);
+  await page.locator('#card [data-a=end].c').click();
+  const b = page.locator('#layer [data-a=listen-end]');
+  await expect(b).toHaveAccessibleName('Nghe');
+  await b.click();
+  await expect(b).toHaveAttribute('data-on', '1');
+  await expect(b).toHaveAccessibleName('Dừng');
+  await page.waitForTimeout(2600);
+  expect(await clips(page)).toEqual(['end-canhtan-4']);
+  expect(await stopped(page)).toEqual([]);
+  await expect(b).toHaveAttribute('data-on', '1');
+  // "Dừng" stops it, and the auto-read does not start it again
+  await b.click();
+  await expect(b).toHaveAccessibleName('Nghe');
+  expect(await stopped(page)).toEqual(['end-canhtan-4']);
+  expect(errors).toEqual([]);
+});
+
+test('ending: "Dừng" pressed before the auto-read is due keeps the dossier silent', async ({ page }) => {
+  const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, narr: true, sound: false, music: false }, 5000);
+  await page.locator('#card [data-a=end].c').click();
+  const b = page.locator('#layer [data-a=listen-end]');
+  await b.click();
+  await expect(b).toHaveAttribute('data-on', '1');
+  await b.click();
+  await expect(b).not.toHaveAttribute('data-on', '1');
+  await page.waitForTimeout(2600);
+  expect(await clips(page)).toEqual(['end-canhtan-4']);
+  await expect(b).not.toHaveAttribute('data-on', '1');
+  expect(errors).toEqual([]);
+});
+
+test('read mode: opening the conclusion with a turning point still open does not use up the first reading of the ending', async ({ page }) => {
+  const st = { step: 'play', name: 'Họ Trần', year: 2026, picks: { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba' }, quiz: { e6: [true, true] }, narr: true, sound: false, music: false };
+  const errors = await boot(page, st);
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('#layer .end-title')).toHaveText('Con đường còn bỏ ngỏ');
+  await page.waitForTimeout(2400);
+  expect(await clips(page)).toEqual([]);
+  // the sixth turning point is chosen (as through its dialog), then the conclusion is opened again
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('dudo-v2')!); s.picks.e6 = 'doimoi'; localStorage.setItem('dudo-v2', JSON.stringify(s)); });
+  await page.reload();
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('#layer .end-title')).toHaveText('Bốn đời canh tân');
+  await expect.poll(() => clips(page), { timeout: 6000 }).toEqual(['end-canhtan-4']);
+  // the badge for reaching the conclusion was already earned on the first open
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2')!).badges)).toContain('done');
   expect(errors).toEqual([]);
 });
 

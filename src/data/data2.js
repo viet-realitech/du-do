@@ -67,7 +67,7 @@ D.ERAS.forEach(e=>{e.ctx=CTX[e.id]||null;e.opts.forEach(o=>{o.fx=FX[o.id];o.guid
    của người viết nhật ký đi xa (Hàng Đào, Pác Bó, Điện Biên…) không đổi theo quê. */
 const DIARY_R={
  'd-baocap0':{t:[1980,'Thóc chia theo công điểm',[107.58,16.46],'Hợp tác xã chia thóc theo công điểm; phần chia không đủ ăn tới mùa giáp hạt. Nhà bạn độn khoai lang, sắn lát vào nồi cơm.'],
-  n:[1980,'Bo bo thay gạo',[106.70,10.78],'Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, trạm kiểm soát trên đường thu từng bao gạo người ta chở từ miền Tây lên.']},
+  n:[1980,'Bo bo thay gạo',[106.70,10.78],'Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, chở gạo qua khỏi tỉnh là bị trạm kiểm soát dọc đường thu từng bao.']},
  'd-baocap1':{t:[1985,'Đổi tiền',[107.58,16.46],'Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Mấy tháng sau, giá muối, giá vải ở chợ huyện đã đổi từng tuần; nhà bạn giữ thóc trong bồ chứ không giữ tiền.'],
   n:[1985,'Đổi tiền lần thứ ba',[106.70,10.78],'Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Ở miền Nam, đây là lần đổi tiền thứ ba kể từ năm 1975; ai còn chút vàng thì giữ vàng, không ai muốn giữ tiền.']},
  'd-doimoi0':{t:[1988,'Ruộng khoán',[107.58,16.46],'Theo Khoán 10, hợp tác xã giao ruộng cho từng hộ. Ruộng ít, lại là đất cát bạc màu, nhưng vụ đầu tiên tự làm, nhà bạn đủ ăn tới vụ sau.'],

@@ -227,7 +227,7 @@ Dòng biên niên của Trò chơi theo quê của dòng họ (`chronLine` trong
 Ba trang ở nhà của điểm rẽ 6 (`DIARY_R` trong `src/data/data2.js`) có bản miền Trung (Nghệ An, Huế, Quảng Nam) và miền Nam (kể cả nhà miền Bắc đã di cư năm 1954), theo nơi dòng họ sống năm ấy, đặt ở chính nơi ấy trên bản đồ. Trang gốc (Hà Nội, Nam Định) giữ cho miền Bắc. Trang của người viết nhật ký đi xa không đổi.
 
 - Sổ gạo 1980, miền Trung, "Thóc chia theo công điểm": Hợp tác xã chia thóc theo công điểm; phần chia không đủ ăn tới mùa giáp hạt. Nhà bạn độn khoai lang, sắn lát vào nồi cơm.
-- Sổ gạo 1980, miền Nam, "Bo bo thay gạo": Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, trạm kiểm soát trên đường thu từng bao gạo người ta chở từ miền Tây lên.
+- Sổ gạo 1980, miền Nam, "Bo bo thay gạo": Mua theo sổ gạo ở cửa hàng lương thực, phần nhiều là bo bo, bột mì. Ngoài chợ, gạo đắt gấp mấy lần; thời ngăn sông cấm chợ, chở gạo qua khỏi tỉnh là bị trạm kiểm soát dọc đường thu từng bao.
 - Đổi tiền 1985, miền Trung, "Đổi tiền": Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Mấy tháng sau, giá muối, giá vải ở chợ huyện đã đổi từng tuần; nhà bạn giữ thóc trong bồ chứ không giữ tiền.
 - Đổi tiền 1985, miền Nam, "Đổi tiền lần thứ ba": Tháng Chín, mười đồng cũ đổi lấy một đồng mới. Ở miền Nam, đây là lần đổi tiền thứ ba kể từ năm 1975; ai còn chút vàng thì giữ vàng, không ai muốn giữ tiền.
 - Ruộng khoán 1988, miền Trung: Theo Khoán 10, hợp tác xã giao ruộng cho từng hộ. Ruộng ít, lại là đất cát bạc màu, nhưng vụ đầu tiên tự làm, nhà bạn đủ ăn tới vụ sau.
