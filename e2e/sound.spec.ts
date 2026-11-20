@@ -147,11 +147,12 @@ test('music loops by crossfading its two decks at the loop point, with no dip in
   expect(last.pa).toBe(true);
   expect(last.pb).toBe(false);
   expect(last.b).toBeGreaterThan(L + XF);
-  expect(last.b).toBeLessThan(L + XF + 6);
+  expect(last.b).toBeLessThan(L + XF + 10); // WebKit (Linux) báo vị trí của phần tử đang phát đi trước tới ~2 s
   await expect.poll(() => musicLine(page), { timeout: 4000 }).toMatch(/nối vòng 1/);
   // mức qua mối nối (cửa sổ 0,4 s): không hụt quá 6 dB so với mức trước mối nối; kiểu cũ (mờ dần về im lặng rồi phát lại từ
   // đầu bài) hụt tới −40…−90 dB
-  const iC = lv.findIndex(x => x.a >= C), n = Math.round(XF / 0.05);
+  // cửa sổ mối nối kéo thêm 2 s sau lúc chuyển: vị trí WebKit báo có thể đi trước tiếng nghe thấy
+  const iC = lv.findIndex(x => x.a >= C), n = Math.round((XF + 2) / 0.05);
   const win = (i: number) => 10 * Math.log10(lv.slice(i, i + 8).reduce((s, x) => s + Math.pow(10, x.db / 10), 0) / 8);
   expect(iC).toBeGreaterThan(30);
   expect(lv.length).toBeGreaterThan(iC + n + 8);
