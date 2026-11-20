@@ -1,6 +1,7 @@
 import { test, expect, devices, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { navCut } from './fixtures/errors';
+import { rewrite } from './fixtures/rewrite';
 
 /* Sổ kết cục (iPad Pro 11, cả Chromium lẫn WebKit):
    - dòng họ đi tới kết cục được cất cả bản lưu vào 'dudo-archive'; mở lại màn kết không cất thêm; chọn lại từ 1858 giữ sổ
@@ -91,8 +92,7 @@ test('a family that reaches its ending goes into Sổ kết cục and stays ther
   expect(b.runs).toEqual(a.runs.map(x => ({ ...x, save: expect.objectContaining({ picks: reformPath }) })));
   expect(b.live).toEqual({});
   // a new game (reading mode here): the seal is still stamped and the family still listed
-  await page.evaluate(s => { localStorage.setItem('dudo-v2', s); localStorage.setItem('dudo-mode', 'read'); }, JSON.stringify(midRead));
-  await page.reload();
+  await rewrite(page, s => { localStorage.setItem('dudo-v2', s); localStorage.setItem('dudo-mode', 'read'); }, JSON.stringify(midRead));
   await alive(page);
   await openLedger(page);
   await expect(page.locator('.ledg h3')).toHaveText('Sổ kết cục · 1/15');
@@ -165,8 +165,7 @@ test('a damaged book never stops the app: unreadable is treated as empty and cop
   await expect(page.locator('.ledg-e')).toContainText('Chưa có dòng họ nào khép hồ sơ');
   expect(await page.evaluate(() => localStorage.getItem('dudo-archive'))).toBe(broken); // reading never rewrites it
   // reading mode reaches its ending: a fresh book is written, the unreadable one is kept aside first
-  await page.evaluate(s => localStorage.setItem('dudo-v2', s), JSON.stringify({ v: 1, step: 'play', name: 'Họ Trần', year: 2026, narr: false, picks: reformPath, quiz: { e6: [true, true] } }));
-  await page.reload();
+  await rewrite(page, s => localStorage.setItem('dudo-v2', s), JSON.stringify({ v: 1, step: 'play', name: 'Họ Trần', year: 2026, narr: false, picks: reformPath, quiz: { e6: [true, true] } }));
   await alive(page);
   await page.locator('#card [data-a=end].c').click();
   await expect(live(page, '.end-title')).toBeVisible();
@@ -286,8 +285,7 @@ test("after the recovery screen's Bắt đầu lại, the same path played again
   // a new family on the same surname, home and six turning points, with another journey (other wealth)
   const errors: string[] = [];
   page.on('pageerror', e => { if (!navCut(e.message)) errors.push(e.message); });
-  await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...finished('Họ Phan', 'qn', reformPath), res: r(70, 70, 70, 70) }));
-  await page.reload();
+  await rewrite(page, s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...finished('Họ Phan', 'qn', reformPath), res: r(70, 70, 70, 70) }));
   await alive(page);
   await page.locator('#card [data-a=end].c').click();
   await expect(live(page, '.end-title')).not.toHaveText('');
@@ -326,8 +324,7 @@ test('play mode closes a dossier only at 2026: no Xem kết luận in Hồ sơ a
   await expect(page.locator('.pane [data-a=end]')).toHaveCount(0);
   expect((await stored(page)).harvests).toEqual(es.slice(0, 5)); // the sixth harvest is not taken early
   // the ending screen itself keeps nothing before 2026 (2025, every harvest and quiz done: the action opens it directly)
-  await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...at76, year: 2025, harvests: es }));
-  await page.reload();
+  await rewrite(page, s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ ...at76, year: 2025, harvests: es }));
   await alive(page);
   await act(page, 'end');
   await expect(live(page, '.ov.end .end-title')).not.toHaveText('');
@@ -337,8 +334,7 @@ test('play mode closes a dossier only at 2026: no Xem kết luận in Hồ sơ a
   expect(await arc(page)).toBeNull();
   // 2026, after the 1980 crossing (tn80 = 0): the ending follows it, and only now is it kept and filed
   const at26 = { ...at76, year: 2026, cards: { ...upTo('st25', 1), ...upTo('tn76', 0), sg75: 2, tn80: 0 }, harvests: es };
-  await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify(at26));
-  await page.reload();
+  await rewrite(page, s => localStorage.setItem('dudo-v2-play', s), JSON.stringify(at26));
   await alive(page);
   await openLedger(page);
   await live(page, '.pane [data-a=end]').click();
@@ -349,8 +345,7 @@ test('play mode closes a dossier only at 2026: no Xem kết luận in Hồ sơ a
   expect(s.endFix?.id).toBe('xanam');
   await expect.poll(async () => (await arc(page))?.runs.map(x => x.end)).toEqual(['xanam']);
   // closed, then the timeline moved back to 1960: Hồ sơ still offers the kept ending (it no longer changes)
-  await page.evaluate(() => { const k = 'dudo-v2-play', s = JSON.parse(localStorage.getItem(k)!); s.year = 1960; localStorage.setItem(k, JSON.stringify(s)); });
-  await page.reload();
+  await rewrite(page, () => { const k = 'dudo-v2-play', s = JSON.parse(localStorage.getItem(k)!); s.year = 1960; localStorage.setItem(k, JSON.stringify(s)); });
   await alive(page);
   await openLedger(page);
   await live(page, '.pane [data-a=end]').click();

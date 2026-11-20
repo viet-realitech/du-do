@@ -1,4 +1,5 @@
 import { test, expect, devices, type Page } from '@playwright/test';
+import { rewrite } from './fixtures/rewrite';
 
 /* Đợt H (gói 6): la bàn giá trị vẽ thành hoa gió, tấm bản đồ ở trang nhật ký và ở hồ sơ kết cục, nhãn thành phố bị dấu
    đè thì mờ đi, thiết lập Chữ lớn. Wikipedia bị chặn như mọi bài thử khác. */
@@ -107,8 +108,7 @@ test('ending home plate: a southern family that regrouped north and came back in
   await expect(sec.locator('svg .pl-move')).toHaveCount(2);
   await expect.poll(() => sovereigntyWhole(page, '.end-plate svg')).toEqual([]);
   // Đọc sử: không có quê, không có tấm bản đồ dòng họ
-  await page.evaluate(() => { localStorage.setItem('dudo-v2', JSON.stringify({ step: 'play', name: 'Họ Lê', year: 2026, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam', e6: 'doimoi' }, quiz: { e6: [true, true] }, sound: false, music: false, narr: false })); localStorage.setItem('dudo-mode', 'read'); });
-  await page.reload();
+  await rewrite(page, () => { localStorage.setItem('dudo-v2', JSON.stringify({ step: 'play', name: 'Họ Lê', year: 2026, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam', e6: 'doimoi' }, quiz: { e6: [true, true] }, sound: false, music: false, narr: false })); localStorage.setItem('dudo-mode', 'read'); });
   await page.waitForSelector('#map text[data-city]');
   await act(page, 'end');
   await expect(page.locator('.ov.end .end-cmp .vrose')).toBeAttached();
@@ -203,8 +203,7 @@ test('a city label that an event marker overprints fades; it comes back when the
   await expect.poll(() => op('Hà Nội'), { timeout: 5000 }).toBe('0');
   for (const c of ['Huế', 'Đà Nẵng']) expect(await op(c)).toBeNull();
   // 1965: không dấu nào đè lên Hà Nội: nhãn hiện lại
-  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('dudo-v2')!); s.year = 1965; localStorage.setItem('dudo-v2', JSON.stringify(s)); });
-  await page.reload();
+  await rewrite(page, () => { const s = JSON.parse(localStorage.getItem('dudo-v2')!); s.year = 1965; localStorage.setItem('dudo-v2', JSON.stringify(s)); });
   await page.waitForSelector('#map text[data-city]');
   await page.waitForTimeout(800);
   expect(await op('Hà Nội')).toBeNull();
@@ -345,8 +344,7 @@ test('the header Chọn hướng button answers a tap anywhere in a 44 px band',
 test('ending home plate and diary plate: a family that chose Ra đi without an exit card lives abroad from 1979 (1989 with a son at the Cambodian front)', async ({ page }) => {
   const radi = { ...PICKS, e6: 'radi' }, rows = page.locator('.ov.end .end-plate .mp-l li'), res = { g: 60, d: 50, b: 50, u: 50 }; // không sa sút
   const again = async (s: object) => {
-    await page.evaluate(s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ sound: false, music: false, narr: false, ...s }));
-    await page.reload();
+    await rewrite(page, s => localStorage.setItem('dudo-v2-play', s), JSON.stringify({ sound: false, music: false, narr: false, ...s }));
     await page.waitForSelector('#map text[data-city]');
     await act(page, 'end');
   };
