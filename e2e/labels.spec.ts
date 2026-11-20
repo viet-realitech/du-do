@@ -66,6 +66,45 @@ for (const [name, dev] of VIEWS) {
   });
 }
 
+/* Màn chọn quê: tên quê đang chọn (chữ đậm cạnh vòng son) không chạm nhãn chủ quyền nào trên tấm bản đồ nhỏ, với cả tám
+   quê. Nhãn Trường Sa canh lề phải từng đè lên "Sài Gòn – Gia Định". So hộp chữ theo đơn vị viewBox (getBBox). */
+for (const [name, dev] of VIEWS) {
+  test(`the home picker's selected home label clears the sovereignty labels · ${name}`, async ({ browser }, info) => {
+    const { defaultBrowserType: _, ...d } = devices[dev];
+    const ctx = await browser.newContext({ ...d, baseURL: info.project.use.baseURL, serviceWorkers: 'block' });
+    try {
+      const page = await ctx.newPage();
+      await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+      await page.goto('/');
+      await page.locator('[data-a=go-play]').click();
+      await expect(page.locator('.hp-map svg')).toBeVisible();
+      const homes = await page.locator('.hlist [data-a=home]').evaluateAll(bs => bs.map(b => (b as HTMLElement).dataset.v!));
+      expect(homes.length).toBe(8);
+      for (const h of homes) {
+        await page.locator(`.hlist [data-a=home][data-v=${h}]`).click();
+        await expect(page.locator('.hp-map .pl-dot.on text')).toHaveCount(1);
+        const hits = await page.evaluate(names => {
+          const svg = document.querySelector<SVGSVGElement>('.hp-map svg')!;
+          const on = svg.querySelector<SVGTextElement>('.pl-dot.on text')!, a = on.getBBox();
+          const out: string[] = [];
+          for (const n of names) {
+            const t = [...svg.querySelectorAll<SVGTextElement>('text')].find(x => x.textContent!.trim() === n);
+            if (!t) { out.push(`${n}: không có nhãn`); continue; }
+            const q = t.getBBox(), gap = 0.5;
+            if (a.x < q.x + q.width + gap && q.x < a.x + a.width + gap && a.y < q.y + q.height + gap && q.y < a.y + a.height + gap)
+              out.push(`${on.textContent} chạm ${n}: [${a.x.toFixed(1)}–${(a.x + a.width).toFixed(1)}] × [${a.y.toFixed(1)}–${(a.y + a.height).toFixed(1)}] / [${q.x.toFixed(1)}–${(q.x + q.width).toFixed(1)}] × [${q.y.toFixed(1)}–${(q.y + q.height).toFixed(1)}]`);
+          }
+          return out;
+        }, PLATE);
+        expect(hits, h).toEqual([]);
+      }
+      await expect.poll(() => problems(page, '.hp-map svg', PLATE, 2), { timeout: 8000 }).toEqual([]);
+    } finally {
+      await ctx.close();
+    }
+  });
+}
+
 /* Góc nhìn là lời tóm lược của ứng dụng, không phải trích dẫn: không có ngoặc kép (<q>), có nhãn "Tóm lược"; câu trích thật
    (khối .quote ở thẻ Diễn biến) vẫn có ngoặc và nguồn. pt84 từng có hai dòng "Quan điểm Trung Quốc". */
 test('Góc nhìn shows unquoted summaries under a Tóm lược label; real quotes keep their block', async ({ page }) => {
@@ -94,4 +133,24 @@ test('Góc nhìn shows unquoted summaries under a Tóm lược label; real quote
   await expect(page.locator('#eb .quote blockquote')).toHaveText('Không thành công cũng thành nhân.');
   await expect(page.locator('#eb .quote')).toContainText('còn truyền là');
   expect(errors).toEqual([]);
+});
+
+/* Bảng số liệu giữ số ngắn; phạm vi và nguồn của một số (mức 3,8 triệu ở sg75) in nhỏ trong dòng ghi chú dưới bảng, không
+   nhồi vào ô số đậm (từng thành bốn dòng chữ đậm trên iPhone). */
+test('sg75 number row stays short; the scope note sits in the muted line under the table', async ({ page }) => {
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  await page.addInitScript(s => localStorage.setItem('dudo-v2', s), JSON.stringify(midGame));
+  await page.goto('/');
+  await page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = 'sg75'; b.id = 'goto-sg75'; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); });
+  await page.locator('#goto-sg75').click();
+  await expect(page.locator('#layer > .ov #et')).toBeVisible();
+  const row = page.locator('#eb .nums > div', { hasText: 'Toàn cuộc chiến' });
+  await expect(row.locator('b')).toHaveText('≈ 1,3 – 3,8 triệu người chết');
+  await expect(page.locator('#eb .nums + p')).toContainText('Obermeyer');
+  await expect(page.locator('#eb .nums + p')).toContainText('1955–2002');
+  // mỗi ô số một dòng: không còn khối chữ đậm nhiều dòng
+  for (const b of await page.locator('#eb .nums b').all()) {
+    const [h, lh] = await b.evaluate(el => [el.getBoundingClientRect().height, parseFloat(getComputedStyle(el).lineHeight)]);
+    expect(h).toBeLessThan(lh * 1.5);
+  }
 });

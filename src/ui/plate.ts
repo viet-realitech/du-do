@@ -15,8 +15,9 @@ const f1 = (n: number) => n.toFixed(1);
 /** SVG của tấm bản đồ. `dots`: điểm đánh dấu (quê quán) [id, kinh, vĩ, tên], `on`: điểm đang chọn. */
 export function plate(dots: [string, number, number, string][] = [], on = '', cls = 'plate-svg'): string {
   const lon = [104, 106, 108, 110, 112, 114].map(x => plateXY(x, 15)[0]), lat = [10, 12, 14, 16, 18, 20, 22].map(y => plateXY(105, y)[1]);
-  // nhãn Trường Sa canh lề phải (text-anchor end) ngay trên các đảo: đặt giữa tại 114,1° E thì chữ tràn khỏi khung 200
-  const [hx, hy] = plateXY(112.2, 17.4), [, ty] = plateXY(114.1, 11.1), tx = 196, [bx, by] = plateXY(111, 13.4);
+  // nhãn Trường Sa canh lề phải (text-anchor end) phía trên các đảo: đặt giữa tại 114,1° E thì chữ tràn khỏi khung 200;
+  // nâng lên 11,6° N để không chạm tên quê đang chọn ở Sài Gòn (màn chọn quê)
+  const [hx, hy] = plateXY(112.2, 17.4), [, ty] = plateXY(114.1, 11.6), tx = 196, [bx, by] = plateXY(111, 13.4);
   return `<svg class="${cls}" viewBox="0 8 200 244" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
   <g class="pl-grat">${lon.map(x => `<path d="M${f1(x)} 8V252"/>`).join('')}${lat.map(y => `<path d="M0 ${f1(y)}H200"/>`).join('')}</g>
   <path class="pl-vn" d="${VN}"/>

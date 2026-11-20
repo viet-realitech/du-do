@@ -194,7 +194,7 @@ D.BADGES=[
 ];
 const fv=(id,arr)=>{const e=D.EV.find(x=>x.id===id);if(e)e.v.push(...arr);};
 const fq=(id,t,by,src)=>{const e=D.EV.find(x=>x.id===id);if(e)e.qt={t,by,src};};
-const fn=(id,arr)=>{const e=D.EV.find(x=>x.id===id);if(e)e.n=arr;};
+const fn=(id,arr,note)=>{const e=D.EV.find(x=>x.id===id);if(e){e.n=arr;if(note)e.nNote=note;}};
 fv('nh40',[['jp','Tiến vào Đông Dương theo thoả thuận với chính quyền Vichy, để cắt tuyến tiếp tế cho Trùng Khánh.']]);
 fv('ng45',[['jp','Đảo chính 9.3 nhằm loại Pháp trước khi Đồng minh đổ bộ; trao ‘độc lập’ danh nghĩa cho Bảo Đại.']]);
 fv('dbp',[['su','Ủng hộ VNDCCH, đồng thời thúc đẩy giải pháp thương lượng ở Genève.']]);
@@ -217,7 +217,7 @@ fn('ng45',[['Nạn đói 1944–45','≈ 1–2 triệu người chết (tuỳ ng
 fn('dc54',[['Di cư vào Nam','≈ 800.000 – 1 triệu người'],['Tập kết ra Bắc','≈ 80.000 – 130.000 người']]);
 fn('mt68',[['Thảm sát Huế','≈ 2.800 – 6.000 thường dân (tuỳ nguồn)']]);
 fn('hs74',[['QL VNCH','74 tử trận'],['Trung Quốc','18 tử trận (nguồn TQ)']]);
-fn('sg75',[['Toàn cuộc chiến','≈ 1,3 – 3,8 triệu người chết (tuỳ nguồn; mức 3,8 triệu, theo Obermeyer và cộng sự 2008, tính người chết vì bạo lực chiến tranh ở Việt Nam 1955–2002)'],['Quân Mỹ','58.220 người chết (≈ 47.400 tử trận)'],['QL VNCH','≈ 220.000 – 313.000 tử trận']]);
+fn('sg75',[['Toàn cuộc chiến','≈ 1,3 – 3,8 triệu người chết'],['Quân Mỹ','58.220 người chết (≈ 47.400 tử trận)'],['QL VNCH','≈ 220.000 – 313.000 tử trận']],'Toàn cuộc chiến: mức 3,8 triệu theo Obermeyer và cộng sự (2008), tính người chết vì bạo lực chiến tranh ở Việt Nam 1955–2002.');
 fn('bb79',[['Thương vong','Hai bên công bố khác nhau, ước tính hàng chục nghìn mỗi phía']]);
 fn('gm88',[['Hải quân Việt Nam','64 tử trận']]);
 fn('tn80',[['Rời Việt Nam bằng đường biển','≈ 800.000 người tới được nơi tị nạn (UNHCR)'],['Chết trên biển','Ước tính hàng chục nghìn đến hơn 200.000, chưa thống kê được']]);
