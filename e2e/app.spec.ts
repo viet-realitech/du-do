@@ -22,26 +22,30 @@ const live = (page: Page, sel: string) => page.locator(`${sel}:not(.exiting *, .
     chỉ sống 2,8 s, còn mỗi lượt hỏi từ máy chạy test (WebKit bận, đang ghi trace) có thể tốn hàng trăm ms: ba lượt
     toHaveCount → toContainText → đo từng lỡ mất nó; chờ hiệu ứng trượt vào chạy xong rồi mới đo cũng lỡ (WebKit có lúc
     3 s mới vẽ một khung). Nên đo ngay lúc nó hiện, theo chỗ nó đứng yên: ô trên màn trừ đi đoạn dời của hiệu ứng trượt
-    (transform chỉ là translate). Kết quả: ô ấy, số thông báo đang hiện lúc ấy (`shown`); null nếu `wait` ms sau vẫn chưa
-    thấy (hỏng trong vài giây, không treo tới hết 60 s). */
-async function catchToast(page: Page, text: string, wait = 10_000) {
+    (transform chỉ là translate). Kết quả: ô ấy, số thông báo đang hiện lúc ấy (`shown`); null nếu tới `wait` ms sau khi
+    thao tác xong vẫn chưa thấy (hỏng trong vài giây, không treo tới hết 60 s; tính từ lúc thao tác xong vì một cú bấm mở
+    trang kết cục trên WebKit quá tải từng tốn tới 16 s). */
+async function catchToast(page: Page, text: string) {
   type Caught = { x: number; y: number; width: number; height: number; shown: number } | null;
-  await page.evaluate(([text, wait]) => {
+  await page.evaluate(text => {
     (window as unknown as { caught: Promise<Caught> }).caught = new Promise<Caught>(done => {
       const up = () => [...document.querySelectorAll<HTMLElement>('.toast')].filter(n => n.style.visibility !== 'hidden');
       const look = () => {
         const n = up().find(x => x.textContent!.includes(text));
         if (!n) return;
-        mo.disconnect(); clearTimeout(late);
+        mo.disconnect();
         const r = n.getBoundingClientRect(), t = getComputedStyle(n).transform, m = new DOMMatrixReadOnly(t === 'none' ? undefined : t);
         done({ x: r.x - m.m41, y: r.y - m.m42, width: r.width, height: r.height, shown: up().length });
       };
-      const mo = new MutationObserver(look), late = setTimeout(() => { mo.disconnect(); done(null); }, wait);
+      const mo = new MutationObserver(look);
       mo.observe(document.body, { childList: true, subtree: true });
       look();
     });
-  }, [text, wait] as const);
-  return () => page.evaluate(() => (window as unknown as { caught: Promise<Caught> }).caught);
+  }, text);
+  return (wait = 10_000) => page.evaluate(w => Promise.race([
+    (window as unknown as { caught: Promise<Caught> }).caught,
+    new Promise<Caught>(r => setTimeout(() => r(null), w)),
+  ]), wait);
 }
 
 const midGame = { step: 'play', name: 'Họ Lê', year: 1954, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam' }, quiz: { e1: [true, true], e2: [true, false], e3: [true, true], e4: [false, true] } };
@@ -1198,7 +1202,7 @@ test('toasts come one at a time, above the tab bar on the main screen', async ({
     mo.observe(document.body, { childList: true, subtree: true });
     tap(); tap();
     const figs = () => [...on.values()].filter(s => s.fig);
-    for (let t = 0; t < 150 && !(figs().length === 2 && figs().every(s => s.to !== undefined)); t++) await new Promise(r => setTimeout(r, 100));
+    for (let t = 0; t < 200 && !(figs().length === 2 && figs().every(s => s.to !== undefined)); t++) await new Promise(r => setTimeout(r, 100));
     mo.disconnect();
     const end = performance.now() - t0, all = [...on.values()];
     return { most, figs: figs().map(s => [s.from, s.to ?? end]), total: all.reduce((a, s) => a + (s.to ?? end) - s.from, 0) };
