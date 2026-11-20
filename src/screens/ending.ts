@@ -119,7 +119,8 @@ export function openEnd(ro?: ArcRun): void {
   // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
   const fresh = !ro && !!end && !S.endSaid;
   if (!ro && (!S.ended || fresh)) { S.ended = true; if (end) S.endSaid = true; save(); }
-  if (!ro && end) archiveRun({ end: end.id, title, name: nameChain(), home: play ? home()[1] : '' });
+  const meta = end && !ro ? { end: end.id, title, name: nameChain(), home: play ? home()[1] : '' } : null;
+  if (meta) archiveRun(meta); // trước khi dựng: gợi ý "Ván sau, thử…" tính cả dòng họ này
   mood('finale');
   if (!ro) ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;
@@ -158,7 +159,9 @@ export function openEnd(ro?: ArcRun): void {
   ${end ? nextTry() : ''}<button class="lnk" data-a="reset">Chọn lại từ 1858</button></div>`}`;
   layer.querySelector<HTMLElement>('.end-title')?.focus({ preventScroll: true }); // như trang sự kiện: tiêu điểm vào hồ sơ vừa mở, trình đọc màn hình đọc từ tên kết cục
   if (ro) { layer.querySelector<HTMLElement>(':scope > .ov.end')!.dataset.ret = JSON.stringify({ tab: 'me' }); return; } // nút đóng (event.ts) về Hồ sơ
+  const nb = S.badges.length;
   checkBadges();
+  if (meta && S.badges.length !== nb) archiveRun(meta); // huy hiệu vừa trao (Khép hồ sơ…) cũng vào bản lưu trong sổ
   if (!end) return;
   warmEnd(f, end); // lời kể của phim hành trình cho lúc mất mạng
   // lần đầu mở: đọc tên kết cục và câu tóm sau khi dấu triện đóng xong (~0,8 s) chừng một giây, nếu giọng đọc đang bật và
@@ -170,7 +173,7 @@ export function openEnd(ro?: ArcRun): void {
 let autoRead: ReturnType<typeof setTimeout> | undefined;
 
 /** Dòng "chỉ xem" trên đầu hồ sơ mở lại từ Sổ kết cục. */
-const roNote = (r: ArcRun) => `<p class="end-ro"><span class="mono">Hồ sơ đã khép</span>${esc(r.name)} khép hồ sơ ngày ${esc(arcDate(r.at))}${r.mode === 'read' ? ' (Đọc sử)' : ''}. Xem lại ở đây không đổi gì trong ván đang chơi.</p>`;
+const roNote = (r: ArcRun) => `<p class="end-ro"><span class="mono">Hồ sơ đã khép</span> ${esc(r.name)} khép hồ sơ ngày ${esc(arcDate(r.at))}${r.mode === 'read' ? ' (Đọc sử)' : ''}. Xem lại ở đây không đổi gì trong ván đang chơi.</p>`;
 
 /** Sổ kết cục: mở lại hồ sơ một dòng họ đã khép, chỉ để xem (openEnd dựng với S tạm là bản lưu của nó, rồi trả S lại). */
 export function openPast(id: string): boolean {

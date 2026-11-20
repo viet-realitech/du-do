@@ -48,10 +48,11 @@ const FIRST = 'Mỗi dòng họ chỉ nhận một kết cục: sổ xét lần 
 
 const MODE = { read: 'Đọc sử', play: 'Trò chơi' } as const;
 const stamp = (t: string, off = false) => `<span class="sl${off ? ' off' : ''}">${esc(t)}</span>`;
-/** Một dòng họ đã khép trong sổ: dấu, tên họ, kết cục, quê, luồng, ngày; chạm để mở lại hồ sơ. */
-function runRow(r: ArcRun, mine: boolean): string {
+/** Một dòng họ đã khép trong sổ: dấu, tên họ, kết cục, quê, luồng, ngày; chạm để mở lại hồ sơ. `bare`: trong hộp của
+    một dấu (dấu đã ở trên đầu hộp, không lặp ở từng dòng). */
+function runRow(r: ArcRun, mine: boolean, bare = false): string {
   const e = ENDINGS.find(x => x.id === r.end), sub = [r.title || e?.title || '', r.home, MODE[r.mode], arcDate(r.at)].filter(Boolean).join(' · ');
-  return `<li><button class="arc-run" data-a="arc-open" data-id="${esc(r.id)}">${stamp(e?.seal || '—')}<span class="t"><b>${esc(r.name)}${mine ? ' <i>· ván này</i>' : ''}</b><span class="d">${esc(sub)}</span></span><span class="go" aria-hidden="true">›</span></button></li>`;
+  return `<li><button class="arc-run${bare ? ' bare' : ''}" data-a="arc-open" data-id="${esc(r.id)}">${bare ? '' : stamp(e?.seal || '—')}<span class="t"><b>${esc(r.name)}${mine ? ' <i>· ván này</i>' : ''}</b><span class="d">${esc(sub)}</span></span><span class="go" aria-hidden="true">›</span></button></li>`;
 }
 
 /** Trình duyệt trên iPhone, iPad, không mở từ màn hình chính: Safari có thể xoá dữ liệu của trang lâu ngày không mở. */
@@ -90,9 +91,9 @@ on('arc-seal', el => {
   sheet(`<div class="mono muted">Sổ kết cục · dấu số ${i + 1}</div><div class="arc-dt">${stamp(e.seal, !k)}</div>
    <h2 style="margin:4px 0 8px">${esc(e.title)}</h2>
    ${k ? `<p class="arc-line">${esc(e.line)}</p><div class="mono muted ledg-h">${k > 1 ? `Đã gặp ${k} lần` : 'Đã gặp một lần'}</div>
-     ${rs.length ? `<ol class="arc-runs">${rs.map(r => runRow(r, r.id === mine)).join('')}</ol>` : ''}
+     ${rs.length ? `<ol class="arc-runs">${rs.map(r => runRow(r, r.id === mine, true)).join('')}</ol>` : ''}
      ${gone ? `<p class="muted small" style="margin-top:8px">${gone} hồ sơ cũ hơn đã rời sổ (sổ giữ ${ARC_MAX} hồ sơ gần nhất); dấu vẫn được đếm.</p>` : ''}`
-    : `<p class="arc-hint"><span class="mono">Chưa gặp</span>${esc(hintOf(e, S.mode))}</p><p class="muted small">${FIRST}</p>`}
+    : `<p class="arc-hint"><span class="mono">Chưa gặp</span> ${esc(hintOf(e, S.mode))}</p><p class="muted small">${FIRST}</p>`}
    ${rar ? `<p class="muted small" style="margin-top:10px">Độ hiếm: ${rar}.</p>` : ''}`, true, 'dlg');
 });
 

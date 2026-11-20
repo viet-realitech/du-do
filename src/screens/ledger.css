@@ -22,6 +22,7 @@
 .arc-runs li + li { border-top: 1px solid var(--rule) }
 .arc-run { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; width: 100%; min-height: 60px; padding: 10px 0; text-align: left; color: var(--ink) }
 .arc-run:active { background: var(--paper2) }
+.arc-run.bare { grid-template-columns: minmax(0, 1fr) auto }
 .arc-run .sl { justify-self: start }
 .arc-run b { display: block; font: 700 var(--t-lead)/1.2 var(--disp) }
 .arc-run b i { font: italic 400 var(--t-s)/1 var(--serif); color: var(--ink3) }

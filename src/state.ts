@@ -349,7 +349,10 @@ function readArc(): { a: Archive; raw: string | null; bad: boolean } {
 /** Ghi sổ; bộ nhớ đầy thì bỏ dần hồ sơ cũ nhất (vẫn đếm dấu) rồi thử lại. Sổ cũ không đọc được: cất một bản sao trước. */
 function writeArc(a: Archive, prev: { raw: string | null; bad: boolean }): boolean {
   try {
-    if (prev.bad && prev.raw !== null && localStorage.getItem(ARC_BROKEN) === null) localStorage.setItem(ARC_BROKEN, prev.raw);
+    if (prev.bad && prev.raw !== null && localStorage.getItem(ARC_BROKEN) === null) {
+      localStorage.setItem(ARC_BROKEN, prev.raw);
+      noteSave(`Sổ kết cục ${ARC_KEY} hỏng (${prev.raw.length} ký tự): đã cất bản sao ${ARC_BROKEN} trước khi ghi lại`);
+    }
   } catch { /* đầy: thôi không cất */ }
   for (;;) {
     try { localStorage.setItem(ARC_KEY, JSON.stringify(a)); return true; } catch {
