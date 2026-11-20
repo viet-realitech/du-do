@@ -17,11 +17,11 @@ Mỗi trận đánh trong tour chương có một cảnh động trên bản đ�
 - Ghi chú: The flotilla left its transports at Cap Saint-Jacques (Vũng Tàu) on 11 Feb 1859 and spent five days going upriver, reducing six riverside forts. On 16 Feb it shelled the two forts south of Sài Gòn and Spanish troops took them. On 17 Feb French and Spanish troops landed from the river side and stormed the Gia Định citadel.
 
 ## cd61 · siege
-- phap: [106.66, 10.74] → [106.63, 10.82] · Đạo quân Charner vòng lên mạn tây bắc, chiếm đồn Redoute (24.2)
-- es: [106.58, 10.8] → [106.66, 10.79] · Cánh phải: bộ binh Tây Ban Nha và thủy binh đánh về phía đông (25.2)
-- phap: [106.58, 10.84] → [106.66, 10.81] · Cánh trái: công binh, thủy quân lục chiến, khinh binh
-- Giữ: dainam [106.66, 10.79]; dainam [106.63, 10.81]
-- Ghi chú: Charner's army, reinforced from China, set out from the French pagoda line between Sài Gòn and Chợ Lớn and on 24 Feb 1861 took the Redoute and part of the trenches at the end of the Kỳ Hòa camp (3 x 0.9 km, astride the Tây Ninh road, today's Cách Mạng Tháng Tám). At dawn on 25 Feb it attacked eastward along the camp in two columns, the right one with Spanish infantry and sailors and the left with engineers, marine infantry and chasseurs, until Nguyễn Tri Phương's army withdrew. The north-west flanking route is from general accounts; the Wikipedia pages consulted give only the two columns and the eastward assault.
+- phap: [106.648, 10.752] → [106.638, 10.768] · Đạo quân Charner vòng lên mạn tây bắc, chiếm đồn Redoute (24.2)
+- es: [106.632, 10.822] → [106.652, 10.8] · Cánh phải: bộ binh Tây Ban Nha và thủy binh đánh vào mặt bắc (25.2)
+- phap: [106.655, 10.83] → [106.664, 10.8] · Cánh trái: công binh, thủy quân lục chiến, khinh binh
+- Giữ: dainam [106.66, 10.79]; dainam [106.638, 10.77]
+- Ghi chú (sửa ở đợt G): on 24 Feb 1861 the allied force set out from chùa Cây Mai and took the Redoute (đồn Hữu in Vietnamese accounts), the south end of the Kỳ Hòa line, about 1.8 km north-north-west of Cây Mai. On the night of 24–25 Feb it camped in an abandoned hamlet about 1.5 km off the north-west corner of the great fort. At dawn on 25 Feb it formed up about 2 km off the north face and attacked that face in two columns: the right (west, facing south) with Spanish infantry and sailors, the left (east) with engineers, marine infantry and chasseurs (Pallu de la Barrière; HistoryNet). Earlier versions drew the 25 Feb columns striking eastward along the camp. Whether the Redoute is đồn Hữu is marked for the historian in docs/review (scene:cd61:0).
 
 ## nt61 · naval
 - dainam: [106.41, 10.54] → [106.51, 10.56] · Năm ghe nghĩa quân giả ghe buôn theo rạch Nhật Tảo áp sát tàu
