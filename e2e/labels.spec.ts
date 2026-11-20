@@ -65,3 +65,33 @@ for (const [name, dev] of VIEWS) {
     }
   });
 }
+
+/* Góc nhìn là lời tóm lược của ứng dụng, không phải trích dẫn: không có ngoặc kép (<q>), có nhãn "Tóm lược"; câu trích thật
+   (khối .quote ở thẻ Diễn biến) vẫn có ngoặc và nguồn. pt84 từng có hai dòng "Quan điểm Trung Quốc". */
+test('Góc nhìn shows unquoted summaries under a Tóm lược label; real quotes keep their block', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.route(/wikipedia\.org|wikimedia\.org/, r => r.abort());
+  await page.addInitScript(s => localStorage.setItem('dudo-v2', s), JSON.stringify(midGame));
+  await page.goto('/');
+  const open = async (id: string) => {
+    await page.evaluate(id => { const b = document.createElement('button'); b.dataset.a = 'ev'; b.dataset.id = id; b.id = 'goto-' + id; b.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;width:12px;height:12px'; document.body.appendChild(b); }, id);
+    await page.locator('#goto-' + id).click();
+    await expect(page.locator('#layer > .ov #et')).toBeVisible();
+  };
+  await open('pt84');
+  await expect(page.locator('#eb .quote blockquote')).toContainText('thừa nhận và chấp nhận quyền bảo hộ');
+  await page.locator('#et').getByRole('tab', { name: 'Góc nhìn' }).click();
+  await expect(page.locator('#eb .pv-sum')).toContainText('Tóm lược');
+  await expect(page.locator('#eb .pv')).toHaveCount(3);
+  await expect(page.locator('#eb .pv .pvt')).toHaveCount(3);
+  await expect(page.locator('#eb q')).toHaveCount(0);
+  await expect(page.locator('#eb .pvh', { hasText: 'Quan điểm Trung Quốc' })).toHaveCount(1);
+  // câu trích Yên Bái đọc đúng câu trong phần Diễn biến (có bản thu); dị bản ghi ở dòng nguồn
+  await page.locator('#layer > .ov .back[data-a=close]').click();
+  await expect(page.locator('#layer > .ov')).toHaveCount(0);
+  await open('yb30');
+  await expect(page.locator('#eb .quote blockquote')).toHaveText('Không thành công cũng thành nhân.');
+  await expect(page.locator('#eb .quote')).toContainText('còn truyền là');
+  expect(errors).toEqual([]);
+});
