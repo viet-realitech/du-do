@@ -114,12 +114,20 @@ export default defineConfig({
         clientsClaim: true,
         runtimeCaching: [
           {
-            // Narration clips and music, hashed or not: keep what was played for offline replays. Audio elements ask for
-            // byte ranges (206, never cached): the cache is filled by plain fetches (src/warm.ts) and ranges are cut from
-            // the cached file. Room for every clip (277) and track (6), with headroom for new clips.
-            urlPattern: /\.m4a$/,
+            // Narration clips (hashed, /assets/): keep what was played for offline replays. Audio elements ask for byte
+            // ranges (206, never cached): the cache is filled by plain fetches (src/warm.ts) and ranges are cut from the
+            // cached file. The cache keeps its old name so clips saved before the music moved out stay. Room for every
+            // clip with headroom (npm run voice:check fails when the clips outgrow it).
+            urlPattern: /\/assets\/[^/]+\.m4a$/,
             handler: 'CacheFirst',
-            options: { cacheName: 'voice-music', rangeRequests: true, expiration: { maxEntries: 320, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
+            options: { cacheName: 'voice-music', rangeRequests: true, expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
+          },
+          {
+            // Music (public/music/<mood>-<hash>.m4a, a new name for each new render): a cache of its own, so ~280 clips
+            // never push a track out, and an old render is dropped once newer ones fill it (voice:check counts the room).
+            urlPattern: /\/music\/[^/]+\.m4a$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'music', rangeRequests: true, expiration: { maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
           },
           {
             urlPattern: /\/assets\/be-vietnam-pro-[^/]+\.woff2?$/,
