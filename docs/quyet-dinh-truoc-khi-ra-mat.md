@@ -32,7 +32,7 @@ Tên miền .vn đăng ký qua nhà đăng ký ở Việt Nam, phải khai thôn
 
 ## 5. Người rà soát sử học và luật sư
 
-- Bảng để người rà soát điền đã sẵn ở `docs/review/` (xem `docs/review/README.md`, có đoạn giới thiệu để anh gửi đi). Phần ưu tiên khoảng một ngày làm việc. Nên tìm hai người: một ở trong nước, một ở nước ngoài hay giới nghiên cứu quốc tế.
+- Bảng để người rà soát điền đã sẵn ở `docs/review/` (xem `docs/review/README.md`, có đoạn giới thiệu để anh gửi đi). Bảng A (các câu rủi ro nhất) mất khoảng một đến hai ngày làm việc. Nên tìm hai người: một ở trong nước, một ở nước ngoài hay giới nghiên cứu quốc tế.
 - Có ghi tên người rà soát trong ứng dụng không: anh và họ thoả thuận. Ứng dụng chưa ghi "đã rà soát" cho tới khi việc ấy xong thật.
 - Một buổi tư vấn với luật sư Việt Nam: mang theo `docs/review/nhay-cam.md` (các câu nhạy cảm, nguyên văn, xếp theo đề tài) và các câu hỏi ở mục 7.
 
@@ -45,8 +45,10 @@ Danh sách đầy đủ, nguyên văn từng câu: `docs/review/nhay-cam.md` (si
 | Màu cờ VNCH mặc định | bản đồ, chú giải | `src/state.ts`, `src/ui/bits.ts` |
 | Nhãn Hoàng Sa, Trường Sa, Biển Đông, Vịnh Bắc Bộ | bản đồ chính, tấm bản đồ ở màn chào | `src/map.ts`, `src/ui/plate.ts` |
 | Góc nhìn "Sử quan VNCH & hải ngoại", xếp ngang hàng | thẻ Góc nhìn của sự kiện | khoá `vnch` trong `src/data/data.js`, `data2.js` |
+| Cách mạng tháng Tám; các vụ bắt, giết người khác chính kiến (1945–1947) | sự kiện `ng45`; nhân vật Phạm Quỳnh, Tạ Thu Thâu, Bùi Quang Chiêu, Huỳnh Phú Sổ; họ Tạ | `data.js`; `data2.js` (FIG); `src/data/surnames.ts` |
 | Cải cách ruộng đất | sự kiện `cc53`; thẻ Chơi; biến cố "Đội cải cách sắp về làng" | `data2.js`; `src/data/cards.ts`; `src/data/cards2.ts` (`x-diachu53`) |
 | Mậu Thân, thảm sát Huế | sự kiện `mt68` | `data.js`, số liệu ở `data2.js` |
+| Thảm sát Mỹ Lai | sự kiện `ml68`; thẻ Chơi "Thảm sát Mỹ Lai" | `data2.js`; `src/data/cards.ts` |
 | Học tập cải tạo | sự kiện `tn76`; "Gia đình bạn" ở điểm rẽ 6 | `data.js`; `data2.js` (CTX) |
 | Nhân Văn – Giai Phẩm | sự kiện `nv56` | `data2.js` |
 | Thuyền nhân, nạn kiều, di tản | sự kiện `tn80`, `ct78`; các lối ra đi của Trò chơi; kết cục "Bên kia đại dương" | `data.js`, `data2.js`; `cards.ts`; `src/data/endings.ts` |

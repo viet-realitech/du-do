@@ -1,7 +1,7 @@
 /* Bộ phiếu rà soát nội dung cho người rà soát sử học: npm run review:export
    Đọc nội dung ngay từ mã (src/data và các hàm sinh câu của trò chơi), ghi vào docs/review/:
    - bang-a-rui-ro-cao.csv: khoảng một trăm mấy chục dòng rủi ro nhất (số liệu, lời trích, đề tài nhạy cảm, góc nhìn
-     VNCH & hải ngoại, giả định "Nếu…" kèm %, câu mới đánh dấu cần kiểm), cho một ngày làm việc của người rà soát;
+     VNCH & hải ngoại, giả định "Nếu…" kèm %, câu mới đánh dấu cần kiểm), cho một, hai ngày làm việc của người rà soát;
    - bang-day-du.csv: mọi câu có nội dung lịch sử, chia hạng A (rủi ro cao), B (phần lịch sử còn lại), C (phần hư cấu
      của Trò chơi đặt trong bối cảnh có thật);
    - nhay-cam.md: các câu chạm đề tài nhạy cảm, xếp theo đề tài, nguyên văn, cho người rà soát và luật sư;
@@ -44,13 +44,19 @@ const rows: Row[] = [];
 const add = (r: Row) => { rows.push(r); return r; };
 
 /* ---------- đề tài nhạy cảm: theo sự kiện, theo chữ ---------- */
-interface Hot { key: string; name: string; ev: string[]; re: RegExp; core: boolean; note: string }
-/** `core`: đề tài mà mọi câu lịch sử của nó vào bảng A (danh sách của lộ trình); còn lại chỉ vào danh sách nhạy cảm. */
+interface Hot { key: string; name: string; ev: string[]; re: RegExp; core: boolean; text?: boolean; note: string }
+/** `core`: đề tài mà mọi câu lịch sử của nó vào bảng A (danh sách của lộ trình); còn lại chỉ vào danh sách nhạy cảm.
+    `text`: thêm vào bảng A cả câu lịch sử (nhân vật, họ tộc…) ở ngoài các sự kiện ấy mà chữ khớp `re`. */
 const HOT: Hot[] = [
+  { key: 'xutu45', name: 'Cách mạng tháng Tám và việc bắt, giết người khác chính kiến (1945–1947)', ev: ['ng45'], core: true, text: true,
+    re: /Việt Minh (bắt|giết|xử tử|thủ tiêu)|bị Việt Minh|thủ tiêu|loại bỏ các đảng phái|bị giết năm 194[5-7]/i,
+    note: 'Ai bị bắt, bị giết, ngày, nơi, theo nguồn nào; điều còn tranh luận (ai ra lệnh, "được cho là") ghi rõ là còn tranh luận; giọng trung tính như với các vụ giết người của mọi phía.' },
   { key: 'ccrd', name: 'Cải cách ruộng đất (1953–1956)', ev: ['cc53'], core: true, re: /cải cách ruộng đất|đội cải cách|giảm tô|thoái tô|đấu tố|địa chủ|sửa sai|quy thành phần/i,
     note: 'Số người bị xử, cách gọi "sai lầm", "sửa sai"; không quy chụp tập thể.' },
   { key: 'hue68', name: 'Mậu Thân 1968 và thảm sát Huế', ev: ['mt68'], core: true, re: /Mậu Thân|thảm sát Huế|Tết 1968/i,
     note: 'Khoảng số nạn nhân và nguồn của mỗi mức; ai chịu trách nhiệm theo các phía.' },
+  { key: 'thamsat', name: 'Thảm sát, giết hại thường dân', ev: ['ml68'], core: true, re: /thảm sát|tàn sát|giết hại|bị giết|ném bom đoàn biểu tình|Mỹ Lai|Sơn Mỹ|Ba Chúc/i,
+    note: 'Số nạn nhân (khoảng, có nguồn), ai gây ra, ai bị xét xử; mọi phía được viết cùng một mức chính xác, cùng một giọng (Xô Viết Nghệ Tĩnh, Mậu Thân ở Huế, Mỹ Lai, Ba Chúc).' },
   { key: 'caitao', name: 'Học tập cải tạo sau 1975', ev: ['tn76'], core: true, re: /học tập cải tạo|trại cải tạo|đi cải tạo|trình diện/i,
     note: 'Quy mô (số người, số năm), cách gọi; không giảm nhẹ, không cường điệu.' },
   { key: 'nhanvan', name: 'Nhân Văn – Giai Phẩm', ev: ['nv56'], core: true, re: /Nhân Văn|Giai Phẩm/i,
@@ -291,6 +297,10 @@ for (const [k, t] of Object.entries(HOOK_TEXT)) add({ id: `hook:${k}`, cls: 'fac
 // con số đếm người, của, đất (không tính ngày tháng, năm)
 const N1 = String.raw`(?<![\d.,])(?!(?:18|19|20)\d\d(?![\d.,]))\d+(?:[.,]\d+)*`;
 const NUM = new RegExp(String.raw`${N1}\s*(?:[–-]\s*${N1}\s*)?(?:%|\s(?:triệu|nghìn|vạn|người|km|tử trận|thương vong|lính|quân|chiến sĩ|thường dân|tàu|máy bay|xe tăng|tiểu đoàn|sư đoàn|trung đoàn|lượng|ha|tấn|phần trăm|nạn nhân|tù nhân|du học sinh|gia đình|hộ)(?![\p{L}]))`, 'iu');
+// số người chết, bị giết, bị bắt viết bằng chữ ("hàng trăm thường dân", "hàng nghìn người bị bắt, bị giết")
+const TOLL_N = String.raw`(?:hàng|vài|mấy)\s(?:chục\s|trăm\s)?(?:trăm|nghìn|ngàn|vạn|triệu)`;
+const TOLL_W = String.raw`(?:chết|bị giết|giết hại|thiệt mạng|hi sinh|tử trận|thương vong|thường dân|nạn nhân|bị bắt)`;
+const TOLL = new RegExp(String.raw`${TOLL_N}[^.;]{0,30}?${TOLL_W}|${TOLL_W}[^.;]{0,40}?${TOLL_N}`, 'iu');
 const voiced = voiceRows().map(r => r.text);
 const markOf = (r: Row) => MARKS.filter(m => (m.id && (m.id.endsWith('*') ? r.id.startsWith(m.id.slice(0, -1)) : r.id === m.id)) || (m.has && r.text.includes(m.has)));
 const used = new Set<Mark>();
@@ -300,10 +310,13 @@ for (const r of rows) {
   if (r.persp === 'vnch' && !topics.includes('vnch')) topics.push('vnch');
   r.topics = topics;
   const why: string[] = [];
-  if (r.cls === 'hist' && (r.kind === 'số liệu' || (!['hồ sơ nguồn', 'giả định', 'cảnh trận', 'đường đi'].includes(r.kind) && NUM.test(r.text)))) why.push('số liệu');
+  if (r.cls === 'hist' && (r.kind === 'số liệu' || (!['hồ sơ nguồn', 'giả định', 'cảnh trận', 'đường đi'].includes(r.kind) && (NUM.test(r.text) || TOLL.test(r.text))))) why.push('số liệu');
   if (r.kind === 'trích dẫn') why.push('trích dẫn');
   // nhạy cảm vào bảng A: chữ lịch sử của chính các sự kiện thuộc đề tài (các câu khác chạm đề tài: danh sách nhạy cảm)
   if (r.cls === 'hist' && r.ev && HOT.some(h => h.core && h.ev.includes(r.ev!)) && ['tóm tắt', 'diễn biến', 'góc nhìn (tóm lược)', 'trích dẫn', 'số liệu'].includes(r.kind)) why.push('nhạy cảm');
+  // đề tài theo chữ: cả câu nhân vật, họ tộc (vd. "Bị Việt Minh bắt và xử tử năm 1945")
+  const byText = r.cls !== 'play' && HOT.some(h => h.text && h.re.test(r.text));
+  if (byText) why.push('nhạy cảm');
   if (r.persp === 'vnch') why.push('góc nhìn VNCH & hải ngoại');
   if (r.id.startsWith('cf:')) why.push('giả định "Nếu…" kèm %');
   const ms = markOf(r);
@@ -311,9 +324,11 @@ for (const r of rows) {
   for (const k of topics) if (why.includes('nhạy cảm') || r.persp === 'vnch' || k === 'neu') r.check.push(`Đề tài nhạy cảm (${HOT_BY[k].name}): ${HOT_BY[k].note}`);
   r.why = [...new Set(why)];
   r.tier = r.why.length ? 'A' : r.cls === 'play' ? 'C' : 'B';
-  // ưu tiên 2: câu hư cấu của Trò chơi, cảnh trận, góc nhìn của sự kiện ngoài các đề tài nhạy cảm nhất (câu ngắn, đọc nhanh)
+  // ưu tiên 2: câu hư cấu của Trò chơi, cảnh trận, góc nhìn của sự kiện ngoài các đề tài nhạy cảm nhất (câu ngắn, đọc nhanh);
+  // nhưng câu có số liệu, góc nhìn VNCH & hải ngoại, câu mới đánh dấu cần kiểm, câu chạm đề tài theo chữ thì luôn ưu tiên 1
   const coreEv = !!r.ev && HOT.some(h => h.core && h.ev.includes(r.ev!));
-  if (r.tier === 'A') r.pri = r.cls === 'play' || ['cảnh trận', 'đường đi'].includes(r.kind) || (r.kind === 'góc nhìn (tóm lược)' && !coreEv) ? 2 : 1;
+  const must = byText || why.some(w => w === 'số liệu' || w.startsWith('góc nhìn VNCH') || w.startsWith('câu mới'));
+  if (r.tier === 'A') r.pri = !must && (r.cls === 'play' || ['cảnh trận', 'đường đi'].includes(r.kind) || (r.kind === 'góc nhìn (tóm lược)' && !coreEv)) ? 2 : 1;
   // câu thuyết minh đọc nguyên văn câu này (sửa thì phải thu lại giọng); trang sự kiện: tên sự kiện được đọc, ngày và nơi thì không
   const title = r.kind === 'tiêu đề, ngày, nơi' ? EV.find(v => v.id === r.ev)!.t : '';
   r.voiced = title ? (voiced.some(t => t.includes(`. ${title}. `)) ? 'tên sự kiện có (sửa tên thì thu lại giọng)' : '') : voiced.some(t => t.includes(r.text)) ? 'có (sửa thì phải thu lại giọng)' : '';
@@ -328,15 +343,30 @@ const SRCS = FILES.map(f => ({ f, lines: readFileSync(join(ROOT, f), 'utf8').spl
 /** Các đoạn để tìm, dài trước: cắt ở dấu câu, dấu nháy, gạch chéo ngược (chữ trong mã có thể viết \' hay \u…) và chỗ
     chữ đổi theo quê (câu dựng từ khuôn trong mã), mỗi đoạn tối đa 40 ký tự. */
 const probes = (t: string, min = 12) => t.split(/[,.;:!?()'"‘’“”\\]|‹[^›]*›|\$\{[^}]*\}/).map(x => x.trim()).filter(x => x.length >= min).sort((a, b) => b.length - a.length).map(x => x.slice(0, 40));
-/** Dòng mã của một sự kiện: dòng có mã sự kiện trong dấu nháy (bảng N, fv/fq/fn ở data2.js) và vài dòng sau `id:'…'` (data.js). */
-const evLines = (id: string) => SRCS.slice(0, 2).flatMap(s => s.lines.flatMap((l, i) => l.includes(`id:'${id}'`) ? [...Array(8).keys()].map(k => [s.f, i + k] as const) : l.includes(`'${id}'`) ? [[s.f, i] as const] : []));
+/** Dòng mã của một sự kiện, hai lớp: dòng của chính sự kiện (vài dòng sau `id:'…'` ở data.js, dòng bảng N và fv/fq/fn ở
+    data2.js), rồi các dòng khác có mã sự kiện trong dấu nháy (câu đố kết bằng mã sự kiện, mà số liệu của câu đố có thể
+    trùng bảng số liệu: chỉ tìm ở đó khi không câu nào khớp lớp đầu). */
+const evLines = (id: string): (readonly [string, number])[][] => {
+  const own: (readonly [string, number])[] = [], other: (readonly [string, number])[] = [];
+  const head = new RegExp(String.raw`^\s*(?:f[nqv]\(|\[)'${id}'`);
+  for (const s of SRCS.slice(0, 2)) s.lines.forEach((l, i) => {
+    if (l.includes(`id:'${id}'`)) own.push(...[...Array(8).keys()].map(k => [s.f, i + k] as const));
+    else if (head.test(l)) own.push([s.f, i]);
+    else if (l.includes(`'${id}'`)) other.push([s.f, i]);
+  });
+  return [own, other];
+};
+const stray: string[] = [];
 for (const r of rows) {
   const files = SRCS.filter(s => !r.file || s.f === r.file);
   // chữ của một sự kiện: tìm trước trong các dòng của chính sự kiện ấy (góc nhìn, số liệu ngắn hay lặp ở sự kiện khác)
   const near = r.id.startsWith('ev:') && r.ev ? evLines(r.ev) : [];
-  for (const p of near.length ? [...(r.needle ? probes(r.needle, 5) : []), ...probes(r.text, 5)] : []) {
-    const hit = near.find(([f, i]) => SRCS.find(s => s.f === f)!.lines[i]?.includes(p));
-    if (hit) { r.loc = `${hit[0]}:${hit[1] + 1}`; break; }
+  for (const layer of near) {
+    for (const p of [...(r.needle ? probes(r.needle, 5) : []), ...probes(r.text, 5)]) {
+      const hit = layer.find(([f, i]) => SRCS.find(s => s.f === f)!.lines[i]?.includes(p));
+      if (hit) { r.loc = `${hit[0]}:${hit[1] + 1}`; break; }
+    }
+    if (r.loc) { if (layer !== near[0]) stray.push(r.id); break; }
   }
   if (!r.loc) for (const p of [...(r.needle ? probes(r.needle) : []), ...probes(r.text)]) {
     const hit = files.flatMap(s => { const i = s.lines.findIndex(l => l.includes(p)); return i < 0 ? [] : [`${s.f}:${i + 1}`]; })[0];
@@ -344,6 +374,8 @@ for (const r of rows) {
   }
   r.loc ||= r.file || '';
 }
+// câu của sự kiện chỉ tìm thấy ở dòng của chỗ khác (vd. câu đố): người sửa theo phiếu có thể sửa nhầm chỗ
+if (stray.length) console.warn(`(${stray.length} dòng sự kiện chỉ khớp dòng mã ngoài sự kiện: ${stray.join(', ')})`);
 
 /* ---------- ghi tệp ---------- */
 const HEAD = ['Mã', 'Hạng', 'Ưu tiên', 'Vì sao vào bảng A', 'Đề tài nhạy cảm', 'Năm', 'Chỗ hiện trong ứng dụng', 'Loại', 'Nguyên văn', 'Nguồn ứng dụng đang dẫn', 'Cần kiểm',
@@ -378,13 +410,15 @@ function sensitivity(): string {
 function brief(): string {
   const nA = count('A'), why = (w: string) => rows.filter(r => r.tier === 'A' && r.why!.some(x => x.startsWith(w))).length;
   const p1 = rows.filter(r => r.pri === 1).length, p2 = rows.filter(r => r.pri === 2).length;
+  // ước chừng: khoảng 125 câu ngắn cho một ngày làm việc
+  const days = p1 <= 140 ? 'một ngày' : 'một đến hai ngày';
   return `# Phiếu rà soát nội dung Dư Đồ
 
 Thư ngắn cho người rà soát sử học. Sinh tự động bằng \`npm run review:export\`; chạy lại sau mỗi lần sửa nội dung (các con số dưới đây theo bản mã lúc chạy).
 
 ## Đoạn giới thiệu để gửi
 
-> Chào anh/chị, tôi đang làm **Dư Đồ**, một ứng dụng miễn phí trên điện thoại và máy tính bảng kể lịch sử Việt Nam từ năm 1858 tới nay trên một tấm bản đồ, cho người lớn yêu sử và bà con người Việt ở nước ngoài. Phần chữ được soạn với sự trợ giúp của công cụ AI và mới chỉ đối chiếu với Wikipedia, chưa qua tay nhà sử học nào. Tôi cần một người có chuyên môn đọc khoảng ${p1} câu rủi ro nhất (số liệu thương vong, lời trích, các đề tài nhạy cảm như cải cách ruộng đất, Mậu Thân, học tập cải tạo, thuyền nhân, chiến tranh 1979, biển đảo, góc nhìn VNCH và hải ngoại, các giả định "Nếu…"), đánh dấu Đúng / Sửa / Bỏ / Thiếu nguồn / Còn tranh luận và ghi nguồn đối chiếu; nếu còn thời gian thì thêm ${p2} câu ngắn. Ước chừng một ngày làm việc; tôi sẽ trả thù lao, xin anh/chị cho biết mức phí. Bảng tính kèm theo đã có sẵn cột để điền.
+> Chào anh/chị, tôi đang làm **Dư Đồ**, một ứng dụng miễn phí trên điện thoại và máy tính bảng kể lịch sử Việt Nam từ năm 1858 tới nay trên một tấm bản đồ, cho người lớn yêu sử và bà con người Việt ở nước ngoài. Phần chữ được soạn với sự trợ giúp của công cụ AI và mới chỉ đối chiếu với Wikipedia, chưa qua tay nhà sử học nào. Tôi cần một người có chuyên môn đọc khoảng ${p1} câu rủi ro nhất (số liệu thương vong, lời trích, các đề tài nhạy cảm như các vụ bắt, giết người khác chính kiến năm 1945–1947, cải cách ruộng đất, Mậu Thân và thảm sát Huế, Mỹ Lai, học tập cải tạo, thuyền nhân, chiến tranh 1979, biển đảo, góc nhìn VNCH và hải ngoại, các giả định "Nếu…"), đánh dấu Đúng / Sửa / Bỏ / Thiếu nguồn / Còn tranh luận và ghi nguồn đối chiếu${p2 ? `; nếu còn thời gian thì thêm ${p2} câu ngắn` : ''}. Ước chừng ${days} làm việc; tôi sẽ trả thù lao, xin anh/chị cho biết mức phí. Bảng tính kèm theo đã có sẵn cột để điền.
 
 ## Ứng dụng là gì
 
@@ -393,9 +427,9 @@ Thư ngắn cho người rà soát sử học. Sinh tự động bằng \`npm ru
 - Chế độ Chơi: một dòng họ hư cấu qua sáu thế hệ, với các thẻ lựa chọn đặt trong bối cảnh có thật. Phần hư cấu không cần kiểm văn chương, chỉ cần kiểm chi tiết lịch sử trong đó.
 - Ứng dụng chạy trên trình duyệt, không cần cài đặt (người gửi phiếu kèm đường dẫn). Ứng dụng tự nhận là đứng ngang hàng giữa các phía. Người rà soát giúp giữ đúng điều ấy: chính xác, cân bằng, không bịa lời trích của người thật, số người chết ghi bằng khoảng có nguồn.
 
-## Việc cần làm (khoảng một ngày)
+## Việc cần làm (khoảng ${days})
 
-1. Mở \`bang-a-rui-ro-cao.csv\` (${nA} dòng, xếp theo năm). Làm trước các dòng có cột "Ưu tiên" là 1 (${p1} dòng, khoảng một ngày); các dòng ưu tiên 2 (${p2} dòng: góc nhìn của những sự kiện ít nhạy cảm hơn, câu hư cấu của Trò chơi có chi tiết lịch sử, cảnh trận) làm nếu còn thời gian. Trong bảng có ${why('số liệu')} dòng có số liệu, ${why('trích dẫn')} lời trích, ${why('nhạy cảm')} dòng thuộc đề tài nhạy cảm, ${why('góc nhìn VNCH')} góc nhìn VNCH & hải ngoại, ${why('giả định')} giả định "Nếu…", ${why('câu mới')} câu mới viết gần đây được đánh dấu cần kiểm (cột "Cần kiểm" ghi điều cụ thể cần đối chiếu). Một dòng có thể thuộc nhiều nhóm.
+1. Mở \`bang-a-rui-ro-cao.csv\` (${nA} dòng, xếp theo năm). ${p2 ? `Làm trước các dòng có cột "Ưu tiên" là 1 (${p1} dòng, khoảng ${days}); các dòng ưu tiên 2 (${p2} dòng: góc nhìn của những sự kiện ít nhạy cảm hơn, câu hư cấu của Trò chơi có chi tiết lịch sử, cảnh trận) làm nếu còn thời gian.` : `Mọi dòng trong bảng đều cần xem (cột "Ưu tiên" đều là 1).`} Trong bảng có ${why('số liệu')} dòng có số liệu, ${why('trích dẫn')} lời trích, ${why('nhạy cảm')} dòng thuộc đề tài nhạy cảm, ${why('góc nhìn VNCH')} góc nhìn VNCH & hải ngoại, ${why('giả định')} giả định "Nếu…", ${why('câu mới')} câu mới viết gần đây được đánh dấu cần kiểm (cột "Cần kiểm" ghi điều cụ thể cần đối chiếu). Một dòng có thể thuộc nhiều nhóm.
 2. Với mỗi dòng, điền:
    - **Ý kiến**: Đúng · Sửa · Bỏ · Thiếu nguồn · Còn tranh luận (khi giới sử học còn chia rẽ: ghi các cách đọc, ứng dụng sẽ nêu cả hai thay vì chọn một);
    - **Đề xuất sửa**: nguyên văn câu mới, nếu chọn Sửa;
@@ -408,7 +442,7 @@ Góc nhìn là lời tóm lược, không phải trích dẫn: chỉ cần xét 
 
 ## Các tệp
 
-- \`bang-a-rui-ro-cao.csv\`: ${nA} dòng rủi ro cao (${p1} dòng ưu tiên 1, ${p2} dòng ưu tiên 2).
+- \`bang-a-rui-ro-cao.csv\`: ${nA} dòng rủi ro cao${p2 ? ` (${p1} dòng ưu tiên 1, ${p2} dòng ưu tiên 2)` : ''}.
 - \`bang-day-du.csv\`: mọi câu có nội dung lịch sử, ${rows.length} dòng: hạng A ${nA}, hạng B ${count('B')} (phần lịch sử còn lại: sự kiện, điểm rẽ, nhân vật, câu đố, hồ sơ nguồn, cảnh trận, dữ kiện về các họ), hạng C ${count('C')} (phần hư cấu của Trò chơi).
 - \`nhay-cam.md\`: các câu chạm đề tài nhạy cảm, xếp theo đề tài, nguyên văn; dành cả cho người rà soát lẫn luật sư.
 

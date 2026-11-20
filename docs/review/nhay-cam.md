@@ -8,6 +8,34 @@ Sinh tự động bằng `npm run review:export` từ mã nguồn (chạy lại 
 - Nhãn chủ quyền trên bản đồ chính: Biển Đông, Vịnh Bắc Bộ, Q.đ. Hoàng Sa, Q.đ. Trường Sa (src/map.ts:174); trên tấm bản đồ nhỏ ở màn chào (src/ui/plate.ts:23).
 - Đường biên hiện nay lấy từ Natural Earth 1:50m (src/data/region-50m.json); không đa giác quốc gia nào của Natural Earth phủ lên Hoàng Sa hay Trường Sa.
 
+## Cách mạng tháng Tám và việc bắt, giết người khác chính kiến (1945–1947) · 21 câu
+
+Cần để ý: Ai bị bắt, bị giết, ngày, nơi, theo nguồn nào; điều còn tranh luận (ai ra lệnh, "được cho là") ghi rõ là còn tranh luận; giọng trung tính như với các vụ giết người của mọi phía.
+
+| Mã | Hạng | Chỗ hiện | Nguyên văn |
+|---|---|---|---|
+| `ev:ng45:t` | B | Chương 4 · trang sự kiện · tiêu đề, ngày, nơi chốn | Đảo chính Nhật, nạn đói, Cách mạng tháng Tám · 9.3 – 2.9.1945 · Hà Nội · Huế |
+| `ev:ng45:s` | A | Chương 4 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Nhật lật Pháp, dựng Đế quốc Việt Nam (Trần Trọng Kim). Nạn đói làm khoảng 1 – 2 triệu người chết, tuỳ nguồn. Tháng 8, Việt Minh giành chính quyền. |
+| `ev:ng45:x` | A | Chương 4 · trang sự kiện › Diễn biến · đoạn thêm | Ngày 30.8 Bảo Đại thoái vị. Ngày 2.9, tại Ba Đình, Hồ Chí Minh đọc Tuyên ngôn Độc lập, khai sinh VN Dân chủ Cộng hoà. Ngày 23.9 Pháp nổ súng ở Sài Gòn. |
+| `ev:ng45:v:vn` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Cách mạng giành chính quyền về tay nhân dân, mở ra kỷ nguyên độc lập. |
+| `ev:ng45:v:vnch` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Việt Minh nắm khoảng trống quyền lực, sau đó loại bỏ các đảng phái quốc gia. |
+| `ev:ng45:v:fr` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử liệu Pháp | Không công nhận, quyết tâm tái lập chủ quyền. |
+| `ev:ng45:v:us` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử liệu Hoa Kỳ | Tình báo OSS có tiếp xúc với Việt Minh; Mỹ chưa công nhận nhà nước mới. |
+| `ev:ng45:v:jp` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử liệu Nhật Bản | Đảo chính 9.3 nhằm loại Pháp trước khi Đồng minh đổ bộ; trao ‘độc lập’ danh nghĩa cho Bảo Đại. |
+| `ev:ng45:qt` | A | Chương 4 · trang sự kiện › Diễn biến · khối trích dẫn | “Tất cả mọi người đều sinh ra có quyền bình đẳng. Tạo hoá cho họ những quyền không ai có thể xâm phạm được…” — Tuyên ngôn Độc lập, 2.9.1945 |
+| `ev:ng45:n:0` | A | Chương 4 · trang sự kiện › Diễn biến · bảng số liệu | Nạn đói 1944–45: ≈ 1–2 triệu người chết (tuỳ nguồn) |
+| `fig:pq` | A | Nhân vật · Phạm Quỳnh | Phạm Quỳnh (1892–1945), Nhà báo, Thượng thư. Chủ bút Nam Phong tạp chí, chủ trương quân chủ lập hiến. Bị Việt Minh bắt và xử tử năm 1945. |
+| `fig:ttt2` | A | Nhân vật · Tạ Thu Thâu | Tạ Thu Thâu (1906–1945), Lãnh tụ Đệ Tứ. Chủ trương báo La Lutte (1933), trúng cử Hội đồng Thành phố Sài Gòn (1937) và Hội đồng Quản hạt Nam Kỳ (1939), đày Côn Đảo đến năm 1944. Bị Việt Minh bắt và xử tử ở Quảng Ngãi tháng 9.1945. |
+| `fig:bqc` | A | Nhân vật · Bùi Quang Chiêu | Bùi Quang Chiêu (1873–1945), Lãnh tụ Đảng Lập hiến. Kỹ sư canh nông, chủ báo La Tribune Indochinoise, sáng lập Đảng Lập hiến Đông Dương, Phó chủ tịch Hội đồng Quản hạt Nam Kỳ từ năm 1926. Bị Việt Minh bắt và xử tử tại Chợ Đệm ngày 29.9.1945. |
+| `fig:hps` | A | Nhân vật · Huỳnh Phú Sổ | Huỳnh Phú Sổ (1920–1947), Người sáng lập Hoà Hảo. Khai đạo Phật giáo Hoà Hảo ở Châu Đốc năm 1939, lập Đảng Dân chủ Xã hội năm 1946. Mất tích ngày 16.4.1947 khi đi hoà giải xung đột Việt Minh – Hoà Hảo; được cho là bị Việt Minh giết. |
+| `quiz:e4:0` | B | Câu đố chương 4 (sau sự kiện ng45) | Tuyên ngôn Độc lập được đọc vào ngày nào? Đáp án: 2.9.1945. Tại quảng trường Ba Đình, Hà Nội. |
+| `move:ng45:0` | B | Bản đồ "Đảo chính Nhật, nạn đói, Cách mạng tháng Tám" · đường 1 (Việt Minh) | Giải phóng quân từ Tân Trào tiến về thị xã Thái Nguyên (16.8) |
+| `move:ng45:1` | B | Bản đồ "Đảo chính Nhật, nạn đói, Cách mạng tháng Tám" · đường 2 (Việt Minh) | Quảng Nam cùng Bắc Giang, Hải Dương, Hà Tĩnh giành chính quyền sớm nhất (18.8) |
+| `move:ng45:2` | B | Bản đồ "Đảo chính Nhật, nạn đói, Cách mạng tháng Tám" · đường 3 (Việt Minh) | Nhân dân nội, ngoại thành mít tinh ở Nhà hát Lớn, chiếm Phủ Khâm sai (19.8) |
+| `move:ng45:3` | B | Bản đồ "Đảo chính Nhật, nạn đói, Cách mạng tháng Tám" · đường 4 (Việt Minh) | Nhân dân Huế và các huyện lân cận giành chính quyền; 30.8 Bảo Đại thoái vị (23.8) |
+| `move:ng45:4` | B | Bản đồ "Đảo chính Nhật, nạn đói, Cách mạng tháng Tám" · đường 5 (Việt Minh) | Quần chúng Sài Gòn – Chợ Lớn và các tỉnh lân cận giành chính quyền (25.8) |
+| `lore:ta` | A | Trò chơi · gia phả mở đầu, họ Tạ | Họ Tạ ít người nhưng có mặt từ Bắc vào Nam. Thế kỷ XX, Tạ Thu Thâu (Lấp Vò, Long Xuyên cũ), lãnh tụ nhóm Đệ Tứ ở Sài Gòn bị giết năm 1945, và Tạ Quang Bửu (Nghệ An), bộ trưởng của VNDCCH, đi hai ngả rất khác nhau. |
+
 ## Cải cách ruộng đất (1953–1956) · 21 câu
 
 Cần để ý: Số người bị xử, cách gọi "sai lầm", "sửa sai"; không quy chụp tập thể.
@@ -57,6 +85,29 @@ Cần để ý: Khoảng số nạn nhân và nguồn của mỗi mức; ai ch�
 | `scene:mt68:2` | B | Cảnh trận "Tổng tấn công Tết Mậu Thân" · mũi tên 3 (Quân Giải phóng) | Quân Giải phóng đánh sân bay Tân Sơn Nhứt |
 | `scene:mt68:3` | B | Cảnh trận "Tổng tấn công Tết Mậu Thân" · mũi tên 4 (Quân Giải phóng) | Tiến vào Chợ Lớn, trường đua Phú Thọ |
 | `card:mt68{regions=B+T1}:0` | C | Trò chơi · thẻ "Tổng tấn công Tết Mậu Thân" khi nhà đang ở vùng B, T1 · lựa chọn 1 | Nghe tin Tết Mậu Thân qua đài: Đài Tiếng nói Việt Nam đọc tin chiến sự suốt những ngày Tết. → Cả xóm tụ quanh chiếc loa. Tin vui, tin dữ đến cùng một lúc. |
+
+## Thảm sát, giết hại thường dân · 16 câu
+
+Cần để ý: Số nạn nhân (khoảng, có nguồn), ai gây ra, ai bị xét xử; mọi phía được viết cùng một mức chính xác, cùng một giọng (Xô Viết Nghệ Tĩnh, Mậu Thân ở Huế, Mỹ Lai, Ba Chúc).
+
+| Mã | Hạng | Chỗ hiện | Nguyên văn |
+|---|---|---|---|
+| `ev:xv30:x` | A | Chương 3 · trang sự kiện › Diễn biến · đoạn thêm | Pháp đàn áp bằng máy bay và quân đội; hàng nghìn người bị bắt, bị giết. |
+| `ev:mt68:x` | A | Chương 5 · trang sự kiện › Diễn biến · đoạn thêm | Tổn thất quân sự rất lớn cho phía tấn công; nhiều dân thường ở Huế bị giết hại. Dư luận Mỹ quay lưng với chiến tranh. |
+| `ev:mt68:v:vnch` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Thắng lợi quân sự của QLVNCH; tưởng niệm thảm sát Huế. |
+| `ev:mt68:n:0` | A | Chương 5 · trang sự kiện › Diễn biến · bảng số liệu | Thảm sát Huế: ≈ 2.800 – 6.000 thường dân (tuỳ nguồn) |
+| `ev:ml68:t` | B | Chương 5 · trang sự kiện · tiêu đề, ngày, nơi chốn | Thảm sát Mỹ Lai · 16.3.1968 · Sơn Mỹ, Quảng Ngãi |
+| `ev:ml68:s` | A | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Lính Mỹ thuộc đại đội Charlie giết hại hàng trăm thường dân, phần lớn là phụ nữ, trẻ em, người già. |
+| `ev:ml68:x` | A | Chương 5 · trang sự kiện › Diễn biến · đoạn thêm | Vụ việc bị che giấu đến tháng 11.1969. Chỉ một sĩ quan bị kết án. |
+| `ev:ml68:v:vn` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | Tội ác chiến tranh điển hình. |
+| `ev:ml68:v:us` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử liệu Hoa Kỳ | Gây chấn động, thúc đẩy phong trào phản chiến. |
+| `ev:ml68:v:intl` | A | Chương 5 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Con số nạn nhân được ghi nhận là 504 người (theo đài tưởng niệm Sơn Mỹ). |
+| `move:xv30:0` | B | Bản đồ "Xô viết Nghệ Tĩnh" · đường 1 (Nghĩa quân) | Nông dân Hưng Nguyên kéo về phủ lỵ rồi tiến về Vinh; máy bay Pháp ném bom đoàn biểu tình (12.9.1930) |
+| `card:ml68:0` | C | Trò chơi · thẻ "Thảm sát Mỹ Lai" · lựa chọn 1 | Làm chứng về Sơn Mỹ: Kể cho nhà báo nước ngoài. → Lời kể được in ở Mỹ. Ở quê, không ai nhắc nữa. |
+| `card:ml68{homes=hue+qn;regions=T2;scope=}:0` | C | Trò chơi · thẻ "Thảm sát Mỹ Lai" khi nhà đang ở vùng T2; quê hue, qn · lựa chọn 1 | Nghe người tị nạn kể chuyện Sơn Mỹ: Người từ Quảng Ngãi chạy ra kể những gì đã thấy. → Câu chuyện chỉ được kể trong nhà. Hơn một năm rưỡi sau, báo chí Mỹ mới đưa tin. |
+| `card:cp79:1` | C | Trò chơi · thẻ "Chiến tranh biên giới Tây Nam" · lựa chọn 2 | Tản cư khỏi biên giới: Khmer Đỏ tàn sát Ba Chúc. → Về lại khi quân Việt Nam đã sang Phnom Penh. |
+| `lore:tran` | B | Trò chơi · gia phả mở đầu, họ Trần | Ước tính khoảng 11% dân số (thống kê 2005), đứng thứ hai. Nhà Trần (1225–1400) ba lần đẩy lui quân Nguyên Mông; khi Hồ Quý Ly đoạt ngôi, tôn thất Trần bị truy sát, riêng vụ mưu sự năm 1399 hơn 370 người bị giết. |
+| `lore:ta` | A | Trò chơi · gia phả mở đầu, họ Tạ | Họ Tạ ít người nhưng có mặt từ Bắc vào Nam. Thế kỷ XX, Tạ Thu Thâu (Lấp Vò, Long Xuyên cũ), lãnh tụ nhóm Đệ Tứ ở Sài Gòn bị giết năm 1945, và Tạ Quang Bửu (Nghệ An), bộ trưởng của VNDCCH, đi hai ngả rất khác nhau. |
 
 ## Học tập cải tạo sau 1975 · 10 câu
 
@@ -212,7 +263,7 @@ Cần để ý: Tên gọi, ngày, số người chết; lập trường chủ q
 
 | Mã | Hạng | Chỗ hiện | Nguyên văn |
 |---|---|---|---|
-| `ev:ng45:v:fr` | B | Chương 4 · trang sự kiện › Góc nhìn · Sử liệu Pháp | Không công nhận, quyết tâm tái lập chủ quyền. |
+| `ev:ng45:v:fr` | A | Chương 4 · trang sự kiện › Góc nhìn · Sử liệu Pháp | Không công nhận, quyết tâm tái lập chủ quyền. |
 | `ev:vb64:t` | B | Chương 5 · trang sự kiện · tiêu đề, ngày, nơi chốn | Sự kiện Vịnh Bắc Bộ · 2–4.8.1964 · Vịnh Bắc Bộ |
 | `ev:vb64:x` | B | Chương 5 · trang sự kiện › Diễn biến · đoạn thêm | Quốc hội Mỹ thông qua Nghị quyết Vịnh Bắc Bộ. Tài liệu giải mật năm 2005 cho thấy vụ thứ hai gần như chắc chắn đã không xảy ra. |
 | `ev:dn65:s` | B | Chương 5 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Sau sự kiện Vịnh Bắc Bộ (1964), Mỹ đưa quân chiến đấu vào và ném bom miền Bắc. |
@@ -397,7 +448,7 @@ Cần để ý: Đúng sử liệu, giọng trung tính; các chi tiết còn tr
 | `ev:cs30:v:vnch` | A | Chương 3 · trang sự kiện › Góc nhìn · Sử quan VNCH & hải ngoại | Một tổ chức theo Quốc tế Cộng sản, đặt mục tiêu giai cấp lên trên dân tộc. |
 | `ev:cs30:v:intl` | B | Chương 3 · trang sự kiện › Góc nhìn · Sử gia quốc tế | Tổ chức có kỷ luật nhất trong các phong trào thời đó. |
 | `ev:vm41:s` | B | Chương 3 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Nguyễn Ái Quốc về nước, lập Việt Nam Độc lập Đồng minh hội, đặt độc lập dân tộc lên hàng đầu. |
-| `ev:ng45:x` | B | Chương 4 · trang sự kiện › Diễn biến · đoạn thêm | Ngày 30.8 Bảo Đại thoái vị. Ngày 2.9, tại Ba Đình, Hồ Chí Minh đọc Tuyên ngôn Độc lập, khai sinh VN Dân chủ Cộng hoà. Ngày 23.9 Pháp nổ súng ở Sài Gòn. |
+| `ev:ng45:x` | A | Chương 4 · trang sự kiện › Diễn biến · đoạn thêm | Ngày 30.8 Bảo Đại thoái vị. Ngày 2.9, tại Ba Đình, Hồ Chí Minh đọc Tuyên ngôn Độc lập, khai sinh VN Dân chủ Cộng hoà. Ngày 23.9 Pháp nổ súng ở Sài Gòn. |
 | `ev:tu46:s` | B | Chương 4 · trang sự kiện › Diễn biến · câu đầu (cũng hiện ở thẻ dưới bản đồ, trong tour) | Hội nghị Fontainebleau không đạt kết quả. Hồ Chí Minh ký Tạm ước, nhượng bộ một số quyền lợi kinh tế, văn hoá. |
 | `ev:cc53:x` | A | Chương 5 · trang sự kiện › Diễn biến · đoạn thêm | Năm 1956, Đảng Lao động Việt Nam thừa nhận sai lầm, tiến hành sửa sai. Số người bị xử tử đến nay vẫn còn tranh luận. |
 | `ev:ts59:v:vn` | B | Chương 5 · trang sự kiện › Góc nhìn · Sử học chính thống Việt Nam | ‘Đường mòn Hồ Chí Minh’, con đường huyền thoại. |
@@ -526,7 +577,7 @@ Cần để ý: Cách tả xung đột tôn giáo, công bằng với các phía
 | `fig:ntt` | B | Nhân vật · Nguyễn Trường Tộ | Nguyễn Trường Tộ (1830–1871), Nhà cải cách. Người Công giáo Nghệ An, từng sang Pháp và Ý. Dâng nhiều điều trần lên vua Tự Đức về giáo dục, kinh tế, quốc phòng. |
 | `fig:tqd` | B | Nhân vật · Thích Quảng Đức | Thích Quảng Đức (1897–1963), Hoà thượng. Tự thiêu ngày 11.6.1963 tại Sài Gòn để phản đối chính sách tôn giáo của chính quyền Ngô Đình Diệm. |
 | `fig:tvk` | B | Nhân vật · Trương Vĩnh Ký | Trương Vĩnh Ký (1837–1898), Học giả, nhà báo. Người Công giáo, thông thạo nhiều ngôn ngữ. Thông ngôn cho Pháp từ năm 1860, đứng đầu Gia Định báo từ năm 1869; năm 1886 ra Huế làm việc ở Cơ Mật viện theo đề nghị của Paul Bert. |
-| `fig:hps` | B | Nhân vật · Huỳnh Phú Sổ | Huỳnh Phú Sổ (1920–1947), Người sáng lập Hoà Hảo. Khai đạo Phật giáo Hoà Hảo ở Châu Đốc năm 1939, lập Đảng Dân chủ Xã hội năm 1946. Mất tích ngày 16.4.1947 khi đi hoà giải xung đột Việt Minh – Hoà Hảo; được cho là bị Việt Minh giết. |
+| `fig:hps` | A | Nhân vật · Huỳnh Phú Sổ | Huỳnh Phú Sổ (1920–1947), Người sáng lập Hoà Hảo. Khai đạo Phật giáo Hoà Hảo ở Châu Đốc năm 1939, lập Đảng Dân chủ Xã hội năm 1946. Mất tích ngày 16.4.1947 khi đi hoà giải xung đột Việt Minh – Hoà Hảo; được cho là bị Việt Minh giết. |
 | `fig:ttq` | B | Nhân vật · Thích Trí Quang | Thích Trí Quang (1923–2019), Hoà thượng. Lãnh đạo phong trào Phật giáo năm 1963 ở Huế và Sài Gòn, rồi biến động miền Trung năm 1966. Sau đó bị quản thúc, lui về dịch kinh; mất tại chùa Từ Đàm, Huế, năm 2019. |
 | `born:tqd` | B | Nhân vật · Thích Quảng Đức · dòng phụ dưới tên | Thích Quảng Đức: khai sinh Lâm Văn Tuất |
 | `quiz:e5:0` | A | Câu đố chương 5 (sau sự kiện dc54) | Cuộc di cư 1954 đưa khoảng bao nhiêu người từ Bắc vào Nam? Đáp án: 800.000 – 1 triệu. Phần lớn là giáo dân; chiều ngược lại, khoảng 80.000 – 130.000 người tập kết ra Bắc. |
