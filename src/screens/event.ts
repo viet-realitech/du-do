@@ -13,7 +13,7 @@ import { evKey, evSpeechFull } from '../speech';
 import { stopTour, pauseTour, resumeTour } from '../tour';
 import { hidePop } from '../map';
 import { renderMain } from '../view';
-import { wikiFor, cachedWiki, probe, mediaCaption, commonsPage, type WikiInfo } from '../wiki';
+import { wikiFor, cachedWiki, wikiFailed, markBad, onOnline, probe, mediaCaption, commonsPage, type WikiInfo } from '../wiki';
 import { openMedia } from './lightbox';
 import { openSrc } from './sources';
 import { canReplay, closeReplay } from '../replay';
@@ -127,10 +127,10 @@ function pageFocus(who: Element | null, ret?: string): void {
 /** Header image: first media item that actually loads; otherwise keep the placeholder. */
 async function loadHero(v: HistEvent): Promise<void> {
   const w = await wikiFor(v);
-  const imgs = w ? w.media.filter(m => m.type === 'image') : [];
+  const imgs = w ? w.media.filter(m => m.type === 'image' && !m.bad) : [];
   for (const m of imgs) {
     if (!document.getElementById('ev-' + v.id)) return;
-    if (!(await probe(m.src, 60))) { m.bad = true; continue; }
+    if (!(await probe(m.src, 60))) { markBad(m); continue; }
     const sl = document.getElementById('ev-' + v.id);
     if (!sl) return;
     const tall = await aspect(m.src);
@@ -146,9 +146,20 @@ async function loadHero(v: HistEvent): Promise<void> {
   }
   const sl = document.getElementById('ev-' + v.id);
   sl?.removeAttribute('busy');
-  if (sl && !sl.getAttribute('src')) sl.setAttribute('placeholder', 'Ảnh tư liệu chưa có');
+  // không có ảnh: bài không có ảnh nào, hay ảnh / bài tải hỏng vì mạng (lần mở sau, hay khi có mạng lại, thử lại)
+  if (sl && !sl.getAttribute('src')) sl.setAttribute('placeholder', wikiFailed(v.id) || w?.media.some(m => m.type === 'image' && m.bad) ? 'Chưa tải được ảnh · thử lại sau' : 'Ảnh tư liệu chưa có');
   if (w && w.media.length) fillStrip(v, w);
 }
+
+/** Máy có mạng trở lại: trang sự kiện đang mở mà còn thiếu ảnh (lần tải trước hỏng) tải lại ngay, không chờ mở lại trang. */
+onOnline(() => {
+  const sl = layer.querySelector<HTMLElement>(':scope > .ov.evp image-slot[id^="ev-"]');
+  const v = sl ? allEv().find(x => 'ev-' + x.id === sl.id) : undefined;
+  if (!sl || !v) return;
+  if (!sl.getAttribute('src')) { sl.setAttribute('busy', ''); sl.setAttribute('placeholder', 'Đang tìm ảnh tư liệu…'); void loadHero(v); }
+  else if (!document.getElementById('mstrip')?.dataset.f) void wikiFor(v).then(w => { if (w && w.media.length) fillStrip(v, w); });
+  if (layer.querySelector('#et button[data-k="m"].on')) void mediaTab(v);
+});
 
 /** A failed thumbnail becomes a hatched "ẢNH TƯ LIỆU" tile and is dropped from the viewer. */
 function wireTiles(root: HTMLElement, v: HistEvent, w: WikiInfo): void {
@@ -161,7 +172,7 @@ function wireTiles(root: HTMLElement, v: HistEvent, w: WikiInfo): void {
       const b = img.parentElement;
       img.remove();
       const m = w.media[+img.dataset.i!];
-      if (m) m.bad = true;
+      if (m) markBad(m);
       if (b) { b.classList.add('ph'); delete b.dataset.a; }
     }, { once: true });
   });
@@ -186,8 +197,8 @@ function fillStrip(v: HistEvent, w: WikiInfo): void {
 
 const ascii = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
 
-async function mediaTab(v: HistEvent): Promise<void> {
-  const w = await wikiFor(v);
+async function mediaTab(v: HistEvent, again = false): Promise<void> {
+  const w = await wikiFor(v, again);
   const eb = $('#eb');
   if (!eb || !layer.querySelector('#et button[data-k="m"].on')) return;
   const q = (w && w.en ? w.en.replace(/\s*\(.*?\)/g, '') : ascii(v.t)) + (w && w.en ? '' : ' Vietnam');
@@ -199,7 +210,9 @@ async function mediaTab(v: HistEvent): Promise<void> {
   const good = w ? w.media.map((m, i) => [m, i] as const).filter(([m]) => !m.bad) : [];
   eb.innerHTML = (w
     ? `<div class="pv"><div class="row sb"><span class="mono muted">Wikipedia tiếng Việt</span><a href="${esc(w.url)}" target="_blank" rel="noopener" class="mono">Đọc bài ↗</a></div><h3 style="margin-top:6px">${esc(w.title)}</h3>${w.ext ? `<p class="clamp4" style="font-size:15.5px;margin-top:6px;line-height:1.35">${esc(w.ext)}</p>` : ''}</div>`
-    : '<p class="muted">Chưa tìm thấy bài Wikipedia phù hợp.</p>') +
+    : wikiFailed(v.id)
+      ? `<div class="pv"><p style="font-size:16px">Chưa tải được bài Wikipedia và ảnh tư liệu. Có thể máy đang mất mạng hay mạng chập chờn: thử lại sau ít phút.</p><button class="chip" style="margin-top:10px" data-a="wretry" data-id="${v.id}">${icon('again', 14)}Thử lại</button></div>`
+      : '<p class="muted">Chưa tìm thấy bài Wikipedia phù hợp.</p>') +
     (w && good.length ? `<div class="mono muted" style="margin:18px 0 8px">Ảnh & video · ${good.length} tệp</div><div class="mgrid" id="mgrid">${good.map(([, i]) => tile(v, w, i)).join('')}</div>` : '') +
     `<div class="mono muted" style="margin:20px 0 4px">Phim tư liệu · tìm "${esc(q)}"</div>${films.map(([n, d, u]) => `<a class="src" href="${u}" target="_blank" rel="noopener"><div class="tt"><h3>${n}</h3><span class="mono" style="color:var(--acc)">Mở ↗</span></div><div class="muted" style="font-size:14.5px;margin-top:2px">${d}</div></a>`).join('')}
     <p class="muted" style="font-size:13px;margin-top:12px">Ảnh và video thuộc Wikimedia Commons, giấy phép tự do theo từng tệp. Phim từ các kho bên ngoài có điều khoản sử dụng riêng.</p>`;
@@ -220,6 +233,16 @@ function aspect(src: string): Promise<boolean> {
 }
 
 on('listen', el => listen(el.dataset.id!, el));
+// "Ảnh, phim" sau một lần tải hỏng: người chơi bấm Thử lại thì tải lại ngay (cả ảnh đầu trang nếu còn trống)
+on('wretry', el => {
+  const v = allEv().find(x => x.id === el.dataset.id);
+  if (!v) return;
+  el.setAttribute('disabled', '');
+  void mediaTab(v, true).then(() => {
+    const sl = document.getElementById('ev-' + v.id);
+    if (sl && !sl.getAttribute('src')) { sl.setAttribute('busy', ''); sl.setAttribute('placeholder', 'Đang tìm ảnh tư liệu…'); void loadHero(v); }
+  });
+});
 on('media', el => openMedia(el.dataset.id!, +el.dataset.i!));
 on('mtab', () => layer.querySelector<HTMLElement>('#et button[data-k="m"]')?.click());
 on('src', el => openSrc(el.dataset.id!));

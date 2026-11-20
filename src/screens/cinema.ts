@@ -3,7 +3,7 @@ import { S, optOf, familyName, archetype, nameChain } from '../state';
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
 import { isPlay, rank, endingNow, bigChoices, factsFromState } from '../play';
 import { rarityLine, chronLine } from '../data/endings';
-import { wikiFor } from '../wiki';
+import { wikiFor, expired } from '../wiki';
 import { esc, app } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { watch } from '../ui/quality';
@@ -79,10 +79,20 @@ async function load(e: Era): Promise<Pic | null> {
 const cache = new Map<string, Promise<Pic | null>>();
 /** Kết quả đã có (kể cả không có ảnh): màn mở chương dựng khung ngay, không phải chờ. */
 const got = new Map<string, Pic | null>();
-/** Tải sẵn ảnh tư liệu của chương (một lần; gọi trước khi cần: lúc tour chương trước chạy, lúc mở màn kết). */
+/** Lúc một chương tải không ra ảnh (mạng chập chờn, hay bài không có ảnh): hết hạn (wiki.ts expired: ~45 s, hay máy có mạng
+    trở lại) thì lần sau tải lại, không để màn mở chương thiếu ảnh cả phiên. Bài thật sự không có ảnh thì wiki.ts đã nhớ,
+    tải lại không tốn mạng. */
+const missAt = new Map<string, number>();
+/** Bỏ kết quả "không có ảnh" đã hết hạn của chương `id`. */
+function fresh(id: string): void {
+  const t = missAt.get(id);
+  if (t !== undefined && expired(t)) { cache.delete(id); got.delete(id); missAt.delete(id); }
+}
+/** Tải sẵn ảnh tư liệu của chương (gọi trước khi cần: lúc tour chương trước chạy, lúc mở màn kết). */
 export function preloadEra(e: Era | undefined): Promise<Pic | null> {
   if (!e) return Promise.resolve(null);
-  if (!cache.has(e.id)) cache.set(e.id, load(e).catch(() => null).then(p => { got.set(e.id, p); return p; }));
+  fresh(e.id);
+  if (!cache.has(e.id)) cache.set(e.id, load(e).catch(() => null).then(p => { got.set(e.id, p); if (!p) missAt.set(e.id, Date.now()); return p; }));
   return cache.get(e.id)!;
 }
 /** Ảnh tư liệu của chương (ảnh đầu bài Wikipedia của sự kiện đại diện), hoặc null nếu chưa có trong `ms`. */
@@ -130,6 +140,7 @@ export function opener(e: Era, done: (played: boolean) => void): void {
   box.querySelector<HTMLElement>('.skip')!.focus({ preventScroll: true });
   // ảnh đã tải sẵn (tour chương trước đã tải): dựng khung ngay; chưa xong thì chờ tối đa 0,3 s rồi dựng không ảnh (ảnh đến
   // muộn không chen vào giữa màn, vì khung bản in và tấm nhãn đã đặt chỗ)
+  fresh(e.id);
   const pic = got.has(e.id) ? Promise.resolve(got.get(e.id) ?? null) : eraImage(e, 300);
   void pic.then(p => {
     if (over) return;
