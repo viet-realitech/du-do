@@ -141,7 +141,8 @@ export const evEra = (v: HistEvent): Era => ERAS.find(e => e.id === (v.diary ? v
 /** Năm đại diện của sự kiện trong chương của nó (tra hướng đã chọn, biến cố riêng…): Điện Biên Phủ → 1953. */
 export const chYear = (v: HistEvent): number => { const e = evEra(v), nx = ERAS[ERAS.indexOf(e) + 1]; return Math.max(e.cy, Math.min(v.y, nx ? nx.cy - 1 : v.y)); };
 /** Một hướng như dòng họ này thấy nó: play.ts gán (nhà đã di tản năm 1975 thấy các hướng của điểm rẽ 6 nói từ xứ người,
-    cùng id); state.ts không nhập play.ts để tránh vòng nhập. */
+    cùng id; nhà ra đi sau đó thì hướng giữ nguyên nhưng bỏ các trang nhật ký đề năm sau năm ra đi, nên allEv cũng bỏ);
+    state.ts không nhập play.ts để tránh vòng nhập. */
 export const optView = { of: (o: Option): Option => o };
 export const optOf = (e: Era): Option | undefined => { const o = e.opts.find(x => x.id === S.picks[e.id]); return o && optView.of(o); };
 export const curPick = (y: number) => optOf(eraOf(y));

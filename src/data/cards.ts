@@ -430,7 +430,7 @@ export const VARIANT: Record<string, Variant[]> = {
   /* ---- Cả nhà đã ra nước ngoài (cờ endings.ts GONE: di tản tháng 4.1975, "bán chính thức" 1979, vượt biển hay đi diện
      đoàn tụ ODP 1980; hasFlag chỉ tính thẻ năm trước năm của sự kiện): thẻ cả nước sau đó nói từ xứ người. Thẻ theo vùng
      và biến cố trong nước không còn bắt buộc (play.ts abroad). Đặt trước các bộ khác của cùng thẻ: bộ đầu tiên khớp được
-     dùng. Lời không nói nhà ở nước nào (Mỹ, Canada, Úc, Pháp…), trừ năm 1976 (chỉ nhà di tản tới được) và năm 1980. Ra
+     dùng. Lời không nói nhà ở nước nào (Mỹ, Canada, Úc, Pháp…), trừ năm 1976 (chỉ nhà di tản đã ở xứ người) và năm 1980. Ra
      đi đã tốn gần hết của: mỗi thẻ có một lựa chọn rẻ nhất (hay có lời) hợp cả đường Nhà nước lẫn đường Mỹ, để nhà trung
      thành không bị khoá (npm run scenes). Bản lưu đã quyết các thẻ này trước khi chúng nói từ xứ người: chỉ số giữ, nên
      các bộ xếp cùng thứ tự nghĩa với bộ cũ (làm ăn / ở yên / chờ xem…). ---- */
@@ -561,6 +561,18 @@ export const VARIANT: Record<string, Variant[]> = {
       ['Cả nhà theo đường người đi trước', 'Người đi trước gửi về tên chủ ghe, nơi đón; bán nhà mua chỗ.', { b: -10, g: -8, d: -3, u: -3, nn: -20, my: 15 }, 'Lần này cả nhà đi, theo đường dây người đi trước đã dò. Ghe tới Pulau Bidong sau sáu ngày; ở trại đã có thư của người đi trước, ghi sẵn địa chỉ bảo lãnh.', 'vuotbien'],
       ['Ở lại, chờ thư', 'Sống bằng sổ gạo và những lá thư từ trại tị nạn.', { g: -6, nn: 5 }, 'Thư về đều đặn. Ở nhà vẫn xếp hàng mua gạo, nhưng biết người đi đã tới nơi.'],
       ['Cả nhà làm đơn đi diện đoàn tụ', 'Người đi trước đã tới nơi, đứng ra bảo lãnh cả nhà theo Chương trình Ra đi có trật tự (ODP).', { d: -1, u: -2, nn: -5, my: 8 }, 'Hồ sơ đi qua nhiều văn phòng và mấy năm chờ phỏng vấn. Rồi cả nhà lên một chuyến bay rời Tân Sơn Nhất, không phải một chiếc ghe; từ đường để lại cho họ hàng trông nom.', 'odp'],
+    ] },
+    // đường biển theo nơi dòng họ đang sống (cùng thứ tự, cùng cờ, cùng hiệu ứng với thẻ gốc; miền Trung: thẻ gốc). Miền
+    // Bắc: ghe từ Hải Phòng, Quảng Ninh men bờ biển lên Hồng Kông; nhiều người được Anh nhận. Miền Nam: ghe ra từ các cửa
+    // biển miền Tây, tới các đảo của Malaysia, Indonesia; trại Galang (Indonesia) mở năm 1979.
+    { regions: ['B', 'T1'], choices: [
+      ['Cả nhà vượt biên', 'Bán hết nhà cửa, mua chỗ cho cả nhà trên một chiếc ghe đi Hồng Kông.', CARD.tn80[2][0][2], 'Ghe men theo bờ biển gần ba tuần mới tới Hồng Kông; có người trong nhà không tới nơi. Sau nhiều tháng ở trại, cả nhà được nhận đi định cư; lá thư đầu tiên gửi về cho họ hàng ở quê kèm tấm ảnh chụp trước căn nhà thuê.', 'vuotbien'],
+      CARD.tn80[2][1],
+      ['Gửi một người đi, giữ phần còn lại', 'Dồn tiền cho một người con.', CARD.tn80[2][2][2], 'Người ấy tới Hồng Kông, rồi được nhận sang Anh. Thùng đồ đầu tiên về năm 1983.', 'guiDi'],
+    ] },
+    { regions: ['NE', 'NW'], choices: [
+      ['Cả nhà vượt biên', 'Bán hết nhà cửa, mua chỗ cho cả nhà trên một chiếc ghe ra từ cửa biển miền Tây.', CARD.tn80[2][0][2], 'Ghe lênh đênh năm ngày mới tạt vào một hòn đảo của Indonesia, rồi cả nhà được đưa về trại Galang; có người trong nhà không tới bờ. Gần một năm ở trại, cả nhà được nhận đi định cư; lá thư đầu tiên gửi về cho họ hàng ở quê kèm tấm ảnh chụp trước căn nhà thuê.', 'vuotbien'],
+      CARD.tn80[2][1], CARD.tn80[2][2],
     ] },
   ],
   // 30.4.1975 với một nhà đang sống ở miền Bắc: không di tản, không đón quân vào thành phố mình. Nhà đã di cư vào Nam

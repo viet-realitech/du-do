@@ -433,6 +433,137 @@ test('play mode: a family that evacuated in April 1975 lives abroad — gate 6 a
   await expect(page.locator('#layer > .scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
   await expect(page.locator('#layer > .scrim .opt h3').first()).toHaveText('Bảo lãnh người thân theo diện đoàn tụ');
   expect(errors).toEqual([]);
+  // the finished game: gia phả, the path's what-if, the share card and the chapter index all speak from abroad
+  const done = await bootGone(page, { name: 'Họ Lê', surname: 'le', home: 'ct', picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'nam', e6: 'baocap' }, cards: { sg75: 0 } });
+  expect(await diaryYears(page)).toEqual([1981]); // "Thùng quà về tới quê", not the rice book / currency pages of a family at home
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-epi')).toContainText('tháng 4.1975, cả nhà di tản');
+  await expect(page.locator('.end-gp')).toContainText('Gửi quà nuôi người ở quê');
+  await expect(page.locator('.end-gp')).toContainText('Thế hệ 6 lớn lên ở xứ người');
+  // generation 6 sent parcels from abroad: its row asks the abroad what-if, not "no Đổi Mới"
+  await expect(page.locator('.end-path')).not.toContainText('Nếu không có Đổi Mới');
+  await expect(page.locator('.end-path .pr').last()).toContainText('Nếu Việt Nam và Mỹ bình thường hoá');
+  expect(await shareText(page)).toEqual(expect.arrayContaining(['Gửi quà nuôi người ở quê', ', cả nhà ở xứ người']));
+  expect(done).toEqual([]);
+});
+
+/** Cả nhà ra nước ngoài trên thẻ sự kiện: bản lưu đã xong năm 2026 (mọi thẻ đã quyết bằng lựa chọn đầu, trừ `cards`),
+    màn ngang để cột bên có mục lục chương, và ghi lại mọi chữ vẽ lên thẻ chia sẻ. */
+async function bootGone(page: Page, st: Record<string, unknown>) {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await page.addInitScript(() => {
+    const f = CanvasRenderingContext2D.prototype.fillText, seen: string[] = ((window as unknown as { __txt: string[] }).__txt = []);
+    CanvasRenderingContext2D.prototype.fillText = function (this: CanvasRenderingContext2D, t: string, x: number, y: number, mw?: number) { seen.push(String(t)); return mw === undefined ? f.call(this, t, x, y) : f.call(this, t, x, y, mw); };
+  });
+  const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u }), es = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+  // cvk: bản lưu đã biết mọi bộ lựa chọn thay thế (không thì state.ts coi thẻ đã quyết là của bản cũ, giữ bộ gốc)
+  const cvk = [...readFileSync('src/data/cards.ts', 'utf8').matchAll(/^  \['(\w+)', '/gm)].map(m => m[1]);
+  return bootPlay(page, { year: 2026, cvk, quiz: Object.fromEntries(es.map(e => [e, [true, true]])), harvests: es,
+    snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(50, 45, 45, 45) }, res: r(50, 45, 45, 45),
+    ...st, cards: { st25: 0, ...(st.cards as object) } }, 'st25', 'seeded2');
+}
+/** Năm các trang nhật ký trong mục lục chương đang xem (cột bên, màn ngang). */
+const diaryYears = async (page: Page) => {
+  await expect(page.locator('#idx .cap')).toContainText('chương VI');
+  return page.locator('#idx li').evaluateAll(ls => ls.filter(l => l.querySelector('em')?.textContent === 'Nhật ký').map(l => +l.querySelector('b')!.textContent!));
+};
+/** Chữ vẽ lên thẻ chia sẻ (các cụm chữ số vẽ riêng bằng phông đơn cách). */
+async function shareText(page: Page): Promise<string[]> {
+  await page.getByRole('button', { name: 'Tạo thẻ chia sẻ' }).click();
+  await expect(page.getByAltText('Thẻ kết quả')).toBeVisible();
+  return page.evaluate(() => (window as unknown as { __txt: string[] }).__txt);
+}
+
+test('play mode: a household that crossed by boat in 1980 lives abroad after — later cards, gia phả, diary and share card agree', async ({ page }) => {
+  const st = { name: 'Họ Nguyễn', surname: 'nguyen', home: 'hue', picks: { e1: 'hoa', e2: 'duytan', e3: 'laphien', e4: 'qg', e5: 'nam', e6: 'baocap' } };
+  const errors = await bootPlay(page, { ...st, year: 1980, cards: { sg75: 1 }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] },
+    harvests: ['e1', 'e2', 'e3', 'e4', 'e5'], res: { g: 60, d: 45, b: 60, u: 40 } }, 'tn80');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
+  await expect(page.locator('#layer > .scrim .opt h3').first()).toHaveText('Cả nhà vượt biên');
+  await page.locator('#layer > .scrim .opt').first().click();
+  await page.locator('#cgo').click();
+  await expect(page.locator('#layer > .scrim .opt.sel .out')).toContainText('cả nhà được nhận đi định cư');
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  // 1986 from abroad: the family is not the state employee nor the first motorbike in the village
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Đổi Mới', { timeout: 15000 });
+  await expect(page.locator('#layer > .scrim .kick')).toContainText('Huế → xứ người');
+  await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Hùn vốn cho người nhà mở tiệm', 'Mở tiệm ở khu phố người Việt', 'Chờ xem, chưa tin']);
+  expect(errors).toEqual([]);
+  const done = await bootGone(page, { ...st, cards: { sg75: 1, tn80: 0 } });
+  expect((await diaryYears(page)).filter(y => y > 1980)).toEqual([]); // no rice queue in 1985 for a family gone in 1980
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toHaveText('Bên kia đại dương');
+  await expect(page.locator('.end-epi')).toContainText('năm 1980, cả nhà vượt biển');
+  const gp = page.locator('.end-gp');
+  await expect(gp).toContainText('tem phiếu những năm đầu sau thống nhất; năm 1980, cả nhà bán hết, xuống ghe vượt biển');
+  await expect(gp).not.toContainText('qua những năm lạm phát ba con số');
+  await expect(gp).toContainText('Cả nhà vượt biên.');
+  await expect(gp).toContainText('Về thăm quê lần đầu.'); // 1995: they are the relatives abroad, not the ones receiving money
+  expect(await shareText(page)).toEqual(expect.arrayContaining(['Giữ kế hoạch hoá', ', cả nhà vượt biển']));
+  expect(done).toEqual([]);
+});
+
+test('play mode: a Lý household that left on the 1979 paid route is abroad in 1980 — southern war card, Hong Kong, ending agree', async ({ page }) => {
+  const st = { name: 'Họ Lý', surname: 'ly', home: 'ct', picks: { e1: 'hoa', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba', e6: 'doimoi' } };
+  const errors = await bootPlay(page, { ...st, year: 1979, xFrom: 1979, cards: { sg75: 1 }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] },
+    harvests: ['e1', 'e2', 'e3', 'e4', 'e5'], res: { g: 60, d: 45, b: 60, u: 40 } }, 'bb79');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  // the northern border war seen from Cần Thơ: not "lên Lạng Sơn" or "sơ tán về xuôi"
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Chiến tranh biên giới phía Bắc', { timeout: 8000 });
+  await expect(page.locator('#layer > .scrim .sheet > [role=radiogroup] .opt h3')).toHaveText(['Tiễn con đi bộ đội', 'Nghe tin qua đài']);
+  await page.locator('#layer > .scrim .opt').nth(1).click();
+  await page.locator('#cgo').click();
+  await expect(live(page, '.scrim .xsp > h3')).toBeVisible();
+  await page.locator('.xopts .opt').nth(1).click();
+  await page.locator('#xgo').click();
+  await expect(page.locator('.xopts .opt.sel .out')).toContainText('cả nhà được nhận sang Toronto');
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 15000 });
+  await expect(page.locator('#layer > .scrim .kick')).toContainText('Cần Thơ → xứ người');
+  await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Bảo lãnh người thân còn ở quê', 'Đi làm trong lúc chờ ở trại', 'Gửi thư, gửi quà về cho họ hàng']);
+  expect(errors).toEqual([]);
+  const done = await bootGone(page, { ...st, xFrom: 1979, cards: { sg75: 1, bb79: 1, 'x:x-ly79': 1 }, xs: { bb79: 'x-ly79' } });
+  expect((await diaryYears(page)).filter(y => y > 1979)).toEqual([]); // no Khoán 10 fields, no WTO workshop at home
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toHaveText('Tiếng nói từ xa');
+  await expect(page.locator('.end-epi')).toContainText('năm 1979, cả nhà đi “bán chính thức” sang Hồng Kông');
+  const gp = page.locator('.end-gp');
+  await expect(gp).toContainText('Đổi Mới còn xa; năm 1979, cả nhà nộp vàng đi “bán chính thức”, tới trại ở Hồng Kông rồi định cư ở Toronto');
+  await expect(gp).not.toContainText('mở một xưởng nhỏ sau năm 1986');
+  await expect(gp).not.toContainText('xe máy đầu tiên trong làng');
+  expect(await shareText(page)).toEqual(expect.arrayContaining(['Đổi Mới', ', cả nhà đi “bán chính thức”']));
+  expect(done).toEqual([]);
+});
+
+test('play mode: a household that followed its 1978 branch through ODP lives abroad after — later cards, gia phả, share card agree', async ({ page }) => {
+  const st = { name: 'Họ Lê', surname: 'le', home: 'sg', picks: { e1: 'chien', e2: 'duytan', e3: 'qdd', e4: 'qg', e5: 'nam', e6: 'doimoi' }, xs: { ct78: 'x-lylich78' } };
+  const errors = await bootPlay(page, { ...st, year: 1980, cards: { sg75: 1, 'x:x-lylich78': 2 }, quiz: { e1: [true, true], e2: [true, true], e3: [true, true], e4: [true, true], e5: [true, true] },
+    harvests: ['e1', 'e2', 'e3', 'e4', 'e5'], res: { g: 60, d: 45, b: 60, u: 40 } }, 'tn80');
+  await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
+  await page.locator('#tourb [data-t=skip]').click();
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Làn sóng thuyền nhân', { timeout: 8000 });
+  await expect(page.locator('#layer > .scrim .opt h3')).toHaveText(['Cả nhà theo đường người đi trước', 'Ở lại, chờ thư', 'Cả nhà làm đơn đi diện đoàn tụ']);
+  await page.locator('#layer > .scrim .opt').nth(2).click();
+  await page.locator('#cgo').click();
+  await page.getByRole('button', { name: 'Tiếp tục ▶' }).click();
+  await expect(page.locator('#layer > .scrim h2')).toHaveText('Đổi Mới', { timeout: 15000 });
+  await expect(page.locator('#layer > .scrim .kick')).toContainText('→ xứ người');
+  await expect(page.locator('#layer > .scrim .opt h3').first()).toHaveText('Hùn vốn cho người nhà mở tiệm');
+  expect(errors).toEqual([]);
+  const done = await bootGone(page, { ...st, cards: { sg75: 1, 'x:x-lylich78': 2, tn80: 2 } });
+  expect((await diaryYears(page)).filter(y => y > 1980)).toEqual([]);
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toHaveText('Bên kia đại dương');
+  await expect(page.locator('.end-epi')).toContainText('năm 1978, một nhánh xuống ghe ở Rạch Giá; đầu thập niên 1980, cả nhà còn lại sang đoàn tụ');
+  const gp = page.locator('.end-gp');
+  await expect(gp).toContainText('cả nhà theo diện đoàn tụ của Chương trình Ra đi có trật tự, bay sang với nhánh đã xuống ghe năm 1978');
+  await expect(gp).not.toContainText('mở một xưởng nhỏ sau năm 1986');
+  await expect(gp).toContainText('Về thăm quê lần đầu.');
+  expect(await shareText(page)).toEqual(expect.arrayContaining([', cả nhà đi diện đoàn tụ (ODP)']));
+  expect(done).toEqual([]);
 });
 
 test('turning points: "Gia đình bạn" follows what the family lived (a father who returned, a new surname, no phantom branch)', async ({ page }) => {
