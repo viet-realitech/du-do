@@ -219,6 +219,32 @@ test('play mode: a family that evacuated in 1975 hears gate 6 in the narrator\'s
   expect(errors).toEqual([]);
 });
 
+test('play mode: a household that crossed by boat in 1980 hears its own generation-6 line in the film, not silence', async ({ page }) => {
+  const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u });
+  const errors = await bootPlay(page, { name: 'Họ Nguyễn', surname: 'nguyen', home: 'sg', year: 2026, picks: { e1: 'hoa', e2: 'duytan', e3: 'laphien', e4: 'qg', e5: 'nam', e6: 'baocap' },
+    quiz: { ...quiz6, e6: [true, true] }, cards: { sg75: 1, tn80: 0 }, harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'],
+    snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(45, 46, 40, 50), e6: r(50, 45, 45, 45) }, res: r(50, 45, 45, 45) }, '');
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-gp')).toContainText('năm 1980, cả nhà bán hết, xuống ghe vượt biển');
+  await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
+  for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowRight');
+  await expect(live(page, '.cine.film .scene-s:not(.gone) .plate')).toContainText('năm 1980, cả nhà bán hết, xuống ghe vượt biển');
+  await expect.poll(() => clips(page), { timeout: 6000 }).toContain('chr-g-baocap-vuotbien');
+  expect(errors).toEqual([]);
+});
+
+test('ending: "Còn lại tên họ" of a family still 45 strong is read with the summary on screen', async ({ page }) => {
+  const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u });
+  const errors = await bootPlay(page, { name: 'Họ Trần', surname: 'tran', home: 'hn', year: 2026, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'baocap' },
+    quiz: { ...quiz6, e6: [true, true] }, cards: { sg75: 1, tn80: 1 }, harvests: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'],
+    snap: { e1: r(55, 42, 30, 22), e2: r(50, 44, 35, 30), e3: r(40, 45, 30, 40), e4: r(30, 40, 20, 45), e5: r(20, 45, 10, 20), e6: r(4, 45, 4, 4) }, res: r(4, 45, 4, 4) }, '');
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('.end-title')).toHaveText('Còn lại tên họ');
+  await expect(page.locator('.end-line')).toContainText('nhà sa sút, nhưng gia phả vẫn giữ được cái tên');
+  await expect.poll(() => clips(page), { timeout: 6000 }).toContain('end-lytan');
+  expect(errors).toEqual([]);
+});
+
 test('settings: narration on and the speed buttons play the narrator at that speed; no false "no Vietnamese voice" warning', async ({ page }) => {
   // a device with no Vietnamese system voice (desktop Chrome, Firefox, many Windows PCs)
   await page.addInitScript(() => { if ('speechSynthesis' in window) speechSynthesis.getVoices = () => []; });

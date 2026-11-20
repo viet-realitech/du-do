@@ -116,7 +116,7 @@ export default defineConfig({
           {
             // Narration clips and music, hashed or not: keep what was played for offline replays. Audio elements ask for
             // byte ranges (206, never cached): the cache is filled by plain fetches (src/warm.ts) and ranges are cut from
-            // the cached file. Room for every clip (262) and track (6), with headroom for new clips.
+            // the cached file. Room for every clip (277) and track (6), with headroom for new clips.
             urlPattern: /\.m4a$/,
             handler: 'CacheFirst',
             options: { cacheName: 'voice-music', rangeRequests: true, expiration: { maxEntries: 320, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
