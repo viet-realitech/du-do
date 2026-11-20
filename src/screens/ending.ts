@@ -17,6 +17,11 @@ import { checkBadges, clearBadgeQueue } from '../badges';
 import { stopTour } from '../tour';
 import { renderMain, invalidateTrack } from '../view';
 import { compass } from './profile';
+// bản đồ dòng họ ở cột bên của hồ sơ kết cục (homePlate)
+import { placeAt } from '../play';
+import { Y0 } from '../state';
+import { goneOf, GONE_AT } from '../data/endings';
+import { plate, type Mark } from '../ui/plate';
 import { openQuiz, openHarvest, quizFor } from './gate';
 import { splash } from './onboarding';
 import { setTab } from '../tabs';
@@ -92,6 +97,38 @@ function wealth(f: Facts): string {
    <p class="gens-n">Gây dựng nhiều nhất: ${genName(gd.best)} · mất mát nhiều nhất: ${genName(gd.worst)}.</p>` : ''}</section>`;
 }
 
+/** Quê và những lần dời nhà (Trò chơi): chỉ những gì bản lưu có. Quê đã chọn; nơi ở mới sau Genève (di cư vào Nam, tập
+    kết ra Bắc rồi về lại quê năm 1976), theo đúng play.ts placeAt; cả nhà ra nước ngoài (cờ rời nước), chỉ ghi trong danh
+    sách vì bản lưu không biết nước nào. Không có chặng nào bản lưu không có, không vẽ đường đi: nét đứt chỉ nói từ đâu
+    tới đâu. Đọc sử không có quê nên không có mục này. */
+function homePlate(f: Facts): string {
+  const h = home(), seen: { y: number; name: string; l: [number, number] }[] = [];
+  for (let y = Y0; y <= Y1; y++) {
+    const p = placeAt(y), q = seen[seen.length - 1];
+    if (!q || q.name !== p.name || q.l.join() !== p.l.join()) seen.push({ y, name: p.name, l: p.l });
+  }
+  const marks: Mark[] = [{ l: h[2], kind: 'home', label: h[1] }], moves: [[number, number], [number, number]][] = [];
+  const rows: [number, string][] = [[Y0, `Quê nhà: <b>${esc(h[1])}</b>`]];
+  let at = h[2];
+  for (const s of seen.slice(1)) {
+    if (s.name === 'xứ người') {
+      const g = goneOf(f), x = g ? GONE_AT[g] : undefined;
+      rows.push([x ? x.y : s.y, x ? `Cả nhà ${esc(x.go)}; từ đó sống ở xứ người` : 'Cả nhà ra nước ngoài, sống ở xứ người']);
+      continue;
+    }
+    const back = s.name === h[1];
+    // dời nhà theo điểm rẽ 5 (Genève): năm 1954, cả với bản lưu có trước việc dời nhà (play.ts regionAt, S.movedFrom)
+    rows.push(back ? [s.y, `Về lại quê nhà <b>${esc(h[1])}</b>`] : [1954, s.name === 'miền Nam' ? 'Di cư vào <b>miền Nam</b>' : 'Tập kết ra <b>miền Bắc</b>']);
+    if (!back) marks.push({ l: s.l, kind: 'stop', label: s.name });
+    moves.push([at, s.l]);
+    at = s.l;
+  }
+  const n = rows.length - 1;
+  return `<section class="end-sec end-plate" aria-labelledby="mph">${sh('Bản đồ dòng họ', n ? 'Quê nhà và những lần dời nhà' : 'Quê nhà', 'mph')}
+   <div class="mp">${plate([], '', 'plate-svg mpl', { marks, moves })}<ol class="mp-l">${rows.map(([y, t]) => `<li><span class="y">${y}</span><span>${t}</span></li>`).join('')}${n ? '' : '<li class="none"><span class="y"></span><span>Không lần dời nhà nào trong sáu đời.</span></li>'}</ol></div>
+   <p class="mp-n">Chỉ ghi quê bạn chọn và những lần cả nhà dời nơi ở trong ván này. Nét đứt nói nơi đi, nơi đến, không phải đường đi.</p></section>`;
+}
+
 /** Con đường của bạn và lịch sử: mỗi điểm rẽ một dòng sổ (năm, tên; hướng bạn chọn cạnh hướng chiếm ưu thế; lịch sử
     thật). Hướng khác lịch sử có giả định gấp sẵn, trừ điểm rẽ đã có thẻ "Nếu…" (`first`). */
 function pathTable(first: number | undefined): string {
@@ -149,7 +186,7 @@ export function openEnd(ro?: ArcRun): void {
   ${ro ? roNote(ro) : ''}${head}
   <div class="end-body">
    <div class="end-main">${giaPha(f)}</div>
-   <div class="end-side">${reg}${end ? cfCard(f) : ''}${play ? wealth(f) : ''}
+   <div class="end-side">${reg}${end ? cfCard(f) : ''}${play ? wealth(f) + homePlate(f) : ''}
     <section class="end-sec end-cmp" aria-labelledby="vlh">${sh('Theo các hướng đã chọn', 'La bàn giá trị', 'vlh')}${compass()}</section></div>
   </div>
   ${pathTable(first?.i)}

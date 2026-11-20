@@ -1,7 +1,7 @@
 import type { HistEvent } from './data';
 import { SCENES, MOVES, SIDE_COLOR, sideName, actOf, type Scene, type Move, type Kind } from './data/scenes';
 import { kindOf, drawPiece } from './units';
-import { fxHost, zoomGen } from './map';
+import { fxHost, zoomGen, labelsSoon } from './map';
 import { WAR, SND, buzz } from './audio';
 import { S } from './state';
 import { wikiFor, probe, videoUrl } from './wiki';
@@ -553,7 +553,8 @@ const box = (x: number, y: number, rx: number, ry: number): Box => [x - rx, y - 
 function labelSpot(placed: Box[], p: [number, number], k: number, sy: number, t: string, fs: number): { dx: number; dy: number; anchor: string } {
   // fs: màn rộng nhãn 12 px (styles.css .fx-at), 1,2 lần; battle() đọc một lần
   const w = t.length * 6.1 * fs + 4, h = 12 * fs, x = p[0] * k, y = (p[1] * k) / sy; // bản đồ nghiêng: chiều dọc trên màn hình co lại sy lần
-  const tries: [number, number, string][] = [[0, -13, 'middle'], [0, 19, 'middle'], [11, 4, 'start'], [-11, 4, 'end'], [0, -27, 'middle'], [0, 33, 'middle'], [24, -10, 'start'], [-24, -10, 'end']];
+  const tries: [number, number, string][] = [[0, -13, 'middle'], [0, 19, 'middle'], [11, 4, 'start'], [-11, 4, 'end'], [0, -27, 'middle'], [0, 33, 'middle'], [24, -10, 'start'], [-24, -10, 'end'],
+    [24, 18, 'start'], [-24, 18, 'end'], [0, -41, 'middle'], [0, 47, 'middle']]; // thân mũi tên chiếm thêm chỗ: thêm vài chỗ xa hơn
   const rect = ([dx, dy, a]: [number, number, string]): Box => {
     const x0 = a === 'middle' ? x + dx - w / 2 : a === 'start' ? x + dx : x + dx - w;
     return [x0, y + dy - h + 3, x0 + w, y + dy + 3];
@@ -600,14 +601,20 @@ function battle(r: Run, v: HistEvent, sc: Scene | undefined): void {
   const old = v.y < 1900, sy = document.getElementById('mapwrap')?.classList.contains('tilt') ? 1.24 : 1;
   const holds = (sc?.hold || []).map(([lo, la, side]) => ({ side, ll: [lo, la] as [number, number], ringed: false }));
   const arrived = new Set<number>(), meets = sc?.meet || [];
-  // chỗ đã chiếm (px màn hình): đầu mũi tên, vị trí giữ; nhãn địa danh tránh đè lên nhau và lên chúng
+  // chỗ đã chiếm (px màn hình): đầu mũi tên, thân mũi tên (các điểm cách nhau ~12 px dọc đường cong), vị trí giữ; nhãn địa
+  // danh tránh đè lên nhau và lên chúng (trước đây chỉ tránh đầu mũi tên: thân mũi tên thứ hai xuyên qua "đồi Độc Lập")
+  const cs = arrows.map((a, i) => curve(P(a[0]), P(a[1]), (i % 2 ? -1 : 1) * 0.16));
   const placed: Box[] = arrows.map(a => { const q = P(a[1]); return box(q[0] * k, (q[1] * k) / sy, 7, 7); })
-    .concat((sc?.hold || []).map(x => { const q = P([x[0], x[1]]); return box(q[0] * k, (q[1] * k) / sy, 6, 6); }));
+    .concat((sc?.hold || []).map(x => { const q = P([x[0], x[1]]); return box(q[0] * k, (q[1] * k) / sy, 6, 6); }))
+    .concat(cs.flatMap(c => {
+      const a = c.at(0), b = c.at(1), n = Math.max(4, Math.min(40, Math.round((Math.hypot(b[0] - a[0], (b[1] - a[1]) / sy) * k) / 12)));
+      return Array.from({ length: n - 1 }, (_, j) => { const q = c.at((j + 1) / n); return box(q[0] * k, (q[1] * k) / sy, 4, 4); });
+    }));
   root.dataset.contacts = '0';
   arrows.forEach((arw, i) => {
     const [from, to, side, note] = arw;
     const act = actOf(arw), kind: Kind = kindOf(note, type, arw[4]);
-    const a = P(from), b = P(to), c = curve(a, b, (i % 2 ? -1 : 1) * 0.16);
+    const a = P(from), b = P(to), c = cs[i];
     const col = SIDE_COLOR[side] || '#ffd84a', ink = act === 'doubt' ? '#9a9a9a' : col;
     // nét: giao chiến / hành quân vẽ dần; rút lui nét đứt chạy; thuỷ chiến nét đứt chạy; nghi vấn nét chấm xám
     const marching = act === 'retreat' || (act !== 'doubt' && (type === 'naval' || type === 'landing')), reveal = act !== 'doubt' && !marching;
@@ -1064,7 +1071,7 @@ export function endScene(instant = false): void {
     const g = r.root;
     g.style.transition = 'opacity .5s';
     g.style.opacity = '0';
-    setTimeout(() => g.remove(), 520);
+    setTimeout(() => { g.remove(); labelsSoon(); }, 520); // hết cảnh (cả khi Đóng phần xem lại): nhãn thành phố hiện lại
   }
   if (r.lt) { const b = r.lt; b.classList.add('out'); setTimeout(() => b.remove(), 320); }
   r.ttl?.remove();

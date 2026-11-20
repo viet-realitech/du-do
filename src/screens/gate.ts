@@ -133,7 +133,7 @@ export function openQuiz(eid: string, done?: () => void): void {
     clearLayer();
     const d = sheet(`<div class="kick"><span class="mono">Đố nhanh · Chương ${e.n}</span><span class="mono muted">Câu ${i + 1}/${qs.length}</span></div>
      <h2 style="margin:12px 0 16px">${q}</h2><div class="qas">${opts.map((o, j) => `<button class="qa" data-j="${j}">${o}</button>`).join('')}</div>
-     <p id="qex" class="muted" aria-live="polite" style="margin-top:12px;min-height:24px;font-size:16px"></p>
+     <p id="qex" class="muted" aria-live="polite" style="margin-top:12px;min-height:24px;font-size:calc(16px*var(--ts))"></p>
      <div class="sfoot"><button class="btn" id="qn" disabled>${i < qs.length - 1 ? 'Câu tiếp' : eid === 'e6' ? (isPlay() ? 'Xem kết cục' : 'Xem kết luận') : 'Tiếp tục hành trình'}</button><button class="lnk" id="qs">Bỏ qua</button></div>`, false, 'dlg');
     d.querySelectorAll<HTMLButtonElement>('.qa').forEach(b => (b.onclick = () => {
       if (res.length > i) return;
@@ -200,11 +200,11 @@ function choice(e: Era, quiet: boolean): void {
   };
   const d = sheet(`<div class="kick must"><span class="mono">${icon('seal', 12)}Điểm rẽ ${e.n}/6 · ${e.cy}</span><span class="mono muted">${esc(familyName())} · thế hệ ${e.n}</span></div>
   <h2 style="margin:10px 0 8px">${e.title}</h2>
-  <div class="gq">${ctx || did.length ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div>${ctx ? `<p style="font-size:16px;font-style:italic;margin-top:3px">${ctx}</p>` : ''}${did.length ? `<ul class="did">${did.map(x => `<li><span class="mono muted">${x.v.y}</span> ${esc(x.ch[0])}</li>`).join('')}</ul>` : ''}</div>` : ''}
+  <div class="gq">${ctx || did.length ? `<div class="pv mine" style="margin-bottom:10px"><div class="mono muted">Gia đình bạn</div>${ctx ? `<p style="font-size:calc(16px*var(--ts));font-style:italic;margin-top:3px">${ctx}</p>` : ''}${did.length ? `<ul class="did">${did.map(x => `<li><span class="mono muted">${x.v.y}</span> ${esc(x.ch[0])}</li>`).join('')}</ul>` : ''}</div>` : ''}
   <p class="muted" style="margin-bottom:14px">${e.q}</p></div>
   <div class="listen" id="lst"><i class="pulse"></i><span>Đang kể lời dẫn…</span><button class="lnk" id="lskip">Chọn ngay ›</button></div>
   <div role="radiogroup">${opts.map(o => `<button class="opt" role="radio" aria-checked="false" data-o="${o.id}" disabled><div class="tt"><h3>${o.label}</h3><span class="tag">${TAG_LABEL[o.tag]}</span></div>${tag(o)}<div class="who">${o.who}</div><p>${o.d}</p><div class="fxs">${fxChips(o.fx)}${isPlay() ? fxChipsPlay(eraFx(o.id)) : ''}</div></button>`).join('')}</div>
-  <p class="muted" style="font-size:13px;margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
+  <p class="muted" style="font-size:calc(13px*var(--ts));margin-top:10px">Điểm giá trị phản ánh điều mỗi lực lượng tự tuyên bố theo đuổi, không phải đánh giá đúng sai.</p>
   <div class="sfoot"><button class="btn" id="go" disabled>Đi theo hướng này</button>${isPlay() ? '' : '<button class="lnk" data-a="gate-later">Đọc chương trước, chọn sau ›</button>'}</div>`, false, 'wide');
   // Đọc sử: điểm rẽ không bắt buộc (Back / Escape = "chọn sau"); Trò chơi: phải chọn
   if (!isPlay()) delete d.dataset.lock;
@@ -251,10 +251,10 @@ function outcome(e: Era, o: Option, got: Fx = {}): void {
   <div class="fxs" style="margin-top:12px">${fxChips(o.fx)}</div>
   ${isPlay() && Object.keys(eraFx(o.id)).length ? `<div class="mono muted" style="margin-top:12px">Các thế lực nhìn dòng họ bạn</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(eraFx(o.id), got)}</div>` : ''}
   <div class="rule"></div>
-  <button class="row" style="width:100%;text-align:left" data-a="fig" data-id="${o.guide}">${av(o.guide, 46)}<span style="flex:1"><span class="mono muted">Người đồng hành</span><br><b style="font:700 18px var(--disp)">${FIG[o.guide][0]}</b> <span class="muted" style="font-size:14px">· ${FIG[o.guide][2]}</span></span><span class="muted">›</span></button>
-  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:15px;margin-top:6px"><span class="al akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])}${bornLine(kin.id) ? ` (${esc(bornLine(kin.id))})` : ''} cũng đi con đường này.</p>` : ''}
+  <button class="row" style="width:100%;text-align:left" data-a="fig" data-id="${o.guide}">${av(o.guide, 46)}<span style="flex:1"><span class="mono muted">Người đồng hành</span><br><b style="font:700 calc(18px*var(--ts)) var(--disp)">${FIG[o.guide][0]}</b> <span class="muted" style="font-size:calc(14px*var(--ts))">· ${FIG[o.guide][2]}</span></span><span class="muted">›</span></button>
+  ${kin && kin.id === o.guide ? `<p class="muted" style="font-size:calc(15px*var(--ts));margin-top:6px"><span class="al akin">${esc(kinLabel(kin))}</span> ${kin.birth ? `Người dẫn đường khai sinh mang họ ${esc(kin.fam)}, như dòng họ bạn.` : `Người dẫn đường cùng họ ${esc(kin.fam)} với dòng họ bạn.`}</p>` : kin ? `<p class="muted" style="font-size:calc(15px*var(--ts));margin-top:6px"><span class="al akin">${esc(kinLabel(kin))}</span> ${esc(FIG[kin.id][0])}${bornLine(kin.id) ? ` (${esc(bornLine(kin.id))})` : ''} cũng đi con đường này.</p>` : ''}
   <div class="rule"></div><div class="mono" style="color:var(--acc)">Mở khoá ${fs.length} nhân vật</div>
-  <div class="figs">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}">${av(id, 48)}<span>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig"><span class="av" style="width:48px;height:48px;font-size:14px">+${fs.length - 8}</span><span>Xem hết</span></button>` : ''}</div>
+  <div class="figs">${fs.slice(0, 8).map(id => `<button data-a="fig" data-id="${id}">${av(id, 48)}<span>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span></button>`).join('')}${fs.length > 8 ? `<button data-a="tab" data-t="fig"><span class="av" style="width:48px;height:48px;font-size:calc(14px*var(--ts))">+${fs.length - 8}</span><span>Xem hết</span></button>` : ''}</div>
   ${o.diary.length ? `<div class="rule"></div><div class="mono" style="color:var(--acc)">Mở ${o.diary.length} trang nhật ký dòng họ</div>${o.diary.map(d => `<div class="chron"><span class="mono muted">${d.y}</span><span>${esc(d.t)}</span></div>`).join('')}` : ''}
   <div class="sfoot">${isPlay()
     ? `<button class="btn go" data-a="watch" data-e="${e.id}"><i class="cd"></i><span>${icon('play', 16)}</span><span>Sống qua thế hệ ${e.n}</span></button><p class="muted note">Chương tự bắt đầu; chạm nhân vật để đọc thêm trước.</p>`

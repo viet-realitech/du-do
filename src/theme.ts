@@ -23,6 +23,21 @@ function paint(): void {
   renderMain();
 }
 
+/* Chữ lớn: thiết lập của máy, chung cho cả hai luồng, giữ trong khoá riêng 'dudo-text' như mức hiệu ứng ('dudo-q'), không
+   nằm trong bản lưu (không đổi phiên bản bản lưu). public/boot.js đặt data-text trước khung hình đầu tiên; styles.css nhân
+   các cỡ chữ đọc (tới 22 px) lên 1,18 lần (--ts). Không lưu được (chế độ riêng tư): vẫn dùng trong phiên này. */
+const TEXT_KEY = 'dudo-text';
+let big = (() => { try { return localStorage.getItem(TEXT_KEY) === 'big'; } catch { return false; } })();
+const paintText = () => { if (big) document.documentElement.dataset.text = 'big'; else delete document.documentElement.dataset.text; };
+paintText();
+export const bigText = (): boolean => big;
+export function setBigText(on: boolean): void {
+  big = on;
+  try { if (on) localStorage.setItem(TEXT_KEY, 'big'); else localStorage.removeItem(TEXT_KEY); } catch { /* chỉ trong phiên này */ }
+  paintText();
+  renderMain(); // đầu trang, thẻ bên đổi cỡ: vẽ lại theo cỡ mới (bản đồ tự đo lại khung)
+}
+
 /** Apply the current settings; `animate` cross-fades the whole screen where View Transitions exist. */
 export function applyTheme(animate = false): void {
   const d = document as Document & { startViewTransition?: (cb: () => void) => unknown };

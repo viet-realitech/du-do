@@ -71,7 +71,7 @@ export function openCard(v: HistEvent, inTour = false): void {
       <p>${esc(ch[1])}</p><div class="fxs">${fxChipsPlay(ch[2], undefined, done)}${done || no ? '' : swapChip(ch[2])}</div>${picked ? `<p class="out">${esc(ch[3])}</p>` : ''}</button>`;
   }).join('')}</div>
   ${done ? '' : '<div style="height:10px"></div><button class="btn" id="cgo" disabled>Chọn một cách ứng xử</button>'}
-  <p class="muted" style="font-size:13px;margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
+  <p class="muted" style="font-size:calc(13px*var(--ts));margin-top:10px">Số liệu là ước lệ của trò chơi. Sự kiện lịch sử vẫn diễn ra như đã diễn ra.</p>
   ${done ? '<div style="height:12px"></div><button class="btn ghost" data-a="close-card">Đóng</button>' : inTour && !must ? '<button class="lnk" data-a="close-card">Bỏ qua, đi tiếp ›</button>' : ''}`, done && !spPending);
   d.dataset.card = v.id;
   radios(d.querySelector('.sheet > [role=radiogroup]'), d.querySelector('h2'));

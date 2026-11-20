@@ -28,6 +28,6 @@ export function feedbackRow(ref: string, about = ''): string {
   const href = feedbackHref(ref);
   if (!href) return '';
   const tab = /^mailto:/i.test(href) ? '' : ' target="_blank" rel="noopener"';
-  return `<a class="src fb" href="${esc(href)}"${tab}><div class="tt"><h3 style="font-size:16.5px">Góp ý / Báo sai${about ? ' ' + about : ''}</h3><span class="mono" style="color:var(--acc)" aria-hidden="true">↗</span></div>` +
-    `<div class="muted" style="font-size:15px;margin-top:2px">Thấy sai ngày tháng, số liệu, lời trích, hay một đoạn viết chưa công bằng? Trang góp ý mở ra bên ngoài ứng dụng; ứng dụng không tự gửi gì.</div></a>`;
+  return `<a class="src fb" href="${esc(href)}"${tab}><div class="tt"><h3 style="font-size:calc(16.5px*var(--ts))">Góp ý / Báo sai${about ? ' ' + about : ''}</h3><span class="mono" style="color:var(--acc)" aria-hidden="true">↗</span></div>` +
+    `<div class="muted" style="font-size:calc(15px*var(--ts));margin-top:2px">Thấy sai ngày tháng, số liệu, lời trích, hay một đoạn viết chưa công bằng? Trang góp ý mở ra bên ngoài ứng dụng; ứng dụng không tự gửi gì.</div></a>`;
 }
