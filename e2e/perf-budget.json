@@ -1,0 +1,14 @@
+{
+ "about": "Ngân sách số nút DOM thêm khi kéo thanh năm 1955 → 1975 (e2e/perf.spec.ts), theo trình duyệt: budget = measured × margin. Đo lại: npm run perf:budget",
+ "margin": 1.5,
+ "drag": {
+  "chromium": {
+   "measured": 455,
+   "budget": 683
+  },
+  "webkit": {
+   "measured": 454,
+   "budget": 681
+  }
+ }
+}

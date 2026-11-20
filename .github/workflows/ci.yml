@@ -3,8 +3,82 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Actions → CI → Run workflow: also runs the path-filtered jobs (endings, voice) whatever changed
+  workflow_dispatch:
 
 jobs:
+  # content, save-safety and size guards, no browser (README, "Checks")
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # battle scenes, decision graph (NEXT), card variants, quizzes, "Nếu…" what-ifs, rarity table shape, loyal-family sim
+      - run: npm run -s scenes
+      # card option sets and VARIANT sets match scripts/lock-choices.json (saves store option indices)
+      - run: npm run -s choices
+      # the endings job's path filter (.github/filters.yml) covers every file the endings simulation imports
+      - run: npm run -s endings:filter
+      - run: npm run build
+      # every narratable line has its clip, and every clip reads the current line (src/voice/said.json)
+      - run: npm run voice:check
+      # gzip size of the main JS / CSS, all JS and the offline precache against scripts/size-budget.json + 10%
+      - run: npm run -s size
+
+  # which path-filtered jobs below have work to do (.github/filters.yml)
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      endings: ${{ steps.filter.outputs.endings }}
+      voice: ${{ steps.filter.outputs.voice }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/filters.yml
+
+  # src/data/endings-rarity.json equals a fresh run of the (deterministic) endings simulation, number for number.
+  # About 9 min (one core, 233,280 simulated games: 537 s measured on a 4-core machine); runs beside the e2e jobs, and only
+  # when a file the simulation reads changed, so a PR that leaves them alone pays nothing.
+  endings:
+    needs: changes
+    if: needs.changes.outputs.endings == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run -s endings:check
+
+  # narration clips whose length does not fit their text (skipped or repeated words), when clips change
+  voice:
+    needs: changes
+    if: needs.changes.outputs.voice == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: command -v ffprobe || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - run: npm run voice:check -- --durations
+
   test:
     # one job per engine, side by side: Chromium, and WebKit (iPad Safari's engine)
     strategy:
@@ -21,9 +95,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      # every narratable line has its clip in src/voice (scripts/check-voice.ts)
-      - run: npm run voice:check
       - run: npx playwright install --with-deps ${{ matrix.browser }}
+      # includes e2e/perf.spec.ts: DOM work budgets of the map (no timing), e2e/perf-budget.json
       - run: npx playwright test --project=${{ matrix.browser }}
       # traces of failed tests: download the artifact, then `npx playwright show-trace <trace.zip>`
       - uses: actions/upload-artifact@v4
