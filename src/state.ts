@@ -94,7 +94,11 @@ function load(mode = activeMode()): State {
   // dòng thời gian về 1955 bắt quyết lại thẻ của nơi ở mới (bản lưu đã xong thì không dời nhà nữa)
   if (!('shown' in raw) && (raw.picks as Record<string, string> | undefined)?.e5) s.movedFrom = typeof raw.year === 'number' ? raw.year : Y1;
   s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])]; s.snap = { ...(s.snap || {}) }; s.shown = [...(s.shown || [])];
-  // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa)
+  // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa). Thẻ đã có
+  // bộ thay thế mà nay thêm bộ mới thì đọc theo bộ mới, xếp cùng thứ tự nghĩa: vd. nhà vượt biển 1980, "bán chính thức"
+  // 1979, đi diện đoàn tụ (ODP) đã quyết Đổi Mới 1986, năm 1995, WTO 2007 khi các thẻ ấy còn nói từ trong nước, nay đọc
+  // bằng bộ nói từ xứ người; nhà họ Lý đi năm 1979 đã quyết thẻ năm 1980 thì đọc bằng bộ của nhà đã ở Hồng Kông; nhà giàu
+  // nhất làng chọn "bần nông" năm 1955 nay đọc là "giảm tô, thoái tô" (cards.ts VARIANT)
   s.cardv = { ...(s.cardv || {}) };
   const known = Array.isArray(raw.cvk) ? raw.cvk as string[] : 'cardv' in raw ? ['nt62', 'sg75'] : []; // cvk có từ khi thêm bộ tn80
   for (const id of Object.keys(VARIANT)) if (!known.includes(id) && s.cards && id in s.cards) s.cardv[id] = 'base';
