@@ -47,7 +47,8 @@ jobs:
           filters: .github/filters.yml
 
   # src/data/endings-rarity.json equals a fresh run of the (deterministic) endings simulation, number for number.
-  # About 8–9 min on a shared 4-core machine; runs beside the e2e jobs, only when a file the simulation reads changed.
+  # About 9 min (one core, 233,280 simulated games: 537 s measured on a 4-core machine); runs beside the e2e jobs, and only
+  # when a file the simulation reads changed, so a PR that leaves them alone pays nothing.
   endings:
     needs: changes
     if: needs.changes.outputs.endings == 'true' || github.event_name == 'workflow_dispatch'
