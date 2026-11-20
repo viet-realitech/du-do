@@ -157,6 +157,33 @@ test('read mode: opening the conclusion with a turning point still open does not
   expect(errors).toEqual([]);
 });
 
+test('read mode: a save from before the first-reading flag that only saw the open dossier still hears the ending read once', async ({ page }) => {
+  // what an older build saved after opening "Con đường còn bỏ ngỏ": ended, no endSaid, turning point 6 still open
+  const st = { step: 'play', name: 'Họ Trần', year: 2026, picks: { e1: 'canhtan', e2: 'duytan', e3: 'laphien', e4: 'tl', e5: 'thuba' }, quiz: { e6: [true, true] },
+    narr: true, sound: false, music: false, ended: true, badges: ['done'] };
+  const errors = await boot(page, st);
+  // turning point 6 is chosen in the app (which saves the migrated flag with it), then the conclusion opens with an ending
+  await page.locator('#card [data-a=pickera]').click();
+  await live(page, '.scrim .opt[data-o=doimoi]').click({ timeout: 15000 });
+  await page.locator('#go').click();
+  await live(page, '#layer [data-a=close]').click();
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('#layer .end-title')).toHaveText('Bốn đời canh tân');
+  await expect.poll(() => clips(page), { timeout: 6000 }).toContain('end-canhtan-4');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dudo-v2')!).endSaid)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('read mode: a save from before the first-reading flag that already saw its ending is not read to again', async ({ page }) => {
+  const st = { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, narr: true, sound: false, music: false, ended: true, badges: ['done'] };
+  const errors = await boot(page, st);
+  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('#layer .end-title')).toHaveText('Bốn đời canh tân');
+  await page.waitForTimeout(2400);
+  expect(await clips(page)).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test('play mode: the journey film narrates lines written for the home region (a Huế family: Duy Tân in Trung Kỳ, back home in 1975)', async ({ page }) => {
   const r = (g: number, d: number, b: number, u: number) => ({ g, d, b, u });
   const errors = await bootPlay(page, { name: 'Họ Lê', surname: 'le', home: 'hue', year: 2026, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' },
