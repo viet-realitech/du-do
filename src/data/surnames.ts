@@ -157,10 +157,10 @@ export const HOOK_TEXT: Record<string, string> = {
   'south-spelling': 'Nếu di cư vào Nam năm 1954, dòng họ sẽ đứng trước cách viết họ của người miền Nam.',
   'ngo-1963': 'Sau đảo chính tháng 11.1963, một gia đình họ Ngô sẽ bị dò hỏi có bà con với nhà Ngô Đình hay không.',
   'royal-1945': 'Mùa thu 1945, dòng dõi hoàng tộc phải chọn giữ hay bỏ tên dòng.',
-  'mac-lore': 'Tổ tiên họ Mạc từng đổi họ để tránh truy bức sau năm 1592. Những năm 1990, khi các chi họ Mạc tìm lại nhau, dòng họ bạn sẽ phải quyết có nhận chung tổ với một chi đã mang họ khác hay không.',
+  'mac-lore': 'Tổ tiên họ Mạc từng đổi họ để tránh truy bức sau năm 1592. Nếu dòng họ còn ở trong nước những năm 1990, khi các chi họ Mạc tìm lại nhau, dòng họ bạn sẽ phải quyết có nhận chung tổ với một chi đã mang họ khác hay không.',
   'tran-1936': 'Mùa hội tháng Tám năm 1936, làng sẽ mời nhà họ Trần đứng ra lo lễ giỗ Đức Thánh Trần, vì cùng họ.',
   'le-1893': 'Năm 1893, gần ngày giỗ tháng Tám, các cụ họ Lê sẽ bàn có giữ lệ “hăm mốt Lê Lai, hăm hai Lê Lợi” giữa năm mất mùa hay không.',
-  'pham-2007': 'Năm 2007, đứa cháu học bài thơ “Tỏ lòng” của Phạm Ngũ Lão sẽ về hỏi nhà mình có phải con cháu ông không.',
+  'pham-2007': 'Nếu dòng họ còn ở trong nước, năm 2007 một đứa cháu học bài thơ “Tỏ lòng” của Phạm Ngũ Lão sẽ về hỏi nhà mình có phải con cháu ông không.',
   'phan-1908': 'Năm 1908, khi Phan Châu Trinh bị bắt sau phong trào chống thuế Trung Kỳ, một gia đình họ Phan ở Huế, Quảng Nam sẽ phải chọn cách đứng.',
   'nguyen-1925': 'Khi cái tên Nguyễn Ái Quốc lan về làng (1919–1925), dòng họ Nguyễn sẽ phải chọn giữ hay đốt những tờ giấy mang tên ấy.',
 };

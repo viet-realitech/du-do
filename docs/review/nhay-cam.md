@@ -85,7 +85,7 @@ Cần để ý: Khoảng số nạn nhân và nguồn của mỗi mức; ai ch�
 | `scene:mt68:2` | B | Cảnh trận "Tổng tấn công Tết Mậu Thân" · mũi tên 3 (Quân Giải phóng) | Quân Giải phóng đánh sân bay Tân Sơn Nhứt |
 | `scene:mt68:3` | B | Cảnh trận "Tổng tấn công Tết Mậu Thân" · mũi tên 4 (Quân Giải phóng) | Tiến vào Chợ Lớn, trường đua Phú Thọ |
 | `card:mt68{regions=B+T1}:0` | C | Trò chơi · thẻ "Tổng tấn công Tết Mậu Thân" khi nhà đang ở vùng B, T1 · lựa chọn 1 | Nghe tin Tết Mậu Thân qua đài: Đài Tiếng nói Việt Nam đọc tin chiến sự suốt những ngày Tết. → Cả xóm tụ quanh chiếc loa. Tin vui, tin dữ đến cùng một lúc. |
-| `x:x-ho89` | A | Trò chơi · biến cố riêng "Người lính năm Mậu Thân" (gắn vào "Việt Nam rút quân khỏi Campuchia") | Người lính năm Mậu Thân. Cuối năm 1989, một người đàn ông chống nạng gõ cửa: năm Mậu Thân, ông là người lính bị thương được nhà bạn băng bó. Ông đã qua những năm học tập cải tạo, đầu năm tới sẽ cùng vợ con sang Mỹ theo diện H.O., và muốn ghé tạ ơn trước khi đi. |
+| `x:x-ho89` | A | Trò chơi · biến cố riêng "Người lính năm Mậu Thân" (gắn vào "Việt Nam rút quân khỏi Campuchia") | Người lính năm Mậu Thân. Tháng Giêng năm 1990, một người đàn ông chống nạng gõ cửa: năm Mậu Thân, ông là người lính bị thương được nhà bạn băng bó. Ông đã qua những năm học tập cải tạo, sắp cùng vợ con sang Mỹ theo diện H.O., và muốn ghé tạ ơn trước khi đi. |
 
 ## Thảm sát, giết hại thường dân · 16 câu
 
@@ -126,7 +126,7 @@ Cần để ý: Quy mô (số người, số năm), cách gọi; không giảm n
 | `card:sg75:1` | C | Trò chơi · thẻ "Sài Gòn — 30 tháng Tư" · lựa chọn 2 | Ở lại, trình diện: Người làm việc cho chế độ cũ đi học tập cải tạo. → Ba năm, năm năm, có người mười năm. Nhà thuộc diện "nguỵ quân nguỵ quyền". |
 | `x:x-ngo63:0` | C | Trò chơi · biến cố riêng "Họ Ngô sau ngày 1 tháng 11" · lựa chọn 1 | Giữ họ, lên trình diện trả lời: Không có gì phải giấu; chịu xét hỏi vài lần. → Hai người bị gọi lên Tổng nha Cảnh sát, hỏi về Cần Lao và Phủ Cam. Không tìm ra gì, nhưng hồ sơ đã mở thì theo mãi đến hết thời Đệ nhị Cộng hoà. |
 | `x:x-lylich78:0` | C | Trò chơi · biến cố riêng "Tờ khai lý lịch" · lựa chọn 1 | Khai đầy đủ, đúng sự thật: Không giấu gì; chấp nhận bị xếp diện. → Hồ sơ ghi 'gia đình có người đi cải tạo'. Đứa cháu thi đủ điểm vẫn không được gọi nhập học; phải nhiều năm sau mới có đứa thứ hai vào đại học. |
-| `x:x-ho89` | A | Trò chơi · biến cố riêng "Người lính năm Mậu Thân" (gắn vào "Việt Nam rút quân khỏi Campuchia") | Người lính năm Mậu Thân. Cuối năm 1989, một người đàn ông chống nạng gõ cửa: năm Mậu Thân, ông là người lính bị thương được nhà bạn băng bó. Ông đã qua những năm học tập cải tạo, đầu năm tới sẽ cùng vợ con sang Mỹ theo diện H.O., và muốn ghé tạ ơn trước khi đi. |
+| `x:x-ho89` | A | Trò chơi · biến cố riêng "Người lính năm Mậu Thân" (gắn vào "Việt Nam rút quân khỏi Campuchia") | Người lính năm Mậu Thân. Tháng Giêng năm 1990, một người đàn ông chống nạng gõ cửa: năm Mậu Thân, ông là người lính bị thương được nhà bạn băng bó. Ông đã qua những năm học tập cải tạo, sắp cùng vợ con sang Mỹ theo diện H.O., và muốn ghé tạ ơn trước khi đi. |
 
 ## Nhân Văn – Giai Phẩm · 7 câu
 
@@ -602,7 +602,7 @@ Cần để ý: Cách tả xung đột tôn giáo, công bằng với các phía
 | `card:dc63:0` | C | Trò chơi · thẻ "Đảo chính lật đổ Ngô Đình Diệm" · lựa chọn 1 | Đi theo đoàn biểu tình Phật giáo: Nhà theo Phật. → Bị bắt một đêm, được thả sáng hôm sau. |
 | `card:dc63:1` | C | Trò chơi · thẻ "Đảo chính lật đổ Ngô Đình Diệm" · lựa chọn 2 | Giữ im lặng: Nhà theo Công giáo hoặc không muốn lộ. → Sau đảo chính, mọi thứ lại đổi. |
 | `card:tn76{flags=ditan+ly79Di+vuotbien+odp}:0` | C | Trò chơi · thẻ "Cộng hoà XHCN Việt Nam" khi dòng họ có cờ ditan, ly79Di, vuotbien, odp · lựa chọn 1 | Ở lại với hội thánh bảo trợ: Một hội thánh ở thị trấn nhỏ miền Trung Tây nước Mỹ đã bảo lãnh cả nhà ra khỏi trại tị nạn. → Hội thánh lo nhà, lo việc làm trong xưởng; cả nhà là người Việt duy nhất trong thị trấn. Mùa đông đầu tiên, tuyết ngập tới bậu cửa sổ. |
-| `x:x-thonggia73` | A | Trò chơi · biến cố riêng "Đám cưới với nhà di cư" (gắn vào "Hiệp định Paris") | Đám cưới với nhà di cư. Gia đình người Bắc di cư từng ở nhờ nhà bạn năm 1954 nay đã thành hàng xóm thân. Đầu năm 1973, Hiệp định Paris vừa ký, con trai nhà bạn và con gái nhà ấy xin cưới; nhà gái theo đạo Công giáo, như nhiều người di cư năm ấy. |
+| `x:x-thonggia73` | A | Trò chơi · biến cố riêng "Đám cưới với nhà di cư" (gắn vào "Hiệp định Paris") | Đám cưới với nhà di cư. Gia đình người Bắc di cư từng ở nhờ nhà bạn hồi di cư 1954 – 1955 nay đã thành hàng xóm thân. Đầu năm 1973, Hiệp định Paris vừa ký, con trai nhà bạn và con gái nhà ấy xin cưới; nhà gái theo đạo Công giáo, như nhiều người di cư năm ấy. |
 | `lore:ngo` | B | Trò chơi · gia phả mở đầu, họ Ngô | Ước tính khoảng 1,3% dân số. Ngô Quyền thắng trận Bạch Đằng năm 938, mở đầu kỷ nguyên độc lập; thế kỷ XX, dòng Ngô Đình gốc Quảng Bình, theo Công giáo nhiều đời, nắm chính quyền Sài Gòn từ 1954 đến 1963. |
 | `lore:lam` | B | Trò chơi · gia phả mở đầu, họ Lâm | Họ Lâm (林) phổ biến ở người Hoa gốc Phúc Kiến, Triều Châu định cư Nam Bộ, đồng thời là họ lâu đời của người Kinh miền Trung. Hoà thượng Thích Quảng Đức có thế danh họ Lâm, sinh ở Khánh Hoà. |
 

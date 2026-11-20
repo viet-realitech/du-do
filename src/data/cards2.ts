@@ -23,10 +23,17 @@ export interface SpecialWhen {
   /** Hệ quả: dòng họ đã chốt, ở một sự kiện trước, một lựa chọn mang một trong các dấu này (dấu là phần tử thứ sáu của
       lựa chọn, cards.ts Choice): dấu đi theo lựa chọn chứ không theo chỉ số, nên dời lựa chọn không làm hệ quả gắn nhầm. */
   after?: string[];
+  /** Hệ quả không đến với nhà đã chốt một lựa chọn mang một trong các dấu này, ở một sự kiện trước hay trên chính thẻ của
+      sự kiện biến cố gắn vào (biến cố hệ quả chốt sau khi thẻ được quyết: play.ts decide). Vd. nhà vừa "Hưởng ứng Chiếu
+      Cần Vương" không bị hỏi có để người nhà theo nghĩa quân không. */
+  notAfter?: string[];
   /** Nơi dòng họ sống năm ấy: true = cả nhà ở xứ người (đã ra nước ngoài trên thẻ, hay chọn Ra đi ở điểm rẽ 6 và đã đi),
       false = còn ở trong nước. Bỏ trống: biến cố trong nước, trừ biến cố của hướng Ra đi (play.ts matches). */
   abroad?: boolean;
-  /** Dòng họ đã (true) hay chưa (false) đổi họ lần nào. */
+  /** Dòng họ còn sống ở quê năm ấy (play.ts placeAt: không di cư, tập kết, không ra nước ngoài): lễ ở đình làng cũ. */
+  atHome?: true;
+  /** true: dòng họ đang mang một họ khác họ ban đầu (đã đổi họ và chưa trở lại họ gốc: còn họ cũ để nhận lại);
+      false: chưa. */
   renamed?: boolean;
 }
 /** [nhãn, mô tả, hiệu ứng, kết cục, đổi họ?, cờ?] — cờ như ở thẻ thường (endings.ts); không đổi họ thì phần tử thứ 5 là undefined. */
@@ -76,7 +83,7 @@ export const SPECIAL: SpecialCard[] = [
     s: "Sau đảo chính, cảnh sát lập danh sách người dính dáng đến gia đình Ngô Đình; dòng họ bạn mang họ Ngô, lại đệm chữ Đình và có người từng làm ở toà tỉnh, nên bị gọi lên hỏi.",
     choices: [
       ["Giữ họ, lên trình diện trả lời", "Không có gì phải giấu; chịu xét hỏi vài lần.", {"u": 4, "b": -6, "qg": -8}, "Hai người bị gọi lên Tổng nha Cảnh sát, hỏi về Cần Lao và Phủ Cam. Không tìm ra gì, nhưng hồ sơ đã mở thì theo mãi đến hết thời Đệ nhị Cộng hoà."],
-      ["Chuyển các cháu sang họ mẹ", "Khai sinh lại cho con cháu, cho yên chuyện.", {"u": -8, "b": -4, "lg": -5, "qg": 5}, "Xin án thế vì khai sinh ở toà tỉnh, các cháu mang họ mẹ. Vài năm sau không ai còn hỏi đến họ Ngô, nhưng giấy tờ đã mang tên khác và không đổi lại nữa.", "mother", "lylich"],
+      ["Chuyển các cháu sang họ mẹ", "Khai sinh lại cho con cháu, cho yên chuyện.", {"u": -8, "b": -4, "lg": -5, "qg": 5}, "Xin án thế vì khai sinh ở toà tỉnh, các cháu mang họ mẹ. Vài năm sau không ai còn hỏi đến họ Ngô; giấy tờ của các cháu đã mang tên khác.", "mother", "lylich"],
       ["Đưa gia phả ra chứng minh", "Tổ tiên không dính gì tới Đại Phong, Lệ Thuỷ; nhờ người quen xác nhận.", {"u": 3, "b": -5, "lg": 5}, "Gia phả chép tổ tiên lập nghiệp ở quê từ đời Gia Long. Người ta tin một nửa; con cháu đi học vẫn bị gọi là 'cháu ông Diệm' đến hết năm học."],
     ],
     note: "Sau cuộc đảo chính 1.11.1963, đảng Cần Lao bị giải tán, nhiều người thân cận với gia đình Ngô Đình bị bắt hoặc mất chức; Ngô Đình Cẩn bị xử bắn tháng 5.1964. Họ Ngô Đình gốc làng Đại Phong (Lệ Thuỷ, Quảng Bình), không liên quan đến phần lớn các dòng họ Ngô khác.",
@@ -191,11 +198,11 @@ export const SPECIAL: SpecialCard[] = [
   {
     id: "x-le93", ev: "la93", when: {"surnames": ["le"]},
     title: "Hăm mốt Lê Lai, hăm hai Lê Lợi",
-    s: "Gần ngày giỗ tháng Tám, các cụ trong họ nhắc câu “hăm mốt Lê Lai, hăm hai Lê Lợi”: ngày hăm mốt cúng Lê Lai, người đã chết thay chủ tướng, rồi hăm hai mới cúng Lê Lợi. Năm nay mất mùa, cả họ phải bàn có giữ lệ ấy không.",
+    s: "Gần ngày giỗ tháng Tám, các cụ trong làng nhắc câu “hăm mốt Lê Lai, hăm hai Lê Lợi”: ngày hăm mốt cúng Lê Lai, người đã chết thay chủ tướng, rồi hăm hai mới cúng Lê Lợi. Có nhà họ Lê giữ lệ ấy như lệ của họ mình; năm nay mất mùa, các cụ trong họ bàn xem nhà mình có làm theo không.",
     choices: [
       ["Giữ đủ hai ngày lễ", "Hai mâm cúng hai ngày, rồi mới đến giỗ tổ nhà mình; mời cả xóm.", {"g": -5, "u": 3, "lg": 4}, "Hai mâm cỗ đạm bạc giữa năm mất mùa. Người trong xóm đến đông; ông trưởng họ lại kể chuyện Lê Lai mặc áo chủ tướng xông ra giữa vòng vây, như năm nào cũng kể."],
-      ["Gộp làm một lễ", "Một mâm cơm, hai nén hương; giữ lệ mà không tốn.", {"g": -2, "u": 1, "lg": 1}, "Lễ gọn, ai cũng hiểu năm nay mất mùa. Bọn trẻ thuộc câu “hăm mốt Lê Lai, hăm hai Lê Lợi” trước khi biết đọc."],
-      ["Chỉ giỗ tổ nhà mình", "Cùng họ Lê, nhưng gia phả không chép nhà mình là con cháu Lam Sơn; lệ ấy nhà mình không nhận.", {"lg": -2}, "Vài cụ trong xóm chê nhà bạn bỏ lệ. Ông trưởng họ chỉ nói: cùng họ chưa chắc đã cùng dòng; gia phả nhà mình chép đủ tổ tiên của chính mình là được."],
+      ["Gộp làm một lễ", "Một mâm cơm, hai nén hương; theo lệ mà không tốn.", {"g": -2, "u": 1, "lg": 1}, "Lễ gọn, ai cũng hiểu năm nay mất mùa. Bọn trẻ thuộc câu “hăm mốt Lê Lai, hăm hai Lê Lợi” trước khi biết đọc."],
+      ["Chỉ giỗ tổ nhà mình", "Cùng họ Lê, nhưng gia phả không chép nhà mình là con cháu Lam Sơn; lệ ấy nhà mình không nhận.", {"lg": -2}, "Vài cụ trong xóm chê nhà bạn không theo lệ. Ông trưởng họ chỉ nói: cùng họ chưa chắc đã cùng dòng; gia phả nhà mình chép đủ tổ tiên của chính mình là được."],
     ],
     note: "Câu “Hăm mốt Lê Lai, hăm hai Lê Lợi” gắn với chuyện Lê Lai mặc áo chủ tướng, đánh ra giữa vòng vây cho Lê Lợi thoát, những năm đầu khởi nghĩa Lam Sơn; tương truyền Lê Lợi (mất ngày 22 tháng Tám âm lịch năm 1433) dặn cúng Lê Lai trước ngày giỗ của mình một ngày. Lễ hội Lam Kinh (Thanh Hoá) gắn với ngày giỗ này. Biến cố là hư cấu: chỉ nói cùng họ, không nhận họ hàng.",
   },
@@ -226,18 +233,18 @@ export const SPECIAL: SpecialCard[] = [
   {
     id: "x-mac95", ev: "hn95", when: {"surnames": ["mac"], "abroad": false},
     title: "Các chi họ Mạc tìm lại nhau",
-    s: "Sau năm 1592, con cháu nhà Mạc tản đi nhiều nơi, nhiều chi phải mang họ khác suốt mấy trăm năm. Nay các chi họ Mạc tìm lại nhau; một chi họ Phạm ở huyện bên mang gia phả đến từ đường nhà bạn, xin đối chiếu để nhận chung tổ.",
+    s: "Sau năm 1592, con cháu nhà Mạc tản đi nhiều nơi, nhiều chi phải mang họ khác suốt mấy trăm năm. Nay các chi tìm lại nhau; một chi họ Phạm ở huyện bên mang gia phả đến từ đường nhà bạn, xin đối chiếu xem hai nhà có chung tổ hay không.",
     choices: [
       ["Mở gia phả đối chiếu, nhận chung tổ", "Mời các cụ hai bên ngồi lại, so từng đời.", {"b": -3, "u": 4, "lg": 4}, "Hai cuốn gia phả gặp nhau ở một đời rất xa. Chi họ Phạm làm lễ cáo tổ ở từ đường nhà bạn rồi làm giấy tờ trở về họ Mạc; giỗ tổ năm sau đông gấp đôi."],
-      ["Góp tiền về quê tổ", "Cùng các chi khác góp tiền tu sửa nơi thờ tổ ở quê gốc nhà Mạc, vùng Cổ Trai (Hải Phòng).", {"b": -7, "u": 3, "lg": 2}, "Tên chi nhà bạn khắc trên bia công đức cùng hàng chục chi khác: có chi mang họ Mạc, có chi vẫn mang họ khác."],
-      ["Thận trọng, chưa nhận", "Hai cuốn gia phả chép khác nhau nhiều chỗ; chờ các cụ tra cứu thêm.", {"lg": -1}, "Chi họ kia ra về, hẹn năm sau. Các cụ nhà bạn tra gia phả thêm mấy mùa nữa: nhận họ là việc của trăm năm, không vội được."],
+      ["Góp tiền về Cổ Trai", "Cùng các chi họ Mạc khác góp tiền tu sửa nơi thờ nhà Mạc ở làng Cổ Trai (Hải Phòng), quê Mạc Đăng Dung.", {"b": -7, "u": 3, "lg": 2}, "Tên chi nhà bạn khắc trên bia công đức cùng hàng chục chi khác: có chi mang họ Mạc, có chi vẫn mang họ khác."],
+      ["Nói thật: cùng họ, chưa chắc cùng dòng", "Gia phả nhà mình không chép tới nhà Mạc; xin để các cụ hai bên tra thêm.", {"lg": -1}, "Hai cuốn gia phả không gặp nhau ở đời nào. Chi họ kia ra về; các cụ nhà bạn bảo: cùng họ Mạc chưa chắc đã cùng dòng nhà Mạc, chép đúng tổ tiên của mình là được."],
     ],
     note: "Mạc Đăng Dung (người làng Cổ Trai, nay thuộc Hải Phòng) lập nhà Mạc năm 1527; năm 1592 Thăng Long về tay Lê – Trịnh, con cháu nhà Mạc giữ Cao Bằng tới 1677. Nhiều gia phả chép hậu duệ nhà Mạc đổi sang họ khác để tránh truy bức; từ cuối thế kỷ XX, nhiều chi tìm lại nhau, có chi xin nhận lại họ Mạc. Biến cố là hư cấu.",
   },
   {
     id: "x-hoten95", ev: "hn95", when: {"renamed": true, "abroad": false}, minor: true,
     title: "Lập lại gia phả: hai cái tên",
-    s: "Các cụ trong họ bàn chuyện chép lại gia phả, sửa sang từ đường. Dòng họ bạn đã có lần phải đổi họ; nay thời thế đã khác, có người trong họ muốn làm giấy tờ nhận lại họ cũ.",
+    s: "Các cụ trong họ bàn chuyện chép lại gia phả, sửa sang từ đường. Dòng họ bạn đã có lần đổi họ; nay có người trong họ muốn làm giấy tờ nhận lại họ cũ.",
     choices: [
       ["Nhận lại họ cũ", "Làm thủ tục đổi lại họ trên giấy tờ cho con cháu; cáo tổ ở từ đường.", {"b": -4, "u": 4, "lg": 3}, "Giấy tờ đi qua mấy cửa, gần một năm mới xong. Ngày cáo tổ, người trưởng họ đọc lại họ cũ trước bàn thờ; gia phả chép rõ những năm dòng họ mang tên khác, và vì sao.", "origin"],
       ["Giữ họ đang mang, chép cả hai", "Con cháu đã quen tên mới; gia phả ghi rõ họ gốc và năm đổi họ.", {"b": -2, "u": 2, "lg": 2}, "Gia phả mới có một trang riêng cho lần đổi họ: năm nào, vì sao, đổi sang họ gì. Con cháu khai họ mới, nhưng thuộc cả họ gốc."],
@@ -281,7 +288,7 @@ export const SPECIAL: SpecialCard[] = [
     note: "Pháp chiếm thành Gia Định tháng 2.1859 (năm Kỷ Mùi); quân Pháp thiếu lương thực và mua gạo của người địa phương. Biến cố là hư cấu.",
   },
   {
-    id: "x-re64", ev: "cv85", when: {"after": ["giauNghiaQuan64"]}, also: true, minor: true,
+    id: "x-re64", ev: "cv85", when: {"after": ["giauNghiaQuan64"], "notAfter": ["theoCV85"]}, also: true, minor: true,
     title: "Người rể từng theo Trương Định",
     s: "Hai mươi năm trước, nhà bạn nuôi giấu mấy người lính tan rã của Trương Định; một người nay là rể trong họ. Tin vua Hàm Nghi xuống chiếu Cần Vương truyền vào tới Nam Kỳ, ông rể ngồi lặng cả buổi bên bàn thờ.",
     choices: [
@@ -292,7 +299,7 @@ export const SPECIAL: SpecialCard[] = [
     note: "Trương Định tử trận ngày 20.8.1864; nhiều nghĩa quân của ông tan về làng. Chiếu Cần Vương ban tháng 7.1885; Nam Kỳ khi ấy đã là thuộc địa Pháp, phong trào Cần Vương chủ yếu ở Trung Kỳ, Bắc Kỳ, có hoạt động ở Bình Thuận. Biến cố là hư cấu.",
   },
   {
-    id: "x-thongngon74", ev: "cv85", when: {"after": ["thongNgon74"]}, also: true, minor: true,
+    id: "x-thongngon74", ev: "cv85", when: {"after": ["thongNgon74"], "notAfter": ["theoCV85"]}, also: true, minor: true,
     title: "Người thông ngôn trong họ",
     s: "Mười năm trước, con trai thứ nhà bạn học chữ Pháp, ra làm thông ngôn ở toà sứ. Nay Chiếu Cần Vương truyền đi, nghĩa quân ở nhiều nơi coi người làm việc cho Pháp là kẻ thù; một sáng có lá thư không ký tên dán ở cổng nhà, đòi ông bỏ việc.",
     choices: [
@@ -358,7 +365,7 @@ export const SPECIAL: SpecialCard[] = [
     note: "Sau Xô viết Nghệ Tĩnh (1930–1931), hàng nghìn người bị bắt, đưa ra Côn Đảo, Sơn La, Lao Bảo…; năm 1936, chính phủ Mặt trận Bình dân ở Pháp ân xá, nhiều tù chính trị Đông Dương được thả. Biến cố là hư cấu.",
   },
   {
-    id: "x-co45", ev: "ng45", when: {"after": ["coSoVM41"]}, also: true, minor: true,
+    id: "x-co45", ev: "ng45", when: {"after": ["coSoVM41"], "notAfter": ["cuopCQ45"]}, also: true, minor: true,
     title: "Lá cờ đầu tiên của làng",
     s: "Bốn năm trước, nhà bạn là nơi Việt Minh họp bí mật. Tháng Tám năm nay, khi tin Nhật đầu hàng về tới làng, những người từng họp trong nhà bạn đến xin chỗ treo lá cờ đầu tiên.",
     choices: [
@@ -369,11 +376,11 @@ export const SPECIAL: SpecialCard[] = [
     note: "Sau khi Nhật đầu hàng Đồng minh (15.8.1945), Việt Minh phát động tổng khởi nghĩa; trong khoảng 14 – 28.8.1945, chính quyền ở hầu hết các tỉnh về tay Việt Minh. Biến cố là hư cấu.",
   },
   {
-    id: "x-thoc45", ev: "ng45", when: {"after": ["giauThoc40"]}, also: true, minor: true,
+    id: "x-thoc45", ev: "ng45", when: {"after": ["giauThoc40"], "notAfter": ["banThoc45"]}, also: true, minor: true,
     title: "Hầm thóc chôn năm 1940",
     s: "Năm năm trước, nhà bạn chôn thóc trong vườn để khỏi phải bán cho Nhật. Nay đói lan khắp miền Bắc; hầm thóc ấy đủ cho cả họ qua mùa giáp hạt, nếu chỉ dành cho người trong họ.",
     choices: [
-      ["Đào thóc chia cho cả xóm", "Chia theo đầu người, nhà nào cũng có phần.", {"g": -8, "u": 5, "lg": 7}, "Mỗi nhà vài đấu thóc. Cả xóm qua được mùa giáp hạt; nhà bạn ăn cháo cùng mọi người."],
+      ["Đào thóc chia cho cả xóm", "Chia theo đầu người, nhà nào cũng có phần.", {"g": -8, "u": 5, "lg": 7}, "Mỗi nhà trong xóm vài đấu thóc. Nhiều nhà qua được mùa giáp hạt; nhà bạn ăn cháo cùng mọi người."],
       ["Chia cho họ hàng, láng giềng sát vách", "Giữ phần cho nhà, san bớt cho những nhà gần.", {"g": -4, "u": 2, "lg": 3}, "Mấy nhà quanh ngõ qua được mùa đói. Ở đầu làng, người nơi khác đến xin ăn mỗi ngày một đông."],
       ["Giữ cho người trong họ", "Đói còn dài; giữ thóc cho người nhà.", {"u": -2, "lg": -5}, "Cả họ qua được mùa đói. Hàng xóm biết nhà bạn còn thóc; nhiều năm sau vẫn có người không chào."],
     ],
@@ -382,13 +389,13 @@ export const SPECIAL: SpecialCard[] = [
   {
     id: "x-hen46", ev: "tk46", when: {"after": ["choVM41"]}, also: true, minor: true,
     title: "Người hẹn gặp lại",
-    s: "Năm 1941, một người Việt Minh đến nhà bạn rồi đi, hẹn gặp lại. Cuối năm 1946, khi tiếng súng kháng chiến nổ, người ấy quay lại thật, nay là cán bộ huyện, đến hỏi nhà bạn giúp được gì.",
+    s: "Năm 1941, một người Việt Minh đến nhà bạn rồi đi, hẹn gặp lại. Cuối năm 1946, khi lời kêu gọi toàn quốc kháng chiến truyền về, người ấy quay lại thật, nay là cán bộ huyện, đến hỏi nhà bạn giúp được gì.",
     choices: [
       ["Cho một người con theo đi", "Vào dân quân, rồi vệ quốc đoàn.", {"d": -1, "u": 3, "vm": 5}, "Người con đi theo người cán bộ ngay đêm ấy. Thư về thưa, nhưng có, qua tay giao liên."],
       ["Góp thóc, giữ người ở nhà", "Thóc thì góp được; người còn phải giữ ruộng.", {"g": -6, "u": 1, "vm": 4}, "Hai bồ thóc đi trong đêm. Người cán bộ ghi tên nhà bạn vào sổ, bắt tay rồi đi."],
       ["Xin cho nhà đứng ngoài", "Nhà neo người, già yếu.", {"u": -1, "vm": -4}, "Người cán bộ không nói gì thêm. Từ đó, trong các buổi họp xã, thỉnh thoảng lại có người nhắc tên nhà bạn."],
     ],
-    note: "Toàn quốc kháng chiến bắt đầu đêm 19.12.1946. Biến cố là hư cấu.",
+    note: "Toàn quốc kháng chiến bắt đầu đêm 19.12.1946, với Lời kêu gọi toàn quốc kháng chiến; ở Nam Bộ, kháng chiến đã nổ ra từ ngày 23.9.1945. Biến cố là hư cấu.",
   },
   {
     id: "x-haimam54", ev: "gnv", when: {"after": ["chiaDoi46"], "homes": ["hn", "nd", "na"]}, also: true, minor: true,
@@ -404,7 +411,7 @@ export const SPECIAL: SpecialCard[] = [
   {
     id: "x-thonggia73", ev: "pr73", when: {"after": ["donDiCu54"], "abroad": false}, also: true, minor: true,
     title: "Đám cưới với nhà di cư",
-    s: "Gia đình người Bắc di cư từng ở nhờ nhà bạn năm 1954 nay đã thành hàng xóm thân. Đầu năm 1973, Hiệp định Paris vừa ký, con trai nhà bạn và con gái nhà ấy xin cưới; nhà gái theo đạo Công giáo, như nhiều người di cư năm ấy.",
+    s: "Gia đình người Bắc di cư từng ở nhờ nhà bạn hồi di cư 1954 – 1955 nay đã thành hàng xóm thân. Đầu năm 1973, Hiệp định Paris vừa ký, con trai nhà bạn và con gái nhà ấy xin cưới; nhà gái theo đạo Công giáo, như nhiều người di cư năm ấy.",
     choices: [
       ["Cưới ở nhà thờ, rồi lễ gia tiên", "Buổi sáng lễ cưới ở nhà thờ xứ, buổi chiều ra mắt tổ tiên ở nhà trai.", {"b": -6, "u": 3, "lg": 4}, "Buổi sáng ở nhà thờ, buổi chiều trước bàn thờ gia tiên. Hai bên nội ngoại, hai giọng Bắc Nam, cùng ngồi một mâm."],
       ["Đám cưới giản dị, thời chiến", "Vài mâm cỗ, mời hàng xóm.", {"b": -2, "u": 1, "lg": 2}, "Cỗ cưới vài mâm, khách phần lớn là hàng xóm. Ai cũng mong hoà bình đến kịp cho đứa cháu đầu lòng."],
@@ -415,7 +422,7 @@ export const SPECIAL: SpecialCard[] = [
   {
     id: "x-ho89", ev: "kh89", when: {"after": ["cuuLinh68"], "abroad": false}, also: true, minor: true,
     title: "Người lính năm Mậu Thân",
-    s: "Cuối năm 1989, một người đàn ông chống nạng gõ cửa: năm Mậu Thân, ông là người lính bị thương được nhà bạn băng bó. Ông đã qua những năm học tập cải tạo, đầu năm tới sẽ cùng vợ con sang Mỹ theo diện H.O., và muốn ghé tạ ơn trước khi đi.",
+    s: "Tháng Giêng năm 1990, một người đàn ông chống nạng gõ cửa: năm Mậu Thân, ông là người lính bị thương được nhà bạn băng bó. Ông đã qua những năm học tập cải tạo, sắp cùng vợ con sang Mỹ theo diện H.O., và muốn ghé tạ ơn trước khi đi.",
     choices: [
       ["Giữ ông lại ăn cơm, ôn chuyện cũ", "Làm mâm cơm, mời cả nhà ra ngồi.", {"g": -2, "u": 2, "lg": 2}, "Ông ngồi đến khuya, kể về những năm trong trại và những người cùng đơn vị. Lúc về, ông xin tấm ảnh chụp cả nhà để mang theo."],
       ["Đưa địa chỉ, hẹn có thư", "Giữ liên lạc với người sắp đi xa.", {"u": 1, "lg": 1, "my": 3}, "Năm sau có thư từ Mỹ, kèm tấm ảnh cả nhà ông trước căn nhà thuê. Thư đi thư lại nhiều năm."],
@@ -424,7 +431,7 @@ export const SPECIAL: SpecialCard[] = [
     note: "Theo thoả thuận Mỹ – Việt Nam năm 1989, chương trình H.O. (Humanitarian Operation) cho cựu tù cải tạo cùng gia đình sang định cư ở Mỹ; những chuyến đầu tiên đi đầu năm 1990. Biến cố là hư cấu.",
   },
   {
-    id: "x-doi95", ev: "hn95", when: {"after": ["banThoc45"], "homes": ["hn", "nd", "na"], "abroad": false}, also: true, minor: true,
+    id: "x-doi95", ev: "hn95", when: {"after": ["banThoc45"], "homes": ["hn", "nd", "na"], "abroad": false, "atHome": true}, also: true, minor: true,
     title: "Năm mươi năm sau nạn đói",
     s: "Năm 1995, tròn năm mươi năm nạn đói Ất Dậu, làng làm lễ cầu siêu và dựng bia cho những người không qua được mùa đói năm ấy. Các cụ trong làng còn nhớ nhà bạn đã bán thóc giá cao giữa lúc người ta đói.",
     choices: [
@@ -435,7 +442,7 @@ export const SPECIAL: SpecialCard[] = [
     note: "Nhiều làng ở miền Bắc lập bia, làm lễ tưởng niệm người chết trong nạn đói năm Ất Dậu (1945); năm 1995 là năm thứ năm mươi. Biến cố là hư cấu.",
   },
   {
-    id: "x-ghion95", ev: "hn95", when: {"after": ["khoThoc45"], "homes": ["hn", "nd", "na"], "abroad": false}, also: true, minor: true,
+    id: "x-ghion95", ev: "hn95", when: {"after": ["khoThoc45"], "homes": ["hn", "nd", "na"], "abroad": false, "atHome": true}, also: true, minor: true,
     title: "Kho thóc năm Ất Dậu",
     s: "Tròn năm mươi năm nạn đói Ất Dậu, làng làm lễ tưởng niệm ở đình. Tấm biển ghi những nhà mở kho cứu đói năm ấy được lau lại; tên dòng họ bạn ở dòng đầu, và làng mời người trong họ đọc văn tế.",
     choices: [

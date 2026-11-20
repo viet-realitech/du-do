@@ -1,5 +1,5 @@
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
-import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices } from '../play';
+import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices, keepEnding } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
@@ -113,7 +113,7 @@ export function openEnd(): void {
   const a = archetype(), ms = matchStats(), { f, e: end, title } = endingNow(), play = isPlay();
   // lần đầu mở màn kết có kết cục (hồ sơ còn bỏ ngỏ không tính): giọng thuyết minh tự đọc tên kết cục (một lần)
   const fresh = !!end && !S.endSaid;
-  if (!S.ended || fresh) { S.ended = true; if (end) S.endSaid = true; save(); }
+  if (!S.ended || fresh || (end && !S.endFix?.id)) { S.ended = true; if (end) { S.endSaid = true; keepEnding(end); } save(); }
   mood('finale');
   ERAS.forEach(e => void preloadEra(e)); // ảnh cho phim hành trình
   const miss = ERAS.filter(e => !S.picks[e.id]).length, rar = end ? rarityLine(end.id, f.mode) : null, first = end ? firstDivergence(f.picks) : null;

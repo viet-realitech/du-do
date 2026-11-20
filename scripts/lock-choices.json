@@ -41,6 +41,13 @@
     "x:x-xiem30"
    ],
    "note": "Đợt H: 23 biến cố mới (x-le93, x-tran36, x-pham07, x-mac95, x-hoten95, x-giapha95, x-giaphaxa95 và 16 biến cố hệ quả x-gao59 … x-ghion95). Không thẻ, bộ theo vùng hay biến cố cũ nào đổi thứ tự: bản lưu cũ đọc các thẻ đã quyết y như trước. Dấu trên lựa chọn (Choice[5]) không đổi chỉ số. S.xs nay có thể chứa hai id cách nhau bằng dấu phẩy; bản lưu cũ (một id hay '') đọc như cũ, không cần bước chuyển đổi."
+  },
+  {
+   "date": "2026-11-20",
+   "ids": [
+    "x:x-mac95"
+   ],
+   "note": "x-mac95 (1995, họ Mạc): lựa chọn 1 'Góp tiền về quê tổ' thành 'Góp tiền về Cổ Trai' (không gán nhà Mạc làm quê tổ của dòng họ người chơi); lựa chọn 2 'Thận trọng, chưa nhận' thành 'Nói thật: cùng họ, chưa chắc cùng dòng' (cùng nghĩa: không nhận chung tổ, cùng hiệu ứng). Thứ tự giữ nguyên; bản lưu đã quyết đọc chỉ số như cũ, chỉ lời đổi."
   }
  ],
  "cards": {
@@ -753,8 +760,8 @@
   ],
   "x:x-mac95 @hn95": [
    "Mở gia phả đối chiếu, nhận chung tổ",
-   "Góp tiền về quê tổ",
-   "Thận trọng, chưa nhận"
+   "Góp tiền về Cổ Trai",
+   "Nói thật: cùng họ, chưa chắc cùng dòng"
   ],
   "x:x-ngo63 @dc63": [
    "Giữ họ, lên trình diện trả lời",

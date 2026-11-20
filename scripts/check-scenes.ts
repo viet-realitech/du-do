@@ -96,7 +96,8 @@ for (const [id, vs] of Object.entries(VARIANT)) {
 }
 // dấu trên lựa chọn (cards.ts Choice[5]) và biến cố hệ quả (cards2.ts SpecialWhen.after): mỗi dấu biến cố nhắc tới có trên
 // một lựa chọn của một sự kiện TRƯỚC sự kiện biến cố gắn vào (play.ts markedAt chỉ xét sự kiện trước; nhắc sự kiện sau hay
-// chính nó thì điều kiện tự gọi lại mình), và dấu nào cũng có biến cố dùng tới
+// chính nó thì điều kiện tự gọi lại mình); dấu loại trừ (notAfter) nằm trước hay trên chính thẻ của sự kiện (play.ts decide
+// chốt biến cố hệ quả sau khi ghi lựa chọn), không nằm ở sự kiện sau; và dấu nào cũng có biến cố dùng tới
 {
   const at: Record<string, string[]> = {};
   for (const [id, c] of Object.entries(CARD)) for (const ch of [...c[2], ...(VARIANT[id] || []).flatMap(va => va.choices)]) if (ch[5]) (at[ch[5]] ||= []).includes(id) || at[ch[5]].push(id);
@@ -107,6 +108,12 @@ for (const [id, vs] of Object.entries(VARIANT)) {
       used.add(m);
       if (!at[m]) { console.error(`LỖI biến cố ${c.id}: after ${m} không lựa chọn nào mang dấu này`); err++; continue; }
       for (const id of at[m]) if (ix(id) >= ix(c.ev)) { console.error(`LỖI biến cố ${c.id} (${c.ev}): dấu ${m} nằm trên ${id}, không trước sự kiện của biến cố`); err++; }
+    }
+    for (const m of c.when.notAfter || []) {
+      used.add(m);
+      if (!c.also) { console.error(`LỖI biến cố ${c.id}: notAfter chỉ dùng cho biến cố hệ quả (also)`); err++; }
+      if (!at[m]) { console.error(`LỖI biến cố ${c.id}: notAfter ${m} không lựa chọn nào mang dấu này`); err++; continue; }
+      for (const id of at[m]) if (ix(id) > ix(c.ev)) { console.error(`LỖI biến cố ${c.id} (${c.ev}): dấu ${m} nằm trên ${id}, sau sự kiện của biến cố`); err++; }
     }
     for (const ch of c.choices) if (ch[4] === 'origin' && c.when.renamed !== true) { console.error(`LỖI biến cố ${c.id}: "nhận lại họ cũ" (origin) cần when.renamed`); err++; }
   }

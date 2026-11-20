@@ -71,7 +71,7 @@ export const CARDS: Card[] = [
     ['Từ quan, về dạy học', 'Không làm việc với người Pháp.', { b: -4, u: 6, tr: 6, ph: -6, lg: 5 }, 'Học trò kéo đến đầy sân. Nhà nghèo đi nhưng được kính.'],
   ]],
   ['cv85', 'all', [
-    ['Hưởng ứng Chiếu Cần Vương', 'Bán ruộng mua gươm, lập đội nghĩa binh.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.'],
+    ['Hưởng ứng Chiếu Cần Vương', 'Bán ruộng mua gươm, lập đội nghĩa binh.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.', undefined, 'theoCV85'],
     ['Góp tiền, không góp người', 'Gửi bạc cho nghĩa quân, giữ con cháu ở nhà.', { b: -10, u: 4, tr: 8, ph: -8 }, 'Quan Pháp nghi ngờ nhưng không có bằng chứng.'],
     ['Đứng ngoài', 'Chờ xem vua nào thắng.', { u: -5, lg: -5 }, 'Khi nghĩa quân về làng xin lương, dòng họ đóng cửa. Người làng nhớ điều đó.', undefined, 'dungNgoai85'],
   ]],
@@ -174,7 +174,7 @@ export const CARDS: Card[] = [
   ['ng45', 'all', [
     ['Mở kho thóc cứu đói', 'Phát thóc cho làng, không bán.', { g: -20, u: 14, vm: 10, lg: 20 }, 'Không ai trong làng chết đói mùa đó. Tên dòng họ được ghi ở đình.', undefined, 'khoThoc45'],
     ['Bán thóc giá cao', 'Thóc giờ đắt hơn vàng.', { b: 25, g: -15, u: -25, lg: -25, vm: -15 }, 'Rương bạc đầy. Làng chôn người ngoài đồng, có nhà chết cả.', undefined, 'banThoc45'],
-    ['Theo Việt Minh cướp chính quyền', 'Người của họ vào đoàn người kéo về tỉnh lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.'],
+    ['Theo Việt Minh cướp chính quyền', 'Người của họ vào đoàn người kéo về tỉnh lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.', undefined, 'cuopCQ45'],
   ]],
   ['tq45', 'B,NE', [
     ['Bán gạo cho quân Trung Hoa', 'Quân Tưởng ở Bắc cần lương, trả bằng tiền quan kim.', { b: 6, g: -8, vm: -5 }, 'Tiền quan kim mất giá, gạo thì mất thật.'],
@@ -631,9 +631,9 @@ export const VARIANT: Record<string, Variant[]> = {
   /* ---- Điểm rẽ vừa chọn không bị hỏi lại: thẻ đầu chương hỏi "làm thế nào" trên đường đã chọn ---- */
   cv85: [
     { picks: ['canvuong'], choices: [
-      ['Bán ruộng mua gươm, lập đội nghĩa binh', 'Cả họ theo nghĩa quân lên núi.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.'],
-      ['Gửi con trai cả theo nghĩa quân, ở nhà nuôi quân', 'Một người đi, cả nhà ở lại làm ra thóc gạo cho nghĩa quân.', { g: -8, d: -2, b: -4, u: 7, tr: 10, ph: -12 }, 'Người con theo nghĩa quân lên núi; ở nhà, mỗi mùa gặt lại có gánh thóc đi đêm.'],
-      ['Giấu lương cho nghĩa quân trong nhà thờ họ', 'Thóc, muối cất dưới bệ thờ, chờ người của nghĩa quân đến lấy.', { g: -6, u: 5, tr: 6, ph: -8, lg: 3 }, 'Thóc nằm dưới bệ thờ, chờ người đến lấy vào những đêm không trăng. Lính đồn khám hai lần, không thấy.'],
+      ['Bán ruộng mua gươm, lập đội nghĩa binh', 'Cả họ theo nghĩa quân lên núi.', { g: -12, d: -6, b: -8, u: 11, tr: 15, ph: -20 }, 'Cả họ lên rừng. Tên dòng họ đi vào các bài vè Cần Vương.', undefined, 'theoCV85'],
+      ['Gửi con trai cả theo nghĩa quân, ở nhà nuôi quân', 'Một người đi, cả nhà ở lại làm ra thóc gạo cho nghĩa quân.', { g: -8, d: -2, b: -4, u: 7, tr: 10, ph: -12 }, 'Người con theo nghĩa quân lên núi; ở nhà, mỗi mùa gặt lại có gánh thóc đi đêm.', undefined, 'theoCV85'],
+      ['Giấu lương cho nghĩa quân trong nhà thờ họ', 'Thóc, muối cất dưới bệ thờ, chờ người của nghĩa quân đến lấy.', { g: -6, u: 5, tr: 6, ph: -8, lg: 3 }, 'Thóc nằm dưới bệ thờ, chờ người đến lấy vào những đêm không trăng. Lính đồn khám hai lần, không thấy.', undefined, 'theoCV85'],
     ] },
   ],
   dd05: [
@@ -664,7 +664,7 @@ export const VARIANT: Record<string, Variant[]> = {
   ng45: [
     { picks: ['vm'], choices: [
       ['Mở kho thóc cứu đói', 'Phát thóc cho làng, không bán.', { g: -20, u: 14, vm: 10, lg: 20 }, 'Không ai trong làng chết đói mùa đó. Tên dòng họ được ghi ở đình.', undefined, 'khoThoc45'],
-      ['Dẫn đoàn người giành chính quyền huyện', 'Người của họ đi đầu đoàn người kéo về huyện lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.'],
+      ['Dẫn đoàn người giành chính quyền huyện', 'Người của họ đi đầu đoàn người kéo về huyện lỵ.', { d: -1, u: 8, vm: 25, qg: -10, lg: 8 }, 'Dòng họ có người trong uỷ ban nhân dân đầu tiên.', undefined, 'cuopCQ45'],
       ['Giữ an ninh làng', 'Lập đội tự vệ canh kho thóc những ngày giao thời.', { u: 5, vm: 8, lg: 6 }, 'Làng qua những ngày tháng Tám không mất một hạt thóc, không đổ máu.'],
     ] },
   ],

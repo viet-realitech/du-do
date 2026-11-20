@@ -58,7 +58,7 @@ export function openCard(v: HistEvent, inTour = false): void {
   if (inTour) { buzz(must ? [15, 30, 15] : 10); }
   const near = c[1] !== 'all' && c[1] !== '' && mustDecide(v); // thẻ bị biến cố riêng buộc (tn25 của họ Nguyễn) không phải vì chạm tới quê
   const d = sheet(`<div class="kick${must ? ' must' : ''}"><span class="mono">${must ? icon('seal', 12) : ''}${must ? 'Dòng họ phải quyết định' : 'Dòng họ có thể hành động'} · ${v.y}</span><span class="mono muted">${esc(familyName())} · ${esc(pl.moved ? `${home()[1]} → ${pl.name}` : pl.name)}</span></div>
-  ${spPending ? `<div class="steps" aria-hidden="true"><span class="on">1 · Thẻ sự kiện</span>${sps.map((c, i) => `<span>${i + 2} · ${c.when.after ? 'Hệ quả' : 'Biến cố riêng'}</span>`).join('')}</div>` : ''}
+  ${spPending ? `<div class="steps" aria-hidden="true">${stepSpans(sps)}</div>` : ''}
   <h2 style="margin:8px 0 6px">${esc(v.t)}</h2>
   <p class="muted" style="margin-bottom:6px">${esc(v.s)}</p>
   ${near ? `<div class="mono near">${icon('home', 14)}${pl.moved ? `Chạm tới nơi dòng họ đang sống (${esc(pl.name)})` : `Chạm tới quê nhà ${esc(pl.name)}`}</div>` : '<div style="height:6px"></div>'}
@@ -103,10 +103,16 @@ export function openCard(v: HistEvent, inTour = false): void {
     const warn = lowNow(before);
     d.querySelector('.sheet')!.insertAdjacentHTML('beforeend', `<div class="rule"></div><div class="mono muted">Thay đổi</div><div class="fxs" style="margin-top:6px">${fxChipsPlay(ch[2], got) || '<span class="muted">Không đổi</span>'}</div>
       ${warn.length ? `<p style="color:var(--red);margin-top:8px">Cạn ${warn.join(', ')}: mùa màng thế hệ tới sẽ khó khăn.</p>` : ''}`);
-    const sp = specialsFor(v).find(c => !specialDecided(c));
+    // các biến cố chốt lại theo lựa chọn vừa rồi (biến cố hệ quả notAfter: nhà vừa theo nghĩa quân không bị hỏi có cho
+    // người nhà theo không): dòng các bước kể đúng những việc còn lại, hay biến mất nếu không còn việc nào
+    const sps1 = specialsFor(v), steps = d.querySelector<HTMLElement>('.steps');
+    if (steps) { if (sps1.length) steps.innerHTML = stepSpans(sps1); else steps.remove(); }
+    const sp = sps1.find(c => !specialDecided(c));
     if (sp) mountSpecial(d, v, sp, inTour); else finish(d, v, inTour);
   };
 }
+/** Dòng các bước đầu bảng thẻ: "1 · Thẻ sự kiện", rồi mỗi biến cố một bước. */
+const stepSpans = (sps: SpecialCard[]) => `<span class="on">1 · Thẻ sự kiện</span>${sps.map((c, i) => `<span>${i + 2} · ${c.when.after ? 'Hệ quả' : 'Biến cố riêng'}</span>`).join('')}`;
 
 const alTag = (al: number) => (al ? `<span class="al ${al > 0 ? 'ok' : 'bad'}">${al > 0 ? 'Hợp đường bạn theo' : 'Trái đường bạn theo'}</span>` : '');
 const resRow = () => RES.map(([k, n, ic]) => `<span><i>${ic}</i>${n} <b>${S.res[k]}</b></span>`).join('');
