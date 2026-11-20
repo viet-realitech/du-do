@@ -1,10 +1,9 @@
 import { CHRONICLE, EPILOGUES, surnameKey } from '../data/surnames';
-import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices, placeAt } from '../play';
+import { isPlay, home, rank, decidedCount, RES, harvest, endingNow, bigChoices } from '../play';
 import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
-import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y0, Y1 } from '../state';
-import { chronLine, epilogue, whyText, rarityLine, firstDivergence, cfOf, exitNote, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, goneOf, GONE_AT, type Facts, type Ending } from '../data/endings';
-import { plate, type Mark } from '../ui/plate';
+import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
+import { chronLine, epilogue, whyText, rarityLine, firstDivergence, cfOf, exitNote, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
 import { endSpeech, epiKey } from '../speech';
 import { chronKey, endVoiceKey } from '../voiced';
 import { sayKey } from '../said';
@@ -18,6 +17,11 @@ import { checkBadges, clearBadgeQueue } from '../badges';
 import { stopTour } from '../tour';
 import { renderMain, invalidateTrack } from '../view';
 import { compass } from './profile';
+// bản đồ dòng họ ở cột bên của hồ sơ kết cục (homePlate)
+import { placeAt } from '../play';
+import { Y0 } from '../state';
+import { goneOf, GONE_AT } from '../data/endings';
+import { plate, type Mark } from '../ui/plate';
 import { openQuiz, openHarvest, quizFor } from './gate';
 import { splash } from './onboarding';
 import { setTab } from '../tabs';
