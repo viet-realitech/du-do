@@ -630,6 +630,10 @@ test('play mode: the last harvest of a Hà Nội household abroad since 1980 pay
   await expect(hv).toContainText('Nơi ở mới ở xứ người · quan hệ với nước sở tại');
   await expect(hv).not.toContainText('Đường bạn theo');
   await expect(hv).not.toContainText('quan hệ với Mỹ');
+  // the relations block under it names no country either: the row that decides life abroad is the host country
+  const rows = hv.locator('ul.rels li');
+  await expect(rows.filter({ hasText: 'đời sống ở xứ người' })).toContainText('Nước sở tại');
+  await expect(rows.filter({ hasText: /^Mỹ/ })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

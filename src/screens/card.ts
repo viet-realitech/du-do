@@ -198,15 +198,18 @@ const relCls = (v: number) => (v >= 55 ? 'ok' : v >= 40 ? '' : 'bad');
 /** Bên quyết định mùa màng năm y: cai quản quê (hay nơi ở mới sau 1954); cả nhà đã ra nước ngoài thì không ai "cai quản"
     nhà, quan hệ ấy chỉ quyết định đời sống ở xứ người (nhà ở Mỹ, Canada, Úc… đều vậy). */
 const rulesTxt = (y: number) => (abroad(y) ? 'đời sống ở xứ người' : `cai quản ${placeAt(y).name}`);
+/** Tên thế lực năm y: cả nhà đã ra nước ngoài thì quan hệ 'my' là quan hệ với nước sở tại (Mỹ, Canada, Úc, Pháp…), như
+    dòng mùa màng (play.ts harvest), không gọi tên nước nào. */
+const powerName = (k: keyof typeof POWERS, y?: number) => (k === 'my' && y !== undefined && abroad(y) ? 'Nước sở tại' : POWERS[k][0]);
 /** Chip quan hệ cho chú giải màn chính. `y`: năm để đánh dấu (mái nhà) bên đang cai quản quê (bên quyết định mùa màng). */
 export const relChip = (k: keyof typeof POWERS, y?: number) => {
-  const [name, fac] = POWERS[k], v = S.rel[k], rules = y !== undefined && ruler(y) === k;
+  const fac = POWERS[k][1], name = powerName(k, y), v = S.rel[k], rules = y !== undefined && ruler(y) === k;
   return `<span class="relc" title="${rules ? `${name}: ${esc(rulesTxt(y!).replace(/^cai/, 'đang cai'))}` : name}">${rules ? icon('home', 13) : ''}${fac ? flag(fac) : '<i class="dot"></i>'}${name} · <b class="${relCls(v)}">${relLabel(v)}</b></span>`;
 };
 /** Sổ quan hệ trong bảng (mùa màng): mỗi thế lực một dòng kẻ (cờ, tên, mức), không phải một đám chip xuống dòng lởm chởm;
     bên đang cai quản quê ghi rõ bằng chữ, cạnh dấu mái nhà. */
 export const relRows = (ks: (keyof typeof POWERS)[], y?: number) => `<ul class="rels">${ks.map(k => {
-  const [name, fac] = POWERS[k], v = S.rel[k], rules = y !== undefined && ruler(y) === k;
+  const fac = POWERS[k][1], name = powerName(k, y), v = S.rel[k], rules = y !== undefined && ruler(y) === k;
   return `<li>${fac ? flag(fac) : '<i class="dot"></i>'}<span>${name}${rules ? `<small>${icon('home', 12)}${esc(rulesTxt(y!))}</small>` : ''}</span><b class="${relCls(v)}">${relLabel(v)}</b></li>`;
 }).join('')}</ul>`;
 
