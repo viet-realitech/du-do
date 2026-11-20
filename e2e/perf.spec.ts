@@ -3,8 +3,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 /* Ngân sách công việc của bản đồ, đếm bằng MutationObserver: không đo thời gian hay khung hình (máy CI dùng chung lệch
    ±10–25%, số khung hình vẽ được tuỳ máy). Giữ hai điều làm iPad mượt sau các đợt A–D:
-   - vẽ lại khi năm không đổi (về tab Bản đồ, đóng một bảng) không ghi gì vào bản đồ: lỗi nặng nhất trước đây là renderMain
-     ghi lại cùng thuộc tính mỗi khung hình (MutationObserver ghi cả những lần ghi cùng giá trị);
+   - vẽ lại khi năm không đổi (về tab Bản đồ, đóng một bảng) không ghi gì vào màn chính: lỗi nặng nhất trước đây là
+     renderMain ghi lại cùng thuộc tính mỗi khung hình (MutationObserver ghi cả những lần ghi cùng giá trị);
    - kéo thanh năm thêm một số nút DOM có hạn (e2e/perf-budget.json, theo trình duyệt). Thay đổi cố ý thêm việc thì đo lại:
      `npm run perf:budget` ghi số đo × margin. */
 
@@ -26,10 +26,11 @@ async function boot(page: Page) {
 }
 
 type Tally = { records: number; added: number; log: string[] };
-/** Đếm mọi thay đổi DOM trong các vùng `sels` (thuộc tính, nút con, chữ): số bản ghi, số nút thêm (kể cả con cháu của nút
-    thêm: dựng lại bằng innerHTML tính đủ), vài dòng mô tả cho thông báo lỗi. Gọi lại thì bắt đầu đếm từ đầu. */
-async function observe(page: Page, sels: string[]) {
-  await page.evaluate(sels => {
+/** Đếm mọi thay đổi DOM trong các vùng `sels` (thuộc tính, nút con, chữ), trừ phần nằm trong `skip`: số bản ghi, số nút
+    thêm (kể cả con cháu của nút thêm: dựng lại bằng innerHTML tính đủ), vài dòng mô tả cho thông báo lỗi. Gọi lại thì bắt
+    đầu đếm từ đầu. */
+async function observe(page: Page, sels: string[], skip = '') {
+  await page.evaluate(([sels, skip]) => {
     type W = { mut?: { t: { records: number; added: number; log: string[] }; mo: MutationObserver } };
     const w = window as unknown as W;
     w.mut?.mo.disconnect();
@@ -37,6 +38,8 @@ async function observe(page: Page, sels: string[]) {
     const name = (n: Node) => { const e = n as Element; return e.id ? '#' + e.id : e.getAttribute?.('class') ? `${e.nodeName.toLowerCase()}.${e.getAttribute('class')}` : n.nodeName.toLowerCase(); };
     const count = (rs: MutationRecord[]) => {
       for (const r of rs) {
+        const at = r.target.nodeType === 1 ? (r.target as Element) : r.target.parentElement;
+        if (skip && at?.closest(skip)) continue;
         t.records++;
         r.addedNodes.forEach(n => { t.added += 1 + (n.nodeType === 1 ? (n as Element).querySelectorAll('*').length : 0); });
         if (t.log.length < 12) t.log.push(`${r.type} ${name(r.target)}${r.attributeName ? ' @' + r.attributeName : ''}${r.addedNodes.length ? ' +' + r.addedNodes.length : ''}${r.removedNodes.length ? ' -' + r.removedNodes.length : ''}`);
@@ -46,7 +49,7 @@ async function observe(page: Page, sels: string[]) {
     for (const s of sels) mo.observe(document.querySelector(s)!, { attributes: true, childList: true, characterData: true, subtree: true });
     w.mut = { t, mo };
     (w as unknown as { flush: () => void }).flush = () => count(mo.takeRecords());
-  }, sels);
+  }, [sels, skip] as const);
 }
 /** Số đếm tới giờ (kể cả bản ghi chưa kịp giao cho callback). */
 const tally = (page: Page): Promise<Tally> => page.evaluate(() => {
@@ -65,11 +68,10 @@ const settle = (page: Page, ms = 700) => page.evaluate(ms => new Promise<void>(d
 /** Hai khung hình: việc hẹn bằng requestAnimationFrame (kéo thanh năm vẽ lại mỗi khung một lần) đã chạy. */
 const frames = (page: Page) => page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
-/** Lớp SVG của bản đồ (nền biển, đất và dấu sự kiện, hiệu ứng), và thêm các khung renderMain vẽ lại mà lúc ấy không đổi. */
+/** Lớp SVG của bản đồ (nền biển, đất và dấu sự kiện, hiệu ứng). */
 const MAP = ['#mapbg', '#map', '#mapfx'];
-const PANELS = [...MAP, '#popl', '#legend', '#card', '#idx', '#trk', '#vals', '#eraR'];
 
-test('perf: a redraw with the year unchanged writes nothing to the map or the main panels', async ({ page }) => {
+test('perf: a redraw with the year unchanged writes nothing to the main screen', async ({ page }) => {
   const errors = await boot(page);
   await settle(page);
   // cú bấm tab tới setTab: thanh tab được đánh dấu trước khi vẽ lại, nên đếm nó để biết renderMain đã chạy
@@ -78,12 +80,13 @@ test('perf: a redraw with the year unchanged writes nothing to the map or the ma
     w.tabMarks = 0;
     new MutationObserver(rs => { w.tabMarks += rs.length; }).observe(document.getElementById('tabs')!, { attributes: true, subtree: true });
   });
-  // về tab Bản đồ khi đang ở đó: setTab('map') → renderMain() với năm cũ, năm lần
-  await observe(page, PANELS);
+  // về tab Bản đồ khi đang ở đó: setTab('map') → renderMain() với năm cũ, năm lần. Xét cả màn chính (đầu trang, năm,
+  // nhãn, gia sản, bản đồ, thẻ, mục lục, thanh năm…), trừ thanh tab: setTab đánh dấu tab mỗi lần bấm, không phải renderMain
+  await observe(page, ['#main'], '#tabs');
   for (let i = 0; i < 5; i++) { await page.locator('.tab[data-t=map]').click(); await frames(page); }
   expect(await page.evaluate(() => (window as unknown as { tabMarks: number }).tabMarks)).toBeGreaterThanOrEqual(5);
   const same = await tally(page);
-  expect(same.log, `renderMain with the year unchanged wrote to the map or the main panels ${same.records}×`).toEqual([]);
+  expect(same.log, `renderMain with the year unchanged wrote to the main screen ${same.records}×`).toEqual([]);
   // mở rồi đóng các bảng che bản đồ: Hồ sơ (đóng bằng tab Bản đồ), trang sự kiện của thẻ bên (đóng bằng Escape). Đóng
   // bảng cũng vẽ lại màn chính. Bảng đặt inert lên các khung màn chính, nên ở đây chỉ xét lớp SVG của bản đồ.
   await observe(page, MAP);

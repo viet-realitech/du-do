@@ -16,20 +16,23 @@ import { openFig } from './screens/figures';
 import { goEnd } from './screens/ending';
 
 /* Main map screen: header, value bars, map, legend, event card, timeline. */
+/** Ghi chữ chỉ khi khác: gán textContent cùng chữ vẫn thay nút chữ (một lần ghi DOM). */
+const setText = (el: Element, t: string): void => { if (el.textContent !== t) el.textContent = t; };
 /* The big year counter glides to its target instead of jumping (also while scrubbing). */
 let shownY = 0, goalY = 0, raf = 0;
 function showYear(y: number): void {
   const el = $('#yr')!;
   goalY = y;
+  if (y === shownY && !raf) return; // vẽ lại cùng năm: số đã đứng yên ở đó, không ghi lại
   if (!shownY || Math.abs(y - shownY) > 60 || matchMedia('(prefers-reduced-motion: reduce)').matches) {
     shownY = y;
-    el.textContent = String(y);
+    setText(el, String(y));
     return;
   }
   const step = () => {
     shownY += (goalY - shownY) * 0.2;
     if (Math.abs(goalY - shownY) < 0.5) shownY = goalY;
-    el.textContent = String(Math.round(shownY));
+    setText(el, String(Math.round(shownY)));
     raf = shownY === goalY ? 0 : requestAnimationFrame(step);
   };
   if (!raf) raf = requestAnimationFrame(step);
@@ -45,7 +48,6 @@ function setHtml(el: Element, h: string): boolean {
   el.innerHTML = h;
   return true;
 }
-const setText = (el: Element, t: string): void => { if (el.textContent !== t) el.textContent = t; };
 
 /** Hàng chú giải tràn ngang (điện thoại): mờ mép phải cho biết còn nữa; cuộn tới cuối thì bỏ mờ. */
 const edge = (r: HTMLElement): void => { r.classList.toggle('over', r.scrollWidth > r.clientWidth + 2); r.classList.toggle('end', r.scrollLeft + r.clientWidth >= r.scrollWidth - 2); };
@@ -112,7 +114,7 @@ export function continueFlow(): void {
 let shownRes: Record<string, number> | null = null, resKey = '';
 function renderRes(): void {
   const el = $('#res')!;
-  el.hidden = !isPlay();
+  if (el.hidden !== !isPlay()) el.hidden = !isPlay(); // gán hidden cùng giá trị vẫn ghi lại thuộc tính
   $('#main')!.classList.toggle('has-res', isPlay()); // thay #main:has(#res:not([hidden])) (xem has-beats, scene.ts)
   if (!isPlay()) { shownRes = null; resKey = ''; return; }
   // Số nổi lên khi gia sản đổi so với lần cuối thấy rõ màn chính (không có bảng che, kể cả bảng đang đóng).

@@ -116,7 +116,7 @@ command rewrites it; rewrite one only when the change is on purpose.
 | `npm run endings:filter` | the `endings` path filter covers every file the simulation imports | `checks` job | add the reported file to `.github/filters.yml` |
 | `npm run voice:check` | every narratable line has a clip and every clip reads the current line (see Sound) | `checks` job; with `-- --durations` (ffprobe) in the `voice` job when `src/voice/` changed | re-record the line (Sound) |
 | `npm run size` | gzip size of the main JS and CSS, of all JS, and the raw size of the offline precache against `scripts/size-budget.json` + 10% (a tripwire for a big jump, not a size target) | `checks` job, after the build | `npm run build && npm run size:update` |
-| `e2e/perf.spec.ts` | map work counted with a MutationObserver, never timed: a redraw with the year unchanged writes nothing to the map or the main panels; a scripted timeline drag 1955 → 1975 adds at most `e2e/perf-budget.json` DOM nodes per engine (measured × 1.5) | e2e jobs | `npm run build && PW_PORT=4211 npm run perf:budget` |
+| `e2e/perf.spec.ts` | map work counted with a MutationObserver, never timed: a redraw with the year unchanged writes nothing to the main screen (all of `#main` but the tab bar); a scripted timeline drag 1955 → 1975 adds at most `e2e/perf-budget.json` DOM nodes per engine (measured × 1.5) | e2e jobs | `npm run build && PW_PORT=4211 npm run perf:budget` |
 
 After merging work that changes cards, rules or code size, the snapshots are rewritten with: `npm run endings`,
 `npm run choices:lock -- --note "…"` (only if options or sets changed), `npm run build && npm run size:update`, and
