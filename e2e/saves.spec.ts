@@ -137,8 +137,9 @@ test.describe('the recovery screen', () => {
       expect(copied).toContain('bản lưu không đọc được');
       expect(copied).toContain(raw);
       // Thử lại reloads; the save is still unreadable, so the screen comes back, without a second copy
+      const reloaded = page.waitForEvent('load'); // the reload starts a moment after the tap (service worker check)
       await box.getByRole('button', { name: 'Thử lại' }).click();
-      await page.waitForLoadState('load');
+      await reloaded;
       await expect(page.locator('#rescue')).toBeVisible();
       expect(await kept(page)).toHaveLength(1);
       // Bắt đầu lại asks first; Thôi keeps everything
@@ -148,7 +149,9 @@ test.describe('the recovery screen', () => {
       await expect(page.locator('#rescue [data-r=wipe]')).toHaveCount(0);
       expect(await stored(page, 'dudo-v2')).toBe(raw);
       await page.locator('#rescue').getByRole('button', { name: 'Bắt đầu lại' }).click();
+      const fresh = page.waitForEvent('load');
       await page.locator('#rescue').getByRole('button', { name: 'Xoá và bắt đầu lại' }).click();
+      await fresh;
       // a fresh reading game: the cover, the copy still kept, the play save untouched
       await expect(page.getByRole('button', { name: /Mở hồ sơ/ })).toBeVisible({ timeout: 15_000 });
       await expect(page.locator('#rescue')).toHaveCount(0);
