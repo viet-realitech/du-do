@@ -154,27 +154,30 @@ function sat(): Float32Array<ArrayBuffer> {
   for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1, y = Math.tanh(k * x + b) - Math.tanh(b); c[i] = y / (y >= 0 ? top : bot); }
   return (SAT = c);
 }
-/** Lớp "punch" cho loa máy tính bảng: cùng nốt trầm `f`→`f2`, bão hoà mềm sinh bội âm 2f, 3f, 4f…, bỏ phần dưới 110 Hz
-    (loa nhỏ không phát được) và trên 900 Hz (không rè); tai nghe các bội âm ấy mà đoán ra nốt gốc. Ngắn hơn tiếng trầm. */
+/** Lớp "punch" cho loa máy tính bảng: cùng nốt trầm `f`→`f2`, bão hoà mềm sinh bội âm 2f, 3f, 4f…; bỏ phần dưới
+    ~130 Hz (lọc bậc bốn: chính nốt gốc, loa nhỏ không phát được) và trên ~1 kHz (không rè). Tai nghe các bội âm ấy mà
+    đoán ra nốt gốc. Ngắn hơn tiếng trầm. */
 function punch(f: number, f2: number, d: number, v: number, delay = 0, dst?: AudioNode): void {
   const a = live();
   if (!a || OLD) return;
-  const t = a.currentTime + delay, o = a.createOscillator(), sh = a.createWaveShaper(), hp = a.createBiquadFilter(), lp = a.createBiquadFilter();
+  const t = a.currentTime + delay, o = a.createOscillator(), sh = a.createWaveShaper(), lp = a.createBiquadFilter();
   o.frequency.setValueAtTime(f, t);
   o.frequency.exponentialRampToValueAtTime(f2, t + d * 0.6);
   sh.curve = sat();
-  hp.type = 'highpass'; hp.frequency.value = 110; hp.Q.value = 0.6;
-  lp.type = 'lowpass'; lp.frequency.value = 900; lp.Q.value = 0.5;
-  o.connect(sh).connect(hp).connect(lp).connect(env(a, t, v, 0.005, d)).connect(dst || FX!);
+  const [h1, h2] = [0.54, 1.31].map(q => { const h = a.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = PUNCH.hp; h.Q.value = q; return h; });
+  lp.type = 'lowpass'; lp.frequency.value = PUNCH.lp; lp.Q.value = 0.5;
+  o.connect(sh).connect(h1).connect(h2).connect(lp).connect(env(a, t, v, 0.005, d)).connect(dst || FX!);
   o.start(t);
   o.stop(t + d + 0.05);
 }
+/** Lớp punch: tần số cắt dưới / trên (Hz), mức so với tiếng trầm của pháo và của trống (đo: npm run audio:measure). */
+const PUNCH = { hp: 130, lp: 1000, boom: 0.8, drum: 0.55 };
 
 /** Low drum: pitched body dropping in frequency plus a skin transient (and the punch layer). */
 function drum(delay = 0, v = 0.5, f = 110, dst?: AudioNode): void {
   tone(f, 0.9, 'sine', v, delay, f * 0.45, dst);
   tone(f * 1.5, 0.25, 'triangle', v * 0.25, delay, f * 0.6, dst);
-  punch(f, f * 0.5, 0.32, v * 0.3, delay, dst);
+  punch(f, f * 0.5, 0.6, v * PUNCH.drum, delay, dst);
   noise(0.18, 900, 200, v * 0.35, 0.7, delay, 0.002, dst);
 }
 
@@ -247,7 +250,7 @@ const sc = (): AudioNode => SCN || FX!;
 
 /* Sổ nút của chuỗi cảnh (bảng chẩn đoán, e2e): bus, bộ lọc, nhánh vang của mỗi cảnh đang mở, bộ đặt vị trí của từng
    tiếng. Mỗi nút được ngắt và trừ khỏi sổ khi tiếng của nó hết hay khi cảnh đóng: sau mười trận sổ phải về 0. */
-interface Bus { g: GainNode; f: BiquadFilterNode; s: GainNode | null; pans: Set<StereoPannerNode> }
+interface Bus { g: GainNode; p: GainNode; f: BiquadFilterNode; s: GainNode | null; pans: Set<StereoPannerNode> }
 let BUS: Bus | null = null;
 const stats = { live: 0, pans: 0, peakPans: 0, scenes: 0, dip: false };
 /** Bảng chẩn đoán / e2e: số nút đang sống của chuỗi cảnh, bộ đặt vị trí, có tiếng vang chưa, nhạc có đang lùi. */
@@ -267,6 +270,10 @@ function impulse(a: BaseAudioContext): AudioBuffer {
       lp += k * (Math.random() * 2 - 1 - lp);
       ch[i] = lp * Math.exp((-6.9 * t) / 1.3);
     }
+    let e = 0;
+    for (const x of ch) e += x * x;
+    const k = 1 / Math.sqrt(e || 1);
+    for (let i = 0; i < n; i++) ch[i] *= k;
   }
   return b;
 }
@@ -274,6 +281,7 @@ function verb(a: BaseAudioContext): ConvolverNode | null {
   if (VERB) return VERB;
   try {
     const c = a.createConvolver();
+    c.normalize = false; // xung đã chuẩn về năng lượng 1: WET là tỉ lệ năng lượng vang / tiếng gốc
     c.buffer = impulse(a);
     c.connect(FX!);
     VERB = c;
@@ -295,7 +303,7 @@ function port(pan: number | [number, number] | undefined, d: number, delay = 0):
   const p = a.createStereoPanner(), t = a.currentTime + delay;
   if (typeof pan === 'number') p.pan.value = clamp(pan);
   else { p.pan.setValueAtTime(clamp(pan[0]), t); p.pan.linearRampToValueAtTime(clamp(pan[1]), t + d); }
-  p.connect(b.g);
+  p.connect(b.p);
   b.pans.add(p);
   stats.live++; stats.pans++; stats.peakPans = Math.max(stats.peakPans, stats.pans);
   setTimeout(() => release(p, b), (delay + d + 0.6) * 1000);
@@ -308,7 +316,7 @@ export const WAR = {
     const v = 0.55 * (1 - far * 0.6), o = port(pan, 1.4 + far, delay);
     thud(1.3 + far, 900 - far * 600, 60, v, delay, o);
     tone(62 - far * 15, 1.1, 'sine', v * 0.7, delay, 28, o);
-    punch(62 - far * 15, 30, 0.55 - far * 0.2, v * (0.5 - far * 0.25), delay, o);
+    punch(62 - far * 15, 30, 1 - far * 0.3, v * PUNCH.boom * (1 - far * 0.5), delay, o);
     if (far < 0.5) noise(0.06, 3200, 1500, v * 0.4, 1, delay, 0.001, o);
   },
   /** Rifle / machine-gun fire: scattered short cracks over `d` seconds. */
@@ -393,17 +401,21 @@ export const WAR = {
     WAR.close();
     const a = live();
     if (!a) return;
-    const g = a.createGain(), f = a.createBiquadFilter();
+    const g = a.createGain(), pin = a.createGain(), f = a.createBiquadFilter();
     f.type = 'lowpass';
     f.Q.value = 0.7;
     f.frequency.value = voiced ? 1200 : 18000;
     g.connect(f).connect(FX!);
+    // tiếng có vị trí: bộ đặt vị trí chia một kênh thành hai, mỗi bên −3 dB ở giữa; bù lại để tổng công suất bằng tiếng
+    // một kênh không đặt vị trí (trình duyệt chép nó ra cả hai loa)
+    pin.gain.value = Math.SQRT2;
+    pin.connect(g);
     let s: GainNode | null = null;
     const v = OLD ? null : verb(a);
     if (v) { s = a.createGain(); s.gain.value = WET; f.connect(s).connect(v); }
-    BUS = { g, f, s, pans: new Set() };
+    BUS = { g, p: pin, f, s, pans: new Set() };
     SCN = g; SCNF = f;
-    stats.live += s ? 3 : 2;
+    stats.live += s ? 4 : 3;
     stats.scenes++;
   },
   /** Cắt mọi tiếng của cảnh đang chạy (đã hẹn trước hay chưa): hạ nhanh rồi ngắt bus và mọi bộ đặt vị trí của nó. */
@@ -414,8 +426,8 @@ export const WAR = {
     b.g.gain.setTargetAtTime(0, c.currentTime, 0.05);
     setTimeout(() => {
       for (const p of [...b.pans]) release(p, b);
-      try { b.g.disconnect(); b.f.disconnect(); b.s?.disconnect(); } catch { /* đã ngắt */ }
-      stats.live -= b.s ? 3 : 2;
+      try { b.g.disconnect(); b.p.disconnect(); b.f.disconnect(); b.s?.disconnect(); } catch { /* đã ngắt */ }
+      stats.live -= b.s ? 4 : 3;
     }, 400);
   },
   /** Nhạc lùi xuống ~7 dB trong lúc trận đánh có tiếng (`on`), rồi lên lại êm; độc lập với việc hạ khi có lời kể (duck).
