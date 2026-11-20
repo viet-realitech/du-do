@@ -54,8 +54,10 @@ export const SCENES: Record<string, Scene> = {
     hold: [[108.22, 16.07, "dainam"], [108.24, 16.08, "dainam"], [108.2, 16.04, "dainam"]], end: { date: '' } /* liên quân bị cầm chân tới 1860: không đóng dấu ngày */ },
   gd59: { type: "siege", arrows: [[[106.99, 10.44], [106.75, 10.69], "phap", "Hạm đội ngược sông Lòng Tàu, phá sáu đồn ven sông"], [[106.78, 10.7], [106.71, 10.76], "es", "Quân Tây Ban Nha chiếm hai đồn phía nam (16.2)"], [[106.75, 10.72], [106.7, 10.78], "phap", "Thủy quân lục chiến đổ bộ, đánh thành (17.2)"]],
     hold: [[106.7, 10.78, "dainam"]], end: { fell: [0] } /* 'phá thành Gia Định' */ },
-  cd61: { type: "siege", arrows: [[[106.66, 10.74], [106.63, 10.82], "phap", "Đạo quân Charner vòng lên mạn tây bắc, chiếm đồn Redoute (24.2)", { at: 'đồn Redoute' }], [[106.58, 10.8], [106.66, 10.79], "es", "Cánh phải: bộ binh Tây Ban Nha và thủy binh đánh về phía đông (25.2)"], [[106.58, 10.84], [106.66, 10.81], "phap", "Cánh trái: công binh, thủy quân lục chiến, khinh binh"]],
+  cd61: { type: "siege", arrows: [[[106.66, 10.74], [106.63, 10.82], "phap", "Đạo quân Charner vòng lên mạn tây bắc, chiếm đồn Redoute (24.2)", { at: 'đồn Redoute' }], [[106.615, 10.85], [106.652, 10.8], "es", "Cánh phải: bộ binh Tây Ban Nha và thủy binh đánh vào mặt bắc (25.2)"], [[106.668, 10.855], [106.664, 10.8], "phap", "Cánh trái: công binh, thủy quân lục chiến, khinh binh"]],
     hold: [[106.66, 10.79, "dainam"], [106.63, 10.81, "dainam"]], end: { fell: [0, 1] } /* 'Phòng tuyến lớn nhất Nam Kỳ vỡ' */ },
+  // 25.2: lấy xong đồn Redoute (tây bắc), liên quân vòng lên phía bắc rồi đánh vào mặt bắc đại đồn (theo Pallu de la
+  // Barrière, sĩ quan Pháp có mặt); quay mặt về nam thì cánh phải ở phía tây, cánh trái ở phía đông
   nt61: { type: "naval", arrows: [[[106.41, 10.54], [106.51, 10.56], "nghiaquan", "Năm ghe nghĩa quân giả ghe buôn theo rạch Nhật Tảo áp sát tàu", { at: 'Nhật Tảo' }], [[106.53, 10.66], [106.52, 10.57], "nghiaquan", "Nghĩa quân phục trên bờ ập ra tiếp ứng"]],
     hold: [[106.52, 10.56, "phap"]], end: { fell: [0] } /* 'đốt chiến thuyền Pháp' */ },
   td64: { type: "land", arrows: [[[106.67, 10.36], [106.74, 10.41], "phap", "Quân Pháp từ Gò Công, Huỳnh Công Tấn dẫn đường, tập kích ban đêm"], [[106.71, 10.33], [106.75, 10.41], "phap", "Cánh thứ hai từ hướng Tân Hòa khép vòng vây"]],
