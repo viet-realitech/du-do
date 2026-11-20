@@ -95,8 +95,8 @@ function loreBox(k: string): string {
   if (!l) return `<input class="f" id="nm" placeholder="Gõ họ của bạn, ví dụ: Lê" value="${esc(S.name.replace(/^Họ /, ''))}" maxlength="24" autocomplete="off" style="margin-top:10px">`;
   const kin = l.kin.filter(id => FIG[id]);
   return `<div class="pv mine" style="margin-top:10px"><div class="mono muted">Gia phả mở đầu · Họ ${esc(l.names.join(' / '))}</div>
-  <p style="font-size:15.5px;margin-top:4px">${esc(l.lore)}${l.variant ? ' ' + esc(l.variant) : ''}</p>
-  ${kin.length ? `<div class="mono muted" style="margin-top:8px">Cùng họ khai sinh trong hồ sơ</div><div class="kin">${kin.slice(0, 8).map(id => `<span>${av(id, 26)}${bornLine(id) ? `<span>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}<small class="muted" style="display:block;font-size:12px">${esc(bornLine(id))}</small></span>` : esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span>`).join('')}${kin.length > 8 ? `<span class="muted">và ${kin.length - 8} người khác</span>` : ''}</div>` : ''}
+  <p style="font-size:calc(15.5px*var(--ts));margin-top:4px">${esc(l.lore)}${l.variant ? ' ' + esc(l.variant) : ''}</p>
+  ${kin.length ? `<div class="mono muted" style="margin-top:8px">Cùng họ khai sinh trong hồ sơ</div><div class="kin">${kin.slice(0, 8).map(id => `<span>${av(id, 26)}${bornLine(id) ? `<span>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}<small class="muted" style="display:block;font-size:calc(12px*var(--ts))">${esc(bornLine(id))}</small></span>` : esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</span>`).join('')}${kin.length > 8 ? `<span class="muted">và ${kin.length - 8} người khác</span>` : ''}</div>` : ''}
   ${l.hooks.filter(h => HOOK_TEXT[h]).length ? `<ul class="hooks">${l.hooks.filter(h => HOOK_TEXT[h]).map(h => `<li>${esc(HOOK_TEXT[h])}</li>`).join('')}</ul>` : ''}</div>`;
 }
 /** Nút chọn trong một nhóm (quê, họ): đúng một nút sáng, aria-pressed theo. */

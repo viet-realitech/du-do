@@ -4,6 +4,8 @@ try {
   var s = JSON.parse(localStorage.getItem(mode) || '{}');
   if (s.theme) document.documentElement.dataset.theme = s.theme;
 } catch (e) { /* private mode / bản lưu hỏng: màn khôi phục bên dưới lo */ }
+// Chữ lớn (Hồ sơ → Giao diện, src/theme.ts): khoá riêng của máy, đặt trước khung hình đầu tiên như giao diện
+try { if (localStorage.getItem('dudo-text') === 'big') document.documentElement.dataset.text = 'big'; } catch (e) { /* riêng tư */ }
 
 /* Lưới an toàn lúc khởi động. Chạy trước mã ứng dụng (một script thường, không phải mô-đun), nên vẫn chạy khi mã ứng
    dụng hỏng ngay lúc nạp (bản lưu đọc lúc nạp: `S = load()`), khi tải không được, hay khi bản đồ chính không vẽ được.

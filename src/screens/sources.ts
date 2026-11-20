@@ -13,9 +13,9 @@ export function openSrc(id: string): void {
   sheet(`<div class="kick"><span class="mono">${s.k}</span><span class="stamp" style="font-size:10px">Công khai</span></div>
   <h2 style="margin:10px 0 4px">${esc(s.t)}</h2><div class="muted" style="font-style:italic">${esc(s.by)} · ${esc(s.y)}</div>
   <p style="margin-top:12px">${esc(s.d)}</p>
-  <div class="pv" style="margin-top:14px"><div class="mono muted">Nơi lưu giữ</div><p style="font-size:16px;margin-top:3px">${esc(s.at)}</p></div>
+  <div class="pv" style="margin-top:14px"><div class="mono muted">Nơi lưu giữ</div><p style="font-size:calc(16px*var(--ts));margin-top:3px">${esc(s.at)}</p></div>
   ${evs.length ? `<div class="mono muted" style="margin:16px 0 4px">Được dẫn trong ${evs.length} sự kiện</div>` +
-    evs.map(v => `<button class="src" data-a="goev" data-id="${v.id}"><div class="tt"><h3 style="font-size:16.5px">${esc(v.t)}</h3><span class="mono muted">${v.y}</span></div></button>`).join('') : ''}`, true);
+    evs.map(v => `<button class="src" data-a="goev" data-id="${v.id}"><div class="tt"><h3 style="font-size:calc(16.5px*var(--ts))">${esc(v.t)}</h3><span class="mono muted">${v.y}</span></div></button>`).join('') : ''}`, true);
   checkBadges();
 }
 
@@ -33,22 +33,22 @@ let srcQ = '';
 export function paneSrc(): void {
   const kinds = ['Tất cả', ...new Set(SRC.map(s => s.k))];
   layer.innerHTML = `<div class="pane"><div class="mono muted">Kho sử liệu · ${SRC.length} hồ sơ</div><h1 style="margin:6px 0 4px">Sử liệu</h1>
-  <p class="muted" style="font-size:16px">Văn bản gốc, hiệp ước, phông lưu trữ đã công bố, từ Huế, Hà Nội, Sài Gòn, Aix-en-Provence đến Washington.</p>
-  <input class="f" id="sq" type="search" aria-label="Tìm sự kiện, nhân vật, sử liệu" placeholder="Tìm sự kiện, nhân vật, văn bản… (gõ không dấu cũng được)" value="${esc(srcQ)}" style="margin:14px 0 10px;height:44px;font-size:17px">
+  <p class="muted" style="font-size:calc(16px*var(--ts))">Văn bản gốc, hiệp ước, phông lưu trữ đã công bố, từ Huế, Hà Nội, Sài Gòn, Aix-en-Provence đến Washington.</p>
+  <input class="f" id="sq" type="search" aria-label="Tìm sự kiện, nhân vật, sử liệu" placeholder="Tìm sự kiện, nhân vật, văn bản… (gõ không dấu cũng được)" value="${esc(srcQ)}" style="margin:14px 0 10px;height:44px;font-size:calc(17px*var(--ts))">
   <div class="chips" id="sk">${kinds.map(k => `<button class="chip${k === srcFilter ? ' on' : ''}" data-k="${esc(k)}">${esc(k)}</button>`).join('')}</div>
   <div style="margin-top:8px" id="sl"></div></div>`;
   const list = () => {
     const q = fold(srcQ.trim()), has = (...xs: string[]) => !q || fold(xs.join(' ')).includes(q);
     const L = SRC.filter(s => (srcFilter === 'Tất cả' || s.k === srcFilter) && has(s.t, s.by, s.at, s.d));
-    const srcHtml = L.map(s => `<button class="src" data-a="src" data-id="${s.id}"><div class="tt"><h3>${esc(s.t)}</h3><span class="mono muted" style="white-space:nowrap">${S.srcSeen.includes(s.id) ? '✓ ' : ''}${s.k}</span></div><div class="muted" style="font-size:15px;margin-top:3px">${esc(s.y)} · ${esc(s.at)}</div></button>`).join('');
+    const srcHtml = L.map(s => `<button class="src" data-a="src" data-id="${s.id}"><div class="tt"><h3>${esc(s.t)}</h3><span class="mono muted" style="white-space:nowrap">${S.srcSeen.includes(s.id) ? '✓ ' : ''}${s.k}</span></div><div class="muted" style="font-size:calc(15px*var(--ts));margin-top:3px">${esc(s.y)} · ${esc(s.at)}</div></button>`).join('');
     // có từ khoá: tìm cả sự kiện, nhân vật (Trò chơi: chỉ những gì dòng họ đã đi qua / đã mở)
     const all = q && srcFilter === 'Tất cả'; // lọc theo loại văn bản thì chỉ còn sử liệu
     const ev = all ? EV.filter(v => (!isPlay() || v.y <= S.year) && has(v.t, v.p, v.s, String(v.y))).slice(0, 12) : [];
     const fg = all ? Object.entries(FIG).filter(([id, f]) => (!isPlay() || figOpen(id)) && has(f[0], f[2])).slice(0, 8) : [];
     const head = (t: string, n: number) => `<div class="mono muted" style="margin:14px 0 4px">${t} · ${n}</div>`;
     layer.querySelector('#sl')!.innerHTML =
-      (ev.length ? head('Sự kiện', ev.length) + ev.map(v => `<button class="src" data-a="ev" data-id="${v.id}"><div class="tt"><h3>${esc(v.t)}</h3><span class="mono muted">${v.y}</span></div><div class="muted" style="font-size:15px;margin-top:3px">${esc(v.k)} · ${esc(v.p)}</div></button>`).join('') : '') +
-      (fg.length ? head('Nhân vật', fg.length) + fg.map(([id, f]) => `<button class="src" data-a="fig" data-id="${id}"><div class="tt"><h3>${esc(f[0])}</h3></div><div class="muted" style="font-size:15px;margin-top:3px">${esc(f[2])}</div></button>`).join('') : '') +
+      (ev.length ? head('Sự kiện', ev.length) + ev.map(v => `<button class="src" data-a="ev" data-id="${v.id}"><div class="tt"><h3>${esc(v.t)}</h3><span class="mono muted">${v.y}</span></div><div class="muted" style="font-size:calc(15px*var(--ts));margin-top:3px">${esc(v.k)} · ${esc(v.p)}</div></button>`).join('') : '') +
+      (fg.length ? head('Nhân vật', fg.length) + fg.map(([id, f]) => `<button class="src" data-a="fig" data-id="${id}"><div class="tt"><h3>${esc(f[0])}</h3></div><div class="muted" style="font-size:calc(15px*var(--ts));margin-top:3px">${esc(f[2])}</div></button>`).join('') : '') +
       (srcHtml ? (q ? head('Sử liệu', L.length) : '') + srcHtml : '') ||
       '<p class="muted" style="padding:20px 0">Không có kết quả.</p>';
   };

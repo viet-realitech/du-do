@@ -27,8 +27,8 @@ export function openFig(id: string): void {
   <div><div class="mono muted">${f[1]}${sideName(id) ? ' · ' + sideName(id) : ''}</div><h2 style="margin-top:4px">${f[0]}</h2><div class="muted" style="font-style:italic;margin-top:2px">${f[2]}${bornLine(id) ? ` · ${esc(bornLine(id))}` : ''}</div></div></div>
   <p style="margin-top:16px">${f[3]}</p>
   ${figEvents(id).length ? `<div class="rule"></div><div class="mono muted">Sự kiện liên quan</div>${figEvents(id).map(v => `<button class="row evl" data-a="ev" data-id="${v.id}"><span class="mono muted">${v.y}</span><span style="flex:1">${esc(v.t)}</span><span class="muted">${icon('next', 16)}</span></button>`).join('')}` : ''}
-  ${chose.length ? `<div class="rule"></div><div class="mono muted">Đồng hành khi bạn chọn</div>${chose.map(([e, o]) => `<div style="font-size:16px;margin-top:6px"><span class="mono muted">${e.cy}</span> · ${o.label}${S.picks[e.id] === o.id ? ' <span class="mono" style="color:var(--acc)">· đã chọn</span>' : ''}</div>`).join('')}` : ''}
-  <p class="muted" style="font-size:13px;margin-top:16px">Tiểu sử tóm lược từ sử liệu công khai.${FIGIMG[id] ? ` Ảnh: <a href="${esc(figImgPage(id))}" target="_blank" rel="noopener">Wikimedia Commons</a>.` : ''}</p>
+  ${chose.length ? `<div class="rule"></div><div class="mono muted">Đồng hành khi bạn chọn</div>${chose.map(([e, o]) => `<div style="font-size:calc(16px*var(--ts));margin-top:6px"><span class="mono muted">${e.cy}</span> · ${o.label}${S.picks[e.id] === o.id ? ' <span class="mono" style="color:var(--acc)">· đã chọn</span>' : ''}</div>`).join('')}` : ''}
+  <p class="muted" style="font-size:calc(13px*var(--ts));margin-top:16px">Tiểu sử tóm lược từ sử liệu công khai.${FIGIMG[id] ? ` Ảnh: <a href="${esc(figImgPage(id))}" target="_blank" rel="noopener">Wikimedia Commons</a>.` : ''}</p>
   ${FEEDBACK_URL ? `<div style="margin-top:12px">${feedbackRow(`nhân vật ${id} · ${f[0]}`, 'về nhân vật này')}</div>` : ''}`, true).dataset.fig = id; // trang sự kiện mở từ đây thì đóng xong mở lại thẻ này
   checkBadges();
 }

@@ -57,8 +57,8 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
      <div style="margin-top:22px"><span class="stamp acc">Nhật ký dòng họ · ${v.y}</span></div>
      <h1 style="margin:16px 0 6px;font-size:32px">${esc(v.t)}</h1><div class="dbl"></div>
      <p style="font:italic 400 21px/1.45 var(--serif)">${esc(v.s)}</p>
-     ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:16px;margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
-     <p class="muted" style="font-size:14px;margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
+     ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:calc(16px*var(--ts));margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
+     <p class="muted" style="font-size:calc(14px*var(--ts));margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
      ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}
      ${beside ? '' : diaryPlate(v)}</div>`;
     pageFocus(who, ret);
@@ -79,24 +79,24 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
 
   const body = (k: Tab): string => {
     if (k === 'x') {
-      return `<p style="font-size:19px;line-height:1.38">${esc(v.s)}</p>${v.x ? `<p style="margin-top:12px" class="muted">${esc(v.x)}</p>` : ''}
+      return `<p style="font-size:calc(19px*var(--ts));line-height:1.38">${esc(v.s)}</p>${v.x ? `<p style="margin-top:12px" class="muted">${esc(v.x)}</p>` : ''}
      ${isPlay() && mine && SIDE_PV.includes(mine) && vs.some(([pp]) => pp === mine) ? `<div class="pv mine" style="margin-top:12px"><div class="mono muted">Phe bạn theo nhìn nhận · ${P[mine]} · tóm lược</div><p class="pvt">${esc(vs.find(([pp]) => pp === mine)![1])}</p></div>` : ''}
      ${v.qt ? `<button class="quote" data-a="src" data-id="${v.qt.src}"><blockquote>${esc(v.qt.t)}</blockquote><div class="mono muted" style="margin-top:8px">— ${esc(v.qt.by)}</div></button>` : ''}
-     ${v.n ? `<div class="nums">${v.n.map(([a, b]) => `<div><span class="muted">${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><p class="muted" style="font-size:13px;margin-top:6px">Số liệu ước tính, khác nhau giữa các nguồn.${v.nNote ? ' ' + esc(v.nNote) : ''}</p>` : ''}
+     ${v.n ? `<div class="nums">${v.n.map(([a, b]) => `<div><span class="muted">${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div><p class="muted" style="font-size:calc(13px*var(--ts));margin-top:6px">Số liệu ước tính, khác nhau giữa các nguồn.${v.nNote ? ' ' + esc(v.nNote) : ''}</p>` : ''}
      <div id="mstrip"></div>
      ${(EVFIG[v.id] || []).filter(id => FIG[id]).length ? `<div class="mono muted" style="margin-top:18px">Nhân vật</div><div class="figrow">${(EVFIG[v.id] || []).filter(id => FIG[id]).map(id => `<button data-a="fig" data-id="${id}"${figOpen(id) ? '' : ' aria-label="Nhân vật chưa mở"'}>${av(id, 44, !figOpen(id))}<span><b>${esc(FIG[id][0].replace(/\s*\(.*\)\s*$/, ''))}</b><br><span class="muted">${esc(FIG[id][2])}</span></span></button>`).join('')}</div>` : ''}
-     ${pk ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Gia đình bạn đang theo · ${esc(pk.label)}</div><p style="font-size:16px;margin-top:4px">${esc(pk.out)}</p></div>` : ''}`;
+     ${pk ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Gia đình bạn đang theo · ${esc(pk.label)}</div><p style="font-size:calc(16px*var(--ts));margin-top:4px">${esc(pk.out)}</p></div>` : ''}`;
     }
     if (k === 'v') {
       if (!S.pvSeen.includes(v.id)) { S.pvSeen.push(v.id); save(); }
       // lời tóm lược của ứng dụng, không phải trích dẫn: không đặt trong ngoặc kép (trích dẫn thật ở khối .quote, thẻ Diễn biến)
       return `<p class="pv-sum mono muted">Tóm lược · không phải trích dẫn</p>` + vs.map(([pp, tx]) => `<div class="pv${pp === mine ? ' mine' : ''}"><div class="pvh"><span class="mono muted">${P[pp]}</span>${pp === mine ? '<span class="mono" style="color:var(--acc)">Gần lựa chọn của bạn</span>' : ''}</div><p class="pvt">${esc(tx)}</p></div>`).join('') +
-        `<p class="muted" style="font-size:14px;margin-top:14px">Các góc nhìn được tóm lược từ sử liệu công khai, xếp ngang hàng nhau. Ứng dụng không đứng về phía nào.</p>`;
+        `<p class="muted" style="font-size:calc(14px*var(--ts));margin-top:14px">Các góc nhìn được tóm lược từ sử liệu công khai, xếp ngang hàng nhau. Ứng dụng không đứng về phía nào.</p>`;
     }
     if (k === 'm') return `<div class="skel" style="height:120px;border-radius:14px"></div><div class="mgrid" style="margin-top:18px">${'<div class="skel" style="aspect-ratio:4/3;border-radius:10px"></div>'.repeat(6)}</div>`;
     return v.src.map(sid => {
       const s = SRC.find(x => x.id === sid)!;
-      return `<button class="src" data-a="src" data-id="${sid}"><div class="tt"><h3>${esc(s.t)}</h3><span class="mono muted">${s.k}</span></div><div class="muted" style="font-size:15px;margin-top:3px">${esc(s.at)}</div></button>`;
+      return `<button class="src" data-a="src" data-id="${sid}"><div class="tt"><h3>${esc(s.t)}</h3><span class="mono muted">${s.k}</span></div><div class="muted" style="font-size:calc(15px*var(--ts));margin-top:3px">${esc(s.at)}</div></button>`;
     }).join('') + srcFoot(v);
   };
   const show = (k: Tab) => {
@@ -264,13 +264,13 @@ async function mediaTab(v: HistEvent, again = false): Promise<void> {
   ].filter(Boolean) as [string, string, string][]);
   const good = w ? w.media.map((m, i) => [m, i] as const).filter(([m]) => !m.bad) : [];
   eb.innerHTML = (w
-    ? `<div class="pv"><div class="row sb"><span class="mono muted">Wikipedia tiếng Việt</span><a href="${esc(w.url)}" target="_blank" rel="noopener" class="mono">Đọc bài ↗</a></div><h3 style="margin-top:6px">${esc(w.title)}</h3>${w.ext ? `<p class="clamp4" style="font-size:15.5px;margin-top:6px;line-height:1.35">${esc(w.ext)}</p>` : ''}</div>`
+    ? `<div class="pv"><div class="row sb"><span class="mono muted">Wikipedia tiếng Việt</span><a href="${esc(w.url)}" target="_blank" rel="noopener" class="mono">Đọc bài ↗</a></div><h3 style="margin-top:6px">${esc(w.title)}</h3>${w.ext ? `<p class="clamp4" style="font-size:calc(15.5px*var(--ts));margin-top:6px;line-height:1.35">${esc(w.ext)}</p>` : ''}</div>`
     : wikiFailed(v.id)
-      ? `<div class="pv"><p style="font-size:16px">Chưa tải được bài Wikipedia và ảnh tư liệu. Có thể máy đang mất mạng hay mạng chập chờn: thử lại sau ít phút.</p><button class="chip" style="margin-top:10px" data-a="wretry" data-id="${v.id}">${icon('again', 14)}Thử lại</button></div>`
+      ? `<div class="pv"><p style="font-size:calc(16px*var(--ts))">Chưa tải được bài Wikipedia và ảnh tư liệu. Có thể máy đang mất mạng hay mạng chập chờn: thử lại sau ít phút.</p><button class="chip" style="margin-top:10px" data-a="wretry" data-id="${v.id}">${icon('again', 14)}Thử lại</button></div>`
       : '<p class="muted">Chưa tìm thấy bài Wikipedia phù hợp.</p>') +
     (w && good.length ? `<div class="mono muted" style="margin:18px 0 8px">Ảnh & video · ${good.length} tệp</div><div class="mgrid" id="mgrid">${good.map(([, i]) => tile(v, w, i)).join('')}</div>` : '') +
-    `<div class="mono muted" style="margin:20px 0 4px">Phim tư liệu · tìm "${esc(q)}"</div>${films.map(([n, d, u]) => `<a class="src" href="${u}" target="_blank" rel="noopener"><div class="tt"><h3>${n}</h3><span class="mono" style="color:var(--acc)">Mở ↗</span></div><div class="muted" style="font-size:14.5px;margin-top:2px">${d}</div></a>`).join('')}
-    <p class="muted" style="font-size:13px;margin-top:12px">Ảnh và video thuộc Wikimedia Commons, giấy phép tự do theo từng tệp. Phim từ các kho bên ngoài có điều khoản sử dụng riêng.</p>`;
+    `<div class="mono muted" style="margin:20px 0 4px">Phim tư liệu · tìm "${esc(q)}"</div>${films.map(([n, d, u]) => `<a class="src" href="${u}" target="_blank" rel="noopener"><div class="tt"><h3>${n}</h3><span class="mono" style="color:var(--acc)">Mở ↗</span></div><div class="muted" style="font-size:calc(14.5px*var(--ts));margin-top:2px">${d}</div></a>`).join('')}
+    <p class="muted" style="font-size:calc(13px*var(--ts));margin-top:12px">Ảnh và video thuộc Wikimedia Commons, giấy phép tự do theo từng tệp. Phim từ các kho bên ngoài có điều khoản sử dụng riêng.</p>`;
   const g = document.getElementById('mgrid');
   if (g && w) wireTiles(g, v, w);
 }

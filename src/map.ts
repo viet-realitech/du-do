@@ -397,8 +397,8 @@ function showPop(ev: MouseEvent, d: Prov | 'la' | 'kh'): void {
   const el = document.createElement('div');
   el.id = 'pop';
   el.innerHTML = `<div class="row sb" style="gap:8px"><b>${esc(title)}</b><span class="mono muted">${y}</span></div>
-    <div class="row" style="gap:7px;margin-top:5px;font-size:14.5px">${fac ? flag(fac) + esc(F[fac].n) : '<span class="muted">Không thuộc Đông Dương</span>'}</div>
-    <div class="muted" style="font-size:13px;margin-top:3px">${esc(sub)}</div>`;
+    <div class="row" style="gap:7px;margin-top:5px;font-size:calc(14.5px*var(--ts))">${fac ? flag(fac) + esc(F[fac].n) : '<span class="muted">Không thuộc Đông Dương</span>'}</div>
+    <div class="muted" style="font-size:calc(13px*var(--ts));margin-top:3px">${esc(sub)}</div>`;
   document.getElementById('mapwrap')!.appendChild(el);
   if (!S.mapTapped) { S.mapTapped = true; save(); checkBadges(); }
   SND.tick();
