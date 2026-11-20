@@ -200,7 +200,7 @@ export async function initMap(): Promise<void> {
 
   // K_MIN < 1: cảnh hải trình dài thu cả bản đồ nhỏ lại; người dùng chụm / cuộn cũng đi được tới đó (không nhảy về 1)
   G.zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([K_MIN, 8]).on('zoom', ev => {
-    if (ev.sourceEvent && isTouring()) pauseTour('map'); // kéo / chụm: tạm dừng, yên 5 s thì chạy tiếp (cả Đọc sử)
+    if (ev.sourceEvent) { userMoves++; if (isTouring()) pauseTour('map'); } // kéo / chụm: tạm dừng, yên 5 s thì chạy tiếp (cả Đọc sử)
     G.k = ev.transform.k;
     const t = String(ev.transform);
     Z.attr('transform', t); Zb.attr('transform', t); Zf.attr('transform', t);
@@ -220,7 +220,7 @@ export async function initMap(): Promise<void> {
   }
   svg.call(G.zoom).on('dblclick.zoom', null);
   // nút zoom, chạm bản đồ nghiêng là thao tác của người dùng như vuốt / chụm: tạm dừng (Chơi) hay dừng tour, kết thúc cảnh động
-  const byUser = () => { if (isTouring()) pauseTour('map'); };
+  const byUser = () => { userMoves++; if (isTouring()) pauseTour('map'); };
   // chạm / cuộn trên bản đồ đang nghiêng: làm phẳng ngay trước khi d3 tính điểm neo (tránh bản đồ trượt dưới ngón tay)
   const flat = () => { if (document.getElementById('mapwrap')?.classList.contains('tilt')) { endScene(true); byUser(); } }; // cảnh bị cắt: tour không đứng chờ trên bản đồ trống
   for (const t of ['pointerdown', 'touchstart', 'wheel']) svg.node()!.addEventListener(t, flat, { capture: true, passive: true });
@@ -595,6 +595,14 @@ function fly(t: d3.ZoomTransform, ms: number): void {
   // không đo khung hình lúc bay (ui/quality.ts): gợn sóng, nét cổ đã tạm tắt trong lúc bay, bớt hiệu ứng không làm bay nhanh hơn
   G.svg.transition().duration(ms).ease(d3.easeCubicInOut).call(G.zoom.transform, t);
 }
+
+/** Số lần người dùng tự dời bản đồ (kéo, chụm, cuộn, nút zoom): trang nhật ký trên máy tính bảng chỉ đưa bản đồ về chỗ
+    cũ khi người dùng chưa tự dời nó trong lúc đọc. */
+let userMoves = 0;
+export const mapMoves = (): number => userMoves;
+/** Chỗ bản đồ đang nhìn [x, y, k], và bay về một chỗ đã nhớ. */
+export const mapView = (): [number, number, number] | null => { if (!ready) return null; const t = d3.zoomTransform(G.svg.node()!); return [t.x, t.y, t.k]; };
+export function flyView(v: [number, number, number], ms = 900): void { if (ready) fly(d3.zoomIdentity.translate(v[0], v[1]).scale(v[2]), ms); }
 
 /** Fly to a lon/lat at scale k, or back to the overview when `l` is null. */
 export function zoomTo(l: [number, number] | null, k = 1, ms?: number): void {

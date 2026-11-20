@@ -1,4 +1,4 @@
-import { isPlay, decided, homeChoice, ownCard } from '../play';
+import { isPlay, decided, homeChoice, ownCard, placeAt, home } from '../play';
 import { mood } from '../music';
 import { isTouring } from '../tour';
 import { EV, EVFIG, FIG, P, SRC } from '../data';
@@ -6,12 +6,13 @@ import { S, save, rt, allEv, evEra, chYear, curPick, figOpen } from '../state';
 import { av, LISTEN } from '../ui/bits';
 import { icon } from '../ui/icons';
 import { on } from '../ui/actions';
-import { $, esc, layer, clearLayer, remember } from '../ui/dom';
+import { $, app, esc, layer, clearLayer, remember } from '../ui/dom';
 import { checkBadges } from '../badges';
 import { hush, speak } from '../narration';
 import { evKey, evSpeechFull } from '../speech';
 import { stopTour, pauseTour, resumeTour } from '../tour';
-import { hidePop } from '../map';
+import { hidePop, zoomTo, zoomFit, mapView, flyView, mapMoves } from '../map';
+import { plate, kmBetween, type Mark } from '../ui/plate';
 import { renderMain } from '../view';
 import { wikiFor, cachedWiki, wikiFailed, markBad, onOnline, probe, mediaCaption, commonsPage, type WikiInfo } from '../wiki';
 import { openMedia } from './lightbox';
@@ -47,8 +48,10 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
   hidePop();
   if (!S.seen.includes(id)) { S.seen.push(id); save(); }
   const e = evEra(v), pk = curPick(chYear(v)), mine = pk?.persp;
+  const back = prevOv?.dataset.back; // mở từ trang nhật ký đã đưa bản đồ tới nơi viết: đóng trang này thì bản đồ về chỗ cũ
 
   if (v.diary) {
+    const beside = mapBeside.matches;
     const real = EV.find(x => x.y === v.y), home0 = homeChoice(v); // người viết nhật ký đi xa; ở nhà, cả họ đã quyết thế này
     layer.innerHTML = `<div class="ov evp diary"><div class="evtop">${closeBtn}<span class="mono muted">Thế hệ ${e.n} · ${e.title}</span></div>
      <div style="margin-top:22px"><span class="stamp acc">Nhật ký dòng họ · ${v.y}</span></div>
@@ -56,8 +59,10 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
      <p style="font:italic 400 21px/1.45 var(--serif)">${esc(v.s)}</p>
      ${home0 ? `<div class="pv mine" style="margin-top:18px"><div class="mono muted">Ở nhà · ${home0.v.y} · ${esc(home0.v.t)}</div><p style="font-size:16px;margin-top:3px">Dòng họ đã chọn “${esc(home0.ch[0])}”. ${esc(home0.ch[3])}${home0.al > 0 ? '' : ' Người viết những dòng này đi đường riêng.'}</p></div>` : ''}
      <p class="muted" style="font-size:14px;margin-top:18px">Trang nhật ký hư cấu, đặt trong bối cảnh có thật, mở ra vì bạn chọn "${esc(pk ? pk.label : '')}".</p>
-     ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}</div>`;
+     ${real ? `<div class="rule"></div><div class="mono muted">Cùng năm ${v.y} trong sử liệu</div><button class="src" data-a="ev" data-id="${real.id}"><div class="tt"><h3>${esc(real.t)}</h3><span class="mono muted">${real.k}</span></div></button>` : ''}
+     ${beside ? '' : diaryPlate(v)}</div>`;
     pageFocus(who, ret);
+    if (beside) diaryPlace(v, back); else keepBack(back);
     return;
   }
 
@@ -115,6 +120,55 @@ export function openEvent(id: string, tab: Tab = 'x', retIn?: string): void {
   show(tab);
   loadHero(v);
   pageFocus(who, ret);
+  keepBack(back);
+}
+
+/** Máy tính bảng (ngang: trang nằm bên bản đồ; dọc: tờ neo đáy, bản đồ phía trên): bản đồ thật đã ở đó, trang nhật ký
+    đưa bản đồ tới nơi người viết đi tới thay cho tấm bản đồ nhỏ. Điện thoại (cả khi xoay ngang): tấm bản đồ nhỏ. */
+const mapBeside = matchMedia('(min-width: 700px) and (min-height: 600px)');
+/** Bay tới nơi viết trang nhật ký, nhớ chỗ cũ trên trang (data-back) để đóng trang thì về lại (bản đồ chưa bị người dùng
+    tự dời). Đang có tour: tour đã đưa bản đồ tới đúng bước này, không bay. */
+function diaryPlace(v: HistEvent, back?: string): void {
+  const ov = layer.querySelector<HTMLElement>(':scope > .ov'), now = mapView();
+  if (!ov || !now || isTouring()) return;
+  ov.dataset.back = back || JSON.stringify({ v: now, n: mapMoves() });
+  // máy dọc: tờ neo đáy che phần dưới khung bản đồ (đo theo bố cục, không theo vị trí lúc tờ còn đang trượt lên)
+  const wrap = document.getElementById('mapwrap'), lb = app.getBoundingClientRect().bottom;
+  if (innerHeight > innerWidth && wrap) zoomFit([v.l], 2.2, 1100, Math.max(0, wrap.getBoundingClientRect().bottom - (lb - ov.offsetHeight)));
+  else zoomTo(v.l, 2.2, 1100);
+}
+/** Trang mở từ trang nhật ký (sự kiện cùng năm): giữ chỗ cũ của bản đồ để đóng trang này thì về lại. */
+function keepBack(back?: string): void {
+  const ov = layer.querySelector<HTMLElement>(':scope > .ov');
+  if (ov && back) ov.dataset.back = back;
+}
+/** Đóng trang: bản đồ về chỗ trước khi trang nhật ký đưa nó đi, nếu người dùng chưa tự kéo, chụm. */
+function flyBack(ov: HTMLElement | null): void {
+  if (!ov?.dataset.back || isTouring()) return;
+  try {
+    const b = JSON.parse(ov.dataset.back) as { v: [number, number, number]; n: number };
+    if (b.n === mapMoves()) flyView(b.v);
+  } catch { /* bỏ qua */ }
+}
+
+const kmText = (km: number) => (km < 100 ? Math.round(km / 10) * 10 : Math.round(km / 50) * 50).toLocaleString('vi-VN');
+/** Tấm bản đồ nhỏ ở nửa dưới trang nhật ký (điện thoại): dấu chân người viết. Trò chơi thêm nhà dòng họ năm ấy (quê, hay
+    nơi ở mới sau 1954; đã ra nước ngoài thì quê gốc) và khoảng cách theo đường chim bay. Đọc sử không có nhà. */
+function diaryPlate(v: HistEvent): string {
+  const marks: Mark[] = [];
+  let cap = `Dấu chân người viết · ${v.y}`;
+  if (isPlay()) {
+    const pl = placeAt(v.y), away = pl.name === 'xứ người', h = home();
+    const at: [number, number] = away ? h[2] : pl.l, name = away ? h[1] : pl.name, km = kmBetween(v.l, at);
+    if (km < 15) {
+      marks.push({ l: v.l, kind: 'foot' }, { l: at, kind: 'home', label: name });
+      cap = away ? `Dấu chân người viết · ở quê gốc ${name}` : `Dấu chân người viết · ngay ở nhà, ${name}`;
+    } else {
+      marks.push({ l: at, kind: 'home', label: name }, { l: v.l, kind: 'foot', label: 'Dấu chân' });
+      cap = `Dấu chân người viết · cách ${away ? 'quê gốc' : 'nhà'} ở ${name} ~${kmText(km)} km`;
+    }
+  } else marks.push({ l: v.l, kind: 'foot', label: 'Dấu chân' });
+  return `<figure class="dplate">${plate([], '', 'plate-svg dpl', { marks })}<figcaption class="mono">${esc(cap)}</figcaption></figure>`;
 }
 /** Trang sự kiện vừa mở: tiêu điểm lên tiêu đề (trình đọc đọc tên sự kiện), nhớ nút đã mở để đóng thì trả về. */
 function pageFocus(who: Element | null, ret?: string): void {
@@ -260,6 +314,7 @@ on('goev', el => {
 // Chỉ nút đóng của chính trang sự kiện mới dùng đích quay về của nó (nút "close" khác: về bản đồ như cũ).
 on('close', el => {
   const raw = el.closest<HTMLElement>('.ov')?.dataset.ret, r: Ret | null = raw ? JSON.parse(raw) : null;
+  flyBack(el.closest<HTMLElement>('.ov'));
   hush(); // "▶ Nghe" của trang vừa đóng thì dừng (cả khi tour đang giữ bằng ❚❚); tour chạy tiếp thì tự kể lại
   if (r && r.tab !== 'map') {
     setTab(r.tab);
