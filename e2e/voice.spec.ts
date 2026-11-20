@@ -101,20 +101,25 @@ test('ending: with narration off the dossier stays silent until "Nghe" is presse
   expect(errors).toEqual([]);
 });
 
+/** Mở kết luận rồi bấm các nút trong cùng một tác vụ: chắc chắn trước hẹn giờ tự đọc (1,8 s), kể cả khi máy chạy chậm. */
+const openEndAndPress = (page: Page, presses: number) => page.evaluate(n => {
+  document.querySelector<HTMLElement>('#card [data-a=end].c')!.click();
+  for (let i = 0; i < n; i++) document.querySelector<HTMLElement>('#layer [data-a=listen-end]')!.click();
+}, presses);
+
 test('ending: "Nghe" tapped right after the first open is not cut by the auto-read; "Dừng" is the button\'s name while it reads', async ({ page }) => {
   // bản thu dài 5 s: còn đang đọc khi hẹn giờ tự đọc (1,8 s) tới
   const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, narr: true, sound: false, music: false }, 5000);
-  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('#card [data-a=end].c')).toBeVisible();
+  await openEndAndPress(page, 1);
   const b = page.locator('#layer [data-a=listen-end]');
-  await expect(b).toHaveAccessibleName('Nghe');
-  await b.click();
   await expect(b).toHaveAttribute('data-on', '1');
   await expect(b).toHaveAccessibleName('Dừng');
   await page.waitForTimeout(2600);
   expect(await clips(page)).toEqual(['end-canhtan-4']);
   expect(await stopped(page)).toEqual([]);
   await expect(b).toHaveAttribute('data-on', '1');
-  // "Dừng" stops it, and the auto-read does not start it again
+  // "Dừng" stops it; the button is "Nghe" again
   await b.click();
   await expect(b).toHaveAccessibleName('Nghe');
   expect(await stopped(page)).toEqual(['end-canhtan-4']);
@@ -123,14 +128,13 @@ test('ending: "Nghe" tapped right after the first open is not cut by the auto-re
 
 test('ending: "Dừng" pressed before the auto-read is due keeps the dossier silent', async ({ page }) => {
   const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, narr: true, sound: false, music: false }, 5000);
-  await page.locator('#card [data-a=end].c').click();
+  await expect(page.locator('#card [data-a=end].c')).toBeVisible();
+  await openEndAndPress(page, 2);
   const b = page.locator('#layer [data-a=listen-end]');
-  await b.click();
-  await expect(b).toHaveAttribute('data-on', '1');
-  await b.click();
   await expect(b).not.toHaveAttribute('data-on', '1');
   await page.waitForTimeout(2600);
   expect(await clips(page)).toEqual(['end-canhtan-4']);
+  expect(await stopped(page)).toEqual(['end-canhtan-4']);
   await expect(b).not.toHaveAttribute('data-on', '1');
   expect(errors).toEqual([]);
 });
