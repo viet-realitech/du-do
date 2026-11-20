@@ -312,7 +312,13 @@ export function resumeTour(why?: 'overlay'): void {
   hush();
   const was = tour.paused;
   tour.paused = undefined;
-  if (was === 'card') tour.i++;
+  if (was === 'card') {
+    tour.i++;
+    // thẻ vừa quyết có thể đưa cả nhà ra nước ngoài (vượt biển 1980…): trang nhật ký ở quê đề năm sau đó (state.allEv
+    // đã bỏ) không kể nữa
+    const all = new Set(allEv()), L = tour.L, i = tour.i;
+    tour.L = L.filter((v, k) => k < i || !v.diary || all.has(v));
+  }
   tourBar();
   // ▶ sau ❚❚: cảnh đã giữ chạy tiếp từ chỗ dừng (lời kể đã cắt thì không đọc lại); bước hẹn lại theo đồng hồ của cảnh
   // (cảnh đang giữ phải là của bước tour, không phải cảnh "Xem diễn biến" đang mở đè lên: khi đó kể lại bước này)

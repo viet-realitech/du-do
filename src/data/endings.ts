@@ -47,8 +47,10 @@ const page = (id: string, y: number, t: string, l: LngLat, s: string): HistEvent
     dòng gia phả; trang nhật ký "Đêm ra khơi" 1979, "Sổ gạo" Hà Nội 1980 không còn đúng với nhà này nên thay. Người đồng
     hành: Trần Văn Khê (sống ở Pháp, giữ mối dây với quê nhà), Võ Văn Kiệt (thủ tướng những năm mở cửa đón Việt kiều về),
     Phạm Duy (rời nước năm 1975) thay cho Lê Duẩn, Nguyễn Văn Linh của những nhà ở trong nước. */
-export const ABROAD6: Record<string, { label: string; who: string; d: string; out: string; doi: string; chron: string; guide: string; diary: HistEvent[] }> = {
-  baocap: { label: 'Gửi quà nuôi người ở quê', who: 'Những thùng quà thời bao cấp', guide: 'tvk2',
+/** `cfId`: giả định "Nếu…" của hướng khi nhìn từ xứ người (cfOf): nhà gửi quà về không phải nhà giữ kế hoạch hoá, nên
+    không hỏi "nếu không có Đổi Mới" mà hỏi "nếu Việt – Mỹ bình thường hoá sớm" (kiều hối, đường đi hợp pháp mở sớm hơn). */
+export const ABROAD6: Record<string, { label: string; who: string; d: string; out: string; doi: string; chron: string; guide: string; diary: HistEvent[]; cfId?: string }> = {
+  baocap: { label: 'Gửi quà nuôi người ở quê', who: 'Những thùng quà thời bao cấp', guide: 'tvk2', cfId: 'radi',
     d: 'Đi làm hai ca; thuốc tây, vải, bột ngọt đóng thùng gửi qua bưu điện, chịu thuế để họ hàng ở quê được nhận.',
     out: 'Bạn lớn lên giữa những thùng quà đóng dở trong phòng khách. Ở quê, họ hàng bán dần từng lọ thuốc, từng xấp vải để đong gạo qua những năm tem phiếu.',
     doi: 'gửi quà về nuôi họ hàng thời bao cấp',
@@ -101,14 +103,33 @@ export interface Ending {
 /** Rời đất nước: đời thứ sáu "Ra đi", hay một lựa chọn đưa cả nhà (hay một nhánh) ra nước ngoài trên thẻ sự kiện. */
 const EXIT: Flag[] = ['ditan', 'vuotbien', 'odp', 'lylichDi', 'ly79Di'];
 export const away = (f: Facts) => f.picks[5] === 'radi' || EXIT.some(x => f.flags.has(x));
-/** Cả nhà (không chỉ một nhánh) ra nước ngoài trên thẻ sự kiện: di tản, vượt biển, ra đi có trật tự, "bán chính thức". */
-const GONE: Flag[] = ['ditan', 'vuotbien', 'odp', 'ly79Di'];
+/** Cả nhà (không chỉ một nhánh) ra nước ngoài trên thẻ sự kiện: di tản, vượt biển, ra đi có trật tự, "bán chính thức".
+    Từ năm sau năm của thẻ ấy, dòng họ sống ở xứ người (play.ts abroad): thẻ cả nước nói từ bên ấy, thẻ theo vùng và biến
+    cố trong nước không còn là việc của nhà. Gửi một người đi (guiDi), một nhánh xuống ghe năm 1978 (lylichDi) thì cả nhà
+    còn ở lại. Thứ tự theo năm. */
+export const GONE: Flag[] = ['ditan', 'ly79Di', 'vuotbien', 'odp'];
+/** Năm của thẻ (hay biến cố riêng) mang cờ rời nước: 30.4.1975, nạn kiều 1979 (biến cố họ Lý gắn vào thẻ tháng 2.1979),
+    làn sóng thuyền nhân 1980 (vượt biển, hay làm đơn đi diện đoàn tụ ODP rồi chờ vài năm mới bay). npm run scenes kiểm
+    cờ nằm đúng trên thẻ năm ấy. `when`: cụm thời gian cho lời kết, gia phả; `go`: cụm động từ ngắn, không dấu phẩy;
+    `short`: gọn hơn nữa, cho thẻ chia sẻ. */
+export const GONE_AT: Record<string, { y: number; when: string; go: string; short: string }> = {
+  ditan: { y: 1975, when: 'tháng 4.1975', go: 'di tản', short: 'di tản' },
+  ly79Di: { y: 1979, when: 'năm 1979', go: 'đi “bán chính thức” sang Hồng Kông', short: 'đi “bán chính thức”' },
+  vuotbien: { y: 1980, when: 'năm 1980', go: 'vượt biển', short: 'vượt biển' },
+  odp: { y: 1980, when: 'đầu thập niên 1980', go: 'sang đoàn tụ theo Chương trình Ra đi có trật tự', short: 'đi diện đoàn tụ (ODP)' },
+};
+/** Cờ rời nước (cả nhà) của dòng họ, sớm nhất trước; trước năm `before` nếu có (điểm rẽ 6 là năm 1976: chỉ nhà di tản
+    năm 1975 bước vào điểm rẽ ấy ở xứ người). */
+export const goneOf = (f: Facts, before = 9999): Flag | undefined => GONE.find(x => f.flags.has(x) && GONE_AT[x].y < before);
+/** Năm điểm rẽ 6 (1976): đời thứ sáu chọn hướng của mình ở năm này. */
+const GATE6 = ERAS[ERAS.length - 1].cy;
 export const sum = (r?: Res) => (r ? r.g + r.d + r.b + r.u : 0);
 const NUMW = ['Không', 'Một', 'Hai', 'Ba', 'Bốn', 'Năm', 'Sáu'];
 
 export const ENDINGS: Ending[] = [
   { id: 'lytan', title: 'Còn lại tên họ', seal: 'Giữ được tên', play: true,
-    line: 'Gia sản gần cạn, người còn ít, nhưng gia phả vẫn giữ được cái tên.',
+    // câu chung cho phim hành trình: đúng cả khi họ còn đông người (gia sản thấp là ở lúa gạo, bạc, uy tín)
+    line: 'Sáu đời qua chiến tranh và những lần chọn phe; nhà sa sút, nhưng gia phả vẫn giữ được cái tên.',
     why: 'Gia sản cuối cùng thuộc nhóm 5% thấp nhất của các dòng họ cùng quê trong mô phỏng, hoặc dòng họ còn dưới 25 nhân đinh.',
     test: f => (!!f.th && sum(f.res) <= f.th.lo) || (!!f.res && f.res.d < 25) },
   { id: 'xanam', title: 'Bên kia đại dương', seal: 'Hai bờ đại dương',
@@ -229,7 +250,12 @@ const DOI: Record<string, string> = {
 export function doi(f: Facts, i: number): string {
   const id = f.picks[i], reg = f.home?.region;
   if (!reg) return DOI[id] || '';
-  if (ABROAD6[id] && f.flags.has('ditan')) return ABROAD6[id].doi; // đời thứ sáu của nhà đã di tản sống ở xứ người
+  if (ABROAD6[id] && goneOf(f, GATE6)) return ABROAD6[id].doi; // đời thứ sáu của nhà đã di tản năm 1975 sống ở xứ người
+  const g = ABROAD6[id] ? goneOf(f) : undefined;
+  if (g) { // đời thứ sáu chọn hướng ở trong nước năm 1976, rồi cả nhà ra đi: nói cả hai, không nói Đổi Mới nhà ấy không ở để thấy
+    const go = `${GONE_AT[g].go} ${GONE_AT[g].when}`;
+    return id === 'baocap' ? `giữ sổ gạo thời bao cấp rồi ${go}` : id === 'doimoi' ? `${go} khi Đổi Mới còn chưa tới` : go;
+  }
   // điểm rẽ 5 dời nhà (play.ts regionAt): nhà miền Bắc theo Miền Nam / Thành phần thứ ba thì di cư, nhà miền Nam theo
   // Miền Bắc thì tập kết
   if (id === 'nam') return north(f) ? 'di cư vào Nam năm 1954' : DOI.nam;
@@ -242,12 +268,27 @@ export function doi(f: Facts, i: number): string {
   if (id === 'vm') return reg === 'B' || reg === 'T1' ? 'lên chiến khu Việt Bắc theo Việt Minh' : reg === 'NE' ? 'theo Việt Minh vào chiến khu Đ' : reg === 'NW' ? 'theo Việt Minh vào rừng U Minh' : DOI.vm;
   return DOI[id] || '';
 }
+/** Cách cả nhà rời nước, cho dòng gia phả đời thứ sáu (sau mốc thời gian): theo đường người đi trước, theo diện đoàn tụ. */
+const GONE_TAIL: Record<string, (f: Facts) => string> = {
+  ly79Di: () => 'cả nhà nộp vàng đi “bán chính thức”, tới trại ở Hồng Kông rồi định cư ở Toronto',
+  vuotbien: f => (f.flags.has('lylichDi') ? 'cả nhà còn lại theo đường người đi trước xuống ghe' : 'cả nhà bán hết, xuống ghe vượt biển') + ', qua trại tị nạn rồi định cư ở xứ người',
+  odp: f => `cả nhà theo diện đoàn tụ của Chương trình Ra đi có trật tự, bay sang với ${f.flags.has('lylichDi') ? 'nhánh đã xuống ghe năm 1978' : 'người thân đã đi trước'}`,
+};
+/** Dòng gia phả đời thứ sáu khi hướng chọn năm 1976 ở trong nước, rồi cả nhà ra đi (`when`, `tail`): nói đời ấy sống thế nào
+    tới lúc đi, không nói những năm Đổi Mới nhà ấy không ở để thấy. */
+const GEN6_GONE: Record<string, (when: string, tail: string) => string> = {
+  baocap: (when, tail) => `Thế hệ 6 sống bằng sổ gạo, tem phiếu những năm đầu sau thống nhất; ${when}, ${tail}.`,
+  doimoi: (when, tail) => `Thế hệ 6 chờ ngày được làm ăn tự do, nhưng Đổi Mới còn xa; ${when}, ${tail}.`,
+  radi: (when, tail) => `Thế hệ 6 chọn ra đi: ${when}, ${tail}; sau năm 1995 mới có người về thăm quê.`,
+};
 /** Dòng gia phả của hướng `id` (gia phả ở kết cục, phim hành trình). Trò chơi biết quê nên nói đúng người miền nào làm gì
     sau Genève: điểm rẽ 5 dời nhà (play.ts regionAt), nhà miền Bắc theo Miền Nam / Thành phần thứ ba thì di cư, nhà miền
     Nam theo Miền Bắc thì tập kết ra Bắc và về lại quê sau 1975. Không có câu riêng: dòng biên niên chung (CHRONICLE). */
 export function chronLine(id: string, f: Facts, chron: Record<string, string>): string {
   const reg = f.home?.region, nth = north(f), q = f.home?.name || '';
-  if (reg && ABROAD6[id] && f.flags.has('ditan')) return ABROAD6[id].chron;
+  if (reg && ABROAD6[id] && goneOf(f, GATE6)) return ABROAD6[id].chron;
+  const g = reg && ABROAD6[id] ? goneOf(f) : undefined;
+  if (g) return GEN6_GONE[id](GONE_AT[g].when, GONE_TAIL[g](f));
   if (reg && id === 'bac') return nth
     ? (f.flags.has('dicu') ? 'Thế hệ 5 chọn miền Bắc, nhưng rồi cả nhà vẫn vào Nam trong hạn 300 ngày tự do đi lại sau Genève.' : 'Thế hệ 5 ở lại miền Bắc, qua cải cách ruộng đất; có người sau đó đi đường Trường Sơn.')
     : `Thế hệ 5 tập kết ra Bắc năm 1954${f.flags.has('nguoiDi54') ? ', để vợ con ở lại quê chờ lời hẹn hai năm' : ''}; năm 1975 mới về lại ${q}.`;
@@ -266,12 +307,19 @@ export function genDelta(f: Facts): { best: number; worst: number; dl: number[] 
 }
 /** Mệnh đề "rời đất nước" theo thẻ đã chọn (năm và cách đi), hay theo hướng "Ra đi" của đời thứ sáu. */
 function exitClause(f: Facts): string {
-  if (f.flags.has('ditan')) return 'tháng 4.1975, cả nhà di tản';
-  if (f.flags.has('lylichDi')) return 'năm 1978, một nhánh xuống ghe ở Rạch Giá';
-  if (f.flags.has('ly79Di')) return 'năm 1979, cả nhà đi “bán chính thức” sang Hồng Kông';
-  if (f.flags.has('vuotbien')) return 'năm 1980, cả nhà vượt biển';
-  if (f.flags.has('odp')) return 'đầu thập niên 1980, cả nhà đi theo Chương trình Ra đi có trật tự';
+  const g = goneOf(f), branch = f.flags.has('lylichDi') ? 'năm 1978, một nhánh xuống ghe ở Rạch Giá' : '';
+  // một nhánh đi trước năm 1978, cả nhà còn lại đi sau: nói cả hai lần
+  if (g && branch && g !== 'ditan' && g !== 'ly79Di') return `${branch}; ${GONE_AT[g].when}, cả nhà còn lại ${g === 'odp' ? 'sang đoàn tụ theo Chương trình Ra đi có trật tự' : 'theo đường ấy vượt biển'}`;
+  if (g) return `${GONE_AT[g].when}, cả nhà ${GONE_AT[g].go}`;
+  if (branch) return branch;
   return 'sau năm 1975, đời thứ sáu ra đi';
+}
+/** Nhà cả nhà đã ra đi trên thẻ sự kiện: cụm ngắn cho dòng năm 1976 trên thẻ chia sẻ (ending.ts makeCard); undefined nếu
+    không. Nhà di tản năm 1975 bước vào điểm rẽ 6 ở xứ người; nhà đi sau năm 1976 thì hướng đã chọn rồi mới đi. */
+export function exitNote(f: Facts): string | undefined {
+  const g = goneOf(f);
+  if (!g) return undefined;
+  return GONE_AT[g].y < GATE6 ? `từ ${GONE_AT[g].when}, cả nhà ở xứ người` : `rồi ${GONE_AT[g].when}, cả nhà ${GONE_AT[g].short}`;
 }
 /** Việc riêng sau 1975 theo thẻ đã chọn (học tập cải tạo, lý lịch, gửi một người đi…), cho các kết cục ở lại. */
 function after75(f: Facts): string[] {
@@ -289,24 +337,25 @@ export function epilogue(id: string, f: Facts): string {
   const at = (i: number) => `${genName(i)} ${doi(f, i)}`, atHo = (i: number) => `${genName(i)} của ${ho} ${doi(f, i)}`;
   switch (id) {
     case 'lytan': {
-      // chỉ nêu những phần gia sản thật sự cạn (≤ 25), không thì hai phần thấp nhất
-      const RN: [keyof Res, string][] = [['g', 'lúa gạo'], ['d', 'nhân đinh'], ['b', 'bạc'], ['u', 'uy tín']];
+      // chỉ nêu những phần gia sản thật sự cạn (≤ 25), không thì hai phần thấp nhất; nhân đinh chỉ khi chính nó cạn (họ
+      // còn đông người thì gia sản thấp là ở lúa gạo, bạc, uy tín, và lời kết không nói "người còn lại")
+      const RN: [keyof Res, string][] = [['g', 'lúa gạo'], ['d', 'nhân đinh'], ['b', 'bạc'], ['u', 'uy tín']].filter(([k]) => k !== 'd' || !r || r.d < 25) as [keyof Res, string][];
       const lows = r ? RN.filter(([k]) => r[k] <= 25).sort((a, b) => r[a[0]] - r[b[0]]) : [];
       const shown = (lows.length ? lows : r ? [...RN].sort((a, b) => r[a[0]] - r[b[0]]).slice(0, 2) : []).slice(0, 3);
       const low = r ? `gia sản của ${ho} chỉ còn ${list(shown.map(([k, n]) => `${n} ${r[k]}`))}` : `${ho} còn lại rất ít`;
       // nhà đã di cư năm 1954 hay cả nhà đã ra nước ngoài: nói đường dòng họ đã đi, không ghim cả sáu đời vào quê gốc
       const mv = north(f) && (f.picks[4] === 'nam' || f.picks[4] === 'thuba' || f.flags.has('dicu')), out = f.picks[5] === 'radi' || GONE.some(x => f.flags.has(x));
       const where = que && (mv || out) ? `, từ ${que}${mv ? ' vào Nam' : ''}${out ? `${mv ? ' rồi' : ''} ra xứ người` : ''},` : oQue;
-      return `Sáu đời ${ho}${where} đi qua giặc giã, đói kém và những lần phải chọn phe.${gd ? ` ${cap(genName(gd.worst))}, những người ${doi(f, gd.worst)}, mất mát nhiều nhất.` : ''} Đến năm 2026, ${low}. Gia phả không đứt: người còn lại giữ cái tên và thắp hương cho cả những người không về.`;
+      return `Sáu đời ${ho}${where} đi qua giặc giã, đói kém và những lần phải chọn phe.${gd ? ` ${cap(genName(gd.worst))}, những người ${doi(f, gd.worst)}, mất mát nhiều nhất.` : ''} Đến năm 2026, ${low}. Gia phả không đứt: ${!r || r.d < 25 ? 'người còn lại' : r.d >= 40 ? 'nhà nghèo đi nhưng con cháu vẫn đông; họ' : 'con cháu'} giữ cái tên và thắp hương cho cả những người không về.`;
     }
     case 'xanam':
-      return `${cap(atHo(4))}; ${exitClause(f)}, rồi dựng lại đời sống ở xứ người. ${f.flags.has('kieuhoi') ? `Từ cuối thập niên 1980, tiền và thùng đồ gửi về sửa lại nhà, xây lại mộ tổ${oQue}.` : 'Nhiều năm liền, những lá thư là sợi dây duy nhất nối hai bờ.'} Năm 2026, ${ho} có hai bàn thờ, một ở ${que || 'quê nhà'} và một ở bên kia đại dương; con cháu đời thứ bảy nói tiếng Việt với ông bà và một thứ tiếng khác ở trường.`;
+      return `${cap(atHo(4))}; ${exitClause(f)}, rồi dựng lại đời sống ở xứ người. ${f.flags.has('kieuhoi') ? `Từ cuối thập niên 1980, tiền và thùng đồ gửi về sửa lại nhà, xây lại mộ tổ${oQue}.` : 'Nhiều năm liền, những lá thư là sợi dây duy nhất nối hai bờ.'} Năm 2026, ${ho} có hai bàn thờ, một ở ${que || 'quê nhà'}${goneOf(f) ? ' do họ hàng ở lại trông nom' : ''} và một ở bên kia đại dương; con cháu đời thứ bảy nói tiếng Việt với ông bà và một thứ tiếng khác ở trường.`;
     case 'xabac': {
       // nhà phía nam vĩ tuyến 17 theo miền Bắc: không lấy ví dụ ghe Hải Phòng, Quảng Ninh hay lao động Đông Âu của người miền Bắc
       const how = EXIT.some(x => f.flags.has(x)) ? exitClause(f) : f.home && !north(f)
         ? 'sau chiến tranh, đời thứ sáu vẫn rời đất nước, như không ít gia đình từng đứng về phía cách mạng mà con cháu ra đi vì sinh kế, vì đoàn tụ, hay đi học rồi ở lại'
         : 'sau chiến tranh, đời thứ sáu rời đất nước, như những người đi ghe từ Hải Phòng, Quảng Ninh sang Hồng Kông, hay những người đi lao động ở Đông Âu rồi ở lại sau năm 1990';
-      return `${cap(atHo(4))} qua những năm chiến tranh; ${how}. Năm 2026, ${ho} có người ở xứ người, còn từ đường${oQue} vẫn do nhánh ở lại trông nom. Gia phả ghi cả hai: người từng ${doi(f, 3)} và người đã ra đi.`;
+      return `${cap(atHo(4))} qua những năm chiến tranh; ${how}. Năm 2026, ${ho} có người ở xứ người, còn từ đường${oQue} vẫn do ${goneOf(f) ? 'họ hàng' : 'nhánh'} ở lại trông nom. Gia phả ghi cả hai: người từng ${doi(f, 3)} và người đã ra đi.`;
     }
     case 'xagiua':
       return `${cap(atHo(4))} và bị cả hai phía nghi ngờ; ${exitClause(f)}. Ở xứ người, ${ho} vẫn viết, dạy học, gây quỹ xây trường ở ${que || 'quê nhà'}, ít ồn ào nhưng bền bỉ. Năm 2026, con cháu là người bắc cầu: đủ gần để về quê ăn giỗ, đủ xa để kể lại chuyện cũ mà không phải chọn phe.`;
@@ -412,12 +461,15 @@ export const CFS: Record<string, CF> = {
 /** Điểm rẽ đầu tiên con đường rời hướng chiếm ưu thế ("lịch sử rẽ từ đây"); con đường trùng cả năm thì lấy hướng ở
     điểm rẽ 2 (không ngả nào thắng: "nếu ngả này thành công"). Sau điểm rẽ đầu tiên, hướng "chiếm ưu thế" của các điểm
     rẽ sau không còn là dữ kiện, nên trò chơi không nhân tiếp các ước lượng. */
-export function firstDivergence(picks: string[]): { i: number; id: string; cf: CF; p: number; free: boolean } | null {
+export function firstDivergence(picks: string[], f?: Facts): { i: number; id: string; cf: CF; p: number; free: boolean } | null {
   let i = picks.findIndex((x, k) => !!x && !!PREV[k] && x !== PREV[k]);
   const free = i < 0;
   if (free) i = PREV.findIndex((x, k) => !x && !!picks[k]);
-  const id = picks[i], cf = id ? CFS[id] : undefined;
+  const id = picks[i], cf = id ? CFS[(f && goneOf(f, GATE6) && ABROAD6[id]?.cfId) || id] : undefined;
   return i >= 0 && cf ? { i, id, cf, p: LEVEL[cf.level][0], free } : null;
 }
+/** Giả định "Nếu…" của một hướng như dòng họ thấy nó (state.optOf): điểm rẽ 6 nhìn từ xứ người (ABROAD6, nhà di tản
+    năm 1975) mang `cfId` riêng. */
+export const cfOf = (o: { id: string; cfId?: string }): CF | undefined => CFS[o.cfId || o.id];
 /** "khoảng 5% (1 trên 20)". */
 export const estimate = (lv: Level) => { const p = LEVEL[lv][0]; return `khoảng ${Math.round(p * 100)}% (1 trên ${Math.round(1 / p)})`; };

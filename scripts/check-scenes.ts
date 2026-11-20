@@ -7,7 +7,7 @@ import { evEra } from '../src/state';
 import { NEXT, HOMES } from '../src/play';
 import { CARD, VARIANT } from '../src/data/cards';
 import { SPECIAL } from '../src/data/cards2';
-import { ENDINGS, RAR, FLAGS, CFS, LEVEL, PREV, endingOf, pathF } from '../src/data/endings';
+import { ENDINGS, RAR, FLAGS, CFS, LEVEL, PREV, GONE, GONE_AT, endingOf, pathF } from '../src/data/endings';
 
 let err = 0;
 const kinds: Record<string, number> = {}, acts: Record<string, number> = {};
@@ -91,7 +91,18 @@ for (const [id, vs] of Object.entries(VARIANT)) {
       const [k, i] = a.split('='), sp = k.startsWith('x:') ? SPECIAL.find(c => c.id === k.slice(2)) : undefined, n = sp ? sp.choices.length : CARD[k]?.[2].length;
       if (!n || !(+i >= 0 && +i < n)) { console.error(`LỖI VARIANT.${id}: after ${a} không có lựa chọn đó`); err++; }
     }
+    if (va.special && !SPECIAL.some(c => c.id === va.special && c.ev === id)) { console.error(`LỖI VARIANT.${id}: special ${va.special} không gắn vào thẻ này`); err++; }
   }
+}
+// cờ rời nước (endings.ts GONE): play.ts abroad tính năm theo thẻ mang cờ, lời kết và gia phả theo GONE_AT: hai bên phải
+// cùng năm
+{
+  const yOf = (id: string) => EV.find(v => v.id === id)?.y;
+  const at = (f: string | undefined, id: string, where: string) => {
+    if (f && (GONE as string[]).includes(f) && yOf(id) !== GONE_AT[f].y) { console.error(`LỖI cờ rời nước ${f} trên ${where} (năm ${yOf(id)}), GONE_AT ghi năm ${GONE_AT[f].y}`); err++; }
+  };
+  for (const [id, c] of Object.entries(CARD)) for (const ch of [...c[2], ...(VARIANT[id] || []).flatMap(va => va.choices)]) at(ch[4], id, `thẻ ${id}`);
+  for (const c of SPECIAL) for (const ch of c.choices) at(ch[5], c.ev, `biến cố ${c.id}`);
 }
 // câu đố cuối chương: mỗi câu gắn một sự kiện của đúng chương ấy (tour Đọc sử luôn kể nó, câu đố chỉ hỏi khi nó đã hiện),
 // ít nhất hai câu mỗi chương, đáp án nằm trong các lựa chọn; tối đa năm sự kiện có câu đố mỗi chương (tour tám bước)
