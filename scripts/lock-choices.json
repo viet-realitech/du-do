@@ -1,0 +1,681 @@
+{
+ "about": "Khoá thứ tự lựa chọn của thẻ (scripts/lock-choices.ts). Bản lưu giữ chỉ số lựa chọn: thay đổi ở đây cần một bước chuyển đổi bản lưu (src/state.ts) và một ghi chú. Ghi lại: npm run choices:lock -- --note \"...\"",
+ "notes": [
+  {
+   "date": "2026-11-20",
+   "ids": [],
+   "note": "Khoá đầu tiên."
+  }
+ ],
+ "cards": {
+  "ab63": [
+   "Tản cư khỏi Ấp Bắc",
+   "Che giấu du kích"
+  ],
+  "ab63 @0 regions=NE homes=sg,hn,nd,na": [
+   "Đón họ hàng từ Mỹ Tho lên",
+   "Đọc tin trên báo"
+  ],
+  "bb79": [
+   "Đi dân quân biên giới",
+   "Sơ tán về xuôi"
+  ],
+  "bb79 @0 regions=T2,NE,NW after=cp79=0": [
+   "Khai tên con theo lệnh tổng động viên",
+   "Nghe tin qua đài"
+  ],
+  "bb79 @1 regions=T2,NE,NW": [
+   "Khai tên con theo lệnh tổng động viên",
+   "Nghe tin qua đài"
+  ],
+  "bd86": [
+   "Tiếp tế cho căn cứ Ba Đình",
+   "Lánh sang phủ bên"
+  ],
+  "bg50": [
+   "Đi dân công tiếp tế",
+   "Ở lại làng"
+  ],
+  "bg99": [
+   "Nhận ruộng tái định cư",
+   "Không ảnh hưởng"
+  ],
+  "bmt75": [
+   "Chạy theo Quốc lộ 7",
+   "Ở lại Buôn Ma Thuột"
+  ],
+  "bmt75 @0 regions=T2 homes=hue,qn": [
+   "Chạy vào Đà Nẵng",
+   "Ở lại giữ nhà"
+  ],
+  "bt91": [
+   "Buôn hàng Trung Quốc qua biên giới",
+   "Mất việc ở Liên Xô"
+  ],
+  "bx55": [
+   "Tránh khỏi Chợ Lớn",
+   "Ủng hộ quân chính phủ"
+  ],
+  "cc53": [
+   "Bị quy địa chủ",
+   "Hiến ruộng trước",
+   "Là bần nông được chia ruộng"
+  ],
+  "cc53 @0 special=x-diachu53": [
+   "Giữ ruộng, chờ đội về",
+   "Hiến ruộng trước khi đội về",
+   "Giảm tô, thoái tô cho người cấy rẽ"
+  ],
+  "cc53 @1 regions=B from=T2,NE,NW": [
+   "Về nông trường khai hoang",
+   "Gửi con vào trường học sinh miền Nam",
+   "Đứng ngoài các buổi đấu tố"
+  ],
+  "cd61": [
+   "Gửi trai tráng vào đồn",
+   "Giấu lương, đóng cổng làng"
+  ],
+  "cm75": [
+   "Đưa thân nhân từ Campuchia về",
+   "Không liên quan"
+  ],
+  "cp79": [
+   "Đi bộ đội tình nguyện",
+   "Tản cư khỏi biên giới"
+  ],
+  "cs30": [
+   "Có người vào Đảng",
+   "Giữ khoảng cách"
+  ],
+  "cs30 @0 picks=cs": [
+   "Nhà thành nơi in truyền đơn",
+   "Đưa em trai vào chi bộ"
+  ],
+  "ct08": [
+   "Kéo về toà sứ đòi giảm thuế",
+   "Nộp đủ thuế, đứng ngoài"
+  ],
+  "ct78": [
+   "Bị kiểm kê, mất cửa hàng",
+   "Giao nộp sớm, xin việc nhà nước",
+   "Giấu vàng, chuẩn bị đi"
+  ],
+  "cv85": [
+   "Hưởng ứng Chiếu Cần Vương",
+   "Góp tiền, không góp người",
+   "Đứng ngoài"
+  ],
+  "cv85 @0 picks=canvuong": [
+   "Bán ruộng mua gươm, lập đội nghĩa binh",
+   "Gửi con trai cả theo nghĩa quân, ở nhà nuôi quân",
+   "Giấu lương cho nghĩa quân trong nhà thờ họ"
+  ],
+  "dbp": [
+   "Đi dân công Điện Biên",
+   "Đóng thuế nông nghiệp",
+   "Ở vùng Pháp, không liên quan"
+  ],
+  "dbp @0 regions=T1": [
+   "Đi dân công Điện Biên",
+   "Đóng thuế nông nghiệp",
+   "Ở nhà giữ làng, nghe tin chiến thắng"
+  ],
+  "dbp @1 regions=T2,NE,NW": [
+   "Tiễn con vào bộ đội địa phương",
+   "Góp thóc cho vùng tự do",
+   "Ở vùng Pháp, không liên quan"
+  ],
+  "dc54": [
+   "Đón người di cư",
+   "Giữ nhà, không nhận"
+  ],
+  "dc54 @0 regions=B from=T2,NE,NW": [
+   "Cả nhà cùng ra Bắc ⚑tapketN",
+   "Người đi, vợ con ở lại giữ đất ⚑nguoiDi54"
+  ],
+  "dc54 @1 regions=NE from=B,T1": [
+   "Cả nhà đi, dựng lại ở khu định cư ⚑dicu",
+   "Để một nhánh ở lại giữ từ đường ⚑tienNhanh"
+  ],
+  "dc54 @2 regions=B,T1": [
+   "Tiễn một nhánh họ di cư ⚑tienNhanh",
+   "Ở lại, giữ nhà"
+  ],
+  "dc63": [
+   "Đi theo đoàn biểu tình Phật giáo",
+   "Giữ im lặng"
+  ],
+  "dd05": [
+   "Gửi con sang Nhật",
+   "Góp tiền quỹ Duy Tân hội",
+   "Từ chối"
+  ],
+  "dd05 @0 picks=dongdu": [
+   "Bán ruộng lo tiền đường cho một người nữa",
+   "Quyên tiền trong họ cho hội",
+   "Ở lại trong nước giữ đường dây"
+  ],
+  "dk07": [
+   "Cho con cháu học Nghĩa Thục",
+   "Giữ trường làng"
+  ],
+  "dk07 @0 picks=duytan": [
+   "Mở thêm lớp tối",
+   "Soạn sách, cổ động cắt tóc ngắn"
+  ],
+  "dk60": [
+   "Theo Đồng khởi",
+   "Lánh lên tỉnh"
+  ],
+  "dm02": [
+   "Mở hiệu buôn ở ga xe lửa",
+   "Nấu rượu lậu",
+   "Chịu thuế, giữ ruộng"
+  ],
+  "dm86": [
+   "Mở hiệu buôn, khoán sản ⚑dmBiz",
+   "Ở lại biên chế nhà nước",
+   "Hoài nghi"
+  ],
+  "dm86 @0 flags=ditan,ly79Di,vuotbien,odp": [
+   "Hùn vốn cho người nhà mở tiệm",
+   "Mở tiệm ở khu phố người Việt",
+   "Chờ xem, chưa tin"
+  ],
+  "dm86 @1 picks=doimoi": [
+   "Mở hiệu buôn, khoán sản ⚑dmBiz",
+   "Mở xưởng nhỏ",
+   "Nhận khoán ruộng"
+  ],
+  "dn58": [
+   "Góp lương cho đồn Liên Trì",
+   "Đưa cả họ lên núi tránh pháo",
+   "Giữ ruộng, chờ xem"
+  ],
+  "dn65": [
+   "Làm việc cho căn cứ Mỹ",
+   "Dọn khỏi vùng căn cứ"
+  ],
+  "el49": [
+   "Làm việc cho Quốc gia Việt Nam",
+   "Từ chối, theo kháng chiến",
+   "Giữ trung lập"
+  ],
+  "el49 @0 picks=qg": [
+   "Nhận chức ở toà tỉnh",
+   "Cho con vào trường sĩ quan",
+   "Làm việc ở công sở, giữ thư với họ hàng bên kia"
+  ],
+  "ft41": [
+   "Đi lính thuỷ cho Pháp",
+   "Không"
+  ],
+  "gd59": [
+   "Chạy khỏi Gia Định",
+   "Bán gạo cho quân Pháp",
+   "Tiếp tế cho quân triều đình"
+  ],
+  "gm88": [
+   "Góp tiền cho Trường Sa",
+   "Theo dõi"
+  ],
+  "gnv": [
+   "Mừng hoà bình, đón bộ đội về",
+   "Ở lại, chờ tổng tuyển cử 1956",
+   "Dò tin những người đã vào Nam"
+  ],
+  "gnv @0 regions=T2,NE,NW": [
+   "Đứng về chính quyền ở Sài Gòn",
+   "Ở lại, chờ tổng tuyển cử 1956",
+   "Có người tập kết ra Bắc ⚑tapketS"
+  ],
+  "gt74": [
+   "Xin làm việc cho toà sứ",
+   "Giữ nếp nhà Nho"
+  ],
+  "hb52": [
+   "Tản cư khỏi Hoà Bình",
+   "Tiếp tế cho bộ đội"
+  ],
+  "hcm69": [
+   "Để tang",
+   "Không bày tỏ"
+  ],
+  "hd14": [
+   "Xuống đường phản đối",
+   "Góp tiền cho ngư dân"
+  ],
+  "hd82": [
+   "Theo Hoàng Diệu giữ thành",
+   "Chạy về quê gốc"
+  ],
+  "hk96": [
+   "Chôn cất nghĩa quân",
+   "Nộp vũ khí nghĩa quân để lập công"
+  ],
+  "hn73": [
+   "Giữ cổng thành với Nguyễn Tri Phương",
+   "Lánh ra ngoại thành",
+   "Bán hàng cho quân Garnier"
+  ],
+  "hn88": [
+   "Nuôi giấu người theo vua",
+   "Không mở cửa"
+  ],
+  "hn95": [
+   "Làm cho công ty nước ngoài",
+   "Mở công ty xuất khẩu"
+  ],
+  "hn95 @0 picks=radi after=x:x-kieuhoi89=1": [
+   "Đưa con cháu về thăm quê ⚑kieuhoi",
+   "Về nước làm ăn"
+  ],
+  "hn95 @1 picks=radi": [
+   "Về thăm quê lần đầu ⚑kieuhoi",
+   "Về nước làm ăn"
+  ],
+  "hn95 @2 flags=ditan,ly79Di,vuotbien,odp": [
+   "Về thăm quê lần đầu ⚑kieuhoi",
+   "Về nước làm ăn"
+  ],
+  "hn95 @3 flags=guiDi,lylichDi": [
+   "Nhận tiền từ thân nhân ở nước ngoài ⚑kieuhoi",
+   "Mở công ty xuất khẩu"
+  ],
+  "hs74": [
+   "Quyên góp cho hải quân VNCH",
+   "Theo dõi tin tức"
+  ],
+  "id65": [
+   "Tản cư khỏi Tây Nguyên",
+   "Ở lại"
+  ],
+  "id65 @0 regions=T2 homes=hue,qn": [
+   "Đón họ hàng từ Pleiku xuống",
+   "Nghe tin qua đài, giữ ruộng"
+  ],
+  "kh63": [
+   "Mở đường buôn lên Nam Vang",
+   "Không quan tâm"
+  ],
+  "kh89": [
+   "Đón con về từ Campuchia",
+   "Không có ai đi"
+  ],
+  "kh89 @0 flags=ditan,ly79Di,vuotbien,odp": [
+   "Đọc tin rút quân trên báo cộng đồng",
+   "Không bận tâm"
+  ],
+  "ks68": [
+   "Rời Khe Sanh",
+   "Ở lại vùng Bru"
+  ],
+  "la93": [
+   "Đi buôn muối lên Lào",
+   "Không đi"
+  ],
+  "lb72": [
+   "Sơ tán khỏi Hà Nội",
+   "Ở lại trực chiến"
+  ],
+  "lb72 @0 regions=B homes=nd": [
+   "Sơ tán khỏi thành phố Nam Định",
+   "Ở lại trực chiến"
+  ],
+  "lb72 @1 regions=B from=T2,NE,NW": [
+   "Sơ tán về nông thôn",
+   "Ở lại trực chiến"
+  ],
+  "ld87": [
+   "Cho con học trường Pháp – Việt",
+   "Giữ trường làng chữ Nho"
+  ],
+  "lk71": [
+   "Đi lính Sư đoàn 1 VNCH",
+   "Trốn lính"
+  ],
+  "ml68": [
+   "Làm chứng về Sơn Mỹ",
+   "Im lặng"
+  ],
+  "ml68 @0 regions=T2 homes=hue,qn": [
+   "Nghe người tị nạn kể chuyện Sơn Mỹ",
+   "Im lặng"
+  ],
+  "mt36": [
+   "Ra báo quốc ngữ",
+   "Mở hiệu buôn lớn"
+  ],
+  "mt60": [
+   "Theo Mặt trận Giải phóng",
+   "Theo chính quyền Sài Gòn",
+   "Đứng giữa"
+  ],
+  "mt68": [
+   "Trú trong hầm nhà thờ",
+   "Dẫn đường cho quân Giải phóng",
+   "Giúp binh sĩ VNCH bị thương"
+  ],
+  "mt68 @0 regions=B,T1": [
+   "Nghe tin Tết Mậu Thân qua đài",
+   "Tiễn thêm một người đi B",
+   "Ăn Tết ở nơi sơ tán"
+  ],
+  "ng45": [
+   "Mở kho thóc cứu đói",
+   "Bán thóc giá cao",
+   "Theo Việt Minh cướp chính quyền"
+  ],
+  "ng45 @0 picks=vm": [
+   "Mở kho thóc cứu đói",
+   "Dẫn đoàn người giành chính quyền huyện",
+   "Giữ an ninh làng"
+  ],
+  "nh40": [
+   "Bán hàng cho quân Nhật",
+   "Giấu thóc"
+  ],
+  "nk40": [
+   "Theo khởi nghĩa",
+   "Cho người trốn qua Miên",
+   "Đóng cửa"
+  ],
+  "nq11": [
+   "Cho một người con đi làm tàu viễn dương",
+   "Giữ con ở nhà"
+  ],
+  "nt61": [
+   "Cho nghĩa quân mượn ghe",
+   "Không dính dáng"
+  ],
+  "nt62": [
+   "Ở lại ba tỉnh miền Đông",
+   "Dời sang miền Tây theo triều đình",
+   "Than khóc rồi nộp thuế"
+  ],
+  "nt62 @0 regions=NW": [
+   "Đón người miền Đông chạy sang",
+   "Gửi thóc cho nghĩa quân Trương Định",
+   "Than khóc rồi nộp thuế"
+  ],
+  "nt62 @1 regions=B,T1,T2": [
+   "Đóng thuế đền chiến phí",
+   "Đón bà con Nam Kỳ chạy ra",
+   "Than khóc rồi sống tiếp"
+  ],
+  "nv56": [
+   "Mua và giữ các số báo Nhân Văn",
+   "Phê phán theo chủ trương"
+  ],
+  "pca16": [
+   "Theo dõi và chia sẻ",
+   "Không quan tâm"
+  ],
+  "pr73": [
+   "Tin hoà bình, sửa nhà",
+   "Không tin, giữ của"
+  ],
+  "pt84": [
+   "Chấp nhận bảo hộ, giữ chức làng",
+   "Từ quan, về dạy học"
+  ],
+  "qd63": [
+   "Về chùa thắp hương",
+   "Không bày tỏ"
+  ],
+  "qt72": [
+   "Chạy trên \"Đại lộ Kinh hoàng\"",
+   "Ở lại vùng giải phóng"
+  ],
+  "qt72 @0 regions=T2 homes=hue,qn": [
+   "Đón người chạy từ Quảng Trị vào",
+   "Gửi người già, trẻ nhỏ đi lánh"
+  ],
+  "sg75": [
+   "Di tản ⚑ditan",
+   "Ở lại, trình diện ⚑caitao",
+   "Đón quân giải phóng"
+  ],
+  "sg75 @0 regions=B from=T2,NE,NW": [
+   "Về quê tìm người thân ⚑seek75",
+   "Chờ con về từ chiến trường",
+   "Làm cỗ mừng thống nhất"
+  ],
+  "sg75 @1 regions=B,T1 after=dc54=0": [
+   "Vào Nam tìm người thân ⚑seek75",
+   "Chờ con về từ chiến trường",
+   "Làm cỗ mừng thống nhất"
+  ],
+  "sg75 @2 regions=B,T1": [
+   "Vào Nam tìm tin người đi B",
+   "Chờ con về từ chiến trường",
+   "Làm cỗ mừng thống nhất"
+  ],
+  "sg75 @3 picks=thuba": [
+   "Di tản ⚑ditan",
+   "Ở lại, chờ hoà hợp",
+   "Đón quân giải phóng"
+  ],
+  "st25": [
+   "Đón tên tỉnh mới",
+   "Lưu giữ tên cũ trong gia phả"
+  ],
+  "st25 @0 flags=ditan,ly79Di,vuotbien,odp": [
+   "Ghi địa chỉ mới của quê",
+   "Giữ tên làng cũ trong gia phả"
+  ],
+  "st25 @1 homes=hn,hue,na": [
+   "Giữ nếp như cũ",
+   "Ghi tên xã cũ vào gia phả"
+  ],
+  "st25 @2 homes=sg,ct": [
+   "Đón thêm tỉnh bạn",
+   "Ghi tên phường cũ vào gia phả"
+  ],
+  "ta83": [
+   "Tản cư khỏi Thuận An",
+   "Góp thuyền chở quân triều đình"
+  ],
+  "td64": [
+   "Che giấu nghĩa quân tan rã",
+   "Giao nộp để yên thân",
+   "Đóng cửa, không biết gì"
+  ],
+  "tk46": [
+   "Tản cư theo kháng chiến",
+   "Ở lại vùng tạm chiếm",
+   "Chia đôi họ ⚑chiadoi46"
+  ],
+  "tk46 @0 regions=T1": [
+   "Đón người tản cư từ thành phố",
+   "Góp lương cho Liên khu IV",
+   "Chia đôi họ ⚑chiadoi46"
+  ],
+  "tn25": [
+   "Gửi con sang Quảng Châu",
+   "Không biết chuyện này"
+  ],
+  "tn76": [
+   "Vào hợp tác xã",
+   "Đi kinh tế mới",
+   "Xin ở lại thành phố"
+  ],
+  "tn76 @0 flags=ditan,ly79Di,vuotbien,odp": [
+   "Ở lại với hội thánh bảo trợ",
+   "Theo họ hàng sang Pháp",
+   "Dọn về California"
+  ],
+  "tn80": [
+   "Cả nhà vượt biên ⚑vuotbien",
+   "Ở lại",
+   "Gửi một người đi, giữ phần còn lại ⚑guiDi"
+  ],
+  "tn80 @0 flags=ditan": [
+   "Bảo lãnh người thân theo diện đoàn tụ",
+   "Gửi tiền đón em ở trại tị nạn",
+   "Gửi thùng quà về cho người ở lại"
+  ],
+  "tn80 @1 flags=ly79Di": [
+   "Bảo lãnh người thân còn ở quê",
+   "Đi làm trong lúc chờ ở trại",
+   "Gửi thư, gửi quà về cho họ hàng"
+  ],
+  "tn80 @2 after=x:x-lylich78=2": [
+   "Cả nhà theo đường người đi trước ⚑vuotbien",
+   "Ở lại, chờ thư",
+   "Cả nhà làm đơn đi diện đoàn tụ ⚑odp"
+  ],
+  "tn80 @3 regions=B,T1": [
+   "Cả nhà vượt biên ⚑vuotbien",
+   "Ở lại",
+   "Gửi một người đi, giữ phần còn lại ⚑guiDi"
+  ],
+  "tn80 @4 regions=NE,NW": [
+   "Cả nhà vượt biên ⚑vuotbien",
+   "Ở lại",
+   "Gửi một người đi, giữ phần còn lại ⚑guiDi"
+  ],
+  "tq45": [
+   "Bán gạo cho quân Trung Hoa",
+   "Giấu gạo"
+  ],
+  "ts59": [
+   "Đi bộ đội Trường Sơn",
+   "Góp gạo cho đoàn vận tải"
+  ],
+  "tt85": [
+   "Bán gạo cho quân Thanh",
+   "Tránh xa vùng chiến sự"
+  ],
+  "tu46": [
+   "Tin vào Tạm ước",
+   "Không tin"
+  ],
+  "vb44": [
+   "Gửi trai tráng vào đội Tuyên truyền",
+   "Không"
+  ],
+  "vb47": [
+   "Che giấu cán bộ kháng chiến",
+   "Không tham gia"
+  ],
+  "vb64": [
+   "Chuẩn bị hầm trú ẩn",
+   "Không"
+  ],
+  "vbb00": [
+   "Đóng tàu đánh cá xa bờ",
+   "Không"
+  ],
+  "vc55": [
+   "Tham gia chính quyền mới",
+   "Bỏ phiếu rồi về"
+  ],
+  "vl67": [
+   "Theo Phan Thanh Giản giao thành",
+   "Về rừng lập trại"
+  ],
+  "vm41": [
+   "Lập cơ sở Việt Minh trong làng",
+   "Theo dõi, chưa quyết"
+  ],
+  "vx84": [
+   "Đi lính Vị Xuyên",
+   "Không"
+  ],
+  "wto07": [
+   "Mở xưởng gia công xuất khẩu",
+   "Giữ ruộng, nuôi tôm",
+   "Cho con du học"
+  ],
+  "wto07 @0 flags=ditan,ly79Di,vuotbien,odp": [
+   "Về mở xưởng ở quê nhà",
+   "Nhập hàng từ quê sang bán",
+   "Cho con về quê học tiếng Việt"
+  ],
+  "ww14": [
+   "Đi lính thợ sang Pháp",
+   "Nộp tiền để khỏi đi"
+  ],
+  "xl75": [
+   "Tản cư về Sài Gòn",
+   "Tiếp tế cho Sư đoàn 18"
+  ],
+  "xv30": [
+   "Theo Xô viết, chia ruộng công",
+   "Giữ ruộng, báo quan",
+   "Đi lánh ở Vinh"
+  ],
+  "yb30": [
+   "Có người trong Quốc dân đảng",
+   "Đứng ngoài"
+  ],
+  "yb30 @0 picks=qdd": [
+   "Theo anh em đánh đồn Yên Bái",
+   "Giấu người, đốt sổ sách"
+  ],
+  "yt13": [
+   "Che chở tàn quân Yên Thế",
+   "Báo đồn"
+  ]
+ },
+ "special": {
+  "x:x-canvuong96 @hk96": [
+   "Dời cả họ sang phủ khác",
+   "Lấy họ mẹ, ở lại làng → họ mother",
+   "Ra thú với công sứ"
+  ],
+  "x:x-diachu53 @cc53": [
+   "Chia nhỏ ruộng, bán tháo trước",
+   "Ở lại, chịu đấu tố",
+   "Vào Nam trước khi đội về ⚑dicu"
+  ],
+  "x:x-kieuhoi89 @kh89": [
+   "Gửi tiền, gửi thùng đồ đều đặn ⚑kieuhoi",
+   "Về thăm quê lần đầu ⚑kieuhoi",
+   "Chưa gửi, chưa về"
+  ],
+  "x:x-ly79 @bb79": [
+   "Đưa gia phả, xin ghi dân tộc Kinh",
+   "Cả nhà đi 'bán chính thức' như người Hoa ⚑ly79Di",
+   "Ở lại, chịu bị để ý"
+  ],
+  "x:x-lylich78 @ct78": [
+   "Khai đầy đủ, đúng sự thật ⚑lylich",
+   "Chuyển các cháu sang họ mẹ → họ mother",
+   "Tìm đường ra đi ⚑lylichDi"
+  ],
+  "x:x-ngo63 @dc63": [
+   "Giữ họ, lên trình diện trả lời",
+   "Chuyển các cháu sang họ mẹ → họ mother ⚑lylich",
+   "Đưa gia phả ra chứng minh"
+  ],
+  "x:x-nguyen25 @tn25": [
+   "Truyền tay bản Yêu sách",
+   "Đốt mọi giấy tờ có cái tên ấy",
+   "Kể cho con cháu nghe về người cùng họ"
+  ],
+  "x:x-phan08 @ct08": [
+   "Cất giữ sách Tân thư",
+   "Khai rõ: cùng họ, khác nhà",
+   "Góp tiền nuôi gia đình người bị bắt"
+  ],
+  "x:x-radi89 @kh89": [
+   "Làm đơn đi diện đoàn tụ",
+   "Xuống ghe như những người đi trước"
+  ],
+  "x:x-royal45 @ng45": [
+   "Khai họ Nguyễn, bỏ chữ Tôn Thất → họ Nguyễn",
+   "Giữ họ Tôn Thất",
+   "Có người trong họ theo Việt Minh"
+  ],
+  "x:x-south54-h @dc54": [
+   "Ghi là Huỳnh, theo cách người Nam → họ Huỳnh",
+   "Giữ họ Hoàng như gia phả"
+  ],
+  "x:x-south54-v @dc54": [
+   "Ghi là Võ, theo cách người Nam → họ Võ",
+   "Giữ họ Vũ như gia phả"
+  ]
+ }
+}

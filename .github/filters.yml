@@ -1,0 +1,14 @@
+# Path groups for the jobs in ci.yml that run only when their inputs change (dorny/paths-filter).
+# endings: every file the endings simulation imports (npm run endings:filter checks this list covers them all)
+endings:
+  - 'src/data/**'
+  - 'src/play.ts'
+  - 'src/state.ts'
+  - 'scripts/sim-endings.ts'
+  - 'scripts/check-endings.ts'
+  - '.github/filters.yml'
+  - '.github/workflows/ci.yml'
+# voice: the narration clips (their lengths are checked with ffprobe)
+voice:
+  - 'src/voice/**'
+  - 'scripts/check-voice.ts'
