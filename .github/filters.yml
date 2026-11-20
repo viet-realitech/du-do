@@ -4,6 +4,7 @@ endings:
   - 'src/data/**'
   - 'src/play.ts'
   - 'src/state.ts'
+  - 'src/boot.ts'  # state.ts imports it once the save-repair work lands; until then it matches nothing
   - 'scripts/sim-endings.ts'
   - 'scripts/check-endings.ts'
   - '.github/filters.yml'
