@@ -342,7 +342,8 @@ export function epilogue(id: string, f: Facts): string {
       const RN: [keyof Res, string][] = [['g', 'lúa gạo'], ['d', 'nhân đinh'], ['b', 'bạc'], ['u', 'uy tín']].filter(([k]) => k !== 'd' || !r || r.d < 25) as [keyof Res, string][];
       const lows = r ? RN.filter(([k]) => r[k] <= 25).sort((a, b) => r[a[0]] - r[b[0]]) : [];
       const shown = (lows.length ? lows : r ? [...RN].sort((a, b) => r[a[0]] - r[b[0]]).slice(0, 2) : []).slice(0, 3);
-      const low = r ? `gia sản của ${ho} chỉ còn ${list(shown.map(([k, n]) => `${n} ${r[k]}`))}` : `${ho} còn lại rất ít`;
+      const nums = list(shown.map(([k, n]) => `${n} ${r![k]}`));
+      const low = r ? (lows.length ? `gia sản của ${ho} chỉ còn ${nums}` : `gia sản của ${ho} sa sút, thấp nhất là ${nums}`) : `${ho} còn lại rất ít`;
       // nhà đã di cư năm 1954 hay cả nhà đã ra nước ngoài: nói đường dòng họ đã đi, không ghim cả sáu đời vào quê gốc
       const mv = north(f) && (f.picks[4] === 'nam' || f.picks[4] === 'thuba' || f.flags.has('dicu')), out = f.picks[5] === 'radi' || GONE.some(x => f.flags.has(x));
       const where = que && (mv || out) ? `, từ ${que}${mv ? ' vào Nam' : ''}${out ? `${mv ? ' rồi' : ''} ra xứ người` : ''},` : oQue;
