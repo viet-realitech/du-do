@@ -1458,7 +1458,8 @@ test('reading mode: skipping chapter 6 leads to the conclusion, not to a bare 20
 
 test('play mode: after a card decision the family event comes into view, the unpicked options fold, values read as a ledger', async ({ page }) => {
   const errors = await bootPlay(page, { name: 'Họ Tôn Thất', surname: 'tonthat', home: 'hn', year: 1945, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
-    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0 }, 'ng45');
+    // vm41 = 1 (chưa theo Việt Minh năm 1941): chỉ một biến cố sau thẻ, không có hệ quả "lá cờ đầu tiên" (e2e/callbacks.spec.ts)
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0, cards: { vm41: 1 } }, 'ng45');
   await expect(page.locator('#tourb')).toBeVisible({ timeout: 8000 });
   await page.locator('#tourb [data-t=skip]').click();
   await expect(live(page, '.scrim h2')).toContainText('Cách mạng tháng Tám', { timeout: 8000 });
@@ -1619,7 +1620,8 @@ test.describe('iPad layouts', () => {
 
 test.describe('short and wide windows', () => {
   const ng45 = { name: 'Họ Tôn Thất', surname: 'tonthat', home: 'hn', year: 1945, picks: { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm' },
-    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0 };
+    // vm41 = 1: một biến cố sau thẻ (không có hệ quả năm 1941)
+    quiz: { e1: [true, true], e2: [true, true], e3: [true, true] }, harvests: ['e1', 'e2', 'e3'], res: { g: 40, d: 40, b: 40, u: 60 }, xFrom: 0, cards: { vm41: 1 } };
   test('phone landscape: the map gets room beside the story column, the tab bar stays on screen, the app never scrolls', async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 });
     const errors = await bootPlay(page, ng45, 'ng45');
