@@ -106,8 +106,9 @@ function load(mode = activeMode()): State {
   const known = Array.isArray(raw.cvk) ? raw.cvk as string[] : 'cardv' in raw ? ['nt62', 'sg75'] : []; // cvk có từ khi thêm bộ tn80
   for (const id of Object.keys(VARIANT)) if (!known.includes(id) && s.cards && id in s.cards) s.cardv[id] = 'base';
   s.cvk = Object.keys(VARIANT);
-  // bản lưu có trước việc tự đọc tên kết cục: ai đã mở kết luận rồi thì không tự đọc nữa
-  if (!('endSaid' in raw)) s.endSaid = !!raw.ended;
+  // bản lưu có trước việc tự đọc tên kết cục: ai đã mở kết luận khi đủ sáu điểm rẽ (đã thấy tên kết cục) thì không tự đọc
+  // nữa; ai mới chỉ mở hồ sơ còn bỏ ngỏ (Đọc sử) thì chưa thấy kết cục nào, lần đầu có kết cục vẫn được đọc
+  if (!('endSaid' in raw)) { const pk = (raw.picks || {}) as Record<string, string>; s.endSaid = !!raw.ended && ERAS.every(e => !!pk[e.id]); }
   s.mode = mode;
   s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
   return s;

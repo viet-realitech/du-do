@@ -174,6 +174,13 @@ Nội dung mới (11.2026) cho chế độ Chơi: gia phả mở đầu của 26
   - **Ở lại cả nhà, giấu quá khứ**: Súng chôn dưới gốc dừa, giấy tờ khai mới. Năm 1960 phong trào nổi dậy lan tới xã, những người quen cũ lại tìm đến nhà lúc nửa đêm.
 - Ghi chú sử liệu: Theo Hiệp định Genève, trên dưới 140.000 cán bộ, bộ đội và một số gia đình ở miền Nam tập kết ra Bắc (các nguồn chênh nhau từ khoảng 100.000 đến hơn 180.000) qua các khu Xuyên Mộc (80 ngày), Cao Lãnh (100 ngày), Chắc Băng – Cà Mau (200 ngày) và Quy Nhơn (300 ngày), phần lớn trên tàu Liên Xô và Ba Lan cập bến Sầm Sơn; nhiều người để vợ con ở lại với lời hẹn hai năm. Các gia đình có người tập kết là đối tượng của chiến dịch Tố Cộng của chính quyền Ngô Đình Diệm từ 1955.
 
+### Người con về, cả nhà lên đường · 1989, Việt Nam rút quân khỏi Campuchia
+- Điều kiện: {"picks":["radi"],"front":true} (nhà Cần Thơ chọn Ra đi mà người con đã đi bộ đội tình nguyện sang Campuchia năm 1979, nên không đi được "cả nhà" trước năm 1989)
+- Tình huống: Mười năm trước cả nhà đã định ra đi, nhưng người con sang mặt trận Campuchia; nay quân tình nguyện về nước, người con đã về, và không còn gì giữ chân cả nhà ở lại.
+  - **Làm đơn đi diện đoàn tụ**: Hồ sơ đi qua nhiều văn phòng và mấy năm chờ phỏng vấn. Đầu thập niên 1990, cả nhà, cả người con từng ở Campuchia, mới lên máy bay ra đi; từ đường để lại cho họ hàng trông nom.
+  - **Xuống ghe như những người đi trước**: Ghe tới trại tị nạn đúng năm các nước bắt đầu thanh lọc người tới sau. Gần hai năm ở trại, cả nhà mới được công nhận là người tị nạn và nhận đi định cư.
+- Ghi chú sử liệu: Quân tình nguyện Việt Nam rút hết khỏi Campuchia tháng 9.1989. Chương trình Ra đi có trật tự (ODP, thoả thuận UNHCR – Việt Nam tháng 5.1979) cho người có thân nhân ở nước ngoài bảo lãnh xuất cảnh hợp pháp. Kế hoạch Hành động Toàn diện (CPA), thông qua ở Hội nghị Genève tháng 6.1989, bắt đầu thanh lọc thuyền nhân tới sau ngày hạn: chỉ người được công nhận tị nạn mới được nhận đi định cư, nhiều người khác phải hồi hương.
+
 ### Thùng đồ và chuyến bay về · 1989, Việt Nam rút quân khỏi Campuchia
 - Điều kiện: {"picks":["radi"]}
 - Tình huống: Đã mười năm ở xứ người; thư từ quê kể ruộng khoán được mùa nhưng mộ tổ sụt, và người ta bắt đầu nghe chuyện Việt kiều được về thăm.
@@ -210,7 +217,7 @@ Nội dung mới (11.2026) cho chế độ Chơi: gia phả mở đầu của 26
 - `thuba`: Thế hệ 5 xuống đường đòi hoà bình ở Sài Gòn cùng thành phần thứ ba; cả hai phía đều nghi ngờ.
 - `baocap`: Thế hệ 6 ở lại trong hợp tác xã và biên chế, xếp hàng mua gạo bằng tem phiếu qua những năm lạm phát ba con số.
 - `doimoi`: Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, rồi ASEAN, rồi WTO.
-- `radi`: Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.
+- `radi`: Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc.
 
 ### Theo quê (Trò chơi)
 
@@ -221,6 +228,7 @@ Dòng biên niên của Trò chơi theo quê của dòng họ (`chronLine` trong
 - "Gia đình bạn" ở điểm rẽ 3 sau Duy Tân (`ctxFor` trong `src/screens/gate.ts`), nhà ở Huế, Quảng Nam: Cha bạn từng dạy ở Đông Kinh Nghĩa Thục; trường bị đóng, ông về quê mở lớp dạy chữ Quốc ngữ theo phong trào Duy Tân ở Trung Kỳ. Nhà còn cả tủ sách mới.
 - Như trên, nhà ở Nam Kỳ cũ: Cha bạn từng ra Hà Nội dạy ở Đông Kinh Nghĩa Thục; trường bị đóng, ông về Nam Kỳ góp vốn vào một hội buôn của phong trào Minh Tân. Nhà còn cả tủ sách mới.
 - Nhà ở Nghệ An giữ câu chung (Đông Kinh Nghĩa Thục), như lời kết vẫn làm.
+- `radi`, nhà Cần Thơ chọn Ra đi mà người con đã đi bộ đội tình nguyện sang Campuchia năm 1979 (cả nhà không đi được trước năm 1989; biến cố "Người con về, cả nhà lên đường" năm 1989): Thế hệ 6 chọn ra đi, nhưng người con còn ở mặt trận Campuchia; năm 1989 con về, cả nhà mới lên đường, rồi định cư ở xứ người.
 
 ### Trang nhật ký đời thường theo miền (Trò chơi)
 
@@ -239,7 +247,7 @@ Cần sử gia xem: ba lần đổi tiền ở miền Nam (9.1975, 5.1978, 9.198
 
 Luật và lời kết ở `src/data/endings.ts`; tỷ lệ hiếm do `npm run endings` sinh vào `src/data/endings-rarity.json` (mô phỏng, không phải thống kê người chơi thật). Xét theo thứ tự, kết cục đầu tiên thoả điều kiện được chọn; Đọc sử bỏ các kết cục chỉ có ở Trò chơi. Lời kết ghép theo hướng đã chọn, quê, thẻ đã quyết và các lần đổi họ; người rà soát xem cả `epilogue()` trong tệp ấy.
 
-- **Còn lại tên họ** (`lytan`, chỉ Trò chơi; Đọc sử –, Trò chơi 5,1%): Gia sản cuối cùng thuộc nhóm 5% thấp nhất của các dòng họ cùng quê trong mô phỏng, hoặc dòng họ còn dưới 25 nhân đinh. Câu tóm: “Gia sản gần cạn, người còn ít, nhưng gia phả vẫn giữ được cái tên.”
+- **Còn lại tên họ** (`lytan`, chỉ Trò chơi; Đọc sử –, Trò chơi 5,1%): Gia sản cuối cùng thuộc nhóm 5% thấp nhất của các dòng họ cùng quê trong mô phỏng, hoặc dòng họ còn dưới 25 nhân đinh. Câu tóm: “Nhà sa sút, nhưng gia phả vẫn giữ được cái tên.”
 - **Bên kia đại dương** (`xanam`; Đọc sử 11,1%, Trò chơi 11%): Đời thứ năm theo miền Nam; đời thứ sáu (hoặc một lựa chọn trên thẻ sự kiện) đưa dòng họ ra nước ngoài. Câu tóm: “Từ miền Nam sau năm 1975, dòng họ dựng lại đời sống ở bên kia đại dương.”
 - **Người đi từ phía Bắc** (`xabac`; Đọc sử 11,1%, Trò chơi 10,8%): Đời thứ năm theo miền Bắc; đời thứ sáu (hoặc một lựa chọn trên thẻ sự kiện) đưa dòng họ ra nước ngoài. Câu tóm: “Đời thứ năm theo miền Bắc; sau chiến tranh, dòng họ có người ra đi, có người ở lại giữ từ đường.”
 - **Tiếng nói từ xa** (`xagiua`; Đọc sử 11,1%, Trò chơi 10,9%): Đời thứ năm theo thành phần thứ ba; đời thứ sáu (hoặc một lựa chọn trên thẻ sự kiện) đưa dòng họ ra nước ngoài. Câu tóm: “Bị cả hai phía nghi ngờ, rồi ra đi; con cháu thành người bắc cầu.”

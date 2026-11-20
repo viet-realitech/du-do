@@ -118,7 +118,8 @@ export const CHRONICLE: Record<string, string> = {
   thuba: "Thế hệ 5 xuống đường đòi hoà bình ở Sài Gòn cùng thành phần thứ ba; cả hai phía đều nghi ngờ.",
   baocap: "Thế hệ 6 ở lại trong hợp tác xã và biên chế, xếp hàng mua gạo bằng tem phiếu qua những năm lạm phát ba con số.",
   doimoi: "Thế hệ 6 mở một xưởng nhỏ sau năm 1986, làm ăn qua Khoán 10, rồi ASEAN, rồi WTO.",
-  radi: "Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc; sau năm 1995 mới có người về thăm quê.",
+  // không nói năm về thăm quê: Trò chơi có biến cố năm 1989 (cards2.ts x-kieuhoi89) cho nhà về thăm sớm hơn
+  radi: "Thế hệ 6 vượt biển, qua trại tị nạn rồi định cư ở Mỹ, Pháp, Úc.",
 };
 
 /** Lời khép theo họ ở kết cục: khoá họ → một câu. */

@@ -207,14 +207,20 @@ export function locks(fxs: Fx[], al: number[], bar: (string | null)[] = []): (st
   if (!all.some(i => !no[i] && al[i] >= 0)) { const on = all.filter(i => al[i] >= 0); if (on.length) open(on); else if (all.every(i => no[i])) open(all); }
   return no;
 }
-/** Lựa chọn mang cờ `flag` không thể chọn năm y vì một việc dòng họ đã quyết (lý do, hay null): người con đi bộ đội tình
-    nguyện sang Campuchia năm 1979 (cp79, quân tình nguyện về hết năm 1989) thì không còn "cả nhà" để cùng ra đi (cờ GONE:
-    "bán chính thức", vượt biển, diện đoàn tụ). Chỉ khi thẻ ấy thật là của nhà này (nhà ở miền Tây Nam Bộ năm 1979). card.ts
-    và các mô phỏng (npm run scenes, npm run endings) cùng dùng. */
-export function barred(flag: Flag | undefined, y: number): string | null {
-  if (!flag || !GONE.includes(flag) || S.cards.cp79 !== 0 || y >= 1989) return null;
+/** Người con đã đi bộ đội tình nguyện sang Campuchia năm 1979 (cp79), trên thẻ thật là của nhà này (nhà ở miền Tây Nam Bộ
+    năm ấy); quân tình nguyện về hết năm 1989. */
+export function atFront(): boolean {
+  if (S.cards.cp79 !== 0) return false;
   const cp = EV.find(v => v.id === 'cp79');
-  return cp && mustDecide(cp) ? 'Người con còn ở mặt trận Campuchia' : null;
+  return !!cp && mustDecide(cp);
+}
+/** Lựa chọn mang cờ `flag` không thể chọn năm y vì một việc dòng họ đã quyết (lý do, hay null): người con còn ở mặt trận
+    Campuchia (atFront) thì không còn "cả nhà" để cùng ra đi (cờ GONE: "bán chính thức", vượt biển, diện đoàn tụ). Nhà
+    chọn Ra đi mà bị giữ lại thì đi sau khi người con về (biến cố x-radi89 năm 1989). card.ts và các mô phỏng (npm run
+    scenes, npm run endings) cùng dùng. */
+export function barred(flag: Flag | undefined, y: number): string | null {
+  if (!flag || !GONE.includes(flag) || y >= 1989 || !atFront()) return null;
+  return 'Người con còn ở mặt trận Campuchia';
 }
 
 export function decide(v: HistEvent, i: number): Fx {
@@ -236,6 +242,7 @@ function matches(w: SpecialCard['when'], y: number): boolean {
   // picks: dòng họ đã chọn một trong các hướng này ở một điểm rẽ nào đó tính tới năm y; camps: phe đang theo vào năm y.
   if (w.picks && !ERAS.some(e => e.cy <= y && w.picks!.includes(S.picks[e.id]))) return false;
   if (w.camps) { const pk = curPick(y); if (!pk || !w.camps.includes(CAMP[pk.id])) return false; }
+  if (w.front && (!atFront() || abroad(y))) return false;
   return true;
 }
 /** Biến cố riêng gắn vào sự kiện v và đúng điều kiện của dòng họ này (họ, phe, quê, gia sản). Điều kiện được xét
@@ -281,7 +288,8 @@ export const abroadOpt = (o: Option): Option => {
   if (!x || !isPlay()) return o;
   if (abroad(GATE6)) return { ...o, ...x };
   const g = GONE.find(f => hasFlag([f]));
-  if (!g) return o;
+  // chọn Ra đi mà người con còn ở mặt trận Campuchia: cả nhà chỉ đi sau năm 1989, không có đêm ra khơi năm 1979
+  if (!g) return o.id === 'radi' && atFront() ? { ...o, diary: x.diary } : o;
   return { ...o, diary: o.id === 'radi' ? x.diary : o.diary.filter(d => d.y <= GONE_AT[g].y) };
 };
 optView.of = abroadOpt;
@@ -341,6 +349,8 @@ const ALIGN_OVR: Record<string, Partial<Record<string, -1 | 0 | 1>>> = {
   // 30.4.1975 với nhà theo miền Nam: di tản theo chính quyền cũ, hay ở lại trình diện như những người đã làm việc cho
   // chính quyền ấy, đều là đi tiếp đường của mình (đón quân giải phóng thì không)
   'sg75:1': { nam: 1 },
+  // nhà đã chọn Ra đi: người con sang mặt trận Campuchia thì cả nhà không đi được tới năm 1989 (barred)
+  'cp79:0': { radi: -1 },
 };
 /** Đứng ngoài, thành phần thứ ba: không theo phe nào, nên lựa chọn ngả hẳn về một phe (tổng thay đổi quan hệ với các
     phe từ 15 trở lên) là trái đường, dù làng xóm có vui. */
@@ -444,6 +454,7 @@ export function factsFromState(): Facts {
     home: play ? { id: h[0], name: h[1], region: h[3] } : undefined,
     res: play ? { ...S.res } : undefined, snap: play ? ERAS.map(e => S.snap[e.id]).filter((r): r is Res => !!r) : undefined,
     renames: play ? S.names.map(n => ({ ...n })) : [], flags, th: play ? thOf(S.home) : undefined,
+    ...(play && atFront() ? { front: true } : {}),
   };
 }
 /** Kết cục của dòng họ lúc này: null khi còn điểm rẽ bỏ ngỏ (Đọc sử cho xem kết luận khi chưa chọn đủ). */

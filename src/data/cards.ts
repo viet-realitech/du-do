@@ -339,7 +339,8 @@ export const CARDS: Card[] = [
     ['Giấu vàng, chuẩn bị đi', 'Chôn vàng, tìm đường.', { b: -5, nn: -10 }, 'Vàng này mua được chỗ trên ghe năm 1980.'],
   ]],
   ['cp79', 'NW', [
-    ['Đi bộ đội tình nguyện', 'Người con sang Campuchia.', { d: -2, u: 6, nn: 15 }, 'Mười năm sau về, không nói gì về Campuchia.'],
+    // con còn ở mặt trận thì cả nhà không đi được trước năm 1989 (play.ts barred): nói trước lúc chọn
+    ['Đi bộ đội tình nguyện', 'Người con sang Campuchia; khi con còn ở mặt trận, cả nhà chưa thể ra đi.', { d: -2, u: 6, nn: 15 }, 'Mười năm sau về, không nói gì về Campuchia.'],
     ['Tản cư khỏi biên giới', 'Khmer Đỏ tàn sát Ba Chúc.', { g: -10, b: -5, d: -1 }, 'Về lại khi quân Việt Nam đã sang Phnom Penh.'],
   ]],
   ['bb79', 'B', [
@@ -514,7 +515,7 @@ export const VARIANT: Record<string, Variant[]> = {
     // này): chịu để đội xét / tự giao ruộng / phần của nông dân. Đợt giảm tô ở vùng tự do là 1953 – 1954; Hà Nội, phần lớn
     // Nam Định giảm tô sau khi tiếp quản 1954, nên lời không đề năm.
     { special: 'x-diachu53', choices: [
-      ['Giữ ruộng, chờ đội về', 'Ruộng do mấy đời tậu được; không bán, không hiến, chờ đội về xét thành phần.', { u: -2, vm: -8, lg: -6 }, 'Mùa ấy nhà vẫn cày cấy như mọi năm, nhưng tá điền không còn đến chào, và nông hội bắt đầu ghi từng sào ruộng, từng con trâu của nhà.'],
+      ['Giữ ruộng, chờ đội về', 'Ruộng do mấy đời tậu được; chưa bán, chưa hiến, chờ xem đội về xét thế nào.', { u: -2, vm: -8, lg: -6 }, 'Mùa ấy nhà vẫn cày cấy như mọi năm, nhưng tá điền không còn đến chào, và nông hội bắt đầu ghi từng sào ruộng, từng con trâu của nhà.'],
       ['Hiến ruộng trước khi đội về', 'Tự nguyện giao phần lớn ruộng cho nông hội, mong được xét nhẹ.', CARD.cc53[2][1][2], 'Nông hội nhận ruộng, ghi tên nhà vào sổ hiến điền. Còn nhà thuộc thành phần nào thì phải chờ đội về mới xét.'],
       ['Giảm tô, thoái tô cho người cấy rẽ', 'Trước khi đội cải cách về, nông hội phát động giảm tô: nhà có ruộng cho cấy rẽ phải hạ tô và trả lại phần tô đã thu quá mức.', { g: -8, b: -6, vm: 6, lg: 4 }, 'Tá điền nhận lại thóc, nông hội ghi tên nhà vào sổ. Nhưng nhà vẫn nhiều ruộng nhất làng, và đội cải cách sắp về.'],
     ] },
@@ -761,6 +762,11 @@ export const VARIANT: Record<string, Variant[]> = {
   // riêng gắn vào, như rà soát họ Lý): không ai ở đây "lên Lạng Sơn" hay "sơ tán về xuôi". Ngày 5.3.1979 có lệnh tổng động
   // viên, cùng ngày Trung Quốc tuyên bố rút quân; thanh niên trong Nam nhập ngũ, nhiều người sang mặt trận Campuchia.
   bb79: [
+    // một người con đã sang mặt trận Campuchia từ tháng 1 (thẻ cp79): lần này khai tên người em
+    { regions: ['T2', 'NE', 'NW'], after: ['cp79=0'], choices: [
+      ['Khai tên con theo lệnh tổng động viên', 'Lệnh tổng động viên ngày 5.3.1979; một người con đã ở mặt trận Campuchia, nay phường, xã lập danh sách cả những người em trong tuổi lính.', { u: 4, nn: 10 }, 'Tên người em vào danh sách chờ gọi. Cùng ngày ấy, Trung Quốc tuyên bố rút quân; giấy gọi chưa về, còn thư người anh từ Campuchia thì thưa dần.'],
+      ['Nghe tin qua đài', 'Chiến sự ở tận biên giới phía Bắc; trong này giá gạo lên, phường rà soát người gốc Hoa.', { g: -3 }, 'Đầu tháng Ba, Trung Quốc tuyên bố rút quân. Ở phố, mấy nhà người Hoa quen đã bán nhà, lặng lẽ ra đi.'],
+    ] },
     { regions: ['T2', 'NE', 'NW'], choices: [
       // không ai rời nhà: biến cố họ Lý ngay sau có lựa chọn "cả nhà đi" (nỗi lo bị gọi sang Campuchia cũng là một lý do
       // nhiều nhà ra đi)

@@ -16,6 +16,8 @@ export interface SpecialWhen {
   minB?: number;
   /** Quê quán (HOMES). */
   homes?: string[];
+  /** Người con đã sang mặt trận Campuchia năm 1979 (play.ts atFront) và cả nhà còn ở trong nước. */
+  front?: true;
 }
 /** [nhãn, mô tả, hiệu ứng, kết cục, đổi họ?, cờ?] — cờ như ở thẻ thường (endings.ts); không đổi họ thì phần tử thứ 5 là undefined. */
 export type SpecialChoice = [string, string, Fx, string, string?, Flag?];
@@ -133,6 +135,20 @@ export const SPECIAL: SpecialCard[] = [
   // (Biến cố "Chuyến tàu tập kết" cho nhà Nam Bộ theo Miền Bắc đã thành bộ lựa chọn của thẻ di cư 1954 cho mọi nhà phía
   // nam vĩ tuyến 17 chọn Miền Bắc (cards.ts VARIANT dc54): điểm rẽ 5 nay thật sự đưa dòng họ ra Bắc, nên không còn lựa
   // chọn "ở lại cả nhà".)
+  // Nhà chọn Ra đi mà người con còn ở mặt trận Campuchia (thẻ cp79): không đi được "cả nhà" trước năm 1989 (play.ts
+  // barred). Năm 1989 người con về; cả nhà mới lên đường. Đứng trước "Thùng đồ và chuyến bay về" (của nhà đã ở xứ người):
+  // biến cố đầu tiên khớp được dùng. Không mang cờ rời nước: như mọi nhà Ra đi không đi trên thẻ, kết cục và gia phả kể
+  // chuyến đi theo hướng Ra đi (endings.ts chronLine, Facts.front).
+  {
+    id: "x-radi89", ev: "kh89", when: {"picks": ["radi"], "front": true},
+    title: "Người con về, cả nhà lên đường",
+    s: "Mười năm trước cả nhà đã định ra đi, nhưng người con sang mặt trận Campuchia; nay quân tình nguyện về nước, người con đã về, và không còn gì giữ chân cả nhà ở lại.",
+    choices: [
+      ["Làm đơn đi diện đoàn tụ", "Nhờ người thân, người quen đã ở xứ người đứng ra bảo lãnh theo Chương trình Ra đi có trật tự (ODP).", {"b": -6, "u": 1, "nn": -5, "my": 8}, "Hồ sơ đi qua nhiều văn phòng và mấy năm chờ phỏng vấn. Đầu thập niên 1990, cả nhà, cả người con từng ở Campuchia, mới lên máy bay ra đi; từ đường để lại cho họ hàng trông nom."],
+      ["Xuống ghe như những người đi trước", "Bán nhà, mua chỗ cho cả nhà trên một chiếc ghe ra từ cửa biển miền Tây.", {"g": -10, "b": -15, "d": -2, "u": -3, "nn": -15, "my": 10}, "Ghe tới trại tị nạn đúng năm các nước bắt đầu thanh lọc người tới sau. Gần hai năm ở trại, cả nhà mới được công nhận là người tị nạn và nhận đi định cư."],
+    ],
+    note: "Quân tình nguyện Việt Nam rút hết khỏi Campuchia tháng 9.1989. Chương trình Ra đi có trật tự (ODP, thoả thuận UNHCR – Việt Nam tháng 5.1979) cho người có thân nhân ở nước ngoài bảo lãnh xuất cảnh hợp pháp. Kế hoạch Hành động Toàn diện (CPA), thông qua ở Hội nghị Genève tháng 6.1989, bắt đầu thanh lọc thuyền nhân tới sau ngày hạn: chỉ người được công nhận tị nạn mới được nhận đi định cư, nhiều người khác phải hồi hương.",
+  },
   {
     id: "x-kieuhoi89", ev: "kh89", when: {"picks": ["radi"]},
     title: "Thùng đồ và chuyến bay về",
