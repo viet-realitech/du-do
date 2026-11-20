@@ -1,14 +1,16 @@
 import { ERAS, type Option } from './data';
 import { HOMES } from './play';
 import { CHRONICLE } from './data/surnames';
-import { ABROAD6, chronLine, type Facts, type Flag } from './data/endings';
-import { chrKey, outKey, outSpeech } from './speech';
+import { ABROAD6, chronLine, type Ending, type Facts, type Flag } from './data/endings';
+import { chrKey, endKey, endSpeech, outKey, outSpeech } from './speech';
 import { outText } from './regional';
+import { sayKey } from './said';
 
 /* Câu thuyết minh đã cá nhân hoá (theo quê, theo nhà đã ra nước ngoài) có bản thu riêng. Mỗi biến thể được dựng lại từ
    chính hàm sinh câu (chronLine, outText) với một dòng họ đại diện; lúc chơi, câu đang hiện được tra đúng nguyên văn
-   trong bảng ấy. Vì vậy bản thu luôn đọc đúng chữ trên màn hình, và một câu mới chưa có bản thu thì phim chỉ hiện chữ
-   chứ không đọc nhầm câu khác. scripts/check-voice.ts báo câu nào còn thiếu bản thu. */
+   trong bảng ấy, rồi đối với dấu của câu bản thu ấy đã đọc (said.ts). Vì vậy bản thu chỉ phát khi đọc đúng chữ trên màn
+   hình: một câu mới, hay một câu đã sửa mà chưa thu lại, thì phim chỉ hiện chữ chứ không đọc nhầm câu khác.
+   scripts/check-voice.ts báo câu nào còn thiếu bản thu và bản thu nào đọc câu cũ. */
 
 export interface Line { key: string; text: string; ctx: string }
 type Home = typeof HOMES[number];
@@ -56,15 +58,21 @@ export function outVariants(): Line[] {
 
 let CHR: Map<string, string> | null = null, OUT: Map<string, string> | null = null;
 const index = (ls: Line[], raw: (l: Line) => string) => new Map(ls.map(l => [raw(l), l.key] as [string, string]).reverse());
-/** Khoá bản thu của dòng gia phả `text` (chronLine) của hướng `id`; undefined nếu câu này chưa có bản thu. */
-export function chronKey(id: string, text: string): string | undefined {
+/** Khoá trong kịch bản của dòng gia phả `text` (chronLine) của hướng `id`, chưa xét bản thu (check-voice). */
+export function chronRow(id: string, text: string): string | undefined {
   if (text === CHRONICLE[id]) return chrKey(id);
   CHR ||= index(chronVariants(), l => l.text);
   return CHR.get(text);
 }
-/** Khoá bản thu của kết cục `out` (đã theo quê, hay nói từ xứ người) của hướng `id`; undefined nếu chưa có bản thu. */
-export function outVoiceKey(id: string, out: string): string | undefined {
+/** Khoá bản thu của dòng gia phả `text` của hướng `id`; undefined nếu câu này chưa có bản thu đọc đúng nguyên văn. */
+export const chronKey = (id: string, text: string): string | undefined => sayKey(chronRow(id, text), text);
+/** Khoá trong kịch bản của kết cục `out` (đã theo quê, hay nói từ xứ người) của hướng `id`, chưa xét bản thu. */
+export function outRow(id: string, out: string): string | undefined {
   if (out === OPT[id]?.out) return outKey(id);
   OUT ||= index(outVariants(), l => l.text);
   return OUT.get(outSpeech(out));
 }
+/** Khoá bản thu của kết cục `out` của hướng `id`; undefined nếu chưa có bản thu đọc đúng nguyên văn. */
+export const outVoiceKey = (id: string, out: string): string | undefined => sayKey(outRow(id, out), outSpeech(out));
+/** Khoá bản thu của tên kết cục và câu tóm (endSpeech); undefined nếu tên hay câu tóm đã đổi mà chưa thu lại. */
+export const endVoiceKey = (e: Ending, f: Facts): string | undefined => sayKey(endKey(e, f), endSpeech(e, f));

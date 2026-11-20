@@ -12,8 +12,9 @@ import { mood } from '../music';
 import { fxOn } from '../scene';
 import { speak, hush } from '../narration';
 import { recording } from '../voice';
-import { endKey, endSpeech, epiKey } from '../speech';
-import { chronKey } from '../voiced';
+import { endSpeech, epiKey } from '../speech';
+import { chronKey, endVoiceKey } from '../voiced';
+import { sayKey } from '../said';
 
 /* Điện ảnh: màn mở chương ở mỗi điểm rẽ (ảnh tư liệu, năm đếm lên, tên chương) và "phim hành trình" ở kết cục (mỗi thế
    hệ một cảnh: ảnh, năm, dòng gia phả). Chạm để bỏ qua / sang cảnh.
@@ -323,10 +324,11 @@ export function montage(): void {
     watch(900, 'film'); // lúc hai cảnh chồng mờ vào nhau
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {
-      // tấm cuối: tên kết cục và câu tóm (đúng hai dòng trên tấm), rồi lời khép theo họ
+      // tấm cuối: tên kết cục và câu tóm (đúng hai dòng trên tấm), rồi lời khép theo họ; chỉ bản thu đọc đúng câu ấy
       const parts: [string, string][] = [], { f, e: end } = endingNow();
-      if (end) parts.push([endSpeech(end, f), endKey(end, f)]);
-      if (epi) parts.push([epi, epiKey(skey)]);
+      const ek = end && endVoiceKey(end, f), pk = epi && sayKey(epiKey(skey), epi);
+      if (end && ek) parts.push([endSpeech(end, f), ek]);
+      if (epi && pk) parts.push([epi, pk]);
       narrate(j, parts, per + 3000);
     }
   };

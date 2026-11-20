@@ -1,6 +1,8 @@
 // Kiểm tra bản thu thuyết minh: mọi lời ứng dụng có thể đọc đều có src/voice/<khoá>.m4a, mọi câu đã cá nhân hoá (theo
-// quê, nhà ở xứ người, tên kết cục) đều tra ra một bản thu đọc đúng nguyên văn, và kịch bản docs/voice/kich-ban.csv khớp
-// với chữ hiện tại của trò chơi. Chạy: npm run voice:check [-- --durations] (thêm đo độ dài từng bản thu bằng ffprobe).
+// quê, nhà ở xứ người, tên kết cục) đều tra ra một bản thu đọc đúng nguyên văn, kịch bản docs/voice/kich-ban.csv khớp
+// với chữ hiện tại của trò chơi, và mỗi bản thu đọc đúng câu hiện tại (dấu trong src/voice/said.json, ghi lúc dựng bản
+// thu): câu đã sửa mà chưa thu lại là lỗi, kể cả sau khi đã chạy voice:script.
+// Chạy: npm run voice:check [-- --durations] (thêm đo độ dài từng bản thu bằng ffprobe).
 // Thiếu bản thu: npm run voice:script, npm run voice:tts, npm run voice (README, phần Sound).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -10,7 +12,8 @@ import { CHRONICLE } from '../src/data/surnames';
 import { ABROAD6, ENDINGS, FLAGS, chronLine, endingOf, pathF, type Facts, type Flag } from '../src/data/endings';
 import { endKey, endSpeech, outSpeech } from '../src/speech';
 import { outText } from '../src/regional';
-import { chronKey, outVoiceKey, repFacts } from '../src/voiced';
+import { chronRow, outRow, repFacts, endVoiceKey } from '../src/voiced';
+import { saidSig, textSig } from '../src/said';
 import { voiceRows } from './voice-lines';
 
 const rows = voiceRows(), byKey = new Map(rows.map(r => [r.key, r]));
@@ -31,11 +34,11 @@ const miss = new Map<string, string>();
 for (const o of OPTS) for (const h of [...HOMES, null]) for (const fl of flagSets) {
   const f: Facts = h ? repFacts(h, fl) : { mode: 'read', name: 'Họ Nguyễn', picks: [], renames: [], flags: new Set(fl) };
   const t = chronLine(o.id, f, CHRONICLE);
-  if (!voiced(chronKey(o.id, t), t) && !miss.has(t)) miss.set(t, `dòng gia phả "${o.id}" (${h ? h[1] : 'Đọc sử'}${fl.length ? ', ' + fl.join(', ') : ''})`);
+  if (!voiced(chronRow(o.id, t), t) && !miss.has(t)) miss.set(t, `dòng gia phả "${o.id}" (${h ? h[1] : 'Đọc sử'}${fl.length ? ', ' + fl.join(', ') : ''})`);
 }
 for (const o of OPTS) for (const x of [o, ...(ABROAD6[o.id] ? [{ ...o, ...ABROAD6[o.id] }] : [])]) for (const h of HOMES) {
   const t = outText(x, h);
-  if (!voiced(outVoiceKey(o.id, t), outSpeech(t)) && !miss.has(t)) miss.set(t, `kết cục ở điểm rẽ "${o.id}" (${h[1]})`);
+  if (!voiced(outRow(o.id, t), outSpeech(t)) && !miss.has(t)) miss.set(t, `kết cục ở điểm rẽ "${o.id}" (${h[1]})`);
 }
 const walk = (i: number, acc: string[]): string[][] => (i === ERAS.length ? [acc] : ERAS[i].opts.flatMap(o => walk(i + 1, [...acc, o.id])));
 for (const picks of walk(0, [])) for (const mode of ['read', 'play'] as const) {
@@ -53,7 +56,17 @@ const cells = (line: string) => [...line.matchAll(/("(?:[^"]|"")*"|[^,]*)(?:,|$)
 const script = new Map(csv.split('\n').slice(1).filter(Boolean).map(l => { const c = cells(l); return [c[1], c[4]] as [string, string]; }));
 for (const r of rows) if (script.get(r.key) !== r.text) errors.push(`docs/voice/kich-ban.csv cũ cho ${r.key} (chạy npm run voice:script, rồi thu lại bản này)`);
 
-// 4. (tuỳ chọn) độ dài: bản thu quá ngắn hay quá dài so với số chữ thì có thể đọc sai, đọc sót hay lặp
+// 4. bản thu đọc đúng câu hiện tại: ứng dụng không phát bản thu có dấu khác câu trên màn (src/said.ts)
+for (const r of rows) {
+  if (!existsSync(clip(r.key))) continue;
+  const s = saidSig(r.key);
+  if (s !== textSig(r.text)) errors.push(`${s ? 'bản thu đọc câu cũ' : 'src/voice/said.json chưa ghi câu của bản thu'} ${clip(r.key)}: “${r.text}” (thu lại: npm run voice:script, npm run voice:tts -- --only ${r.key}, npm run voice)`);
+}
+// tự kiểm: câu tóm của một kết cục sửa sau khi thu thì ứng dụng không phát bản thu cũ
+const f0: Facts = { mode: 'read', name: 'Họ Nguyễn', picks: [], renames: [], flags: new Set() }, e0 = ENDINGS.find(e => endVoiceKey(e, f0));
+if (e0 && endVoiceKey({ ...e0, line: e0.line.replace(/\.$/, ' nữa.') }, f0)) errors.push('src/said.ts: ứng dụng vẫn phát bản thu kết cục khi câu tóm đã đổi');
+
+// 5. (tuỳ chọn) độ dài: bản thu quá ngắn hay quá dài so với số chữ thì có thể đọc sai, đọc sót hay lặp
 if (process.argv.includes('--durations')) {
   for (const r of rows) {
     if (!existsSync(clip(r.key))) continue;

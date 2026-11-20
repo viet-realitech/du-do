@@ -4,8 +4,9 @@ import { mood } from '../music';
 import { ERAS, VAL, type Era } from '../data';
 import { S, save, rt, optOf, archetype, matchStats, values, resetState, familyName, nameChain, Y1 } from '../state';
 import { chronLine, epilogue, whyText, rarityLine, firstDivergence, CFS, LEVEL, CF_METHOD, estimate, matchLine, genDelta, genName, PREV, type Facts, type Ending } from '../data/endings';
-import { endKey, endSpeech, epiKey } from '../speech';
-import { chronKey } from '../voiced';
+import { endSpeech, epiKey } from '../speech';
+import { chronKey, endVoiceKey } from '../voiced';
+import { sayKey } from '../said';
 import { hush, speak } from '../narration';
 import { warmKeys } from '../warm';
 import { LISTEN } from '../ui/bits';
@@ -161,18 +162,19 @@ export function openEnd(): void {
 }
 let autoRead: ReturnType<typeof setTimeout> | undefined;
 
-/** Tên kết cục và câu tóm bằng giọng thuyết minh (bản thu end-<id>); bấm lần nữa thì dừng. */
+/** Tên kết cục và câu tóm bằng giọng thuyết minh (bản thu end-<id>, nếu đọc đúng câu trên màn; không thì giọng của máy);
+    bấm lần nữa thì dừng. */
 function listenEnd(b: HTMLElement, force: boolean): void {
   const { f, e } = endingNow();
   if (!e) return;
   if (b.dataset.on) { hush(); return; }
-  if (speak(endSpeech(e, f), () => { delete b.dataset.on; }, force, endKey(e, f))) b.dataset.on = '1';
+  if (speak(endSpeech(e, f), () => { delete b.dataset.on; }, force, endVoiceKey(e, f))) b.dataset.on = '1';
 }
 on('listen-end', el => { clearTimeout(autoRead); listenEnd(el, true); });
 /** Lời kể của phim hành trình (dòng gia phả từng đời, kết cục, lời khép theo họ): tải sẵn cho lúc mất mạng (warm.ts). */
 function warmEnd(f: Facts, end: Ending): void {
-  const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name);
-  warmKeys([...ERAS.map(e => { const o = optOf(e); return o ? chronKey(o.id, chronLine(o.id, f, CHRONICLE)) : undefined; }), endKey(end, f), epiKey(skey)]);
+  const skey = S.names.length ? surnameKey(S.names[0].from) : S.surname || surnameKey(S.name), epi = EPILOGUES[skey];
+  warmKeys([...ERAS.map(e => { const o = optOf(e); return o ? chronKey(o.id, chronLine(o.id, f, CHRONICLE)) : undefined; }), endVoiceKey(end, f), epi ? sayKey(epiKey(skey), epi) : undefined]);
 }
 
 /** Địa chỉ công khai của trò chơi, in ở chân thẻ chia sẻ và gửi kèm khi chia sẻ (bản xem thử, bản chạy trên máy riêng
