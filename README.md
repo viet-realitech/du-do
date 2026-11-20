@@ -31,7 +31,8 @@ SITE_URL=https://your-domain.example/ npm run build
 - A Content-Security-Policy `<meta>` is injected at build time (`vite.config.ts`): own code only, plus Wikipedia/Wikimedia.
   If you add analytics or another API, extend `CSP` there.
 - CI (`.github/workflows/ci.yml`) runs typecheck, build and the e2e tests in Chromium and WebKit (two parallel jobs) on every push / PR;
-  a failing job uploads `test-results/` with traces (`npx playwright show-trace <trace.zip>`).
+  a failing job uploads `test-results/` with traces of the retried tests (`npx playwright show-trace <trace.zip>`; locally:
+  `npx playwright test --trace=retain-on-failure`).
 
 Before launch, have a historian review the event texts, quotes and casualty / population figures in `src/data/`
 (the design notes flag these as unreviewed), and confirm the attribution text in `src/screens/about.ts`.

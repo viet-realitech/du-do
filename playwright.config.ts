@@ -17,7 +17,8 @@ export default defineConfig({
   use: {
     baseURL,
     serviceWorkers: 'block',
-    trace: 'retain-on-failure',
+    // a trace only for a retried test (CI retries once): recording every test slows WebKit several-fold and upsets timing checks
+    trace: 'on-first-retry',
   },
   projects: [
     {
