@@ -18,14 +18,31 @@ async function boot(page: Page, state?: object) {
     .cine không neo vào #layer. `toHaveCount(0)` giữ locator trần: chờ cả bản sao đi hẳn. */
 const live = (page: Page, sel: string) => page.locator(`${sel}:not(.exiting *, .cine.out, .cine.out *)`);
 
-/** Ô của thông báo đang hiện, đo trong trang khi nó đã trượt vào chỗ (`ms` tính từ lúc hiện; thông báo chỉ sống 2,8 s).
-    waitForTimeout rồi boundingBox lỡ mất nó khi máy bận (một lần chờ 500 ms từng kéo thành 3,5 s). */
-const toastBox = (page: Page, ms: number) => page.locator('.toast:visible').evaluate(async (n, ms) => {
-  const an = n.getAnimations()[0];
-  while (an?.playState === 'running' && Number(an.currentTime) < ms) await new Promise(r => requestAnimationFrame(r));
-  const r = n.getBoundingClientRect();
-  return { x: r.x, y: r.y, width: r.width, height: r.height };
-}, ms);
+/** Bắt thông báo kế tiếp có chữ `text` ngay trong trang: gọi trước thao tác làm nó hiện, rồi chờ hàm trả về. Thông báo
+    chỉ sống 2,8 s, còn mỗi lượt hỏi từ máy chạy test (WebKit bận, đang ghi trace) có thể tốn hàng trăm ms: ba lượt
+    toHaveCount → toContainText → đo từng lỡ mất nó; chờ hiệu ứng trượt vào chạy xong rồi mới đo cũng lỡ (WebKit có lúc
+    3 s mới vẽ một khung). Nên đo ngay lúc nó hiện, theo chỗ nó đứng yên: ô trên màn trừ đi đoạn dời của hiệu ứng trượt
+    (transform chỉ là translate). Kết quả: ô ấy, số thông báo đang hiện lúc ấy (`shown`); null nếu `wait` ms sau vẫn chưa
+    thấy (hỏng trong vài giây, không treo tới hết 60 s). */
+async function catchToast(page: Page, text: string, wait = 10_000) {
+  type Caught = { x: number; y: number; width: number; height: number; shown: number } | null;
+  await page.evaluate(([text, wait]) => {
+    (window as unknown as { caught: Promise<Caught> }).caught = new Promise<Caught>(done => {
+      const up = () => [...document.querySelectorAll<HTMLElement>('.toast')].filter(n => n.style.visibility !== 'hidden');
+      const look = () => {
+        const n = up().find(x => x.textContent!.includes(text));
+        if (!n) return;
+        mo.disconnect(); clearTimeout(late);
+        const r = n.getBoundingClientRect(), t = getComputedStyle(n).transform, m = new DOMMatrixReadOnly(t === 'none' ? undefined : t);
+        done({ x: r.x - m.m41, y: r.y - m.m42, width: r.width, height: r.height, shown: up().length });
+      };
+      const mo = new MutationObserver(look), late = setTimeout(() => { mo.disconnect(); done(null); }, wait);
+      mo.observe(document.body, { childList: true, subtree: true });
+      look();
+    });
+  }, [text, wait] as const);
+  return () => page.evaluate(() => (window as unknown as { caught: Promise<Caught> }).caught);
+}
 
 const midGame = { step: 'play', name: 'Họ Lê', year: 1954, picks: { e1: 'chien', e2: 'duytan', e3: 'cs', e4: 'vm', e5: 'nam' }, quiz: { e1: [true, true], e2: [true, false], e3: [true, true], e4: [false, true] } };
 
@@ -1158,16 +1175,44 @@ test('toasts come one at a time, above the tab bar on the main screen', async ({
   await page.waitForTimeout(800);
   // notices in a row (a locked chapter-6 figure tapped twice, plus any badge earned at start): never drawn on top of each other
   const tap = () => page.evaluate(() => { const b = document.createElement('button'); b.dataset.a = 'fig'; b.dataset.id = 'vvk'; document.body.appendChild(b); b.click(); b.remove(); });
-  await tap(); await tap();
-  let most = 0, shown = 0;
-  for (let t = 0; t < 32; t++) { const n = await page.locator('.toast:visible').count(); most = Math.max(most, n); shown += n; await page.waitForTimeout(250); }
-  expect(most).toBe(1);
-  expect(shown).toBeGreaterThan(14); // more than one notice's 2,8 s: the second showed after the first
+  // ghi trong trang lúc mỗi thông báo hiện và tắt (đếm .toast từ máy chạy test 32 lần × 250 ms trượt nhịp khi WebKit ghi
+  // trace: mỗi lượt đếm tốn 17–56 ms), tới khi cả hai thông báo của hai cái chạm đã tắt
+  const seen = await page.evaluate(async () => {
+    const tap = () => { const b = document.createElement('button'); b.dataset.a = 'fig'; b.dataset.id = 'vvk'; document.body.appendChild(b); b.click(); b.remove(); };
+    const t0 = performance.now(), on = new Map<Node, { from: number; to?: number; fig: boolean }>();
+    let most = 0;
+    const look = (rs: MutationRecord[]) => {
+      const now = performance.now() - t0;
+      for (const r of rs) {
+        r.removedNodes.forEach(n => { const s = on.get(n); if (s && s.to === undefined) s.to = now; });
+        r.addedNodes.forEach(n => {
+          if (!(n instanceof HTMLElement) || !n.matches('.toast') || !n.isConnected || n.style.visibility === 'hidden') return;
+          on.set(n, { from: now, fig: n.textContent!.includes('Nhân vật này mở') });
+        });
+      }
+      most = Math.max(most, [...on.values()].filter(s => s.to === undefined).length);
+    };
+    const mo = new MutationObserver(look);
+    document.querySelectorAll('.toast').forEach(n => on.set(n, { from: 0, fig: false })); // huy hiệu đang hiện từ lúc vào
+    most = on.size;
+    mo.observe(document.body, { childList: true, subtree: true });
+    tap(); tap();
+    const figs = () => [...on.values()].filter(s => s.fig);
+    for (let t = 0; t < 150 && !(figs().length === 2 && figs().every(s => s.to !== undefined)); t++) await new Promise(r => setTimeout(r, 100));
+    mo.disconnect();
+    const end = performance.now() - t0, all = [...on.values()];
+    return { most, figs: figs().map(s => [s.from, s.to ?? end]), total: all.reduce((a, s) => a + (s.to ?? end) - s.from, 0) };
+  });
+  expect(seen.most).toBe(1);
+  expect(seen.figs).toHaveLength(2);
+  expect(seen.figs[1][0]).toBeGreaterThanOrEqual(seen.figs[0][1]); // the second showed after the first had gone
+  expect(seen.total).toBeGreaterThan(2800 * 1.25); // more than one notice's 2,8 s
   // on the main screen a notice sits above the tab bar, not over the year in the header
   await expect(page.locator('.toast')).toHaveCount(0, { timeout: 8000 });
+  const caught = await catchToast(page, 'Nhân vật này mở');
   await tap();
-  await expect(page.locator('.toast:visible')).toHaveCount(1);
-  const tb = await toastBox(page, 600), yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+  const tb = (await caught())!, yr = (await page.locator('#yr').boundingBox())!, tabs = (await page.locator('#tabs').boundingBox())!;
+  expect(tb).toMatchObject({ shown: 1 }); // null: no notice within 10 s
   expect(tb.y).toBeGreaterThan(yr.y + yr.height);
   expect(tb.y + tb.height).toBeLessThanOrEqual(tabs.y);
   expect(errors).toEqual([]);
@@ -1316,11 +1361,11 @@ test.describe('short and wide windows', () => {
     test(`${name}: badges earned on the ending show while it is open, clear of the dossier masthead`, async ({ page }) => {
       await page.setViewportSize({ width: w, height: h });
       const errors = await boot(page, { step: 'play', name: 'Họ Trần', year: 2026, picks: reformPath, quiz: { e6: [true, true] }, badges: ['start'] });
+      // màn rộng: trước đây huy hiệu chờ tới khi đóng trang (không bao giờ hiện ở đây: catchToast trả null)
+      const caught = await catchToast(page, 'huy hiệu');
       await page.locator('#card [data-a=end].c').click();
-      const t = page.locator('.toast:visible');
-      await expect(t).toHaveCount(1, { timeout: 4000 }); // màn rộng: trước đây chờ tới khi đóng trang
-      await expect(t).toContainText('huy hiệu');
-      const a = await toastBox(page, 500), m = (await page.locator('.end-mast').boundingBox())!;
+      const a = (await caught())!, m = (await page.locator('.end-mast').boundingBox())!;
+      expect(a).toMatchObject({ shown: 1 }); // null: no badge notice within 10 s
       expect(a.y + a.height <= m.y || a.y >= m.y + m.height).toBe(true);
       expect(errors).toEqual([]);
     });
