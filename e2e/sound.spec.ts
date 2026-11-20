@@ -261,8 +261,8 @@ test('the ending plays the elegiac finale for a family that lost its homeland, a
   await page.getByRole('button', { name: /Xem phim hành trình/ }).click();
   await page.waitForTimeout(1500);
   expect(await musicLine(page)).toMatch(/^Nhạc: elegy \d/);
-  // another family, another ending: Heroic Age
-  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('dudo-v2')!); s.picks = { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' }; localStorage.setItem('dudo-v2', JSON.stringify(s)); });
+  // another family, another ending: Heroic Age (a new family has not read an ending yet: no endFix, which keeps a read ending)
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('dudo-v2')!); s.picks = { e1: 'chien', e2: 'canvuong', e3: 'cs', e4: 'vm', e5: 'bac', e6: 'doimoi' }; delete s.endFix; delete s.endSaid; s.ended = false; localStorage.setItem('dudo-v2', JSON.stringify(s)); });
   await page.reload();
   await page.locator('#card [data-a=end].c').click();
   await expect(page.locator('#layer .end-title')).not.toHaveText('Bên kia đại dương');
