@@ -1,5 +1,5 @@
 // sổ lỗi trên máy trước mọi mô-đun khác: bắt cả lỗi lúc chúng chạy (bảng chẩn đoán, ui/debug.ts)
-import './errlog';
+import { note } from './errlog';
 // Only the latin + vietnamese subsets: everything the UI writes, without precaching cyrillic/greek/latin-ext.
 import '@fontsource/eb-garamond/latin-400';
 import '@fontsource/eb-garamond/vietnamese-400';
@@ -47,7 +47,8 @@ import '@fontsource/ibm-plex-mono/vietnamese-500';
 import './styles.css';
 import './ui/image-slot';
 import { initPwa } from './pwa';
-import { S, setFocus } from './state';
+import { S, setFocus, saveNotes } from './state';
+import { boot } from './boot';
 import { initMap } from './map';
 import { initMainControls, renderMain } from './view';
 import { initTabs } from './tabs';
@@ -62,6 +63,13 @@ import './screens/event';
 import './screens/card';
 import './screens/profile';
 import './screens/ending';
+
+// lưới an toàn lúc khởi động (public/boot.js): mã ứng dụng đã chạy tới đây (bản lưu đã đọc xong)
+const B = boot();
+B?.started();
+// ghi chú về bản lưu lúc mở (đã sửa gì, đã cất bản sao nào) vào sổ lỗi trên máy
+saveNotes.sink = note;
+saveNotes.list.splice(0).forEach(note);
 
 initMainControls();
 initTabs();
@@ -84,3 +92,6 @@ else resumePlace(mapReady); // thẻ còn nợ / điểm rẽ (Trò chơi), hay 
 initPwa(); // bản mới: kiểm tra khi quay lại app, chỉ tải lại lúc an toàn (pwa.ts)
 // bảng chẩn đoán (?debug, hay chạm 5 lần vào dòng phiên bản ở Giới thiệu): chỉ tải khi được mở
 try { if (/[?&]debug\b/.test(location.search) || sessionStorage.getItem('dudo-debug')) void import('./ui/debug').then(m => m.openDebug()); } catch { /* riêng tư */ }
+// khởi động xong phần đồng bộ; bản đồ chính vẽ được thì từ đây lỗi chỉ ghi sổ, không vẽ được thì mở màn khôi phục
+B?.booted();
+void mapReady.then(() => B?.ready(), (e: unknown) => B?.fail(e instanceof Error ? `${e.name}: ${e.message}` : String(e)));

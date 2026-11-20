@@ -1,6 +1,7 @@
 import { surnameKey } from './data/surnames';
 import { ERAS, EV, FIG, FIGERA, type Era, type HistEvent, type Option, type ValueKey } from './data';
 import { VARIANT } from './data/cards';
+import { boot } from './boot';
 
 export type Theme = 'archive' | 'night' | 'poster';
 export type Res = { g: number; d: number; b: number; u: number };
@@ -19,6 +20,8 @@ const activeMode = (): 'read' | 'play' => { try { return localStorage.getItem(MO
 const PREFS = ['sound', 'music', 'theme', 'pal', 'mstyle', 'grain', 'modern', 'grat', 'haptic', 'fx', 'narr', 'rate'] as const;
 
 export interface State {
+  /** Phiên bản hình dạng bản lưu (SAVE_V lúc ghi); bản lưu chưa có trường này là phiên bản 0. */
+  v: number;
   step: 'splash' | 'intro' | 'play';
   name: string;
   /** Đọc sử (kể chuyện) hay Chơi (gia sản, thẻ ứng xử). */
@@ -80,41 +83,195 @@ export interface State {
   tourAt: { e: string; id: string } | null;
 }
 
+/* ---------- bản lưu: số phiên bản, các bước nâng cấp, kiểm tra kiểu ---------- */
+type Raw = Record<string, unknown>;
+const isObj = (x: unknown): x is Raw => !!x && typeof x === 'object' && !Array.isArray(x);
+/** MIGRATE[i] nâng bản lưu phiên bản i lên i + 1. Đổi hình dạng bản lưu: thêm một bước vào cuối (SAVE_V tự tăng theo);
+    không sửa, không xoá bước cũ, để bản lưu cũ đến mấy cũng đi qua đủ các bước theo đúng thứ tự. */
+const MIGRATE: ((raw: Raw) => void)[] = [
+  // 0 → 1: bản lưu chưa đánh số (mọi bản lưu tới 6f464aa, cả các trường đợt E, F thêm như endSaid). Các trường thêm dần
+  // trước đây được suy bằng "bản lưu đã có khoá này chưa", y như load() cũ
+  raw => {
+    const y = typeof raw.year === 'number' ? raw.year : undefined, pk = isObj(raw.picks) ? raw.picks : {};
+    // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
+    if (!('xFrom' in raw)) raw.xFrom = y ?? Y0;
+    // Bản lưu có trước việc điểm rẽ 5 dời nhà (cùng bản với `shown`): những năm đã chơi giữ vùng quê như lúc chơi, không kéo
+    // dòng thời gian về 1955 bắt quyết lại thẻ của nơi ở mới (bản lưu đã xong thì không dời nhà nữa)
+    if (!('shown' in raw) && pk.e5) raw.movedFrom = y ?? Y1;
+    // cvk có từ khi thêm bộ tn80; bản lưu có cardv mà chưa có cvk đã biết hai bộ nt62, sg75
+    if (!Array.isArray(raw.cvk)) raw.cvk = 'cardv' in raw ? ['nt62', 'sg75'] : [];
+    // bản lưu có trước việc tự đọc tên kết cục: ai đã mở kết luận khi đủ sáu điểm rẽ (đã thấy tên kết cục) thì không tự đọc
+    // nữa; ai mới chỉ mở hồ sơ còn bỏ ngỏ (Đọc sử) thì chưa thấy kết cục nào, lần đầu có kết cục vẫn được đọc
+    if (!('endSaid' in raw)) raw.endSaid = !!raw.ended && ERAS.every(e => !!pk[e.id]);
+  },
+];
+/** Phiên bản bản lưu hiện nay (trường `v`). */
+export const SAVE_V = MIGRATE.length;
+
 const def: State = {
-  step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, movedFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
+  v: SAVE_V, step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, movedFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
   filt: 'Tất cả', sound: true, music: true, theme: 'archive', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, endSaid: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
-function load(mode = activeMode()): State {
-  let s: State;
-  let raw: Record<string, unknown> = {};
-  try { raw = JSON.parse(localStorage.getItem(slotKey(mode)) || '{}'); } catch { /* hỏng: dùng mặc định */ }
-  s = Object.assign({}, def, raw);
-  // Bản lưu có trước biến cố riêng: không kéo dòng thời gian về những sự kiện đã đi qua.
-  if (!('xFrom' in raw)) s.xFrom = typeof raw.year === 'number' ? raw.year : Y0;
-  // Bản lưu có trước việc điểm rẽ 5 dời nhà (cùng bản với `shown`): những năm đã chơi giữ vùng quê như lúc chơi, không kéo
-  // dòng thời gian về 1955 bắt quyết lại thẻ của nơi ở mới (bản lưu đã xong thì không dời nhà nữa)
-  if (!('shown' in raw) && (raw.picks as Record<string, string> | undefined)?.e5) s.movedFrom = typeof raw.year === 'number' ? raw.year : Y1;
-  s.xs = { ...(s.xs || {}) }; s.names = [...(s.names || [])]; s.snap = { ...(s.snap || {}) }; s.shown = [...(s.shown || [])];
+
+/** Số hữu hạn (cả chuỗi số như "1954"), không thì undefined. */
+const toNum = (x: unknown): number | undefined => {
+  const n = typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' ? Number(x) : NaN;
+  return Number.isFinite(n) ? n : undefined;
+};
+const ENUM: Partial<Record<keyof State, readonly string[]>> = { step: ['splash', 'intro', 'play'], theme: ['archive', 'night', 'poster'], pal: ['flag', 'sepia'], mstyle: ['co', 'flat'] };
+const LISTS = ['harvests', 'seen', 'shown', 'srcSeen', 'pvSeen', 'figSeen', 'badges', 'cvk'] as const;
+const FLAGS = ['sound', 'music', 'grain', 'modern', 'grat', 'haptic', 'fx', 'narr', 'zoomed', 'mapTapped', 'shared', 'ended', 'endSaid'] as const;
+const TEXTS = ['name', 'home', 'surname', 'filt'] as const;
+
+/** Kiểm tra từng trường theo kiểu của nó, sửa được gì sửa nấy, không bỏ cả bản lưu. Khoá thiếu lấy mặc định (bản lưu cũ,
+    không tính là sửa); khoá sai kiểu thì sửa và ghi tên vào `fixed`. Không bỏ id nào chỉ vì ứng dụng không còn biết nó
+    (hướng, thẻ, sự kiện đã đổi tên vẫn mở được như trước); khoá lạ giữ nguyên. Đối tượng, mảng trả về đều là bản mới. */
+function sanitize(raw: Raw, fixed: string[]): State {
+  const D = JSON.parse(JSON.stringify(def)) as Raw; // mặc định, bản mới: không dùng chung mảng / đối tượng với `def`
+  const s: Raw = { ...D, ...raw }; // thứ tự khoá như trước (mặc định, rồi khoá lạ của bản lưu)
+  const has = (k: string) => raw[k] !== undefined;
+  const fix = (k: string) => { if (!fixed.includes(k)) fixed.push(k); };
+  // { khoá: giá trị } giữ những mục `ok`; `conv` đổi giá trị gần đúng (chuỗi số → số)
+  const rec = <T>(k: string, ok: (x: unknown) => x is T, conv?: (x: unknown) => T | undefined): void => {
+    if (!has(k)) { s[k] = D[k]; return; }
+    if (!isObj(raw[k])) { fix(k); s[k] = D[k]; return; }
+    const o: Record<string, T> = {};
+    for (const [id, x] of Object.entries(raw[k] as Raw)) {
+      if (ok(x)) o[id] = x;
+      else { fix(k); const c = conv?.(x); if (c !== undefined) o[id] = c; }
+    }
+    s[k] = o;
+  };
+  const isStr = (x: unknown): x is string => typeof x === 'string';
+  const isInt = (x: unknown): x is number => typeof x === 'number' && Number.isInteger(x);
+  const intOf = (x: unknown) => { const n = toNum(x); return n !== undefined && Number.isInteger(n) ? n : undefined; };
+  // gia sản / quan hệ: đủ các khoá số, khoá thiếu hay sai lấy mặc định
+  const pool = <T extends Record<string, number>>(x: unknown, d: T, k: string): T => {
+    if (!isObj(x)) { fix(k); return { ...d }; }
+    const o: Raw = { ...x };
+    for (const n of Object.keys(d)) {
+      if (x[n] === undefined) { o[n] = d[n]; continue; }
+      const v = toNum(x[n]);
+      if (typeof x[n] !== 'number' || v === undefined) fix(k);
+      o[n] = v ?? d[n];
+    }
+    return o as T;
+  };
+
+  for (const k of TEXTS) if (has(k) && !isStr(raw[k])) { fix(k); s[k] = D[k]; } else if (!has(k)) s[k] = D[k];
+  for (const k of FLAGS) if (has(k) && typeof raw[k] !== 'boolean') { fix(k); s[k] = D[k]; } else if (!has(k)) s[k] = D[k];
+  for (const k of LISTS) {
+    if (!has(k)) { s[k] = D[k]; continue; }
+    const a = raw[k];
+    if (!Array.isArray(a)) { fix(k); s[k] = k === 'cvk' ? Object.keys(VARIANT) : []; continue; } // cvk hỏng: coi như đã biết mọi bộ, không đọc lại thẻ nào
+    const b = a.filter(isStr);
+    if (b.length !== a.length) fix(k);
+    s[k] = b;
+  }
+  for (const [k, vals] of Object.entries(ENUM)) if (has(k) && !vals!.includes(raw[k] as string)) { fix(k); s[k] = D[k]; } else if (!has(k)) s[k] = D[k];
+  rec('picks', isStr);
+  rec('xs', isStr);
+  rec('cards', isInt, intOf); // chỉ số lựa chọn: "1" → 1; không đọc được thì thẻ ấy hỏi lại
+  rec('cardv', (x): x is 'base' => x === 'base');
+  rec('quiz', (x): x is boolean[] => Array.isArray(x) && x.every(b => typeof b === 'boolean'), x => (Array.isArray(x) ? x.map(b => b === true) : undefined));
+  s.res = has('res') ? pool(raw.res, RES0, 'res') : { ...RES0 };
+  s.rel = has('rel') ? pool(raw.rel, REL0, 'rel') : { ...REL0 };
+  if (has('snap')) {
+    if (!isObj(raw.snap)) { fix('snap'); s.snap = {}; }
+    else s.snap = Object.fromEntries(Object.entries(raw.snap).flatMap(([id, r]) => (isObj(r) ? [[id, pool(r, RES0, 'snap')]] : (fix('snap'), []))));
+  } else s.snap = {};
+  if (has('names')) {
+    const a = Array.isArray(raw.names) ? raw.names : (fix('names'), []);
+    s.names = a.flatMap(n => {
+      if (!isObj(n) || !isStr(n.from) || !isStr(n.to)) { fix('names'); return []; }
+      const y = toNum(n.y);
+      if (y === undefined || !isStr(n.why)) fix('names');
+      return [{ ...n, y: y ?? Y0, why: isStr(n.why) ? n.why : '' }];
+    });
+  } else s.names = [];
+  if (has('tourAt') && raw.tourAt !== null) {
+    const t = raw.tourAt;
+    if (isObj(t) && isStr(t.e) && isStr(t.id)) s.tourAt = { e: t.e, id: t.id };
+    else { fix('tourAt'); s.tourAt = null; }
+  } else s.tourAt = null;
+  // năm: số trong 1858–2026 ("1954" đọc được; ngoài khoảng thì kẹp lại)
+  const y = toNum(raw.year);
+  if (has('year') && (typeof raw.year !== 'number' || y === undefined || y < Y0 || y > Y1)) fix('year');
+  s.year = y === undefined ? Y0 : Math.min(Y1, Math.max(Y0, y));
+  for (const k of ['xFrom', 'movedFrom'] as const) {
+    const n = toNum(raw[k]);
+    if (has(k) && (typeof raw[k] !== 'number' || n === undefined)) fix(k);
+    // biến cố riêng chỉ từ năm đang ở (như bản lưu có trước tính năng); dời nhà: không ghim năm nào
+    s[k] = n ?? (k === 'xFrom' ? s.year : 0);
+  }
+  const r = toNum(raw.rate);
+  if (has('rate') && (typeof raw.rate !== 'number' || r === undefined || r <= 0 || r > 3)) { fix('rate'); s.rate = D.rate; } else s.rate = r ?? D.rate;
+  // bước hỏng: đã chọn điểm rẽ hay đã đi qua năm đầu thì đang chơi dở, không về màn chào
+  if (has('step') && fixed.includes('step') && (Object.keys(s.picks as Raw).length || (s.year as number) > Y0)) s.step = 'play';
+  return s as unknown as State;
+}
+
+/** Kết quả đọc một bản lưu: trạng thái, các trường đã sửa, phiên bản gốc; `unreadable` khi không đọc được gì (không phải
+    JSON, hay không phải một đối tượng); `newer` khi bản lưu do bản ứng dụng mới hơn ghi. */
+export interface Loaded { s: State; fixed: string[]; from: number; unreadable?: boolean; newer?: boolean }
+
+/** Đọc chuỗi bản lưu `txt` của luồng `mode` (không đụng bộ nhớ, không báo gì ra ngoài: load() làm việc ấy).
+    Chưa có bản lưu: như một bản lưu rỗng chưa đánh số, đúng như trước khi có phiên bản. */
+export function readSave(txt: string | null, mode: 'read' | 'play'): Loaded {
+  let raw: unknown = {};
+  if (txt) { try { raw = JSON.parse(txt); } catch { raw = undefined; } }
+  if (!isObj(raw)) { const s = sanitize({}, []); s.mode = mode; return { s, fixed: [], from: SAVE_V, unreadable: true }; }
+  const fixed: string[] = [];
+  let from = 0;
+  if (raw.v !== undefined) {
+    const n = toNum(raw.v);
+    if (n !== undefined && Number.isInteger(n) && n >= 0) from = n; else fixed.push('v');
+  }
+  // chạy từng bước nâng cấp còn thiếu; bản lưu của bản ứng dụng mới hơn: không đoán bước nào, chỉ kiểm tra kiểu
+  for (let i = from; i < SAVE_V; i++) MIGRATE[i](raw);
+  const s = sanitize(raw, fixed);
   // Bản lưu có trước lựa chọn theo vùng: thẻ đã quyết giữ nghĩa của bộ lựa chọn gốc (chỉ số không đổi nghĩa). Thẻ đã có
   // bộ thay thế mà nay thêm bộ mới thì đọc theo bộ mới, xếp cùng thứ tự nghĩa: vd. nhà vượt biển 1980, "bán chính thức"
   // 1979, đi diện đoàn tụ (ODP) đã quyết Đổi Mới 1986, năm 1995, WTO 2007 khi các thẻ ấy còn nói từ trong nước, nay đọc
   // bằng bộ nói từ xứ người; nhà họ Lý đi năm 1979 đã quyết thẻ năm 1980 thì đọc bằng bộ của nhà đã ở Hồng Kông; nhà giàu
   // nhất làng đã quyết thẻ năm 1955 nay đọc theo bộ "trước khi đội về": "bị quy địa chủ" là giữ ruộng chờ đội, "bần nông"
-  // là giảm tô, thoái tô (cards.ts VARIANT)
-  s.cardv = { ...(s.cardv || {}) };
-  const known = Array.isArray(raw.cvk) ? raw.cvk as string[] : 'cardv' in raw ? ['nt62', 'sg75'] : []; // cvk có từ khi thêm bộ tn80
-  for (const id of Object.keys(VARIANT)) if (!known.includes(id) && s.cards && id in s.cards) s.cardv[id] = 'base';
+  // là giảm tô, thoái tô (cards.ts VARIANT). Chạy mỗi lần mở: bộ thay thế mới có thể thêm vào mà không đổi phiên bản.
+  for (const id of Object.keys(VARIANT)) if (!s.cvk.includes(id) && id in s.cards) s.cardv[id] = 'base';
   s.cvk = Object.keys(VARIANT);
-  // bản lưu có trước việc tự đọc tên kết cục: ai đã mở kết luận khi đủ sáu điểm rẽ (đã thấy tên kết cục) thì không tự đọc
-  // nữa; ai mới chỉ mở hồ sơ còn bỏ ngỏ (Đọc sử) thì chưa thấy kết cục nào, lần đầu có kết cục vẫn được đọc
-  if (!('endSaid' in raw)) { const pk = (raw.picks || {}) as Record<string, string>; s.endSaid = !!raw.ended && ERAS.every(e => !!pk[e.id]); }
   s.mode = mode;
-  s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
-  return s;
+  // không bao giờ hạ số phiên bản: bản ứng dụng mới hơn mở lại bản lưu này thì không chạy lại các bước đã chạy
+  s.v = Math.max(from, SAVE_V);
+  return { s, fixed, from, newer: from > SAVE_V || undefined };
+}
+
+/** Ghi chú về bản lưu lúc mở (đã sửa gì, đã cất bản sao nào): main.ts chuyển vào sổ lỗi trên máy (errlog.ts) khi sổ đã
+    sẵn sàng (state.ts chạy cả trong node, không nhập errlog.ts). */
+export const saveNotes = { list: [] as string[], sink: null as ((m: string) => void) | null };
+const noteSave = (m: string) => { if (saveNotes.sink) saveNotes.sink(m); else saveNotes.list.push(m); };
+
+function load(mode = activeMode()): State {
+  const key = slotKey(mode);
+  let txt: string | null = null;
+  try { txt = localStorage.getItem(key); } catch { /* chế độ riêng tư: bắt đầu mới */ }
+  const r = readSave(txt, mode), b = boot();
+  if (r.unreadable) {
+    // không đọc được gì: cất bản sao, mở màn khôi phục (public/boot.js) và dừng ứng dụng tại đây, không ghi đè lên nó
+    noteSave(`Bản lưu ${key} không đọc được (${(txt || '').length} ký tự)`);
+    if (b) {
+      b.keep(key, 'không đọc được');
+      b.rescue('save', key);
+      throw new Error(`Bản lưu ${key} không đọc được`);
+    }
+    return r.s; // không có lưới khởi động (công cụ chạy bằng node): bắt đầu mới
+  }
+  if (r.fixed.length) { noteSave(`Bản lưu ${key}: đã sửa ${r.fixed.join(', ')}`); b?.keep(key, 'đã sửa ' + r.fixed.join(', ')); }
+  if (r.newer) { noteSave(`Bản lưu ${key} của bản ứng dụng mới hơn (phiên bản ${r.from})`); b?.keep(key, `phiên bản ${r.from}, mới hơn bản ứng dụng này`); }
+  return r.s;
 }
 
 export let S: State = load();
+
 
 export function save(): void {
   try { localStorage.setItem(slotKey(S.mode), JSON.stringify(S)); localStorage.setItem(MODE_KEY, S.mode); } catch { /* private mode: progress lives for this session only */ }
