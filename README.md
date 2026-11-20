@@ -58,7 +58,7 @@ Wikipedia/Commons images, portraits and video are fetched at runtime and cached 
 | Path | What |
 |---|---|
 | `src/data/` | Content tables ported verbatim from `project/data.js` + `data2.js` (ES modules), typed in `index.ts` |
-| `src/state.ts` | Persisted game state (`localStorage` key `dudo-v2`) and derived helpers |
+| `src/state.ts` | Persisted game state (`localStorage` key `dudo-v2`), the Sổ kết cục archive (`dudo-archive`) and derived helpers |
 | `src/map.ts` | Map rendering, zoom/pan, region popover, tour spotlight |
 | `src/view.ts` | Main screen: header, value bars, legend, event card, timeline, filter |
 | `src/tour.ts` | Chapter zoom tour with narration |
@@ -86,6 +86,18 @@ are optional. Every generation opens with a harvest (`src/play.ts`): fixed incom
 grows with the family's size and wealth (food, tax, fading renown), and bonuses or penalties from the ruling power's
 and the village's attitude, so no resource can sit at its ceiling; turning-point choices also shift relations. The ending ranks the family (Vọng tộc … Dòng họ ly tán).
 All numbers are game abstractions, not historical data.
+
+**Sổ kết cục** (Hồ sơ; `src/screens/ledger.ts`, storage in `src/state.ts`): a family that reaches its ending, in either
+flow, is kept as a whole-save snapshot in `localStorage` `dudo-archive` (20 at most, oldest dropped, its seal still
+counted), which "Chọn lại từ 1858" never clears. Hồ sơ shows the 15 seals (met: stamped and counted; unmet: a
+"chưa gặp" hint from the ending's rule) and the closed families; one can be reopened read-only: `viewRun()` swaps the
+snapshot in as `S` through `readSave()` (so old snapshots go through every `MIGRATE` step), `save()` and
+`checkBadges()` do nothing meanwhile, and the film, sharing and restart are hidden. A reopened family shows the ending
+and title it was stamped with, judged against the wealth lines stored with it (`th`, `tiers`), not against a later
+`endings-rarity.json`. The recovery screen's wipe (`public/boot.js`) forgets the live entry as a restart does. The book is read only when Hồ sơ or
+the ending opens, never at start-up, and a damaged one is repaired entry by entry or treated as empty (the unreadable
+text is kept once as `dudo-archive-broken`), so it can never bring up the recovery screen. The ending adds two
+"Ván sau, thử…" leads (an unmet ending, a home in a region not yet played, a surname with its own event, or play mode).
 
 ### Sound
 

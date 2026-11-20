@@ -2,7 +2,7 @@ import { surnameKey, asFamily } from './data/surnames';
 import { SPECIAL, type SpecialCard } from './data/cards2';
 import { ERAS, EV, regime2, type Era, type Faction, type HistEvent, type Option, type Region } from './data';
 import { CARD, VARIANT, type Card, type Choice, type Fx } from './data/cards';
-import { S, save, curPick, chYear, evEra, optView, type Res, type Rel, renameFamily, familyName } from './state';
+import { S, save, curPick, chYear, evEra, optView, type Res, type Rel, renameFamily, familyName, viewing } from './state';
 import { tiersOf, thOf, complete, endingOf, titleOf, ENDINGS, ABROAD6, GONE, GONE_AT, type Ending, type Facts, type Flag } from './data/endings';
 
 /* Chế độ Chơi: gia sản dòng họ (4 tài nguyên), quan hệ với các thế lực, thẻ ứng xử ở mỗi sự kiện
@@ -475,8 +475,7 @@ export function harvest(lived: Era, y: number): Harvest | null {
     nhập mùa màng khác hẳn giữa các vùng, nên một ngưỡng chung cho cả nước chỉ thưởng cho quê miền Bắc. Bậc: P92 Vọng tộc,
     P60 khá giả, P25 thường dân, P5 sa sút, thấp hơn nữa "Còn lại tên họ"; "ly tán" khi còn chưa tới 15 người. */
 export function rank(): [string, string] {
-  // hồ sơ đã khép (S.endFix): ngưỡng đời thứ sáu như lúc kết cục được đọc lần đầu
-  const { g, d, b, u } = S.res, s = g + d + b + u, n = S.harvests.length, t = (n >= 6 && S.endFix?.t) || tiersOf(S.home, n);
+  const { g, d, b, u } = S.res, s = g + d + b + u, n = S.harvests.length, t = tiersNow();
   if (d < 15) return ['Dòng họ ly tán', 'Người còn lại quá ít; gia phả dừng ở thế hệ này.'];
   if (!n || !t) return ['Thường dân', 'Chưa qua mùa màng nào; gia sản như mọi dòng họ lúc khởi đầu.'];
   const k = n >= 6 ? 'qua sáu thế hệ' : `sau ${n} thế hệ`;
@@ -491,6 +490,15 @@ export function rank(): [string, string] {
   return ['Còn lại tên họ', `Nhóm 5% sa sút nhất cùng quê trong mô phỏng: ${lowT}${d >= 40 ? `, dù trong họ vẫn còn ${d} nhân đinh` : d >= 25 ? '' : ', người cũng còn ít'}; tên họ thì vẫn giữ được.`];
 }
 
+/** Hàng ngưỡng [P5, P25, P60, P92] mà rank() dùng: của quê, sau đời vừa gặt gần nhất. Hồ sơ mở lại từ Sổ kết cục: hàng
+    đã ghi lúc khép (bảng hôm nay có thể đã dời). */
+/** Bậc gia sản để xếp hạng lúc này: hồ sơ mở lại từ Sổ kết cục dùng bậc đã đóng dấu; hồ sơ đã khép (S.endFix) dùng
+    ngưỡng đời thứ sáu như lúc kết cục được đọc lần đầu; còn lại theo bảng hôm nay. */
+export const tiersNow = (): number[] | undefined => {
+  const n = S.harvests.length;
+  return viewing()?.tiers ?? ((n >= 6 && S.endFix?.t) || tiersOf(S.home, n));
+};
+
 /** Dữ kiện cho kết cục (data/endings.ts): sáu hướng, quê, gia sản, gia sản sau từng mùa màng, các lần đổi họ và cờ
     trên các lựa chọn đã quyết (thẻ sự kiện, biến cố riêng). */
 export function factsFromState(): Facts {
@@ -502,18 +510,20 @@ export function factsFromState(): Facts {
     mode: play ? 'play' : 'read', name: familyName(), picks: ERAS.map(e => S.picks[e.id] || ''),
     home: play ? { id: h[0], name: h[1], region: h[3] } : undefined,
     res: play ? { ...S.res } : undefined, snap: play ? ERAS.map(e => S.snap[e.id]).filter((r): r is Res => !!r) : undefined,
-    renames: play ? S.names.map(n => ({ ...n })) : [], flags, th: play ? frozenTh() ?? thOf(S.home) : undefined,
+    renames: play ? S.names.map(n => ({ ...n })) : [], flags, th: play ? viewing()?.th ?? frozenTh() ?? thOf(S.home) : undefined,
     ...(play && atFront() ? { front: true } : {}),
   };
 }
 /** Ngưỡng P5, P92 đã ghi khi kết cục được đọc lần đầu (S.endFix), hay undefined. */
 const frozenTh = (): { lo: number; hi: number } | undefined => { const t = S.endFix?.t; return t ? { lo: t[0], hi: t[3] } : undefined; };
-/** Kết cục của dòng họ lúc này: null khi còn điểm rẽ bỏ ngỏ (Đọc sử cho xem kết luận khi chưa chọn đủ). Hồ sơ đã khép
-    (S.endFix, ghi ở lần đầu mở màn kết: ending.ts openEnd) giữ kết cục đã đọc, kể cả khi bảng ngưỡng gia sản sinh lại. */
+/** Kết cục của dòng họ lúc này: null khi còn điểm rẽ bỏ ngỏ (Đọc sử cho xem kết luận khi chưa chọn đủ). Hồ sơ mở lại
+    từ Sổ kết cục (state.ts viewing): kết cục và tên đã đóng dấu lúc khép, không xét lại theo luật và bảng hôm nay. Hồ sơ
+    đã khép (S.endFix, ghi ở lần đầu mở màn kết: ending.ts openEnd) giữ kết cục đã đọc, kể cả khi bảng ngưỡng gia sản sinh lại. */
 export function endingNow(): { f: Facts; e: Ending | null; title: string } {
-  const f = factsFromState(), done = complete(f), kept = done && S.endFix?.id ? ENDINGS.find(x => x.id === S.endFix!.id && (!x.play || f.mode === 'play')) : undefined;
-  const e = done ? kept || endingOf(f) : null;
-  return { f, e, title: e ? titleOf(e, f) : '' };
+  const f = factsFromState(), v = viewing(), done = complete(f), seen = v && ENDINGS.find(x => x.id === v.end);
+  const kept = seen || (done && S.endFix?.id ? ENDINGS.find(x => x.id === S.endFix!.id && (!x.play || f.mode === 'play')) : undefined);
+  const e = kept || (done ? endingOf(f) : null);
+  return { f, e, title: seen ? v.title || titleOf(seen, f) : e ? titleOf(e, f) : '' };
 }
 /** Ghi kết cục vừa đọc lần đầu (id, ngưỡng gia sản đời thứ sáu): mở lại về sau đọc đúng kết cục ấy (S.endFix). */
 export function keepEnding(e: Ending): void {

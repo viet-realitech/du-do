@@ -300,13 +300,171 @@ function load(mode = activeMode()): State {
 
 export let S: State = load();
 
+/** Đang mở lại hồ sơ một dòng họ đã khép (viewRun): S là bản lưu trong Sổ kết cục, không được ghi đè lên ván đang chơi. */
+let frozen = 0;
+export const readOnly = (): boolean => frozen > 0;
+/** Hồ sơ đang mở lại (viewRun): play.ts lấy kết cục và ngưỡng gia sản đã ghi lúc khép, không xét lại theo bảng hôm nay. */
+let viewed: ArcRun | undefined;
+export const viewing = (): ArcRun | undefined => viewed;
 
 export function save(): void {
+  if (frozen) return;
   try { localStorage.setItem(slotKey(S.mode), JSON.stringify(S)); localStorage.setItem(MODE_KEY, S.mode); } catch { /* private mode: progress lives for this session only */ }
+}
+
+/* ---------- Sổ kết cục: hồ sơ các dòng họ đã khép, giữ qua mọi lần chọn lại ---------- */
+/* Khoá riêng 'dudo-archive', ngoài hai bản lưu: chọn lại từ 1858 không đụng tới nó. Chỉ đọc khi mở Hồ sơ hay màn kết
+   (không bao giờ lúc khởi động), và đọc kiểu không bao giờ ném lỗi: sổ hỏng thì sửa được gì sửa nấy hay coi như trống,
+   không mở màn khôi phục (public/boot.js chỉ lo hai bản lưu). Mỗi hồ sơ giữ cả bản lưu lúc khép (~2 KB), mở lại qua
+   readSave() như một bản lưu thật, nên đi qua đủ các bước nâng cấp MIGRATE của mọi phiên bản về sau. */
+const ARC_KEY = 'dudo-archive';
+/** Bản sao sổ không đọc được, cất một lần trước khi ghi đè. */
+const ARC_BROKEN = 'dudo-archive-broken';
+/** Số hồ sơ giữ tối đa; đầy thì bỏ hồ sơ cũ nhất, dấu kết cục của nó vẫn được đếm (`gone`). */
+export const ARC_MAX = 20;
+export interface ArcRun {
+  /** Mã ngẫu nhiên của ván. */
+  id: string;
+  /** Lúc dòng họ khép hồ sơ lần đầu (ISO). */
+  at: string;
+  mode: 'read' | 'play';
+  /** Kết cục (id trong ENDINGS) và tên kết cục theo con đường, lúc khép. */
+  end: string;
+  title: string;
+  /** Tên họ qua các lần đổi; quê (Trò chơi, '' ở Đọc sử). */
+  name: string;
+  home: string;
+  /** Trò chơi: ngưỡng gia sản lúc khép (endings.ts Facts.th, và hàng P5/P25/P60/P92 mà play.ts rank() dùng). Bảng
+      endings-rarity.json tính lại thì ngưỡng dời; mở lại hồ sơ vẫn dùng ngưỡng này, để hồ sơ giữ đúng dấu đã đóng.
+      Hồ sơ ghi trước khi có hai trường này: dùng bảng hôm nay. */
+  th?: { lo: number; hi: number };
+  tiers?: number[];
+  /** Cả bản lưu lúc khép. */
+  save: Raw;
+}
+export interface Archive {
+  v: number;
+  /** Cũ trước, mới sau. */
+  runs: ArcRun[];
+  /** Hồ sơ đã rời sổ vì sổ đầy: kết cục → số lần. */
+  gone: Record<string, number>;
+  /** Ván đang chơi của mỗi luồng đã có hồ sơ nào trong sổ (mở lại màn kết thì cập nhật hồ sơ ấy, không thêm hồ sơ mới). */
+  live: Partial<Record<'read' | 'play', string>>;
+  /** Đã xin trình duyệt giữ bộ nhớ lâu dài (navigator.storage.persist) một lần. */
+  asked?: boolean;
+}
+const okRun = (r: unknown): r is Raw => isObj(r) && typeof r.id === 'string' && !!r.id && (r.mode === 'read' || r.mode === 'play') && typeof r.end === 'string' && isObj(r.save);
+const str = (x: unknown) => (typeof x === 'string' ? x : '');
+const fin = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+/** Đọc sổ: hồ sơ hỏng thì bỏ riêng hồ sơ ấy; cả sổ không đọc được thì coi như trống (`bad`: chưa ghi đè thì cất bản sao). */
+function readArc(): { a: Archive; raw: string | null; bad: boolean } {
+  const a: Archive = { v: 1, runs: [], gone: {}, live: {} };
+  let raw: string | null = null;
+  try { raw = localStorage.getItem(ARC_KEY); } catch { /* riêng tư */ }
+  if (raw === null) return { a, raw, bad: false };
+  let o: unknown;
+  try { o = JSON.parse(raw); } catch { return { a, raw, bad: true }; }
+  if (!isObj(o)) return { a, raw, bad: true };
+  let bad = false;
+  if (o.runs !== undefined && !Array.isArray(o.runs)) bad = true;
+  const runs: unknown[] = Array.isArray(o.runs) ? o.runs : [];
+  for (const r of runs) {
+    if (!okRun(r)) { bad = true; continue; }
+    if (a.runs.some(x => x.id === r.id)) continue;
+    // khoá lạ (bản ứng dụng mới hơn ghi) giữ nguyên; ngưỡng hỏng thì bỏ riêng ngưỡng ấy (mở lại dùng bảng hôm nay)
+    const run: ArcRun = { ...r, id: r.id as string, mode: r.mode as 'read' | 'play', end: r.end as string, save: r.save as Raw, at: str(r.at), title: str(r.title), name: str(r.name), home: str(r.home) };
+    if (r.th !== undefined) { if (isObj(r.th) && fin(r.th.lo) && fin(r.th.hi)) run.th = { lo: r.th.lo, hi: r.th.hi }; else { delete run.th; bad = true; } }
+    if (r.tiers !== undefined) { if (Array.isArray(r.tiers) && r.tiers.length === 4 && r.tiers.every(fin)) run.tiers = r.tiers.slice(); else { delete run.tiers; bad = true; } }
+    a.runs.push(run);
+  }
+  if (isObj(o.gone)) for (const [k, n] of Object.entries(o.gone)) { if (typeof n === 'number' && Number.isInteger(n) && n > 0) a.gone[k] = n; else bad = true; }
+  if (isObj(o.live)) for (const m of ['read', 'play'] as const) { const id = o.live[m]; if (typeof id === 'string' && a.runs.some(r => r.id === id)) a.live[m] = id; }
+  if (o.asked === true) a.asked = true;
+  const v = toNum(o.v);
+  if (v !== undefined && Number.isInteger(v) && v > 1) a.v = v; // sổ do bản ứng dụng mới hơn ghi: không hạ số
+  return { a: { ...o, ...a }, raw, bad };
+}
+/** Ghi sổ; bộ nhớ đầy thì bỏ dần hồ sơ cũ nhất (vẫn đếm dấu) rồi thử lại. Sổ cũ không đọc được: cất một bản sao trước. */
+function writeArc(a: Archive, prev: { raw: string | null; bad: boolean }): boolean {
+  try {
+    if (prev.bad && prev.raw !== null && localStorage.getItem(ARC_BROKEN) === null) {
+      localStorage.setItem(ARC_BROKEN, prev.raw);
+      noteSave(`Sổ kết cục ${ARC_KEY} hỏng (${prev.raw.length} ký tự): đã cất bản sao ${ARC_BROKEN} trước khi ghi lại`);
+    }
+  } catch { /* đầy: thôi không cất */ }
+  for (;;) {
+    try { localStorage.setItem(ARC_KEY, JSON.stringify(a)); return true; } catch {
+      if (a.runs.length <= 1) return false;
+      dropOldest(a);
+    }
+  }
+}
+function dropOldest(a: Archive): void {
+  const r = a.runs.shift();
+  if (!r) return;
+  a.gone[r.end] = (a.gone[r.end] || 0) + 1;
+  for (const m of ['read', 'play'] as const) if (a.live[m] === r.id) delete a.live[m];
+}
+/** Sổ kết cục hiện có (không bao giờ ném lỗi). */
+export const archive = (): Archive => readArc().a;
+/** Dấu hiệu nhận ra cùng một dòng họ: luồng, họ ban đầu, quê, sáu hướng (đủ cả sáu khi đã có kết cục, không đổi nữa). */
+const runKey = (s: State | Raw): string => {
+  const x = s as Raw, names = Array.isArray(x.names) ? x.names : [], n0 = isObj(names[0]) ? str(names[0].from) : '', pk = isObj(x.picks) ? x.picks : {};
+  return [x.mode, n0 || str(x.name), str(x.home), ...ERAS.map(e => str(pk[e.id]))].join('|');
+};
+/** Hồ sơ trong sổ của ván đang chơi (luồng hiện tại), nếu đã khép. */
+export function liveRun(a = archive()): ArcRun | undefined {
+  const id = a.live[S.mode], r = id ? a.runs.find(x => x.id === id) : undefined;
+  return r && runKey(r.save) === runKey(S) ? r : undefined;
+}
+/** Dòng họ đang chơi vừa đi tới kết cục: cất cả bản lưu vào Sổ kết cục (mở lại màn kết thì cập nhật hồ sơ ấy). Lần ghi
+    đầu tiên xin trình duyệt giữ bộ nhớ lâu dài, nếu trình duyệt có cách ấy (không hứa gì: trình duyệt vẫn có thể xoá). */
+export function archiveRun(meta: { end: string; title: string; name: string; home: string; th?: ArcRun['th']; tiers?: ArcRun['tiers'] }): ArcRun | null {
+  if (frozen) return null;
+  const prev = readArc(), a = prev.a, snap = JSON.parse(JSON.stringify(S)) as Raw;
+  let r = liveRun(a);
+  if (r) Object.assign(r, meta, { save: snap });
+  else {
+    r = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), at: new Date().toISOString(), mode: S.mode, ...meta, save: snap };
+    a.runs.push(r);
+    a.live[S.mode] = r.id;
+    while (a.runs.length > ARC_MAX) dropOldest(a);
+  }
+  if (!a.asked) {
+    a.asked = true;
+    try { void navigator.storage?.persist?.().catch(() => false); } catch { /* không có: thôi */ }
+  }
+  return writeArc(a, prev) ? r : null;
+}
+/** Xoá cả Sổ kết cục (người chơi đã xác nhận); ván đang chơi không đổi. */
+export function clearArchive(): void {
+  try { localStorage.removeItem(ARC_KEY); localStorage.removeItem(ARC_BROKEN); } catch { /* riêng tư */ }
+}
+/** Chọn lại từ 1858: sổ giữ nguyên, chỉ quên rằng ván của luồng này đã có hồ sơ (ván mới, dù đi y hệt, là một hồ sơ mới). */
+function forgetLive(mode: 'read' | 'play'): void {
+  const prev = readArc();
+  if (!prev.a.live[mode]) return;
+  delete prev.a.live[mode];
+  writeArc(prev.a, prev);
+}
+/** Chạy `fn` với S là bản lưu của hồ sơ `run` (đọc qua readSave như một bản lưu thật; thiết lập thiết bị lấy của ván đang
+    chơi), rồi trả lại S như cũ. Trong lúc ấy save() không ghi gì, checkBadges() không trao gì, viewing() là hồ sơ ấy. undefined khi bản lưu của
+    hồ sơ không đọc được. Chỉ cho việc đồng bộ (dựng màn, đọc lời): đừng để việc chạy sau (setTimeout, await) đọc S. */
+export function viewRun<T>(run: ArcRun, fn: () => T): T | undefined {
+  const r = readSave(JSON.stringify(run.save), run.mode);
+  if (r.unreadable) return undefined;
+  const live = S, t = r.s as unknown as Raw;
+  for (const k of PREFS) t[k] = live[k];
+  const was = viewed;
+  S = r.s;
+  viewed = run;
+  frozen++;
+  try { return fn(); } finally { S = live; viewed = was; frozen--; }
 }
 
 /** Start over, keeping device preferences. */
 export function resetState(): void {
+  forgetLive(S.mode);
   S = Object.assign({}, def, { picks: {}, quiz: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], badges: [], cards: {}, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, movedFrom: 0, res: { ...RES0 }, rel: { ...REL0 }, mode: S.mode, home: S.home, sound: S.sound, music: S.music, theme: S.theme, pal: S.pal, mstyle: S.mstyle, grain: S.grain, modern: S.modern, grat: S.grat, haptic: S.haptic, fx: S.fx, narr: S.narr, rate: S.rate });
   rt.focusEv = null;
   rt.gate = null;

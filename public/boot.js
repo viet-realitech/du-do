@@ -198,6 +198,21 @@ try {
     manual();
   }
 
+  /** Bắt đầu lại xoá bản lưu `key`: Sổ kết cục (state.ts, 'dudo-archive') quên rằng ván của luồng ấy đã có hồ sơ trong
+      sổ, như Chọn lại từ 1858 (forgetLive). Không thì ván mới đi y hệt (cùng họ, quê, sáu hướng) ghi đè lên hồ sơ cũ thay
+      vì thêm một hồ sơ mới. Sổ không đọc được (state.ts coi như trống) hay chỗ lưu đầy: để nguyên. */
+  function forgetLive(key) {
+    try {
+      var raw = get('dudo-archive'), m = key === 'dudo-v2-play' ? 'play' : 'read';
+      if (raw === null) return;
+      var a = JSON.parse(raw);
+      if (!a || typeof a !== 'object' || !a.live || typeof a.live !== 'object' || !Object.prototype.hasOwnProperty.call(a.live, m)) return;
+      delete a.live[m];
+      localStorage.setItem('dudo-archive', JSON.stringify(a));
+      note('Bắt đầu lại: Sổ kết cục quên ván ' + m);
+    } catch (e) { /* không bao giờ ném lỗi từ đây */ }
+  }
+
   function ask(c, row, reset) {
     reset.disabled = true;
     // có bản sao của đúng bản lưu này chưa (lúc mở màn chỗ lưu đầy thì chưa; thử cất lại lần nữa)
@@ -215,6 +230,7 @@ try {
       // chưa có bản sao: xoá bản lưu rồi thử cất bản sao vào đúng chỗ vừa trống (được thì ván không mất hẳn)
       var raw = n ? null : get(slot);
       try { localStorage.removeItem(slot); localStorage.setItem('dudo-mode', slot === 'dudo-v2-play' ? 'play' : 'read'); } catch (e) { /* riêng tư */ }
+      forgetLive(slot);
       if (raw !== null) keep(slot, 'trước khi bắt đầu lại', raw);
       note('Bắt đầu lại: đã xoá ' + slot);
       location.reload();

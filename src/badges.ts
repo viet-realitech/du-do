@@ -1,5 +1,5 @@
 import { BADGES } from './data';
-import { S, save, picked, matchStats, quizCorrect } from './state';
+import { S, save, picked, matchStats, quizCorrect, readOnly } from './state';
 import { toast, whenClear } from './ui/dom';
 import { SND, buzz } from './audio';
 
@@ -41,6 +41,7 @@ export function clearBadgeQueue(): void {
 
 /** Award newly earned badges, announcing them with a toast + chime once nothing is in the way. */
 export function checkBadges(): void {
+  if (readOnly()) return; // đang xem lại hồ sơ một dòng họ đã khép (Sổ kết cục): huy hiệu là của ván đang chơi
   const st = badgeState();
   BADGES.forEach(([id, ic, name, d]) => {
     if (!st[id] || S.badges.includes(id)) return;

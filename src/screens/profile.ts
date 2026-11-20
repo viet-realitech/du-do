@@ -13,6 +13,7 @@ import { SND, buzz, audioSession } from '../audio';
 import { hasVoice, missedVoice, speak } from '../narration';
 import { UI_LINES } from '../speech';
 import { openShare, resetAll } from './ending';
+import { ledger, keepLine } from './ledger';
 import { qmode, setQMode, type QMode } from '../ui/quality';
 import './about';
 
@@ -54,6 +55,7 @@ export function paneMe(): void {
   <div class="gs">${RES.map(([k, n, ic]) => `<div class="pv"><div class="mono muted">${ic} ${n}</div><b>${S.res[k]}</b></div>`).join('')}</div>
   <div class="mono muted" style="margin:14px 0 6px">Quan hệ hiện nay</div><div class="fxs">${powersAt(S.year).map(k => relChip(k, S.year)).join('')}</div>
   <div class="mono muted" style="margin:14px 0 6px">Đã quyết định ${decidedCount()} thẻ sự kiện · hiện là <b style="color:var(--acc)">${rank()[0]}</b></div>` : ''}
+  ${ledger()}
   <h3 style="margin:22px 0 6px">Luồng đang mở</h3>
   <div class="pv"><div class="row sb"><div><b class="h4">${isPlay() ? 'Trò chơi dòng họ' : 'Đọc sử'}</b><div class="muted" style="font-size:14px;margin-top:2px">${isPlay() ? 'Gia sản, thẻ sự kiện, mùa màng. Tiến độ lưu riêng.' : 'Sáu điểm rẽ, bản đồ, tư liệu. Không có tài nguyên.'}</div></div>
    <button class="chip" data-a="${isPlay() ? 'go-read' : 'go-play'}">${isPlay() ? 'Sang Đọc sử ›' : 'Vào trò chơi ›'}</button></div></div>
@@ -100,9 +102,9 @@ on('rate', el => { S.rate = +el.dataset.r!; save(); paneMe(); speak(UI_LINES['ui
 on('share', () => openShare());
 // Xoá cả dòng họ / tiến trình: hỏi lại trước (nút Huỷ được chọn sẵn)
 on('reset', () => {
-  const who = isPlay() ? familyName() : 'tiến trình đọc sử';
+  const who = isPlay() ? familyName() : 'tiến trình đọc sử', keep = keepLine(); // Sổ kết cục không bị xoá: nói rõ
   const d = sheet(`<div class="mono muted">Bắt đầu lại</div><h2 style="margin:8px 0 6px">Xoá ${esc(who)} và bắt đầu lại từ 1858?</h2>
-    <p class="muted" style="margin:0 0 16px">${isPlay() ? 'Các lựa chọn, thẻ quyết định và gia sản sẽ mất' : 'Các lựa chọn ở điểm rẽ và tiến trình đọc sẽ mất'}; không hoàn tác được.</p>
+    <p class="muted" style="margin:0 0 16px">${isPlay() ? 'Các lựa chọn, thẻ quyết định và gia sản sẽ mất' : 'Các lựa chọn ở điểm rẽ và tiến trình đọc sẽ mất'}; không hoàn tác được.${keep ? ' ' + esc(keep) : ''}</p>
     <div class="row" style="gap:10px"><button class="btn ghost" data-a="reset-no">Huỷ</button><button class="btn" data-a="reset-yes">Xoá, bắt đầu lại</button></div>`, true, 'dlg'); // hộp xác nhận nhỏ giữa màn, không phải tờ cao cả màn
   d.querySelector<HTMLElement>('[data-a=reset-no]')!.focus();
 });
