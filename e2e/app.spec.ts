@@ -548,8 +548,10 @@ test('play mode: a Lý household in Cần Thơ whose son went to the Cambodian f
   await expect(page.locator('#layer > .scrim h2')).toHaveText('Chiến tranh biên giới phía Bắc', { timeout: 8000 });
   await page.locator('#layer > .scrim .opt').first().click();
   await page.locator('#cgo').click();
-  // the mobilisation card sends nobody away; the son already in Cambodia (cp79) still bars "cả nhà đi"
-  await expect(page.locator('#layer > .scrim .opt.sel .out')).toContainText('Tên người con vào danh sách chờ gọi');
+  // the mobilisation card sends nobody away and knows a son is already in Cambodia (cp79): it registers his younger
+  // brother, not "the son" still waiting for call-up; that son still bars "cả nhà đi"
+  await expect(page.locator('#layer > .scrim .opt.sel')).toContainText('một người con đã ở mặt trận Campuchia');
+  await expect(page.locator('#layer > .scrim .opt.sel .out')).toContainText('Tên người em vào danh sách chờ gọi');
   await expect(live(page, '.scrim .xsp > h3')).toHaveText('Họ Lý, năm 1979');
   const x = page.locator('.xopts .opt');
   await expect(x.nth(1)).toBeDisabled();

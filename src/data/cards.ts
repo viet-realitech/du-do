@@ -761,6 +761,11 @@ export const VARIANT: Record<string, Variant[]> = {
   // riêng gắn vào, như rà soát họ Lý): không ai ở đây "lên Lạng Sơn" hay "sơ tán về xuôi". Ngày 5.3.1979 có lệnh tổng động
   // viên, cùng ngày Trung Quốc tuyên bố rút quân; thanh niên trong Nam nhập ngũ, nhiều người sang mặt trận Campuchia.
   bb79: [
+    // một người con đã sang mặt trận Campuchia từ tháng 1 (thẻ cp79): lần này khai tên người em
+    { regions: ['T2', 'NE', 'NW'], after: ['cp79=0'], choices: [
+      ['Khai tên con theo lệnh tổng động viên', 'Lệnh tổng động viên ngày 5.3.1979; một người con đã ở mặt trận Campuchia, nay phường, xã lập danh sách cả những người em trong tuổi lính.', { u: 4, nn: 10 }, 'Tên người em vào danh sách chờ gọi. Cùng ngày ấy, Trung Quốc tuyên bố rút quân; giấy gọi chưa về, còn thư người anh từ Campuchia thì thưa dần.'],
+      ['Nghe tin qua đài', 'Chiến sự ở tận biên giới phía Bắc; trong này giá gạo lên, phường rà soát người gốc Hoa.', { g: -3 }, 'Đầu tháng Ba, Trung Quốc tuyên bố rút quân. Ở phố, mấy nhà người Hoa quen đã bán nhà, lặng lẽ ra đi.'],
+    ] },
     { regions: ['T2', 'NE', 'NW'], choices: [
       // không ai rời nhà: biến cố họ Lý ngay sau có lựa chọn "cả nhà đi" (nỗi lo bị gọi sang Campuchia cũng là một lý do
       // nhiều nhà ra đi)
