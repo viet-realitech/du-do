@@ -405,7 +405,7 @@ export function clearArchive(): void {
 /** Chọn lại từ 1858: sổ giữ nguyên, chỉ quên rằng ván của luồng này đã có hồ sơ (ván mới, dù đi y hệt, là một hồ sơ mới). */
 function forgetLive(mode: 'read' | 'play'): void {
   const prev = readArc();
-  if (prev.bad || !prev.a.live[mode]) return;
+  if (!prev.a.live[mode]) return;
   delete prev.a.live[mode];
   writeArc(prev.a, prev);
 }
