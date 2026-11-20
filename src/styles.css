@@ -342,7 +342,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .figs button:active { transform: scale(.97) }
 .grab { width: 40px; height: 4px; border-radius: 1px; background: var(--paper3); margin: 0 auto 14px }
 /* nút ✕ của bảng đóng được: góc phải đầu tờ, chữ chảy quanh, dính đỉnh khi cuộn tờ dài */
-.sheet > .sx { float: right; position: sticky; top: 0; z-index: 3; width: 40px; height: 40px; margin: -2px -6px 8px 12px; display: grid; place-items: center; border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); color: var(--ink2) }
+.sheet > .sx { float: right; position: sticky; top: 0; z-index: 3; width: 44px; height: 44px; margin: -2px -6px 8px 12px; display: grid; place-items: center; border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); color: var(--ink2) }
 @keyframes up { from { transform: translateY(40px); opacity: 0 } }
 @keyframes rise { from { transform: translateY(18px) scale(.985); opacity: 0 } }
 @keyframes sheetup { from { transform: translateY(70%); opacity: .4 } }
@@ -854,7 +854,7 @@ input.f:focus { outline: 2px solid var(--red); outline-offset: 1px }
   .mtag { left: 16px; top: 16px; padding: 5px 10px }
   .mtag b { font-size: calc(16px * var(--ts)) }
   .zoomc { right: 16px; top: 16px }
-  .zoomc button { width: 40px; height: 40px }
+  .zoomc button { width: 44px; height: 44px } /* vùng chạm 44 px trên máy tính bảng */
   .zoomc .i { width: 20px; height: 20px }
   .fmenu { right: 62px; top: 16px }
   .tour { left: 14px; right: 14px; bottom: 14px; padding: 10px 10px 10px 16px; gap: 8px }
