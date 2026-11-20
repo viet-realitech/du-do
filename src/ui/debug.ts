@@ -1,7 +1,7 @@
 import { S } from '../state';
 import { qstats } from './quality';
 import { acState, warStats, warNew, setWarNew } from '../audio';
-import { musicStats } from '../music';
+import { musicStats, musicToSeam } from '../music';
 import { vstats, voiceName } from '../narration';
 import { swStats } from '../pwa';
 import { errlog } from '../errlog';
@@ -19,8 +19,8 @@ const CSS = `
 #dbg header button { width: 30px; height: 26px; border: 1px solid var(--rule); border-radius: var(--r); color: var(--ink2); font: 500 14px/1 var(--mono) }
 #dbg pre { margin: 0; padding: 8px 10px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; flex: 1; min-height: 0 }
 #dbg textarea { margin: 0 10px 8px; height: 120px; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule) }
-#dbg .go, #dbg .ab { width: auto; flex: none; margin: 0 10px 10px; height: 38px; font-size: 15px }
-#dbg.min pre, #dbg.min .go, #dbg.min .ab, #dbg.min textarea { display: none }
+#dbg .go, #dbg .ab, #dbg .seam { width: auto; flex: none; margin: 0 10px 10px; height: 38px; font-size: 15px }
+#dbg.min pre, #dbg.min .go, #dbg.min .ab, #dbg.min .seam, #dbg.min textarea { display: none }
 `;
 
 let fps = 0, worst = 0, panel: HTMLElement | null = null, store = '', timer = 0;
@@ -122,7 +122,7 @@ export function openDebug(): void {
   const p = panel = document.createElement('section');
   p.id = 'dbg';
   p.setAttribute('aria-label', 'Chẩn đoán');
-  p.innerHTML = `<header><b>Chẩn đoán</b><button type="button" data-d="min" aria-label="Thu gọn">–</button><button type="button" data-d="x" aria-label="Đóng">×</button></header><pre></pre><button type="button" class="btn go">Sao chép báo cáo</button>${keptSaves().length ? '<button type="button" class="btn go kept">Sao chép bản lưu hỏng</button>' : ''}<button type="button" class="btn ab"></button>`;
+  p.innerHTML = `<header><b>Chẩn đoán</b><button type="button" data-d="min" aria-label="Thu gọn">–</button><button type="button" data-d="x" aria-label="Đóng">×</button></header><pre></pre><button type="button" class="btn go">Sao chép báo cáo</button>${keptSaves().length ? '<button type="button" class="btn go kept">Sao chép bản lưu hỏng</button>' : ''}<button type="button" class="btn ab"></button><button type="button" class="btn seam">Nghe thử chỗ nhạc nối vòng</button>`;
   // nghe so sánh tiếng trận cũ / mới trên máy thật (nhớ trên máy này, không vào bản lưu)
   const ab = p.querySelector<HTMLButtonElement>('.ab')!, abShow = () => { ab.textContent = warNew() ? 'Nghe tiếng trận kiểu cũ' : 'Nghe tiếng trận kiểu mới'; };
   abShow();
@@ -132,6 +132,12 @@ export function openDebug(): void {
     if (d === 'min') { p.classList.toggle('min'); paint(); }
     else if (d === 'x') { closeDebug(); }
     else if ((ev.target as HTMLElement).closest('.ab')) { setWarNew(!warNew()); abShow(); paint(); }
+    // nghe trên máy thật chỗ nối vòng của bản đang phát (nhảy tới 4 s trước điểm vòng), không phải đợi vài phút
+    else if ((ev.target as HTMLElement).closest('.seam')) {
+      const b = p.querySelector<HTMLButtonElement>('.seam')!;
+      if (!musicToSeam()) { b.textContent = 'Nhạc chưa phát'; setTimeout(() => { b.textContent = 'Nghe thử chỗ nhạc nối vòng'; }, 2000); }
+      paint();
+    }
     else if ((ev.target as HTMLElement).closest('.kept')) void copy(p.querySelector<HTMLButtonElement>('.kept')!, keptText(), 'Sao chép bản lưu hỏng');
     else if ((ev.target as HTMLElement).closest('.go')) void copy(p.querySelector<HTMLButtonElement>('.go')!);
   });
