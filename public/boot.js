@@ -135,23 +135,40 @@ try {
     try { retry.focus(); } catch (e) { /* bỏ qua */ }
   }
 
-  /** Thử lại: có bản ứng dụng mới đang chờ (service worker) thì cho nó nắm quyền trước, rồi tải lại trang. */
+  /** Thử lại: có bản ứng dụng mới (service worker) thì cho nó nắm quyền trước, rồi tải lại trang. Bản mới đang cài dở
+      (bản sửa vừa lên máy chủ khi màn này đang mở: update() xong lúc bản mới mới bắt đầu cài) thì chờ nó cài xong; tải lại
+      ngay thì trang vẫn chạy bản cũ đang hỏng, phải bấm lần nữa. */
   function again(btn) {
     btn.disabled = true; btn.textContent = 'Đang mở lại…';
-    var gone = false;
-    function go() { if (!gone) { gone = true; location.reload(); } }
-    setTimeout(go, 5000);
+    var gone = false, t = 0, seen = null;
+    function go() { if (!gone) { gone = true; clearTimeout(t); location.reload(); } }
+    /** Hẹn tải lại sau `ms` dù chưa xong (mạng treo, bản mới không nhận lời). */
+    function wait(ms) { clearTimeout(t); t = setTimeout(go, ms); }
+    wait(6000);
     try {
       var sw = navigator.serviceWorker;
       if (!sw || !sw.getRegistration) { go(); return; }
+      /** Bản `w` đã cài xong, đang chờ: cho nó nắm quyền; tải lại khi nó đã nắm (controllerchange). */
+      var take = function (w) { wait(6000); sw.addEventListener('controllerchange', go); w.postMessage({ type: 'SKIP_WAITING' }); };
+      /** Bản `w` đang cài: chờ nó cài xong (tối đa 20 s: cả gói tải trước ~1,5 MB) rồi cho nắm quyền; cài hỏng thì tải lại. */
+      var track = function (w) {
+        if (!w || w === seen) return;
+        seen = w; wait(20000);
+        w.addEventListener('statechange', function () {
+          if (w.state === 'installed') take(w);
+          else if (w.state === 'redundant') go();
+        });
+        if (w.state === 'installed') take(w);
+      };
       sw.getRegistration().then(function (r) {
         if (!r) { go(); return; }
+        r.addEventListener('updatefound', function () { track(r.installing); });
         var upd = r.update ? r.update().catch(function () { /* mất mạng */ }) : Promise.resolve();
         return upd.then(function () {
-          var w = r.waiting;
-          if (!w) { go(); return; }
-          sw.addEventListener('controllerchange', go);
-          w.postMessage({ type: 'SKIP_WAITING' });
+          if (seen) return;
+          if (r.waiting) take(r.waiting);
+          else if (r.installing) track(r.installing);
+          else go();
         });
       }).catch(go);
     } catch (e) { go(); }

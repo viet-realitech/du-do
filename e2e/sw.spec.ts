@@ -15,15 +15,19 @@ const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
 const TYPES: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.m4a': 'audio/mp4', '.txt': 'text/plain' };
 
 /** The built app (dist/) on a port of its own whose sw.js can change: "build B" is the same worker plus a comment, which
-    the browser treats as a new worker. (route() does not see the browser's own update checks for sw.js.) */
+    the browser treats as a new worker. (route() does not see the browser's own update checks for sw.js.) A broken build
+    serves a page that never loads the app code; from the first broken build on, each build also gives the page a new
+    revision, so each worker caches its own page. */
 async function serveDist() {
-  let tail = '';
+  let tail = '', broken = false, pages = false;
   const srv = createServer(async (req, res) => {
     try {
       const p = decodeURIComponent(new URL(req.url || '/', 'http://x').pathname);
       const f = normalize(join(DIST, p.endsWith('/') ? p + 'index.html' : p));
       if (!f.startsWith(DIST)) throw new Error('outside dist');
       let body = await readFile(f);
+      if (broken && f.endsWith('index.html')) body = Buffer.from(String(body).replace(/<script type="module"[^>]*><\/script>/, ''));
+      if (p === '/sw.js' && pages) body = Buffer.from(String(body).replace(/(url:"index\.html",revision:")([^"]+)/, `$1$2-${tail}`));
       // each build's worker answers "build?" with its name (a MessageChannel port), so a test can tell which one is active
       if (p === '/sw.js' && tail) body = Buffer.concat([body, Buffer.from(`\n// build ${tail}\nself.addEventListener('message', e => { if (e.data === 'build?') e.ports[0]?.postMessage(${JSON.stringify(tail)}); });\n`)]);
       res.writeHead(200, { 'content-type': TYPES[extname(f)] || 'application/octet-stream', 'cache-control': 'no-cache' });
@@ -32,7 +36,7 @@ async function serveDist() {
   });
   await new Promise<void>(r => srv.listen(0, r));
   const port = (srv.address() as { port: number }).port;
-  return { url: `http://localhost:${port}/`, build: (t: string) => { tail = t; }, close: () => new Promise<void>(r => srv.close(() => r())) };
+  return { url: `http://localhost:${port}/`, build: (t: string, bad = false) => { tail = t; broken = bad; pages ||= bad; }, close: () => new Promise<void>(r => srv.close(() => r())) };
 }
 
 async function boot(page: Page, context: BrowserContext, state: object = STATE, url = '/') {
@@ -176,5 +180,29 @@ test('an update that waited through a tour gives way to a newer one on return: o
     expect(await swBuild(page, 'waiting')).toBeNull();
     expect(await page.evaluate(() => sessionStorage.getItem('offered'))).toBeNull();
     expect(loads).toBe(1);
+  } finally { await srv.close(); }
+});
+
+test('a broken build shows the recovery screen; when the fix lands while it is open, one tap on Thử lại opens the app', async ({ page, context }) => {
+  test.skip(!existsSync(join(DIST, 'sw.js')), 'needs the production build in dist/');
+  const srv = await serveDist();
+  try {
+    await boot(page, context, STATE, srv.url);
+    // build B never starts the app; it takes over at the next safe moment (back on the idle map) and the page reloads into it
+    srv.build('B', true);
+    const reload = page.waitForEvent('load', { timeout: 30_000 });
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await reload;
+    await expect(page.locator('#rescue h1')).toHaveText('Dư Đồ chưa mở được', { timeout: 15_000 });
+    expect(await swBuild(page, 'active')).toBe('B');
+    // the fix (C) lands while the screen is open. Thử lại finds C still installing: it waits for it, lets it take over, and
+    // only then reloads (reloading at once ran broken B again and needed a second tap)
+    srv.build('C');
+    const reload2 = page.waitForEvent('load', { timeout: 30_000 });
+    await page.locator('#rescue [data-r=retry]').click();
+    await reload2;
+    await page.waitForSelector('#map text[data-city]', { timeout: 15_000 });
+    await expect(page.locator('#rescue')).toHaveCount(0);
+    expect(await swBuild(page, 'active')).toBe('C');
   } finally { await srv.close(); }
 });
