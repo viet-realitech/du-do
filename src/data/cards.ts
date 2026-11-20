@@ -514,7 +514,7 @@ export const VARIANT: Record<string, Variant[]> = {
     // này): chịu để đội xét / tự giao ruộng / phần của nông dân. Đợt giảm tô ở vùng tự do là 1953 – 1954; Hà Nội, phần lớn
     // Nam Định giảm tô sau khi tiếp quản 1954, nên lời không đề năm.
     { special: 'x-diachu53', choices: [
-      ['Giữ ruộng, chờ đội về', 'Ruộng do mấy đời tậu được; không bán, không hiến, chờ đội về xét thành phần.', { u: -2, vm: -8, lg: -6 }, 'Mùa ấy nhà vẫn cày cấy như mọi năm, nhưng tá điền không còn đến chào, và nông hội bắt đầu ghi từng sào ruộng, từng con trâu của nhà.'],
+      ['Giữ ruộng, chờ đội về', 'Ruộng do mấy đời tậu được; chưa bán, chưa hiến, chờ xem đội về xét thế nào.', { u: -2, vm: -8, lg: -6 }, 'Mùa ấy nhà vẫn cày cấy như mọi năm, nhưng tá điền không còn đến chào, và nông hội bắt đầu ghi từng sào ruộng, từng con trâu của nhà.'],
       ['Hiến ruộng trước khi đội về', 'Tự nguyện giao phần lớn ruộng cho nông hội, mong được xét nhẹ.', CARD.cc53[2][1][2], 'Nông hội nhận ruộng, ghi tên nhà vào sổ hiến điền. Còn nhà thuộc thành phần nào thì phải chờ đội về mới xét.'],
       ['Giảm tô, thoái tô cho người cấy rẽ', 'Trước khi đội cải cách về, nông hội phát động giảm tô: nhà có ruộng cho cấy rẽ phải hạ tô và trả lại phần tô đã thu quá mức.', { g: -8, b: -6, vm: 6, lg: 4 }, 'Tá điền nhận lại thóc, nông hội ghi tên nhà vào sổ. Nhưng nhà vẫn nhiều ruộng nhất làng, và đội cải cách sắp về.'],
     ] },

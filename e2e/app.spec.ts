@@ -569,6 +569,9 @@ test('play mode: a rich northern family answers land reform before the team come
   const opts = live(page, '.scrim .sheet > [role=radiogroup] .opt');
   await expect(opts.locator('h3')).toHaveText(['Giữ ruộng, chờ đội về', 'Hiến ruộng trước khi đội về', 'Giảm tô, thoái tô cho người cấy rẽ']);
   await expect(opts.nth(2)).not.toContainText('1953'); // Hà Nội's rent reduction came after the 1954 takeover
+  // keeping the land promises nothing the next step (sell off first, leave for the South) would take back
+  await expect(opts.nth(0)).toContainText('chưa bán, chưa hiến');
+  await expect(opts.nth(0)).not.toContainText('không bán');
   await opts.nth(1).click();
   await page.locator('#cgo').click();
   // the donation is recorded; the classification is the next step's to settle
