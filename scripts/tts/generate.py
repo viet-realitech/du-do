@@ -3,8 +3,10 @@
     python3 scripts/tts/generate.py [--voice "Thanh Bình"] [--only key,key] [--force]
 
 Reads docs/voice/kich-ban.csv (from `npm run voice:script`), writes tts-out/<key>.wav (48 kHz) and
-tts-out/manifest.json. A clip is regenerated only when its text or the voice changed. Human recordings
-in recordings/ take precedence when `npm run voice` builds src/voice/."""
+tts-out/manifest.json. A clip is regenerated only when its text or the voice changed. The manifest keeps the
+script line each clip reads ("text"); `npm run voice` stamps it into src/voice/said.json, so the app never plays
+a clip whose line has since changed. Human recordings in recordings/ take precedence when `npm run voice` builds
+src/voice/."""
 import argparse, csv, hashlib, json, re, sys, time
 from pathlib import Path
 
@@ -45,20 +47,28 @@ def main() -> None:
     if a.dry:
         for r in rows: print(r["Tên file"], "|", spoken(r["Lời đọc"]))
         return
-    from vieneu_local import load
-    t0 = time.time(); tts = load(); voice = tts.get_preset_voice(a.voice)
-    print(f"VieNeu ready in {time.time() - t0:.0f}s, voice {a.voice}, {len(rows)} lines", flush=True)
+    sig_of = lambda voice, text: hashlib.sha1((voice + "\n" + text).encode()).hexdigest()[:12]
+    # clips made before the manifest kept the line: record it when the signature proves the clip reads this line
+    for r in rows:
+        m = man.get(r["Tên file"])
+        if m and "text" not in m and m.get("sig") == sig_of(m.get("voice", a.voice), spoken(r["Lời đọc"])): m["text"] = r["Lời đọc"]
+    mpath.write_text(json.dumps(man, ensure_ascii=False, indent=1))
+    tts = voice = None
     done = 0
     for i, r in enumerate(rows, 1):
         key, text = r["Tên file"], spoken(r["Lời đọc"])
         if only and key not in only: continue
-        sig = hashlib.sha1((a.voice + "\n" + text).encode()).hexdigest()[:12]
+        sig = sig_of(a.voice, text)
         dst = out / f"{key}.wav"
         if not a.force and dst.exists() and man.get(key, {}).get("sig") == sig: continue
+        if tts is None:
+            from vieneu_local import load
+            t0 = time.time(); tts = load(); voice = tts.get_preset_voice(a.voice)
+            print(f"VieNeu ready in {time.time() - t0:.0f}s, voice {a.voice}, {len(rows)} lines", flush=True)
         t = time.time()
         wav = tts.infer(text, voice=voice, show_progress=False, apply_watermark=False)
         tts.save(wav, dst)
-        man[key] = {"sig": sig, "voice": a.voice, "sec": round(len(wav) / tts.sample_rate, 1)}
+        man[key] = {"sig": sig, "voice": a.voice, "sec": round(len(wav) / tts.sample_rate, 1), "text": r["Lời đọc"]}
         mpath.write_text(json.dumps(man, ensure_ascii=False, indent=1))
         done += 1
         print(f"[{i}/{len(rows)}] {key}: {man[key]['sec']}s in {time.time() - t:.0f}s", flush=True)

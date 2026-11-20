@@ -1,8 +1,10 @@
-import { allEv, evEra, S } from './state';
+import { allEv, evEra, S, optView } from './state';
 import { ERAS, type Era } from './data';
 import { recording } from './voice';
-import { evKey, gateKey, outKey } from './speech';
+import { evKey, gateKey } from './speech';
 import { eraMood } from './music';
+import { outFor } from './regional';
+import { outVoiceKey } from './voiced';
 
 /* Lời kể và nhạc cho lúc mất mạng (người đi đường, máy bay). Thẻ <audio> chỉ xin từng đoạn byte (206), service worker
    không lưu đoạn: khi một chương bắt đầu, tải trọn (200) các bản thu của chương ấy, lần lượt từng tệp, ưu tiên thấp, để
@@ -27,11 +29,15 @@ function fetchAll(urls: string[]): void {
 }
 
 /** Chương `e` bắt đầu (tour): các bước tour trước (`first`), rồi mọi sự kiện khác của chương, lời dẫn điểm rẽ kế và các
-    kết cục của nó, nhạc của chương. */
+    kết cục của nó (đúng câu dòng họ này sẽ nghe: theo quê, nói từ xứ người), nhạc của chương. */
 export function warmEra(e: Era, first: string[] = []): void {
   const nx = ERAS[ERAS.indexOf(e) + 1];
-  const keys = S.narr ? [...first, ...allEv().filter(v => evEra(v) === e).map(evKey), ...(nx ? [gateKey(nx), ...nx.opts.map(o => outKey(o.id))] : [])] : [];
+  const keys = S.narr ? [...first, ...allEv().filter(v => evEra(v) === e).map(evKey), ...(nx ? [gateKey(nx), ...nx.opts.map(o => { const x = optView.of(o); return outVoiceKey(x.id, outFor(x)); })] : [])] : [];
   const urls = keys.map(recording).filter((u): u is string => !!u);
   if (S.sound && S.music) urls.push(...[eraMood(e.id), 'gate', 'calm'].map(m => `${import.meta.env.BASE_URL}music/${m}.m4a`));
   fetchAll([...new Set(urls)]);
+}
+/** Tải sẵn các bản thu `keys` (khoá không có bản thu thì bỏ qua), khi giọng đọc đang bật. */
+export function warmKeys(keys: (string | undefined)[]): void {
+  if (S.narr) fetchAll([...new Set(keys.map(recording).filter((u): u is string => !!u))]);
 }

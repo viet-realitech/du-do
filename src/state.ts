@@ -70,6 +70,8 @@ export interface State {
   mapTapped: boolean;
   shared: boolean;
   ended: boolean;
+  /** Đã tự đọc tên kết cục một lần (lần đầu mở màn kết có kết cục; hồ sơ còn bỏ ngỏ không tính). */
+  endSaid: boolean;
   /** Thẻ đã quyết bằng bộ lựa chọn gốc trước khi có lựa chọn theo vùng (VARIANT): chỉ số lưu trong `cards` hiểu theo bộ gốc. */
   cardv: Record<string, 'base'>;
   /** Các thẻ có bộ lựa chọn thay thế (VARIANT) mà bản lưu này đã biết: thẻ có bộ mới thêm sau, đã quyết, giữ bộ gốc. */
@@ -80,7 +82,7 @@ export interface State {
 
 const def: State = {
   step: 'splash', name: '', mode: 'read', home: 'hn', res: { ...RES0 }, rel: { ...REL0 }, cards: {}, harvests: [], snap: {}, surname: '', names: [], xs: {}, xFrom: 0, movedFrom: 0, year: Y0, picks: {}, seen: [], shown: [], srcSeen: [], pvSeen: [], figSeen: [], quiz: {}, badges: [],
-  filt: 'Tất cả', sound: true, music: true, theme: 'archive', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
+  filt: 'Tất cả', sound: true, music: true, theme: 'archive', pal: 'flag', mstyle: 'co', grain: true, modern: false, grat: true, haptic: true, fx: true, narr: true, rate: 0.95, zoomed: false, mapTapped: false, shared: false, ended: false, endSaid: false, cardv: {}, cvk: Object.keys(VARIANT), tourAt: null,
 };
 
 function load(mode = activeMode()): State {
@@ -103,6 +105,8 @@ function load(mode = activeMode()): State {
   const known = Array.isArray(raw.cvk) ? raw.cvk as string[] : 'cardv' in raw ? ['nt62', 'sg75'] : []; // cvk có từ khi thêm bộ tn80
   for (const id of Object.keys(VARIANT)) if (!known.includes(id) && s.cards && id in s.cards) s.cardv[id] = 'base';
   s.cvk = Object.keys(VARIANT);
+  // bản lưu có trước việc tự đọc tên kết cục: ai đã mở kết luận rồi thì không tự đọc nữa
+  if (!('endSaid' in raw)) s.endSaid = !!raw.ended;
   s.mode = mode;
   s.res = { ...RES0, ...s.res }; s.rel = { ...REL0, ...s.rel };
   return s;

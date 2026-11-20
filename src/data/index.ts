@@ -97,6 +97,7 @@ interface DDShape {
   provName(n: string): string;
   regionName(g: Region, y: number, north: boolean): string;
   pop(y: number): [number, string, string] | null;
+  DIARY_R: Record<string, Partial<Record<'t' | 'n', HistEvent>>>;
 }
 
 const D = DD as unknown as DDShape;
@@ -107,6 +108,8 @@ export const provGroup = D.provGroup;
 export const provName = D.provName;
 export const regionName = D.regionName;
 export const pop = D.pop;
+/** Trang nhật ký đời thường ở nhà theo miền (data2.js DIARY_R): id trang gốc (miền Bắc) → bản miền Trung (t), miền Nam (n). */
+export const DIARY_R = D.DIARY_R;
 export const PROVINCES = provinces as unknown as ProvinceShape[];
 
 /** Era each figure unlocks with. */

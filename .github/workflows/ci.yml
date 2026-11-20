@@ -21,6 +21,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # every narratable line has its clip in src/voice (scripts/check-voice.ts)
+      - run: npm run voice:check
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npx playwright test --project=${{ matrix.browser }}
       # traces of failed tests: download the artifact, then `npx playwright show-trace <trace.zip>`

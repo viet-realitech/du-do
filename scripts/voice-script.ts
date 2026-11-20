@@ -1,24 +1,10 @@
 // Writes the voice-over script (docs/voice/kich-ban.md + .csv) from the game data: one line per clip,
 // keyed by the file name the recording must have. Run: npm run voice:script
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { ERAS, EV, type HistEvent } from '../src/data';
-import { evKey, evSpeechFull, gateKey, gateSpeech, chrKey, epiKey, outKey, outSpeech } from '../src/speech';
-import { CHRONICLE, EPILOGUES, SURNAMES } from '../src/data/surnames';
+import { ERAS } from '../src/data';
+import { voiceRows } from './voice-lines';
 
-type Row = { key: string; ch: number; ctx: string; text: string };
-const rows: Row[] = [];
-for (const e of ERAS) {
-  rows.push({ key: gateKey(e), ch: e.n, ctx: `Điểm rẽ ${e.n} (${e.cy}), đọc khi người chơi đứng trước lựa chọn`, text: gateSpeech(e) });
-  for (const o of e.opts) rows.push({ key: outKey(o.id), ch: e.n, ctx: `Điểm rẽ ${e.n} · kết cục của hướng "${o.label}" (màn Con đường của bạn)`, text: outSpeech(o.out) });
-  const evs: HistEvent[] = EV.filter(v => (v.era ? v.era === e.id : v.y >= e.cy && (!ERAS[e.n] || v.y < ERAS[e.n].cy)));
-  for (const v of evs) rows.push({ key: evKey(v), ch: e.n, ctx: `${v.k} · ${v.d}`, text: evSpeechFull(v) });
-  for (const o of e.opts) for (const v of o.diary) rows.push({ key: evKey(v), ch: e.n, ctx: `Nhật ký dòng họ, nếu chọn "${o.label}" · ${v.y}`, text: evSpeechFull(v) });
-}
-// Phim hành trình ở kết cục: dòng gia phả từng hướng, lời khép theo họ
-for (const [opt, line] of Object.entries(CHRONICLE)) rows.push({ key: chrKey(opt), ch: 7, ctx: `Phim hành trình · dòng gia phả của hướng "${opt}"`, text: line });
-for (const [k, line] of Object.entries(EPILOGUES)) rows.push({ key: epiKey(k), ch: 7, ctx: `Phim hành trình · lời khép, họ ${SURNAMES.find(s => s.key === k)?.names.join(' / ') || k}`, text: line });
-const seen = new Set<string>();
-const uniq = rows.filter(r => !seen.has(r.key) && seen.add(r.key));
+const uniq = voiceRows();
 const secs = (t: string) => Math.round(t.length / 13);
 const total = uniq.reduce((n, r) => n + secs(r.text), 0);
 const done = (k: string) => existsSync(`recordings/${k}.wav`) || existsSync(`recordings/${k}.mp3`);
@@ -42,6 +28,8 @@ const md = [`# Dư Đồ · Kịch bản thu giọng thuyết minh`, '',
     ...uniq.filter(r => r.ch === e.n).flatMap(r => [`### \`${r.key}\`${done(r.key) ? ' ✓ đã thu' : synth(r.key) ? ' · giọng máy' : ''}`, '', `*${r.ctx} · ~${secs(r.text)} giây*`, '', `> ${r.text}`, ''])]),
   '', '## Kết cục · Phim hành trình', '',
   ...uniq.filter(r => r.ch === 7).flatMap(r => [`### \`${r.key}\`${done(r.key) ? ' ✓ đã thu' : synth(r.key) ? ' · giọng máy' : ''}`, '', `*${r.ctx} · ~${secs(r.text)} giây*`, '', r.text, '']),
+  '', '## Cài đặt', '',
+  ...uniq.filter(r => r.ch === 0).flatMap(r => [`### \`${r.key}\`${done(r.key) ? ' ✓ đã thu' : synth(r.key) ? ' · giọng máy' : ''}`, '', `*${r.ctx} · ~${secs(r.text)} giây*`, '', r.text, '']),
 ].join('\n');
 writeFileSync('docs/voice/kich-ban.md', md);
 console.log(`${uniq.length} clips, ~${Math.round(total / 60)} min → docs/voice/kich-ban.md, kich-ban.csv`);

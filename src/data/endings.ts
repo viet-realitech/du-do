@@ -297,6 +297,10 @@ export function chronLine(id: string, f: Facts, chron: Record<string, string>): 
     ? 'Thế hệ 5 di cư vào Nam năm 1954, sống qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.'
     : 'Thế hệ 5 sống ở miền Nam, qua hai nền cộng hoà và một cuộc chiến ngày càng lớn.';
   if (reg && id === 'thuba' && nth) return 'Thế hệ 5 di cư vào Nam năm 1954, rồi xuống đường đòi hoà bình cùng thành phần thứ ba ở Sài Gòn; cả hai phía đều nghi ngờ.';
+  // Duy Tân của nhà phía nam: Đông Kinh Nghĩa Thục ở Hà Nội; ở quê là phong trào Duy Tân Trung Kỳ, Minh Tân Nam Kỳ
+  if (reg && id === 'duytan' && !nth) return reg === 'NE' || reg === 'NW'
+    ? 'Thế hệ 2 theo phong trào Minh Tân, nhánh duy tân ở Nam Kỳ: góp vốn lập hội buôn, mở khách sạn làm nơi gặp gỡ, đọc Lục tỉnh tân văn; năm 1908 Trần Chánh Chiếu bị bắt, phong trào tan rã.'
+    : 'Thế hệ 2 theo phong trào Duy Tân ở Trung Kỳ: mở lớp dạy chữ Quốc ngữ, lập hội buôn, cắt tóc ngắn; năm 1908 phong trào chống thuế bị đàn áp, Phan Châu Trinh bị đày ra Côn Đảo.';
   return chron[id] || OPT[id]?.out || '';
 }
 /** Đời được nhiều / mất nhiều nhất (tổng gia sản đổi giữa hai mùa màng); null khi chưa đủ sáu mùa. */

@@ -1,6 +1,7 @@
 import { FIG, VAL, type Faction, type Option } from '../data';
 import { FIGIMG, figFocus } from '../wiki';
 import { S, type Theme } from '../state';
+import { icon } from './icons';
 
 /* Faction colours: after the historical flags, or a sepia-ink set (lighter on the night theme). */
 type Pal = { dainam: string; phap: string; bh1: string; bh2: string; red: string; yel: string; blue: string; jp: string };
@@ -70,3 +71,6 @@ document.addEventListener('error', e => {
 }, true);
 
 export const TAG_LABEL: Record<string, string> = { vutrang: 'Đấu tranh', caicach: 'Cải cách', thuongthuyet: 'Hoà hoãn', giunep: 'Giữ nếp' };
+/** Nút Nghe / Dừng (trang sự kiện, màn kết): hai nhãn sẵn trong nút, data-on chọn nhãn (narration.ts hush() gỡ data-on
+    khi lời đọc dừng). */
+export const LISTEN = `<span class="l1">${icon('listen', 16)}Nghe</span><span class="l2">${icon('stop', 14)}Dừng</span>`;

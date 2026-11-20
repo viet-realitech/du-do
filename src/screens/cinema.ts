@@ -12,7 +12,9 @@ import { mood } from '../music';
 import { fxOn } from '../scene';
 import { speak, hush } from '../narration';
 import { recording } from '../voice';
-import { chrKey, epiKey } from '../speech';
+import { endSpeech, epiKey } from '../speech';
+import { chronKey, endVoiceKey } from '../voiced';
+import { sayKey } from '../said';
 
 /* Điện ảnh: màn mở chương ở mỗi điểm rẽ (ảnh tư liệu, năm đếm lên, tên chương) và "phim hành trình" ở kết cục (mỗi thế
    hệ một cảnh: ảnh, năm, dòng gia phả). Chạm để bỏ qua / sang cảnh.
@@ -176,7 +178,9 @@ function slides(): Slide[] {
     const big = isPlay() ? bigChoices(e, 1)[0] : undefined;
     if (big) lines.push(`${big.y} · ${big.out}`);
     for (const n of S.names) if (n.y >= e.cy && n.y < end) lines.push(`${n.y} · ${n.from} đổi thành ${n.to}`);
-    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: e.title, pick: o.label, lines, img: eraImage(e, 6000), say: chron === CHRONICLE[o.id] ? [chron, chrKey(o.id)] : undefined }); // câu đã chỉnh theo quê: không có bản thu
+    // câu theo quê, theo nhà ở xứ người có bản thu riêng (voiced.ts); câu chưa có bản thu thì chỉ hiện chữ
+    const ck = chronKey(o.id, chron);
+    out.push({ y: e.cy, head: `Thế hệ ${e.n} · ${e.cy}–${end === 2026 ? 'nay' : end}`, title: e.title, pick: o.label, lines, img: eraImage(e, 6000), say: ck ? [chron, ck] : undefined });
   }
   return out;
 }
@@ -320,8 +324,11 @@ export function montage(): void {
     watch(900, 'film'); // lúc hai cảnh chồng mờ vào nhau
     if (j < list.length) narrate(j, list[j].say ? [list[j].say!] : [], per);
     else {
-      const parts: [string, string][] = [];
-      if (epi) parts.push([epi, epiKey(skey)]);
+      // tấm cuối: tên kết cục và câu tóm (đúng hai dòng trên tấm), rồi lời khép theo họ; chỉ bản thu đọc đúng câu ấy
+      const parts: [string, string][] = [], { f, e: end } = endingNow();
+      const ek = end && endVoiceKey(end, f), pk = epi && sayKey(epiKey(skey), epi);
+      if (end && ek) parts.push([endSpeech(end, f), ek]);
+      if (epi && pk) parts.push([epi, pk]);
       narrate(j, parts, per + 3000);
     }
   };
