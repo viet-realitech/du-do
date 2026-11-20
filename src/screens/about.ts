@@ -24,7 +24,7 @@ export function openAbout(): void {
    <p style="font-size:calc(16px*var(--ts));margin-top:8px">Nội dung chưa được nhà sử học thẩm định. Chỗ sai nào được chỉ ra, sau khi đối chiếu với sử liệu, sẽ được sửa trong bản cập nhật sau.${FEEDBACK_URL ? ' Bạn có thể báo chỗ sai qua mục Góp ý / Báo sai ở dưới.' : ''}</p></div>
   ${FEEDBACK_URL ? `<div style="margin-top:16px">${feedbackRow('giới thiệu')}</div>` : ''}
   <h3 style="margin:18px 0 4px">Nguồn dữ liệu</h3>
-  ${CREDITS.map(([k, v, u]) => `<a class="src" href="${u}" target="_blank" rel="noopener"><div class="tt"><h3 style="font-size:calc(16.5px*var(--ts))">${k}</h3><span class="mono" style="color:var(--acc)">↗</span></div><div class="muted" style="font-size:calc(15px*var(--ts));margin-top:2px">${v}</div></a>`).join('')}
+  ${CREDITS.map(([k, v, u]) => `<a class="src" href="${u}" target="_blank" rel="noopener"><div class="tt"><h3 style="font-size:16.5px">${k}</h3><span class="mono" style="color:var(--acc)">↗</span></div><div class="muted" style="font-size:15px;margin-top:2px">${v}</div></a>`).join('')}
   <h3 style="margin:18px 0 4px">Quyền riêng tư</h3>
   <p class="muted" style="font-size:calc(16px*var(--ts))">Không cần tài khoản, không quảng cáo, không theo dõi. Tiến trình chơi chỉ lưu trên thiết bị này. Khi xem ảnh và bài viết, ứng dụng tải trực tiếp từ Wikipedia và Wikimedia Commons.</p>`, true);
 }
